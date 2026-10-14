@@ -1,0 +1,24 @@
+Jun's Garden: fingerprints of the downloads (2026-10-13)
+
+These are the SHA-256 fingerprints of the three files in the Google Drive
+folder "Jun's Garden". If a file you downloaded gives the same fingerprint, it
+is exactly the file published here: nothing added, removed or changed on the way.
+
+4e057d9f26d9a7d2b24264952b3b84fa7fa0c127d75bc89dd52d716aff00f943  junsgarden-for-jun.zip   (85,165,778 bytes)
+331ed058b1d56f184b5023af2e94d0a8a7918d2793843eaee60c8668383dd1ff  junsgarden-photos-addon.zip   (807,558,073 bytes)
+8d293d6370d5f830ed8431debc4b37605938d0c6b474fe1c4808cc7a307a1813  junsgarden-wiki-addon.zip   (794,602 bytes)
+
+How to check (in the folder where the file is):
+- Windows, in PowerShell:        Get-FileHash junsgarden-for-jun.zip
+  It shows "SHA256" and a long number: it must be the same as the line above.
+- Ubuntu or a Raspberry Pi:      sha256sum junsgarden-for-jun.zip
+
+More checks:
+- Inside the main zip, FILES-FROM-JASON.txt lists the fingerprint of every
+  file, and the garden menu checks them for you: menu M, then 11.
+- The install checks the photos and wiki zips against fingerprints in this
+  code before it uses them (docker/tools/photos.sha256 and
+  docker/wiki/seed/wiki-pages.sha256), and refuses a file that does not match.
+- Google Drive cannot scan very large files for viruses, so it shows a warning
+  for the photos zip. That is normal: the fingerprint above is how you know it
+  is exactly this file.
