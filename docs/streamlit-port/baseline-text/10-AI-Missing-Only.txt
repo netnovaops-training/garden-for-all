@@ -1,0 +1,6 @@
+🔒 AI — Missing Fields Only
+🛡️
+
+Strict read-protect mode. The AI can only fill fields that are completely empty. Any field that already has a value is skipped — the AI never overwrites or proposes changes to existing data. Plants are reviewed one at a time. Save or discard, then fetch the next one.
+
+🔍 Find Next Plant with Missing Fields

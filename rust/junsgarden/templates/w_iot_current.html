@@ -1,0 +1,76 @@
+<div class="widget-card" data-tags="weather temperature air uv pollen wind" style="grid-column: span 2;">
+    <style>
+        @keyframes livePulse {
+            0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(16,185,129,0.8); }
+            50%      { opacity:0.8; box-shadow:0 0 0 6px rgba(16,185,129,0); }
+        }
+    </style>
+    <div class="widget-header">
+        <span class="widget-icon">🌡️</span>
+        <h3>Air & Temperature — Clifton Park
+            <span style="font-size:0.7rem;font-weight:700;background:#065f46;color:#d1fae5;padding:2px 10px;border-radius:10px;margin-left:8px;display:inline-block;animation:livePulse 1.4s ease-in-out infinite;">● LIVE</span>
+        </h3>
+    </div>
+    <div class="widget-body" style="padding:14px 16px;">
+        {% if has_timestamp %}
+        <div style="font-size:0.7rem;color:#888;margin-bottom:6px;">Updated: {{ timestamp }}</div>
+        {% endif %}
+
+        <!-- Hero -->
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+            <div style="flex:0 0 auto;text-align:center;background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-radius:14px;padding:18px 24px;">
+                <div style="font-size:3rem;font-weight:900;color:#E65100;line-height:1;">{{ temp }}°F</div>
+                <div style="font-size:0.85rem;color:#BF360C;margin-top:4px;">Feels {{ feels }}°F</div>
+            </div>
+            <div style="flex:1;min-width:180px;">
+                <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:{{ zone_color }};color:#fff;border-radius:10px;font-weight:700;font-size:0.9rem;">
+                    <span style="font-size:1.3rem;">{{ zone_icon }}</span>
+                    {{ zone_status|safe }}
+                </div>
+                <div style="margin-top:8px;font-size:0.78rem;color:#555;">
+                    Soil: <strong>{{ soil_t }}°F</strong> ·
+                    {{ soil_note|safe }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Group checkboxes -->
+        <div style="border-top:1px solid #eee;padding-top:10px;">
+            {% for group in groups %}
+            <label style="display:inline-flex;align-items:center;gap:5px;font-size:0.78rem;font-weight:700;color:#333;cursor:pointer;background:#f0f0f0;padding:5px 12px;border-radius:16px;margin:0 6px 8px 0;user-select:none;border:2px solid {% if group.default_on %}#2e7d32{% else %}#ccc{% endif %};">
+                <input type="checkbox" class="{{ uid }}_group" data-group="{{ group.key }}"
+                    style="accent-color:#2e7d32;width:14px;height:14px;" {% if group.default_on %}checked{% endif %}>
+                {{ group.label|safe }}
+            </label>
+            {% endfor %}
+        </div>
+
+        <!-- Metrics grid -->
+        <div id="{{ uid }}_grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-top:8px;">
+            {% for group in groups %}
+                {% for m in group.metrics %}
+                <div class="{{ uid }}_item" data-group="{{ group.key }}"
+                     style="background:{{ m.color }};border-radius:8px;padding:8px 10px;text-align:center;{% if !group.default_on %}display:none;{% endif %}">
+                    <div style="font-size:0.7rem;color:#888;">{{ m.icon|safe }} {{ m.label|safe }}</div>
+                    <div style="font-weight:700;font-size:0.95rem;color:#333;">{{ m.value|safe }}</div>
+                    <div style="font-size:0.65rem;color:#666;">{{ m.sub|safe }}</div>
+                </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+    <script>
+    (function(){
+        document.querySelectorAll('.{{ uid }}_group').forEach(function(cb){
+            cb.addEventListener('change', function(){
+                var g = this.dataset.group;
+                var show = this.checked;
+                this.parentElement.style.borderColor = show ? '#2e7d32' : '#ccc';
+                document.querySelectorAll('.{{ uid }}_item[data-group="'+g+'"]').forEach(function(el){
+                    el.style.display = show ? '' : 'none';
+                });
+            });
+        });
+    })();
+    </script>
+</div>

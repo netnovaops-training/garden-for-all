@@ -1,0 +1,74 @@
+<header>
+    <div class="header-container">
+        <div class="logo">
+            <!-- The real J&K mark (ic_launcher_playstore.png) -- the same icon
+                 the Android app uses, so the site and the app match. Replaced a
+                 hand-drawn inline SVG that only approximated it.
+                 border-radius clips the icon's square green backing to a circle
+                 so it sits on the header the way the old SVG's circle did; the
+                 icon already has a circle outline inside that lines up with it. -->
+            <img class="logo-jk" src="/ic_launcher_playstore.png"
+                 width="44" height="44" alt="J&amp;K Garden logo"
+                 style="flex-shrink:0; border-radius:50%; display:block;
+                        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));">
+            Jun's and Kona's Garden
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.php">Home</a></li>
+                <li><a href="plant_listing.php">Quick Search</a></li> 
+		<li><a href="catalog.php">Full Catalog</a></li>
+		<li><a href="data.php">Data</a></li>
+		<li><a href="gallery.php">Gallery</a></li>
+                <li><a href="https://wiki.junsgarden.duckdns.org/"
+                       title="The garden encyclopedia">Wiki</a></li>
+{% if plan_ok %}
+        <li><a href="/beds" title="Draw the beds and plan what goes in them">Beds &amp; Planner</a></li>
+        <li><a href="/checkup" title="Photograph a plant and see what can be read off it">Plant Check-up</a></li>
+{% endif %}
+                <li>
+                    <a href="/apps/junsgarden.apk" download="JunsGarden.apk" title="Download the Jun's Garden Android app"
+                       style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.35); border-radius:20px; padding:4px 12px 4px 8px; font-size:0.85rem; white-space:nowrap;">
+                        <!-- Android robot logo -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <!-- Antenna left -->
+                            <line x1="7.5" y1="2" x2="5.5" y2="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <!-- Antenna right -->
+                            <line x1="16.5" y1="2" x2="18.5" y2="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <!-- Head -->
+                            <path d="M5,10.5 A7,5.5 0 0,1 19,10.5 L19,14 A7,5.5 0 0,1 5,14 Z" fill="currentColor"/>
+                            <!-- Eyes -->
+                            <circle cx="9" cy="12" r="0.9" fill="white"/>
+                            <circle cx="15" cy="12" r="0.9" fill="white"/>
+                            <!-- Body -->
+                            <rect x="4.5" y="14" width="15" height="7" rx="1.5" fill="currentColor"/>
+                            <!-- Left arm -->
+                            <rect x="1.5" y="14" width="2.5" height="5.5" rx="1.25" fill="currentColor"/>
+                            <!-- Right arm -->
+                            <rect x="20" y="14" width="2.5" height="5.5" rx="1.25" fill="currentColor"/>
+                            <!-- Left leg -->
+                            <rect x="7" y="21" width="2.5" height="3" rx="1.25" fill="currentColor"/>
+                            <!-- Right leg -->
+                            <rect x="14.5" y="21" width="2.5" height="3" rx="1.25" fill="currentColor"/>
+                        </svg>
+                        Android App{% if !app_version.is_empty() %} v{{ app_version }}{% endif %}
+                    </a>
+                </li>
+                </ul>
+        </nav>
+    </div>
+
+    {{ after_header|safe }}
+
+    <!-- Flowing green wave — animated, hangs slightly over the hero -->
+    <div class="edge-wave edge-wave--header" aria-hidden="true">
+        <div class="edge-wave__layer edge-wave__layer--back">
+            <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,0 H1440 V32 C1200,6 960,58 720,32 C480,6 240,58 0,32 Z"/></svg>
+            <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,0 H1440 V32 C1200,6 960,58 720,32 C480,6 240,58 0,32 Z"/></svg>
+        </div>
+        <div class="edge-wave__layer edge-wave__layer--front">
+            <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,0 H1440 V30 C1140,52 1020,8 720,30 C420,52 300,8 0,30 Z"/></svg>
+            <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,0 H1440 V30 C1140,52 1020,8 720,30 C420,52 300,8 0,30 Z"/></svg>
+        </div>
+    </div>
+</header>

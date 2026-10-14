@@ -1,0 +1,12 @@
+# Project 1: Uptime Kuma. A dashboard that tells you if your things are up.
+# Start:  docker compose -f docker/extras/uptime-kuma.yml up -d
+# Open:   http://localhost:3001   (you make the admin login the first time)
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    restart: unless-stopped
+    volumes:
+      - ./uptime-kuma-data:/app/data
+    ports:
+      - "127.0.0.1:3001:3001"

@@ -1,0 +1,51 @@
+📸 Manual Image Replacement Gallery
+
+Show plants:
+
+All plants
+
+Unverified images
+
+Verified images
+
+No image yet
+
+Only one image
+
+🔍 Filter by name / family / botanical name:
+
+Select a plant (485 shown):
+
+'Angel Bells' [ID 509] 📷
+
+⚠️ File not found: web/eaa3c9bef67d4b5d.jpg
+
+🗑️ Remove this image
+
+✅ Gallery Looks Good! (Mark as Verified)
+
+🗑️ Wipe ALL images
+
+'Angel Bells' | Botanical: Campanula glomerata | Family: Campanulaceae
+
+Option 1: Fetch from Web
+
+Searches Wikipedia first, then DuckDuckGo — no API key.
+
+Search term:
+
+🔍 Fetch Image Preview
+
+Option 2: Upload Your Own
+
+Upload photos (multiple allowed)
+
+Drag and drop files here
+Limit 200MB per file • JPG, JPEG, PNG, WEBP
+Browse files
+
+Upload action:
+
+Append to current gallery
+
+Wipe gallery and replace

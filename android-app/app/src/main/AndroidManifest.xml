@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+      Lets the app hand a downloaded APK to Android's package installer so an
+      update can be applied without a trip to the browser.
+
+      IT DOES NOT INSTALL ANYTHING ITSELF. Android still shows its own
+      confirmation screen, and the person must have allowed "install unknown
+      apps" for this app once. This permission only removes the step where
+      they go and find the file in Downloads.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <!--
+      NO CAMERA PERMISSION IS DECLARED, deliberately. This app does not open
+      the camera; it asks the system camera app to take a picture and hand
+      one back. That app already holds the permission, so requesting it here
+      would be asking the person for access this app never uses.
+    -->
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.JunsGarden">
+
+        <!--
+          PORTRAIT ONLY, AND THIS IS A BUG FIX RATHER THAN A STYLE CHOICE.
+
+          Jason, 2026-09-26: "when we are using the apps and rotating it
+          through landscape or portrait the prompts seem to end up timing
+          out".
+
+          They were not timing out. Rotating a phone is a configuration
+          change, and Android answers one by DESTROYING this activity and
+          building a new one. Everything held in `remember` goes with it,
+          and the part that looks like a timeout is this: the coroutine
+          carrying the in-flight request is cancelled along with the
+          composition that launched it. A plant identification takes tens
+          of seconds; turn the phone during one and the answer is thrown
+          away with nothing to say so. The request itself was fine.
+
+          Locking the orientation stops the recreate, which stops the
+          cancellation. It also suits the app: it is read in a garden
+          while holding a plant.
+
+          THE FULLER FIX IS STATE THAT OUTLIVES THE ACTIVITY, a ViewModel,
+          so a turn costs a redraw instead of the answer. Worth doing if
+          tablets or split screen ever matter. Until then this is the
+          honest one line version. See the README, "Known leftovers".
+        -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+
+            android:label="@string/app_name"
+            android:theme="@style/Theme.JunsGarden"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!--
+              Puts this app in the phone's "Share" list for text and links
+              (for example a YouTube link). Android offers every app that
+              declares ACTION_SEND for a MIME type as a share target.
+
+              LEFTOVER, KEPT ON PURPOSE (2026-10). This was made for the old
+              "Ask" chat, which has been removed. Today a shared link only
+              opens an empty panel over the garden (see Shared.kt and the
+              `open` sheet in GardenScreen.kt). It is harmless. Removing this
+              filter, Shared.kt and that panel is a good small first tidy-up;
+              see the README, "Known leftovers".
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <!--
+          Lets the camera app write the photo it takes into this app's cache
+          and nowhere else. A raw file:// path handed to another app throws
+          FileUriExposedException on any modern Android; a FileProvider grants
+          one app, one file, for one capture.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+    </application>
+
+</manifest>

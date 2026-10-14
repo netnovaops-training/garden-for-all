@@ -1,0 +1,25 @@
+🗺️ Garden Bed Assignment
+
+Find any plant, then assign or reassign it to one or more garden beds using the multiselect below. Changes are saved directly to the database.
+
+🔍 Filter plants:
+
+Select a plant (485 shown):
+
+'Angel Bells' [ID 509]
+
+📷 Image file not found on disk
+
+ID: 509
+
+Botanical: Campanula glomerata
+
+Family: Campanulaceae
+
+Legacy flower_bed: To Be Sorted
+
+📍 Assign to garden bed(s):
+
+To Be Sorted
+
+💾 Save Bed Assignment

@@ -1,0 +1,84 @@
+<div class="widget-card" data-tags="weather moisture rain snow humidity soil precipitation" style="grid-column: span 2;">
+    <div class="widget-header">
+        <span class="widget-icon">💧</span>
+        <h3>Water & Moisture</h3>
+    </div>
+    <div class="widget-body" style="padding:12px 16px;">
+        {% if has_timestamp %}
+        <div style="font-size:0.7rem;color:#888;margin-bottom:6px;">Updated: {{ timestamp }}</div>
+        {% endif %}
+
+        <!-- Group checkboxes -->
+        <div style="margin-bottom:10px;">
+            {% for group in groups %}
+            <label style="display:inline-flex;align-items:center;gap:5px;font-size:0.78rem;font-weight:700;color:#333;cursor:pointer;background:#f0f0f0;padding:5px 12px;border-radius:16px;margin:0 6px 6px 0;user-select:none;border:2px solid {% if group.default_on %}#1565c0{% else %}#ccc{% endif %};">
+                <input type="checkbox" class="{{ uid }}_group" data-group="{{ group.key }}"
+                    style="accent-color:#1565c0;width:14px;height:14px;" {% if group.default_on %}checked{% endif %}>
+                {{ group.label|safe }}
+            </label>
+            {% endfor %}
+        </div>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin-bottom:14px;">
+            <!-- Current readings -->
+            <div style="flex:1;min-width:200px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-size:0.78rem;">
+                {% for group in groups %}
+                    {% for m in group.metrics %}
+                    <div class="{{ uid }}_item" data-group="{{ group.key }}"
+                         style="background:{{ m.color }};border-radius:10px;padding:10px;text-align:center;{% if !group.default_on %}display:none;{% endif %}">
+                        <div style="font-weight:700;color:#333;">{{ m.icon|safe }} {{ m.value|safe }}</div>
+                        <div style="font-size:0.65rem;color:#666;">{{ m.label|safe }}</div>
+                    </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+
+            <!-- 7-day trend chart -->
+            <div style="flex:2;min-width:250px;">
+                <canvas id="wgt-moisture-trend"></canvas>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function(){
+        // Group toggles
+        document.querySelectorAll('.{{ uid }}_group').forEach(function(cb){
+            cb.addEventListener('change', function(){
+                var g = this.dataset.group, show = this.checked;
+                this.parentElement.style.borderColor = show ? '#1565c0' : '#ccc';
+                document.querySelectorAll('.{{ uid }}_item[data-group="'+g+'"]').forEach(function(el){
+                    el.style.display = show ? '' : 'none';
+                });
+            });
+        });
+
+        // Chart
+        new Chart(document.getElementById('wgt-moisture-trend').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ trend_labels|safe }},
+                datasets: [
+                    { label: 'Rain (in)', data: {{ trend_rain|safe }},
+                      backgroundColor: 'rgba(33,150,243,0.6)', borderRadius: 4, yAxisID: 'y', order: 2 },
+                    { label: 'Snow (in)', data: {{ trend_snow|safe }},
+                      backgroundColor: 'rgba(156,39,176,0.4)', borderRadius: 4, yAxisID: 'y', order: 3 },
+                    { label: 'Humidity %', data: {{ trend_hum|safe }},
+                      type: 'line', borderColor: '#1565C0', borderWidth: 2, pointRadius: 3,
+                      fill: false, tension: 0.3, yAxisID: 'y1', order: 1 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: true,
+                plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 10, font: { size: 9 } } } },
+                scales: {
+                    y:  { beginAtZero: true, position: 'left', title: { display: true, text: 'Inches', font: { size: 9 } } },
+                    y1: { beginAtZero: true, max: 100, position: 'right', grid: { drawOnChartArea: false },
+                          title: { display: true, text: 'Humidity %', font: { size: 9 } },
+                          ticks: { callback: function(v){ return v+'%'; } } }
+                }
+            }
+        });
+        if(window.registerWidgetChart) window.registerWidgetChart('wgt-moisture-trend', {{ trend_labels|safe }}, {{ trend_rain|safe }}, {label:'Rain (in)', indexAxis:'x'});
+    })();
+    </script>
+</div>

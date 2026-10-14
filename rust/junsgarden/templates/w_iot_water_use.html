@@ -1,0 +1,65 @@
+<div class="widget-card" data-tags="iot water irrigation usage gallons future">
+    <div class="widget-header">
+        <span class="widget-icon">🚿</span>
+        <h3>Water Usage by Bed (IoT Mock)</h3>
+    </div>
+    <div class="widget-body">
+        <div style="background:#fff3e0;border:1px solid #ffe0b2;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:0.78rem;color:#e65100;">
+            <strong>🔌 IoT Preview</strong> — Simulated weekly water usage. Future: connect smart irrigation valves or flow meters per bed.
+        </div>
+        <canvas id="wgt-iot-water-use"></canvas>
+        <div style="margin-top:10px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:0.78rem;">
+            <div style="background:#e3f2fd;padding:6px 14px;border-radius:20px;font-weight:700;color:#1565c0;">
+                Weekly Total: {{ total_weekly }} gal
+            </div>
+            <div style="background:#e8f5e9;padding:6px 14px;border-radius:20px;font-weight:700;color:#2e7d32;">
+                Target: {{ total_target }} gal
+            </div>
+            <div style="background:#ffebee;padding:6px 14px;border-radius:20px;font-weight:700;color:#c62828;">
+                {{ over_under_text }} gal vs target
+            </div>
+        </div>
+        <div style="margin-top:8px;text-align:center;font-size:0.7rem;color:#888;">
+            Monthly est: ~{{ monthly_est }} gal | Annual est: ~{{ annual_est }} gal (growing season)
+        </div>
+    </div>
+    <script>
+    (function(){
+        new Chart(document.getElementById('wgt-iot-water-use').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ beds_json|safe }},
+                datasets: [
+                    {
+                        label: 'Actual (gal/week)',
+                        data: {{ actual_json|safe }},
+                        backgroundColor: {{ colors_json|safe }},
+                        borderWidth: 1, borderRadius: 4
+                    },
+                    {
+                        label: 'Target (gal/week)',
+                        data: {{ target_json|safe }},
+                        type: 'line',
+                        borderColor: '#2e7d32',
+                        borderWidth: 2,
+                        borderDash: [6, 3],
+                        pointRadius: 3,
+                        pointBackgroundColor: '#2e7d32',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: true,
+                plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } },
+                scales: {
+                    y: { beginAtZero: true,
+                         title: { display: true, text: 'Gallons / Week', font: { size: 10 } } },
+                    x: { ticks: { maxRotation: 45, font: { size: 9 } } }
+                }
+            }
+        });
+        if(window.registerWidgetChart) window.registerWidgetChart('wgt-iot-water-use', {{ beds_json|safe }}, {{ actual_json|safe }}, {label:'Gallons/Week', indexAxis:'x'});
+    })();
+    </script>
+</div>

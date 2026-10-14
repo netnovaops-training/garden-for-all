@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" id="acc-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{{ meta_desc }}">
+    <title>{{ page_title }}</title>
+    <link rel="icon" href="/favicon.svg">
+
+    {% if show_hero %}{% if let Some(first) = hero_initial.first() %}
+    <link rel="preload" as="image" href="{{ first }}" fetchpriority="high">
+    {% endif %}{% endif %}
+
+    <link rel="stylesheet" href="style.css?v={{ style_v }}">
+
+    <script>
+    (function(){var k='garden_site_theme',d='spring_d',n=k;try{n=localStorage.getItem(k)||d}catch(e){}
+    var m={'spring_d':['#4A7c59','#fffff0','#33402f','#2e7d32','#256d29','rgba(46,125,50,0.10)','rgba(46,125,50,0.06)','#c0d8a5','#5a7a50','#c8e6c9','#4A7c59','#fff','#3a6a48','#4A7c59']};
+    if(!m[n])n=d;var t=m[n];if(t){var r=document.documentElement.style;
+    r.setProperty('--pw-green',t[0]);r.setProperty('--site-body-bg',t[1]);r.setProperty('--site-body-text',t[2]);
+    r.setProperty('--site-accent',t[3]);r.setProperty('--site-accent-hover',t[4]);
+    r.setProperty('--site-tint',t[6]);r.setProperty('--site-row-border',t[7]);}})();
+    </script>
+
+    <script src="js/site-theme.js?v={{ site_theme_v }}" defer></script>
+    {{ extra_head|safe }}
+</head>
+<body class="{{ body_class }}">
+
+<!-- Skip navigation — visible on focus for keyboard/screen-reader users -->
+<a href="#main-content" class="skip-link" tabindex="0">Skip to main content</a>
+
+{% include "header.html" %}
+
+{% if is_admin %}
+<!-- ── Admin comment notification bubble ─────────────────────────────── -->
+<div id="comment-notify-bubble" style="display:none; position:fixed; bottom:20px; right:20px; z-index:99998;
+     background:#2e7d32; color:#fff; border-radius:20px; padding:12px 18px; box-shadow:4px 4px 0 rgba(0,0,0,0.4);
+     font-size:0.88rem; font-weight:700; max-width:260px; border:3px solid #1b5e20; animation:bubble-in 0.3s ease;">
+    💬 New comment left!
+    <br>
+    <label style="font-weight:400; font-size:0.82rem; cursor:pointer; margin-top:6px; display:flex; align-items:center; gap:6px;">
+        <input type="checkbox" id="notify-dismiss-cb" style="accent-color:#a5d6a7; width:16px; height:16px;">
+        Mark as read
+    </label>
+</div>
+<style>
+@keyframes bubble-in { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+</style>
+<script>
+(function() {
+    fetch('comments.php?check_notify=1')
+        .then(r => r.json())
+        .then(d => {
+            if (d.notify) document.getElementById('comment-notify-bubble').style.display = 'block';
+        }).catch(()=>{});
+
+    document.addEventListener('change', function(e) {
+        if (e.target.id !== 'notify-dismiss-cb') return;
+        if (!e.target.checked) return;
+        fetch('comments.php', { method:'POST', body: new URLSearchParams({dismiss_notify: '1'}) })
+            .then(() => {
+                document.getElementById('comment-notify-bubble').style.display = 'none';
+            });
+    });
+})();
+</script>
+{% endif %}
+
+{% if show_hero %}
+<div id="hero-banner">
+    {% for img in hero_initial %}
+        <div class="hero-slide {% if loop.first %}active{% endif %}"
+             style="background-image:url('{{ img }}')"></div>
+    {% endfor %}
+    <div class="hero-overlay" id="overlay-box">
+        <h2>Did you know?</h2>
+        <p id="fun-fact-text">Loading...</p>
+    </div>
+
+    <!-- Wavy bottom edge of the hero — seamlessly tiling 2-crest paths.
+         Both paths start AND end at the same y so the two SVG tiles
+         join without a visible seam/jagged edge during the scroll loop. -->
+    <div class="hero-wave" aria-hidden="true">
+        <div class="hero-wave__layer hero-wave__layer--back">
+            <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,32 C240,8 480,56 720,32 C960,8 1200,56 1440,32 V60 H0 Z"/></svg>
+            <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,32 C240,8 480,56 720,32 C960,8 1200,56 1440,32 V60 H0 Z"/></svg>
+        </div>
+        <div class="hero-wave__layer hero-wave__layer--front">
+            <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,30 C240,54 480,6 720,30 C960,54 1200,6 1440,30 V60 H0 Z"/></svg>
+            <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,30 C240,54 480,6 720,30 C960,54 1200,6 1440,30 V60 H0 Z"/></svg>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Data injection: PHP → JS. Logic lives in js/hero.js -->
+<script>
+window.SITE_CONFIG = {
+    allFacts:      {{ facts_json|safe }},
+    deferredImages: {{ deferred_json|safe }},
+    isAdmin:       {% if is_admin %}true{% else %}false{% endif %},
+    currentUser:   "{{ current_user }}"
+};
+window.HOME_CONFIG   = window.SITE_CONFIG;
+window.GARDEN_CONFIG = window.SITE_CONFIG;
+</script>
+{% if show_hero %}
+<script src="js/hero.js?v={{ hero_v }}" defer></script>
+{% endif %}
+
+<!-- Accessibility settings panel — loaded on every page, no module dependencies -->
+<script src="js/accessibility.js?v={{ acc_v }}" defer></script>
+
+<!-- Skip-link target — every page's content follows this marker -->
+<main id="main-content" tabindex="-1">
+
+{{ body|safe }}
+    {% include "footer.html" %}
+</body>
+</html>

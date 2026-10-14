@@ -1,0 +1,11 @@
+{
+  "id": "native-plants-zone5",
+  "emoji": "🦋",
+  "title": "Go Native in Zone 5",
+  "tags": [
+    { "emoji": "🌍", "label": "Native Plants" },
+    { "emoji": "🐝", "label": "Pollinators" }
+  ],
+  "body": "Native plants like coneflower, black-eyed Susan, wild bergamot, and Joe-Pye weed thrive in Upstate NY with almost no care. They need zero extra watering once established and bring in bees, butterflies, and birds all season.",
+  "theme": 3
+}

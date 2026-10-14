@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jun's Garden: 모든 것이 어떻게 작동하나요</title>
+<style>
+  /* The same look as 00-READ-ME-FIRST.html. Each step keeps the soft colour of its PDF folder. */
+  :root { --bg:#f7f8f3; --card:#ffffff; --ink:#1f2a1f; --muted:#5b6b5b; --line:#d7e2d1; --accent:#2f6b3a;
+          --s0:#9c3d54; --b0:#fbeef1; --s1:#9a4f1c; --b1:#fdf1e6; --s2:#7d6200; --b2:#fdf8e1; --s3:#2f6b3a; --b3:#edf6ea;
+          --s4:#136a6a; --b4:#e8f6f5; --s5:#2a5a9a; --b5:#ebf2fb; --s6:#45459a; --b6:#efeffb; --lav:#7a63b5; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#121712; --card:#1b221b; --ink:#e7efe4; --muted:#a8b8a5; --line:#2e3d2e; --accent:#8fd19b;
+          --b0:#2d1c21; --b1:#2e2318; --b2:#2c2914; --b3:#1d2b1f; --b4:#162b2a; --b5:#18233a; --b6:#1f1f37;
+          --s0:#f0a3b6; --s1:#f2b27f; --s2:#e8cf66; --s3:#8fd19b; --s4:#7fd4cf; --s5:#9cc0f0; --s6:#b4b4f0; --lav:#c4b3ec; color-scheme:dark; } }
+  :root[data-theme="dark"] { --bg:#121712; --card:#1b221b; --ink:#e7efe4; --muted:#a8b8a5; --line:#2e3d2e; --accent:#8fd19b;
+          --b0:#2d1c21; --b1:#2e2318; --b2:#2c2914; --b3:#1d2b1f; --b4:#162b2a; --b5:#18233a; --b6:#1f1f37;
+          --s0:#f0a3b6; --s1:#f2b27f; --s2:#e8cf66; --s3:#8fd19b; --s4:#7fd4cf; --s5:#9cc0f0; --s6:#b4b4f0; --lav:#c4b3ec; color-scheme:dark; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.6 system-ui, "Segoe UI", Ubuntu, "Malgun Gothic", sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:24px 16px 64px; }
+  h1 { color:var(--accent); margin:.2em 0 .1em; font-size:2rem; text-wrap:balance; }
+  h2 { margin:1.4em 0 .5em; font-size:1.3rem; }
+  .lead { color:var(--muted); margin-top:0; }
+  .flow { display:grid; gap:0; }
+  .stage { border-radius:12px; padding:14px 16px; border:1px solid var(--line); }
+  .stage h3 { margin:0 0 .3em; font-size:1.1rem; display:flex; align-items:center; gap:10px; }
+  .sticker { flex:0 0 34px; height:34px; border-radius:50%; color:#fff; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
+  .arrow { text-align:center; color:var(--muted); font-size:1.3rem; line-height:1.6; }
+  .s0 { background:var(--b0); } .s0 .sticker { background:var(--s0); } .s0 h3 { color:var(--s0); }
+  .s1 { background:var(--b1); } .s1 .sticker { background:var(--s1); } .s1 h3 { color:var(--s1); }
+  .s2 { background:var(--b2); } .s2 .sticker { background:var(--s2); } .s2 h3 { color:var(--s2); }
+  .s3 { background:var(--b3); } .s3 .sticker { background:var(--s3); } .s3 h3 { color:var(--s3); }
+  .s4 { background:var(--b4); } .s4 .sticker { background:var(--s4); } .s4 h3 { color:var(--s4); }
+  .s5 { background:var(--b5); } .s5 .sticker { background:var(--s5); } .s5 h3 { color:var(--s5); }
+  .s6 { background:var(--b6); } .s6 .sticker { background:var(--s6); } .s6 h3 { color:var(--s6); }
+  .two { display:grid; grid-template-columns:1fr; gap:10px; margin:8px 0; }
+  @media (min-width:680px) { .two { grid-template-columns:1fr 1fr; } }
+  .two > div { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; min-width:0; }
+  .two h4 { margin:0 0 .3em; }
+  table { border-collapse:collapse; width:100%; font-size:.95rem; background:var(--card); }
+  th, td { border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+  th { background:var(--b3); }
+  .scroll { overflow-x:auto; }
+  code, kbd { font-family:ui-monospace, "Cascadia Mono", Consolas, monospace; font-size:.92em; }
+  kbd { border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:0 5px; background:var(--card); }
+  a { color:var(--accent); }
+  ul { padding-left:1.2em; margin:.3em 0; } li { margin:.15em 0; }
+  footer { color:var(--lav); font-size:.9rem; margin-top:40px; }
+</style>
+</head>
+<body>
+<main>
+<h1>모든 것이 어떻게 작동하나요</h1>
+<p class="lead">전체 길을 한 페이지에 담았어요: 다운로드부터 정원이 돌아가기까지, 그리고 그 뒤의 모든 기능까지. 각 상자는
+그 PDF 폴더("Setup documentation")와 같은 색이에요. 그래서 전체 안내서를 빨리 찾을 수 있어요. 설치 프로그램도
+화면에서 모든 단계를 설명해요. 지금 어디쯤인지 헷갈리면, 언제든 이 페이지로 돌아오세요.</p>
+
+<div class="flow">
+  <section class="stage s0"><h3><span class="sticker">0</span>준비하기</h3>
+    <ul>
+      <li><a href="START-HERE/ko/00b-before-you-start.md">시작하기 전에</a>를 읽으세요: 무엇이 필요한지, 무엇이 꼭 필요하고 무엇이 선택인지, 각 부분이 얼마나 걸리는지 알려 줘요.</li>
+      <li>Google Drive에서 내려받으세요: <code>junsgarden-for-jun.zip</code>(꼭 필요해요), <code>junsgarden-photos-addon.zip</code>(사진), <code>junsgarden-wiki-addon.zip</code>(위키를 원할 때만).</li>
+      <li>파일은 <strong>Desktop</strong>(바탕 화면, Windows)이나 <strong>Home</strong>(홈) 폴더(Ubuntu)에 두세요. 첫 번째 파일만 압축을 푸세요.</li>
+    </ul></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s1"><h3><span class="sticker">1</span>정원 컴퓨터</h3>
+    <ul>
+      <li><strong>따로 있는 Ubuntu 노트북 또는 Raspberry Pi</strong>(추천해요. 정원을 인터넷에 올리려면 필요해요): <a href="START-HERE/ko/01-ubuntu-laptop.md">안내서 01</a>이 거기에 Ubuntu를 설치하는 방법을 보여 줘요. 설치 프로그램이 대신 해 줄 수 없는 유일한 부분이에요.</li>
+      <li><strong>또는 이 Windows PC</strong>: 설치 프로그램이 Windows 자체의 Ubuntu(WSL)를 추가해요. 이 PC에서 정원을 쓰기에 좋아요. 처음 한 번은 Windows를 다시 시작해야 해요.</li>
+    </ul></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s2"><h3><span class="sticker">2</span>설치 시작하기</h3>
+    <div class="two">
+      <div><h4>Windows에서</h4><code>Start-Here-Windows.cmd</code>를 더블클릭하세요. <strong>Garden Bridge</strong>가 열려요: <kbd>Next</kbd>(다음)로 넘기는 페이지 다섯 개예요:
+        <ol><li>Welcome(환영), 그리고 이 지도</li><li>정원이 실행될 곳</li><li>About you(내 정보), 그리고 내 웹 이름</li><li>What gets installed(설치되는 것): 원하는 구성 요소에 체크하세요</li><li>Install(설치): 검은 창이 열려서 일을 해요</li></ol></div>
+      <div><h4>Ubuntu에서</h4><code>Start-Here-Ubuntu.sh</code>를 오른쪽 클릭하고 <strong>Run as a Program</strong>(프로그램으로 실행)을 고르세요. 메뉴가 열려요. <kbd>1</kbd>을 입력하고 <kbd>Enter</kbd>를 누르세요.</div>
+    </div>
+    <p>그다음 한 번 물어봐요: <strong>EASY</strong> 또는 <strong>CUSTOM</strong>.</p>
+    <div class="two">
+      <div><h4>1) EASY(쉬운 설치, 추천)</h4><ul><li>내 이름, 이메일, 데이터베이스 비밀번호(<kbd>Enter</kbd>를 누르면 하나 만들어 줘요), 그리고 웹 이름을 그대로 쓸지만 물어봐요.</li><li>꼭 필요한 모든 것과 정원 도구를 설치해요.</li><li>사진을 알아서 넣어요.</li><li>위키와 n8n: 꺼져 있어요(나중에 추가하세요).</li></ul></div>
+      <div><h4>2) CUSTOM(직접 고르기)</h4><ul><li>같은 질문에, 선택 구성 요소를 하나씩 더 물어봐요.</li><li>내가 골라요: 사진은 지금 또는 나중에, 위키는 할지 말지, n8n은 할지 말지.</li><li>아무 단계 번호에서나 시작할 수 있어요.</li></ul></div>
+    </div></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s2"><h3><span class="sticker">2</span>14단계</h3>
+    <p>각 단계는 무엇을 하는지, 왜 하는지, 어디에서 더 읽을 수 있는지, 보통 얼마나 걸리는지 말해 줘요. 끝나면 실제로 얼마나 걸렸는지도 말해 줘요.
+    언제든 멈춰도 돼요: <kbd>1</kbd>을 다시 고르면 이어서 해요.</p>
+    <div class="scroll"><table>
+      <tr><th>단계</th><th>무슨 일이 일어나나요</th><th>보통</th></tr>
+      <tr><td>1~2</td><td>컴퓨터와 폴더를 확인해요</td><td>1분 미만</td></tr>
+      <tr><td>3~7</td><td>업데이트, SSH, 방화벽, Docker, 스왑(작은 컴퓨터에서)</td><td>10~25분</td></tr>
+      <tr><td>8~11</td><td>설정 파일, 구성 요소, 폴더, 변경 기록</td><td>약 1분</td></tr>
+      <tr><td>12</td><td>웹사이트를 만들고(빌드), 식물과 사진을 넣고, 모든 것을 시작해요</td><td>15~45분(아주 오래된 노트북이나 Pi에서는 1시간까지)</td></tr>
+      <tr><td>13~14</td><td>매일 밤 백업, 바탕화면 아이콘</td><td>1분 미만</td></tr>
+    </table></div>
+    <p><strong>마지막에:</strong> EASY는 로그인 이름을 물어요(그냥 <kbd>Enter</kbd>를 누르세요). 그다음 비밀번호를 물어요(입력하는 동안 아무것도 보이지 않아요).
+    그다음 AI 키를 물어요(아무것도 넣지 않고 <kbd>Enter</kbd>를 누르면 건너뛰어요). CUSTOM은 비밀번호, 이메일, 주소 예약하기를 제안해요.
+    긴 빌드가 끝난 뒤 Ubuntu 비밀번호를 다시 물을 수 있어요.</p></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s6"><h3><span class="sticker">6</span>매일: 메뉴</h3>
+    <div class="scroll"><table>
+      <tr><th>누르기</th><th>하는 일</th></tr>
+      <tr><td><kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></td><td>정원 시작하기, 멈추기, 웹사이트 열기</td></tr>
+      <tr><td><kbd>5</kbd></td><td>점검표: 모든 것에 PASS(통과), WARN(주의), FAIL(실패)을 표시하고, 무엇을 하면 되는지 알려 줘요</td></tr>
+      <tr><td><kbd>6</kbd> <kbd>7</kbd></td><td>백업(NAS와 Google Drive로도, 그리고 사진 다운로드 파일도), 백업 복원하기</td></tr>
+      <tr><td><kbd>8</kbd> <kbd>9</kbd></td><td>설정(이름, 시간대, 폴더...), 구성 요소 켜기와 끄기(정원 도구, 위키, n8n)</td></tr>
+      <tr><td><kbd>U</kbd> <kbd>K</kbd> <kbd>A</kbd></td><td>사용자와 비밀번호, 내 API 키, 내 주소</td></tr>
+      <tr><td><kbd>H</kbd> <kbd>L</kbd></td><td>다른 사람에게 보여 줄 도움 파일(비밀번호는 들어 있지 않아요), 언어(English, 한국어, 둘 다)</td></tr>
+      <tr><td><kbd>M</kbd></td><td>More(더 보기): 정문, 이메일, 네트워크, 로그, 데이터베이스, 로컬 AI, 하위 도메인, LiteLLM, 웹사이트 이름 바꾸기, 제거(Windows: 바로가기도)</td></tr>
+    </table></div>
+    <p>모든 선택을 하나하나 설명해요: <a href="START-HERE/ko/19-every-menu-option.md">안내서 19</a>.</p></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s3"><h3><span class="sticker">3</span>나중에, 원할 때만: 인터넷에 올리기</h3>
+    <ul>
+      <li><strong>메뉴 <kbd>M</kbd>, <kbd>1</kbd>(정문):</strong> 1) 집 Wi-Fi에서만, 2) 연습, 3) 자물쇠가 있는 진짜 웹 이름.</li>
+      <li>무료 No-IP 이름과 공유기(router)가 필요해요: <a href="START-HERE/ko/04-go-public-no-ip-caddy.md">안내서 04</a>, <a href="START-HERE/ko/14-reserve-your-ip.md">안내서 14</a>. 포트는 언제나 80과 443만 써요.</li>
+      <li>다른 것들을 위한 추가 주소(DuckDNS 하위 도메인), 다른 방에서 작업하기(SSH, Remote Desktop(원격 데스크톱): <a href="START-HERE/ko/20-ssh-and-remote-desktop.md">안내서 20</a>).</li>
+    </ul></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s4"><h3><span class="sticker">4</span>나중에: 이메일, 키, AI</h3>
+    <ul>
+      <li>Gmail 앱 비밀번호. "비밀번호를 잊었어요" 이메일이 내게 오도록 해요(메뉴 <kbd>M</kbd>, <kbd>3</kbd>).</li>
+      <li>내 무료 AI 키(메뉴 <kbd>K</kbd>): <a href="START-HERE/ko/16-ai-studio.md">안내서 16</a>. 데스크톱에서 쓰는 로컬 AI: 안내서 15. 휴대폰 앱: 안내서 17.</li>
+    </ul></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s5"><h3><span class="sticker">5</span>나중에: 모든 것의 사본 세 개</h3>
+    <ul>
+      <li>매일 밤 백업은 자동이에요(7일 동안 보관해요). NAS와 Google Drive를 추가하세요(메뉴 <kbd>6</kbd>): <a href="START-HERE/ko/13-backups-and-folders.md">안내서 13</a>.</li>
+    </ul></section>
+</div>
+
+<h2>막히면</h2>
+<ol>
+  <li><strong>잃어버린 것은 없어요.</strong> <kbd>1</kbd>을 다시 고르세요: 어느 단계가 끝났는지 보여 주고 이어서 해요.</li>
+  <li><strong>메뉴 <kbd>5</kbd></strong>, 점검표가 무엇이 잘못됐는지, 무엇을 하면 되는지 알려 줘요.</li>
+  <li><a href="START-HERE/ko/09-troubleshooting.md">안내서 09</a>: 보이는 것에 따라 고치는 방법.</li>
+  <li><strong>메뉴 <kbd>H</kbd></strong>는 친구나 AI에게 보여 줄 도움 파일(비밀번호 없음)을 만들어요.</li>
+</ol>
+
+<footer>Garden Bridge: from Windows to Linux. Imagined by Jason, prototyped by Claude.</footer>
+</main>
+</body>
+</html>

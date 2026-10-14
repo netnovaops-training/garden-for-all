@@ -1,0 +1,11 @@
+📥 Import & Review
+
+Upload a JSON file (from Phase 2 or hand-edited). Each plant is compared against the current database record. New fills (was empty) are highlighted green. Proposed overwrites (field already had a value) are highlighted amber and require explicit approval. Nothing is written until you press Approve & Commit.
+
+Upload enriched JSON file
+
+Drag and drop file here
+Limit 200MB per file • JSON
+Browse files
+
+Upload a JSON file above to begin the review.

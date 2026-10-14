@@ -1,0 +1,289 @@
+<div class="page-content page-garden-bg" style="margin-top:0; min-height:100vh;">
+    <div class="catalog-container">
+        <div class="admin-bar" style="border: none; text-align: center;">
+            {% if !is_admin %}
+                <div style="display:inline-block; background:rgba(255,255,255,0.8); border-radius:20px; padding:30px 40px; border:2px dashed rgba(46,125,50,0.4); box-shadow:0 10px 30px rgba(0,0,0,0.05); max-width:380px; width:100%; box-sizing:border-box;">
+                    <h3 style="margin:0 0 16px 0; font-size:1.1rem;">🔐 Login</h3>
+                    <form method="POST" action="/login.php" id="admin-login-form" style="display:flex; flex-direction:column; gap:12px;">
+                        <input type="hidden" name="back" value="/catalog.php">
+                        <input type="text" name="admin_user" placeholder="Username" required autocomplete="username"
+                               style="padding:11px 14px; border-radius:10px; border:2px solid var(--site-row-border, #c8e6c9); font-size:0.95rem; width:100%; box-sizing:border-box; background:rgba(255,255,255,0.9);">
+                        <input type="password" name="admin_password" placeholder="Password" required autocomplete="current-password"
+                               style="padding:11px 14px; border-radius:10px; border:2px solid var(--site-row-border, #c8e6c9); font-size:0.95rem; width:100%; box-sizing:border-box; background:rgba(255,255,255,0.9);">
+                        <button type="submit" name="admin_login" class="btn"
+                                style="border-radius:10px; padding:11px; font-size:0.95rem; font-weight:700; width:100%;">Login</button>
+                    </form>
+                    <p style="margin:12px 0 0 0; font-size:0.85rem;"><a href="/login.php?forgot=1">Forgot password? / First time?</a></p>
+                </div>
+            {% else %}
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 id="form-title">🪴 Add / Edit Plant</h3>
+                    <div>
+                        <button onclick="toggleBulkMode()" class="btn" style="background:var(--accent-gold); color:#2c3e30; margin-right:5px;">📦 Bulk Move</button>
+                        <button onclick="resetForm()" class="btn btn-blue" style="font-size:0.8rem; margin-right:5px;">Clear Form</button>
+                        <form method="POST" style="display:inline;"><button name="logout" class="btn" style="background:#555;">Logout</button></form>
+                    </div>
+                </div>
+
+                <div id="bulk-toolbar" style="display:none; margin-top: 15px;">
+                    <form method="POST" style="display:flex; gap:10px; flex-grow:1;">
+                        <input type="hidden" name="selected_ids" id="bulk_ids">
+                        <select name="new_bed_name" required style="flex-grow:1; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                            <option value="" disabled selected>Select Destination Bed...</option>
+                            <option value="All Animals Go to Heaven">All Animals Go to Heaven</option>
+                            <option value="Annuals">Annuals</option>
+                            <option value="Aunt Sharon’s Garden">Aunt Sharon’s Garden</option>
+                            <option value="Barwaz Garden">Barwaz Garden</option>
+                            <option value="Boo Boo’s Garden">Boo Boo’s Garden</option>
+                            <option value="China Town Garden">China Town Garden</option>
+                            <option value="Dead or Removed">Dead or Removed</option>
+                            <option value="Grandma Emily Barwaz Garden">Grandma Emily Barwaz Garden</option>
+                            <option value="Grandpa Duke of Earl Middleton Garden">Grandpa Duke of Earl Middleton Garden</option>
+                            <option value="Jason’s Terrace">Jason’s Terrace</option>
+                            <option value="Jimmy John's Blue’s Garden">Jimmy John's Blue’s Garden</option>
+                            <option value="Karta’s Corner Garden">Karta’s Corner Garden</option>
+                            <option value="Ko-Ja Garden">Ko-Ja Garden</option>
+                            <option value="Kona’s Garden">Kona’s Garden</option>
+                            <option value="Korea Garden">Korea Garden</option>
+                            <option value="Orchard Grove">Orchard Grove</option>
+                            <option value="River Garden">River Garden</option>
+                            <option value="Sister Elizabeth’s Garden">Sister Elizabeth’s Garden</option>
+                            <option value="The 4 Season Garden">The 4 Season Garden</option>
+                            <option value="The Royal Run">The Royal Run</option>
+                            <option value="To Be Sorted">To Be Sorted</option>
+                            <option value="Uncle Dennis Garden">Uncle Dennis Garden</option>
+                            <option value="Want">Want (Wishlist)</option>
+                            <option value="Zen Garden">Zen Garden</option>
+                        </select>
+                        <button type="submit" name="bulk_update_bed" class="btn">Move Selected</button>
+                        <button type="button" onclick="toggleBulkMode()" class="btn btn-red">Cancel</button>
+                    </form>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data" id="plantForm" style="display:flex; flex-direction:column; gap:15px; margin-top:15px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <input type="hidden" name="edit_id" id="edit_id">
+                    <input type="hidden" name="edit_source" id="edit_source" value="">
+
+                    <div style="background: #f1f8e9; padding: 15px; border-radius: 8px; border: 1px solid #c8e6c9;">
+                        <label style="font-weight: bold; color: #2e7d32; display:block; margin-bottom: 5px;">🪴 Plant Name</label>
+                        <input type="text" name="plant_name" id="p_name" placeholder="Plant Identifier" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 1.1rem; font-weight: bold;">
+                        <small style="color: #555; display:block; margin-top: 8px;">✨ <strong>AI Managed:</strong> Detailed plant specifications are now strictly managed autonomously by the Ollama integration.</small>
+                    </div>
+
+                    <div style="display:none;">
+                        <input id="p_family"><input id="p_genus"><input id="p_company"><input id="p_local_store"><input id="p_sun"><input id="p_qty"><input id="p_year"><input id="p_zones"><input id="p_water"><input id="p_size_new"><input id="p_size"><input id="p_deer"><input id="p_space"><input id="p_maint"><input id="p_attracts"><input id="p_care"><input id="p_cleanup"><input id="p_cuttings"><input id="p_admin_todo"><input id="p_split"><input id="p_botanical"><input id="p_soil_ph"><input id="p_soil_type"><input id="p_bloom_color"><input id="p_foliage_color"><input id="p_stem_color"><input id="p_toxicity"><input id="p_prop"><input id="p_disease"><input id="p_grow_months"><input id="p_bloom_months"><select id="p_grow_start"></select><select id="p_grow_end"></select><select id="p_bloom_start"></select><select id="p_bloom_end"></select><input id="p_est_cost">
+                    </div>
+                    
+                    <div style="display:flex; gap: 15px; align-items: stretch; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <label style="font-weight: bold; color: #2e7d32; display:block; margin-bottom: 5px;">🗺️ Garden Bed(s)</label>
+                            <select name="flower_bed[]" id="p_bed" multiple size="8" style="width: 100%; border: 1px solid #ccc; border-radius: 5px; padding: 5px;">
+                                <option value="To Be Sorted" selected>To Be Sorted</option>
+                                <option value="Dead or Removed">Dead or Removed</option>
+                                <option value="Want">Want (Wishlist)</option>
+                                <option value="All Animals Go to Heaven">All Animals Go to Heaven</option>
+                                <option value="Annuals">Annuals</option>
+                                <option value="Aunt Sharon’s Garden">Aunt Sharon’s Garden</option>
+                                <option value="Barwaz Garden">Barwaz Garden</option>
+                                <option value="Boo Boo’s Garden">Boo Boo’s Garden</option>
+                                <option value="China Town Garden">China Town Garden</option>
+                                <option value="Grandma Emily Barwaz Garden">Grandma Emily Barwaz Garden</option>
+                                <option value="Grandpa Duke of Earl Middleton Garden">Grandpa Duke of Earl Middleton Garden</option>
+                                <option value="Jason’s Terrace">Jason’s Terrace</option>
+                                <option value="Jimmy John's Blue’s Garden">Jimmy John's Blue’s Garden</option>
+                                <option value="Karta’s Corner Garden">Karta’s Corner Garden</option>
+                                <option value="Ko-Ja Garden">Ko-Ja Garden</option>
+                                <option value="Kona’s Garden">Kona’s Garden</option>
+                                <option value="Korea Garden">Korea Garden</option>
+                                <option value="Orchard Grove">Orchard Grove</option>
+                                <option value="River Garden">River Garden</option>
+                                <option value="Sister Elizabeth’s Garden">Sister Elizabeth’s Garden</option>
+                                <option value="The 4 Season Garden">The 4 Season Garden</option>
+                                <option value="The Royal Run">The Royal Run</option>
+                                <option value="Uncle Dennis Garden">Uncle Dennis Garden</option>
+                                <option value="Zen Garden">Zen Garden</option>
+                            </select>
+                        </div>
+
+                        <div style="flex: 1; min-width: 200px; display:flex; flex-direction:column; gap:12px;">
+                            <div>
+                                <label style="font-weight:bold; color:#2e7d32; display:block; margin-bottom:5px;">📅 Year(s) Added to Garden</label>
+                                <input type="text" name="p_year_added" id="p_year_added" placeholder="e.g. 2023, 2024"
+                                    style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:5px; font-size:0.95rem;">
+                                <small style="color:#888;">Comma-separate multiple years</small>
+                            </div>
+                            <div>
+                                <label style="font-weight:bold; color:#2e7d32; display:block; margin-bottom:5px;">📦 Quantity</label>
+                                <input type="number" name="p_qty_edit" id="p_qty_edit" min="0" placeholder="e.g. 3"
+                                    style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:5px; font-size:0.95rem;">
+                                {% if !current_user.is_empty() %}
+                                <small style="color:#4caf50;">✅ Qty change will be logged under <strong>{{ current_user }}</strong></small>
+                                {% else %}
+                                <small style="color:#888;">Log in to record qty changes</small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column;">
+                            <label style="font-weight: bold; color: #2e7d32; display:block; margin-bottom: 5px;">📸 Upload Images</label>
+                            {% if can_upload %}
+                                <div class="drop-zone" id="drop-zone" style="flex: 1; display: flex; flex-direction:column; align-items: center; justify-content: center; border: 2px dashed #a5d6a7; border-radius: 8px; background: #f1f8e9; cursor: pointer; padding: 20px;">
+                                    <span id="drop-text" style="color: #4caf50; font-weight: bold;">Click or Drop Multiple Images</span>
+                                    <input type="file" name="plant_image[]" id="plant_image_input" accept="image/*" multiple style="display:none;">
+                                    <img id="preview-thumb" alt="Preview" style="display:none; max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 15px; border: 2px solid #ccc;">
+                                </div>
+                            {% else %}
+                                <div style="padding: 15px; background: #f8d7da; color: #721c24; text-align: center; border-radius: 5px; border: 1px solid #f5c6cb; flex: 1; display: flex; align-items: center;">
+                                    ⚠️ Notice: Only authorized admins can upload pictures.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <button type="submit" name="save_plant" id="save_btn" class="btn btn-blue" style="padding: 12px; font-size: 1.1rem;">Update Plant</button>
+                </form>
+
+                <!-- Optional Quantity Event Logger -->
+                <div id="qty-log-section" style="display:none; margin-top:16px; background:#f1f8e9; border:1px solid #c8e6c9; border-radius:8px; padding:16px;">
+                    <details>
+                        <summary style="font-weight:bold; color:#2e7d32; cursor:pointer; font-size:1rem;">
+                            📊 Log a Quantity Event <small style="font-weight:normal; color:#666;">(optional)</small>
+                        </summary>
+                        <p style="font-size:0.85rem; color:#555; margin:8px 0 12px;">Record a purchase, loss, or removal for this plant. Updates the current qty automatically.</p>
+
+                        <input type="hidden" id="qty-log-plant-id" value="">
+
+                        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+                            <div style="flex:1; min-width:160px;">
+                                <label style="font-size:0.85rem; font-weight:bold; color:#333;">Event type</label>
+                                <select id="qty-event-type" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-top:4px;">
+                                    <option value="purchased">🛒 Purchased / Added</option>
+                                    <option value="died">💀 Died</option>
+                                    <option value="removed">🗑️ Removed</option>
+                                    <option value="other">📝 Other</option>
+                                </select>
+                            </div>
+                            <div style="flex:1; min-width:120px;">
+                                <label style="font-size:0.85rem; font-weight:bold; color:#333;">How many plants</label>
+                                <input type="number" id="qty-event-amt" min="1" value="1"
+                                    style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-top:4px;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.85rem; font-weight:bold; color:#333;">Week</label>
+                            <select id="qty-event-week" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-top:4px;"></select>
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.85rem; font-weight:bold; color:#333;">Notes (optional)</label>
+                            <input type="text" id="qty-event-notes" placeholder="e.g. bought from Hewitt's"
+                                style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-top:4px;">
+                        </div>
+
+                        <div id="qty-log-msg" style="display:none; padding:8px 12px; border-radius:5px; margin-bottom:10px; font-size:0.88rem;"></div>
+
+                        <button type="button" onclick="window.saveQtyEvent()" class="btn btn-blue" style="width:100%; padding:10px;">
+                            💾 Save Quantity Event
+                        </button>
+                    </details>
+                </div>
+
+                <script>
+                // Build week dropdown
+                (function() {
+                    const sel = document.getElementById('qty-event-week');
+                    if (!sel) return;
+                    const today = new Date();
+                    const dow = today.getDay() === 0 ? 6 : today.getDay() - 1; // Mon=0
+                    const thisMon = new Date(today); thisMon.setDate(today.getDate() - dow);
+                    const fmt = d => d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+                    for (let w = 0; w < 172; w++) {
+                        const mon = new Date(thisMon); mon.setDate(thisMon.getDate() - w * 7);
+                        const sun = new Date(mon);    sun.setDate(mon.getDate() + 6);
+                        const label = w === 0 ? `This week (${fmt(mon)} – ${fmt(sun)})`
+                                    : w === 1 ? `Last week (${fmt(mon)} – ${fmt(sun)})`
+                                    : `${fmt(mon)} – ${sun.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})}`;
+                        const opt = document.createElement('option');
+                        opt.value = mon.toISOString().slice(0, 10);
+                        opt.textContent = label;
+                        sel.appendChild(opt);
+                    }
+                })();
+
+                window.saveQtyEvent = function() {
+                    const plantId = document.getElementById('qty-log-plant-id').value;
+                    if (!plantId) { alert('Select a plant to edit first.'); return; }
+                    const msg = document.getElementById('qty-log-msg');
+                    const fd = new FormData();
+                    fd.append('log_qty_event_catalog', '1');
+                    fd.append('plant_id',   plantId);
+                    fd.append('event_type', document.getElementById('qty-event-type').value);
+                    fd.append('qty_amt',    document.getElementById('qty-event-amt').value);
+                    fd.append('event_date', document.getElementById('qty-event-week').value);
+                    fd.append('notes',      document.getElementById('qty-event-notes').value);
+                    fetch('catalog.php', { method:'POST', body: fd })
+                        .then(r => r.json())
+                        .then(d => {
+                            msg.style.display = 'block';
+                            if (d.status === 'ok') {
+                                msg.style.background = '#d4edda'; msg.style.color = '#155724';
+                                msg.textContent = '✅ Event logged successfully!';
+                                document.getElementById('qty-event-notes').value = '';
+                                document.getElementById('qty-event-amt').value = '1';
+                            } else {
+                                msg.style.background = '#f8d7da'; msg.style.color = '#721c24';
+                                msg.textContent = '❌ ' + (d.message || 'Error saving event.');
+                            }
+                        });
+                };
+                </script>
+            {% endif %}
+        </div>
+
+        <div class="stats-pill-container" style="text-align:center; margin: 15px 0 20px 0;">
+            <span style="display:inline-block; background: #e8f5e9; color: #2e7d32; padding: 10px 25px; border-radius: 50px; font-weight: bold; border: 1px solid #c8e6c9; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                🌻 You have {{ plant_count }} plants (across {{ variety_count }} varieties) LOOK AT YOU GROW!
+            </span>
+        </div>
+
+        <div class="search-container" style="text-align:center; margin-bottom:20px;">
+            <input type="text" id="search-box" placeholder="Search plants..." style="width:100%; max-width:500px; padding:12px; border-radius:25px; border:1px solid #ccc;">
+        </div>
+              
+        {% include "catalog_search.html" %}
+
+        <div class="plant-grid" id="plant-feed"></div>
+        <div id="loading-trigger" style="text-align:center; padding: 40px;">
+            <div class="spinner"></div><p>Loading garden...</p>
+        </div>
+        <div id="bulk-floater">
+            <span id="count-badge">0</span>
+            <span style="font-weight:bold; color:#333;">Plants Selected</span>
+            <button onclick="toggleBulkMode()" class="btn btn-red" style="border:2px solid #000;">✕ Cancel</button>
+        </div><!-- /#bulk-floater -->
+    </div><!-- /.catalog-container -->
+</div><!-- /.page-content -->
+
+<!-- ============================================================ -->
+<!-- Plant Detail Modal                                           -->
+<!-- ============================================================ -->
+<div id="plant-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; overflow-y:auto;">
+    <div class="plant-modal-content">
+        <div id="modal-body"></div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Page Config + JS                                             -->
+<!-- ============================================================ -->
+<script>
+    window.GARDEN_CONFIG = {
+        isAdmin:     {% if is_admin %}true{% else %}false{% endif %},
+        currentUser: "{{ current_user }}",
+        imgBase:     "/images/Database/"
+    };
+</script>
+<script type="module" src="js/app.js?v={{ app_v }}"></script>
+<script type="module" src="js/search.js?v={{ search_v }}"></script>
+

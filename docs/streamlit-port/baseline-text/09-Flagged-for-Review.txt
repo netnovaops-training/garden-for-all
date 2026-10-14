@@ -1,0 +1,236 @@
+🚩 Flagged for Review
+
+Plants manually marked with the 'Needs Review' flag.
+
+Edit a Flagged Plant
+
+Select flagged plant to review:
+
+Globe Arborvitae (ID: 21)
+🧬 Section 1: Taxonomy & Core Identity
+
+Botanical Name
+
+Company / Brand
+
+Family
+
+Genus
+
+Species
+
+Plant Type
+
+Shrub
+
+Native Status
+
+Cultivar
+📏 Section 2: Growth Metrics, Spacing & Beds
+
+Target Length / Height
+
+Target Width / Spread
+
+Life Expectancy
+
+Plant Spacing Limits
+
+Global Species Hardiness Zones spectrum
+
+Growth Rate Assumption
+
+Slow
+🌦️ Section 3: Microclimatic Profiles & Soil Requirements
+
+Sun Exposure Requirement
+
+Full Sun - Partial Shade
+
+Hydration Needs
+
+Soil Target pH Scale
+
+Soil Consistency Profile
+
+Planting Depth Requirement
+
+Chilling Hours Requirement
+
+💵 Section 4: Investment & Procurement Logistics
+
+Estimated 1-Gallon Regional Retail Cost ($)
+
+Quantity Planted (Manual Override Only)
+
+Year(s) Added to Garden (Manual Override Only)
+
+2021
+
+Year Plant Died (optional, leave blank if alive)
+
+📍 Section 5: Extended Human Bed Location Manager
+
+Assign Plant to Bed (AI Prohibited Field)
+
+To Be Sorted
+🌿 Section 6: Foliage & Stem Morphologies
+
+Foliage Color Spec
+
+Stem Color Spec
+
+Foliage Retention (Tags)
+
+Evergreen
+
+Leaf Structural Shape
+
+Linear (Long, narrow)
+
+Leaf Blade Type
+
+Simple (Single undivided blade)
+
+Leaf Margin / Edge Profile
+
+Entire (Smooth, no teeth)
+🌸 Section 7: Flower, Scent & Reproduction
+
+Flower/Bloom Color
+
+Aromatics / Scent Descriptors
+
+Flower Symmetry Layout
+
+Actinomorphic (Radial symmetry)
+
+Flower / Corolla Shape
+
+Rotate (Flat wheel-shaped)
+
+Flower Size Class
+
+Tiny (<1 in)
+
+Reproduction Mechanism
+
+Monoecious
+🍒 Section 8: Fruit & Berry Yields
+
+Fruit/Berry Type
+
+Fruit Structural Shape
+
+Fruit Color
+
+Fruit Dimension Size
+
+Fruit Edibility Class
+
+Inedible
+🪹 Section 9: Subterranean Anatomy & Root Systems
+
+Primary Root Structure
+
+Fibrous/Adventitious Systems
+
+Root Dimensional Morphology
+
+Mixed Fine & Coarse
+
+Root Order & Function Limits
+
+Mixed Orders
+🛡️ Section 10: Care, Hazards, Propagation & Companions
+
+Attracts Pollinators/Wildlife
+
+Deer/Rabbit Pest Resistance
+
+Deer Resistant
+
+Toxicity Verification Classification
+
+Non-toxic
+
+Local Invasive Status
+
+No
+
+Propagation Method
+
+Cuttings Instructions
+
+Assigned Companion Plant Tokens
+
+North Pole Arborvitae
+Tater Tot Arborvitae
+Anna's Magic Ball
+
+Assigned Fertilizer Regimens
+
+Evergreen-tone
+📅 Section 11: Growth Calendars
+
+🌸 Multi-Period Mode (non-contiguous months)
+
+Vegetative Grow Start
+
+Apr
+
+Vegetative Grow End
+
+Oct
+
+🚫 Does not bloom
+
+🌲 Flowerless — bloom months cleared and no longer required.
+
+🌱
+Grow
+···AMJJASO··
+...AMJJASO..
+🌸
+Bloom
+············
+............
+
+↑ Preview matches the website card. The code shows the DB bitmap value that will be saved.
+
+📝 Section 12: Long-Form Maintenance Journals & Search Overrides
+
+Seasonal Care & Watering Notes
+
+Pruning & Fertilizer Notes
+
+Winterization & Cleanup Notes
+
+Disease & Insect Vulnerabilities
+
+Extra Details / Culinary Edibility Profile
+
+⚠️ Flag Entry for Further Technical Review
+
+🖼️ Section 13: Digital Asset Gallery Management
+
+Active Vault Graphics:
+
+GlobeArborvitae_21_manual.webp
+
+🗑 Wipe File from Vol
+
+Upload custom photo(s) to gallery collection
+
+Drag and drop files here
+Limit 200MB per file • JPG, JPEG, PNG, WEBP
+Browse files
+✅ Section 14: Validation Signing Authority
+
+Jason Gibson Signature Sign-Off
+
+Jun Rae Signature Sign-Off
+
+Save Changes
+
+📊 Log a Quantity Event (optional)

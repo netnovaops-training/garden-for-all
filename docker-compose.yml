@@ -1,0 +1,294 @@
+# =============================================================================
+#  Jun's Garden: your own copy, on your own computer.
+#
+#  The easy way:  bash garden.sh          (Ubuntu: a menu does everything)
+#                 Start-Here-Windows.cmd  (Windows: double-click)
+#
+#  By hand:       docker compose up -d     start
+#                 docker compose down      stop (your plants and photos are kept)
+#
+#  Containers:
+#    garden-db    the database (MariaDB, which speaks MySQL). Plants, comments, logins.
+#    garden-site  the website, built from the Rust code in ./rust
+#    tools        (only when called) backup, restore, set-password
+#    adminer      (only when asked)  a web page for looking inside the database
+#
+#  The website is reachable ONLY from this computer: http://localhost:8030
+#  (the "127.0.0.1:" in front of the port number is what keeps it private).
+#  Guide 04 shows how to put Caddy in front of it for the internet.
+#
+#  FOLDERS: every folder this file uses comes from .env (SITE_DIR, IMAGES_DIR,
+#  DATA_DIR, CACHE_DIR, DB_DIR, BACKUP_DIR). To rename a folder, stop the site,
+#  rename it, change that ONE line in .env, start again. Guide 13 shows how.
+# =============================================================================
+
+# A fixed project name. Without it Docker names the project after the folder,
+# and renaming the folder would make Docker think it is a different project.
+name: junsgarden
+
+services:
+  db:
+    image: mariadb:11
+    container_name: garden-db
+    restart: unless-stopped
+    environment:
+      # These come from the .env file that the setup writes. Never type a
+      # password into this file.
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: juns_garden_db
+      MARIADB_USER: dbadmin
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      TZ: ${TZ:-America/New_York}
+    volumes:
+      # Where the database keeps its files. Never edit inside it by hand.
+      - ${DB_DIR:-./local/db}:/var/lib/mysql
+      # On the very first start only, MariaDB runs every .sql file in this
+      # folder. That builds the empty plant tables.
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  site:
+    build:
+      context: ./rust
+      args:
+        APP: junsgarden        # which program in the Rust folder to build
+    image: junsgarden/rs:mine
+    container_name: garden-site
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      JUNSGARDEN_DATABASE_URL: mysql://dbadmin:${DB_PASSWORD}@db:3306/juns_garden_db
+      APP_PORT: "8030"
+      TZ: ${TZ:-America/New_York}
+      # Who may log in and edit. Your name and your email, nobody else.
+      JUNSGARDEN_USERS: ${GARDEN_USERS}
+      JUNSGARDEN_UPLOADERS: ${GARDEN_UPLOADER_NAMES}
+      # The address put into password-reset emails. Use your test name until
+      # the switch in START-HERE/04b-take-over-junsgarden-zapto.md, then
+      # https://junsgarden.zapto.org.
+      JUNSGARDEN_PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8030}
+      # Optional: email for "Forgot password" links (see guide 03, part C).
+      JUNSGARDEN_SMTP_HOST: ${SMTP_HOST:-}
+      JUNSGARDEN_SMTP_PORT: ${SMTP_PORT:-587}
+      JUNSGARDEN_SMTP_USER: ${SMTP_USER:-}
+      JUNSGARDEN_SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      JUNSGARDEN_MAIL_FROM: ${SMTP_USER:-}
+      # Optional FREE AI keys for the AI boxes (see guide 03, part D).
+      JUNSGARDEN_GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      JUNSGARDEN_OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      JUNSGARDEN_PERENUAL_KEY: ${PERENUAL_KEY:-}
+      # Optional local AI on ANOTHER computer (garden.sh ai, guide 15).
+      # Empty means "none": the default address answers nothing, quickly.
+      OLLAMA_URL: ${OLLAMA_URL:-http://127.0.0.1:9/none}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-none}
+    volumes:
+      # The site's own files (style, scripts, pages, the app download).
+      # Not marked read-only, because Docker must be able to make the three
+      # folders below inside it.
+      - ${SITE_DIR:-./site}:/www
+      # Folders the site writes into. Keep the names on the RIGHT side
+      # (/www/images ...) exactly as they are: the website looks for them.
+      - ${IMAGES_DIR:-./local/images}:/www/images
+      - ${DATA_DIR:-./local/data}:/www/data
+      - ${CACHE_DIR:-./local/cashe}:/www/cashe
+    ports:
+      - "127.0.0.1:${SITE_PORT:-8030}:8030"
+
+  # The garden tools (/beds): bed planner, checkup, diagnose, tag scan, spend,
+  # wiki queue, and the phone app's camera tools. Python, in ./beds (read
+  # beds/README.md). Caddy lets people in only after the sign-in page, and the
+  # tools check the email again against BEDS_ALLOWED_EMAILS.
+  beds:
+    profiles: ["beds"]
+    build: ./beds
+    image: junsgarden/beds:mine
+    container_name: junsgarden-ingest   # the website calls it by this name
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    environment:
+      DB_HOST: db
+      DB_NAME: juns_garden_db
+      DB_USER: dbadmin
+      DB_PASS: ${DB_PASSWORD}
+      BEDS_ALLOWED_EMAILS: ${BEDS_ALLOWED_EMAILS:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      PERENUAL_KEY: ${PERENUAL_KEY:-}
+      WIKIJS_API_URL: ${WIKIJS_API_URL:-http://wiki:3000/graphql}
+      WIKIJS_API_KEY: ${WIKIJS_API_KEY:-}
+      TZ: ${TZ:-America/New_York}
+    volumes:
+      - ${IMAGES_DIR:-./local/images}/plan:/photos
+    ports:
+      - "127.0.0.1:8025:8025"
+
+  # ---- The wiki (Wiki.js): your garden encyclopedia. Three parts. ----------
+  # Docs: https://docs.requarks.io   Read docker/wiki/README.md.
+  #
+  # 1) wiki-db-init: makes sure the wiki has its own database (junsgarden_wiki)
+  #    and its own login (wikijs) that can use nothing else. It runs for a
+  #    second each time the garden starts, then stops ("Exited (0)" is normal).
+  wiki-db-init:
+    profiles: ["wiki"]
+    image: mariadb:11
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      WIKI_DB_PASSWORD: ${WIKI_DB_PASSWORD}
+    volumes:
+      - ./docker/wiki/wiki-db-init.sh:/init/wiki-db-init.sh:ro
+    entrypoint: ["sh", "-c", "tr -d '\\r' < /init/wiki-db-init.sh > /tmp/init.sh && sh /tmp/init.sh"]
+    restart: "no"
+
+  # 2) wiki: Wiki.js itself, from its makers (ghcr.io/requarks/wiki).
+  #    Private to this computer on port 3000. It cannot live under a path, so
+  #    to put it online it needs its own web name (front door step).
+  wiki:
+    profiles: ["wiki"]
+    image: ghcr.io/requarks/wiki:2
+    container_name: garden-wiki
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      wiki-db-init:
+        condition: service_completed_successfully
+    environment:
+      DB_TYPE: mariadb
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: wikijs
+      DB_PASS: ${WIKI_DB_PASSWORD}
+      DB_NAME: junsgarden_wiki
+      TZ: ${TZ:-America/New_York}
+    ports:
+      - "127.0.0.1:${WIKI_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  # 3) wiki-setup: the ONE-TIME job that finishes the wiki's setup (you become
+  #    its admin) and puts in all the garden pages (about 30 minutes the first
+  #    time). Safe to run again: it only adds what is missing.
+  #    The pages come from the wiki add-on download (docker/wiki/seed/); without
+  #    it the wiki is set up empty. garden.sh runs it for you:  bash garden.sh wiki
+  wiki-setup:
+    profiles: ["wiki-setup"]
+    build: ./docker/wiki
+    image: junsgarden/wiki-setup:mine
+    depends_on:
+      wiki:
+        condition: service_started
+    volumes:
+      - ./docker/wiki/seed:/seed:ro
+    environment:
+      WIKI_URL: http://wiki:3000
+      WIKI_SITE_URL: ${WIKI_SITE_URL:-http://localhost:3000}
+      WIKI_ADMIN_EMAIL: ${WIKI_ADMIN_EMAIL}
+      WIKI_DB_PASSWORD: ${WIKI_DB_PASSWORD}
+      DB_HOST: db
+
+  # The toolbox: backup, restore and set-password. It only runs when the
+  # menu calls it ("profiles" keeps it from starting with the others).
+  tools:
+    profiles: ["tools"]
+    build: ./docker/tools
+    image: junsgarden/tools:mine
+    environment:
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      TZ: ${TZ:-America/New_York}
+      HOST_UID: ${HOST_UID:-0}
+      HOST_GID: ${HOST_GID:-0}
+      FROM_COMPUTER: ${FROM_COMPUTER:-}
+      GARDEN_USERS: ${GARDEN_USERS}
+      IMAGES_DIR: ${IMAGES_DIR:-./local/images}
+      DATA_DIR: ${DATA_DIR:-./local/data}
+      CACHE_DIR: ${CACHE_DIR:-./local/cashe}
+    volumes:
+      - ${IMAGES_DIR:-./local/images}:/garden/images
+      - ${DATA_DIR:-./local/data}:/garden/data
+      - ${CACHE_DIR:-./local/cashe}:/garden/cashe
+      - ${N8N_DIR:-./local/n8n}:/garden/n8n
+      - ${AUTH_DIR:-./local/authelia}:/garden/auth
+      - ${BACKUP_DIR:-./backups}:/backups
+
+  # Your sign-in page (Authelia). Started by the front door step
+  # (garden.sh public), which writes its settings into AUTH_DIR.
+  # Docs: https://www.authelia.com/integration/proxies/caddy/
+  authelia:
+    profiles: ["gate"]
+    image: authelia/authelia:4.39
+    container_name: garden-auth
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-America/New_York}
+      # The three secrets, from .env (made by the setup, never shown).
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET: ${AUTHELIA_JWT_SECRET}
+      AUTHELIA_SESSION_SECRET: ${AUTHELIA_SESSION_SECRET}
+      AUTHELIA_STORAGE_ENCRYPTION_KEY: ${AUTHELIA_STORAGE_KEY}
+    volumes:
+      - ${AUTH_DIR:-./local/authelia}:/config
+    ports:
+      - "127.0.0.1:9091:9091"
+
+  # n8n: "when this happens, do that" automations (guides in START-HERE/n8n/).
+  # It uses the laptop's own network (Linux only) so it can reach the garden
+  # at 127.0.0.1:8030; N8N_LISTEN_ADDRESS keeps it private to this laptop.
+  # Docs: https://docs.n8n.io
+  n8n:
+    profiles: ["n8n"]
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      N8N_LISTEN_ADDRESS: 127.0.0.1
+      N8N_PORT: "5678"
+      TZ: ${TZ:-America/New_York}
+      GENERIC_TIMEZONE: ${TZ:-America/New_York}
+    volumes:
+      - ${N8N_DIR:-./local/n8n}:/home/node/.n8n
+
+  # Optional: LiteLLM, one AI address with a monthly spending limit, for your
+  # own projects (menu M, 15). Settings: local/litellm/config.yaml.
+  # Docs: https://docs.litellm.ai/docs/simple_proxy
+  litellm:
+    profiles: ["llm"]
+    image: ghcr.io/berriai/litellm:main-stable
+    container_name: garden-llm
+    restart: unless-stopped
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+    volumes:
+      - ./local/litellm/config.yaml:/app/config.yaml:ro
+    ports:
+      - "127.0.0.1:${LITELLM_PORT:-4000}:4000"
+
+  # Optional: look inside the database in your browser (guide 12).
+  # Start:  bash garden.sh dbweb     then open http://localhost:8082
+  # Server: db   User: dbadmin   Password: DB_PASSWORD from your .env
+  adminer:
+    profiles: ["dbweb"]
+    image: adminer:latest
+    container_name: garden-adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    ports:
+      - "127.0.0.1:8082:8080"

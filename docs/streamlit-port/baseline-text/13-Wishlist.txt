@@ -1,0 +1,32 @@
+🌟 Wishlist / Future Plants
+
+Browse, edit, and promote plants from the future_plants table into your garden.
+
+Wishlist Plants
+
+6534
+
+🔍 Filter by name
+
+Select a plant
+
+'Abe Lincoln' Tomato (Chef Jeff's Edibles) [ID 7731]
+'Abe Lincoln' Tomato
+
+Botanical: Solanum lycopersicum 'Abe Lincoln'
+
+Company: Chef Jeff's Edibles
+
+Family: None
+
+Added: 2026-06-16 07:55:05
+
+Missing 10 key fields: family, genus, species, plant_type, zones, sun_exposure, water_needs, bloom_color, foliage_color, size
+
+✏️ Edit Fields
+
+🌱 Promote to Garden
+
+🗑️ Remove from Wishlist
+
+📋 Full Wishlist Table

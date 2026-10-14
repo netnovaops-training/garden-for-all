@@ -1,0 +1,89 @@
+# =============================================================================
+#  The Rust side of the stack.
+#
+#  A Cargo *workspace*, not four separate projects, and that's deliberate: one
+#  lockfile, one set of dependency versions, one shared `common` crate, and a
+#  single `target/` directory that every app's build reuses. The first build is
+#  slow; every one after it is fast because the dependencies are already there.
+#
+#  Adding an app later:
+#     1. cargo new --bin rust/booking
+#     2. add it to `members` below
+#     3. add a service to docker-compose.web.yml with  APP: booking
+#  Nothing else changes. The Dockerfile is generic.
+# =============================================================================
+
+[workspace]
+resolver = "2"
+members = [
+    "common",
+    "junsgarden",
+]
+
+# Every app pins its dependencies HERE, once, and inherits them with
+# `foo.workspace = true`. Two apps can never drift onto different axum versions.
+[workspace.dependencies]
+axum = { version = "0.8", features = ["multipart"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "fs"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["fs", "compression-gzip", "trace", "set-header", "normalize-path"] }
+askama = "0.14"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream", "multipart"] }
+time = { version = "0.3", features = ["formatting", "macros", "local-offset"] }
+
+# Password hashing for the two logins (accounts.rs). Argon2 is deliberately
+# slow and memory-hard, so every guess costs real time and RAM; the database
+# holds only the hash, never the password.
+argon2 = "0.5"
+# Reset links are stored as a SHA-256 of the code, never the code itself.
+sha2 = "0.10"
+# Session tokens (the visitor cookie id). OsRng is the operating system's own CSPRNG --
+# a predictable token would let someone forge a session without ever seeing the
+# password, which would make the password pointless.
+rand = "0.8"
+# SMTP, for the password-reset code. rustls rather than native-tls so the image
+# needs no OpenSSL at runtime, matching how reqwest is configured above.
+lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "tokio1", "tokio1-rustls-tls", "builder", "hostname"] }
+
+# --- legacy only -------------------------------------------------------------
+# Thumbnails. The originals are ~9.5MB each; a grid of twenty would be a 190MB
+# page load. default-features = false keeps this to the formats actually on
+# disk instead of compiling every decoder the crate supports.
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
+webp = "0.3"
+md5 = "0.7"
+multer = "3"
+futures-util = "0.3"
+
+# --- junsgarden only ----------------------------------------------------
+# The legacy PHP site's DB access is raw PDO SQL with no compile-time
+# checking at all -- sqlx keeps "raw SQL, no ORM" (matches the existing
+# schema/queries we're porting) but checks query shape against the schema
+# at compile time instead of first-request-in-production.
+sqlx = { version = "0.8", default-features = false, features = ["mysql", "runtime-tokio-rustls", "macros", "chrono"] }
+# Dates out of MariaDB DATETIME columns. `default-features = false` drops
+# the (unused here) oldtime/js interop weight; "clock" is not needed
+# either -- nothing in this stack asks chrono for "now", only for
+# formatting values the database handed it.
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+
+common = { path = "common" }
+
+# Release builds are what ship. These settings roughly halve the binary and
+# make it meaningfully faster, at the cost of a slower compile -- which happens
+# inside Docker, on a machine that isn't waiting on it.
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true
+
+# NOT `panic = "abort"`, tempting as it is for a smaller binary. These are web
+# servers: with abort, one panicking request takes the whole process down and
+# every other visitor's connection with it. Unwinding keeps the blast radius to
+# the one request that went wrong.

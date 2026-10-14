@@ -1,0 +1,1074 @@
+
+<!-- ── Seasonal animated loading screen ──────────────────────── -->
+<div id="gal-loader">
+    <div id="season-scene"></div>
+    <div id="season-label">Loading Gallery</div>
+    <div id="season-tag"></div>
+    <div class="gal-progress-track"><div class="gal-progress-fill" id="gal-pf"></div></div>
+    <div class="gal-loader-label" id="gal-pl">0 / {{ total }}</div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   SEASONAL LOADER — 8 animated SVG scenes (2 per season)
+   Picked randomly on every page load.
+══════════════════════════════════════════════════════════════ */
+(function() {
+
+function snowflakes(n) {
+    const cols=['#e8f4fd','#d0e8f8','#ffffff','#c8dff5'];
+    let s='';
+    const xs=[30,75,120,165,210,255,300,345,385,50,150,250,350,100,200];
+    const sizes=[5,7,4,6,8,5,4,7,6,5,8,4,7,6,5];
+    const anims=['sf1','sf2','sf3','sf4','sf1','sf2','sf3','sf4','sf1','sf2'];
+    const durs=[2.8,3.4,2.5,3.8,3.0,2.7,3.5,2.9,3.2,3.6,2.6,4.0,2.8,3.3,3.7];
+    const dels=[0,.4,.8,1.2,.2,.6,1.0,0,.3,.7,1.1,.5,.9,.1,1.3];
+    for(let i=0;i<n;i++){
+        s+=`<circle cx="${xs[i%xs.length]}" cy="${-10-i*4}" r="${sizes[i%sizes.length]/2}"
+            fill="${cols[i%cols.length]}" opacity=".8"
+            style="animation:${anims[i%anims.length]} ${durs[i%durs.length]}s ${dels[i%dels.length]}s infinite linear"/>`;
+    }
+    return s;
+}
+
+function pine(cx, scale=1, dark=false) {
+    const g=dark?'#1a3a0d':'#2d6e1a', m=dark?'#245914':'#3a8a24', l=dark?'#2d5a1b':'#4aa030';
+    const s=scale;
+    return `<g transform="translate(${cx},0) scale(${s})">
+        <rect x="-4" y="220" width="8" height="20" fill="#6b4226"/>
+        <polygon points="0,140 -28,210 28,210" fill="${g}"/>
+        <polygon points="0,115 -24,185 24,185" fill="${m}"/>
+        <polygon points="0,90 -20,160 20,160" fill="${l}"/>
+        <polygon points="-5,210 0,185 5,210" fill="white" opacity=".55"/>
+        <polygon points="-4,185 0,158 4,185" fill="white" opacity=".45"/>
+        <polygon points="-3,160 0,135 3,160" fill="white" opacity=".40"/>
+    </g>`;
+}
+
+function tulip(cx, col, delay) {
+    return `<g transform="translate(${cx},0)"><g style="animation:riseUp .6s ${delay}s both ease-out">
+        <line x1="0" y1="290" x2="0" y2="230" stroke="#3a8a24" stroke-width="3" stroke-linecap="round"/>
+        <line x1="0" y1="265" x2="-12" y2="255" stroke="#3a8a24" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="0" y1="255" x2="12" y2="244" stroke="#3a8a24" stroke-width="2.5" stroke-linecap="round"/>
+        <ellipse cx="-5" cy="224" rx="10" ry="17" fill="${col}" transform="rotate(-8,-5,224)" style="animation:bloom .4s ${delay+.3}s both"/>
+        <ellipse cx=" 5" cy="222" rx="10" ry="17" fill="${col}" transform="rotate( 8, 5,222)" style="animation:bloom .4s ${delay+.3}s both"/>
+        <ellipse cx="0" cy="215" rx="9" ry="18" fill="${col}" style="animation:bloom .4s ${delay+.35}s both"/>
+    </g></g>`;
+}
+
+function leaf(cx, cy, col, anim, dur, del, rot=0) {
+    return `<ellipse cx="${cx}" cy="${cy}" rx="9" ry="6" fill="${col}"
+        transform="rotate(${rot},${cx},${cy})"
+        style="animation:${anim} ${dur}s ${del}s infinite ease-in"/>`;
+}
+
+const THEMES = [
+
+/* 1. WINTER: Building a Snowman */
+{ season:'❄️ Winter', tag:'Building a Snowman', bg:'#4a7fb0', barColor:'#6db8f0',
+  render() { return `<svg viewBox="0 0 400 290" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="wBg" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%" stop-color="#3a6fa0"/><stop offset="55%" stop-color="#7ab0d8"/>
+  <stop offset="100%" stop-color="#c8e4f5"/></linearGradient></defs>
+<rect width="400" height="290" fill="url(#wBg)"/>
+<rect x="0" y="258" width="400" height="32" fill="white"/>
+<ellipse cx="200" cy="260" rx="220" ry="22" fill="white"/>
+${pine(70,.85,true)} ${pine(330,.85,true)}
+${snowflakes(15)}
+<circle cx="200" cy="247" r="34" fill="white" stroke="#d0d8e0" stroke-width="1.5" style="animation:popIn .5s .3s both ease-out"/>
+<circle cx="200" cy="200" r="25" fill="white" stroke="#d0d8e0" stroke-width="1.5" style="animation:popIn .5s .85s both ease-out"/>
+<circle cx="200" cy="162" r="19" fill="white" stroke="#d0d8e0" stroke-width="1.5" style="animation:popIn .5s 1.4s both ease-out"/>
+<rect x="187" y="141" width="26" height="4" rx="2" fill="#1a1a1a" style="animation:popIn .4s 1.9s both"/>
+<rect x="190" y="118" width="20" height="24" rx="2" fill="#1a1a1a" style="animation:popIn .4s 1.9s both"/>
+<rect x="190" y="137" width="20" height="5" fill="#e74c3c" style="animation:popIn .3s 1.95s both"/>
+<circle cx="193" cy="157" r="2.5" fill="#222" style="animation:popIn .3s 2.1s both"/>
+<circle cx="207" cy="157" r="2.5" fill="#222" style="animation:popIn .3s 2.1s both"/>
+<polygon points="200,162 213,165 200,168" fill="#e8620a" style="animation:popIn .3s 2.2s both"/>
+<circle cx="193" cy="174" r="2" fill="#555" style="animation:popIn .25s 2.3s both"/>
+<circle cx="200" cy="177" r="2" fill="#555" style="animation:popIn .25s 2.35s both"/>
+<circle cx="207" cy="174" r="2" fill="#555" style="animation:popIn .25s 2.4s both"/>
+<path d="M182,206 Q200,213 218,206 Q218,215 200,218 Q182,215 182,206Z" fill="#e74c3c" style="animation:popIn .4s 2.5s both"/>
+<circle cx="200" cy="191" r="2.5" fill="#555" style="animation:popIn .2s 2.6s both"/>
+<circle cx="200" cy="202" r="2.5" fill="#555" style="animation:popIn .2s 2.65s both"/>
+<line x1="176" y1="202" x2="152" y2="186" stroke="#8b6f3e" stroke-width="4" stroke-linecap="round" style="animation:popIn .3s 2.7s both"/>
+<line x1="152" y1="186" x2="143" y2="175" stroke="#8b6f3e" stroke-width="3" stroke-linecap="round" style="animation:popIn .3s 2.8s both"/>
+<line x1="224" y1="202" x2="248" y2="186" stroke="#8b6f3e" stroke-width="4" stroke-linecap="round" style="animation:popIn .3s 2.7s both"/>
+<line x1="248" y1="186" x2="257" y2="175" stroke="#8b6f3e" stroke-width="3" stroke-linecap="round" style="animation:popIn .3s 2.8s both"/>
+</svg>`; }},
+
+/* 2. WINTER: Pine Forest Night with Aurora */
+{ season:'❄️ Winter', tag:'A Starry Winter Night', bg:'#0d1b3e', barColor:'#88ccff',
+  render() { return `<svg viewBox="0 0 400 290" xmlns="http://www.w3.org/2000/svg">
+<defs><radialGradient id="aur" cx="50%" cy="0%" r="60%">
+  <stop offset="0%" stop-color="#00ff88" stop-opacity=".4"/>
+  <stop offset="100%" stop-color="#00ff88" stop-opacity="0"/></radialGradient></defs>
+<rect width="400" height="290" fill="#0d1b3e"/>
+<ellipse cx="200" cy="0" rx="300" ry="120" fill="url(#aur)" style="animation:pulse 4s infinite ease-in-out"/>
+<ellipse cx="120" cy="0" rx="150" ry="80" fill="#00ccff" opacity=".1" style="animation:pulse 5s .5s infinite ease-in-out"/>
+${[[30,60,1.5],[70,30,2],[115,50,1.2],[160,20,2.5],[210,40,1.8],[255,25,1],[300,55,1.6],[345,35,2.2],[375,15,1.4],[10,80,1.9],[140,80,1.1],[285,15,2.3],[380,70,1.7],[55,90,2],[320,80,1.3]].map(([x,y,d])=>`<circle cx="${x}" cy="${y}" r="2" fill="white" style="animation:twink ${d}s ${(x*y%20)/10}s infinite ease-in-out"/>`).join('')}
+<rect x="0" y="255" width="400" height="35" fill="#0a1628"/>
+<ellipse cx="200" cy="258" rx="220" ry="20" fill="#e8f4fd" opacity=".15"/>
+<ellipse cx="200" cy="258" rx="220" ry="14" fill="white" opacity=".3"/>
+${pine(50,.9,true)} ${pine(150,.75,true)} ${pine(250,.85,true)} ${pine(350,.8,true)} ${pine(100,1,true)} ${pine(300,.95,true)}
+${snowflakes(12)}
+<circle cx="340" cy="40" r="24" fill="#d8eeff" opacity=".95" style="animation:pulse 6s infinite ease-in-out"/>
+<circle cx="332" cy="35" r="18" fill="#0d1b3e"/>
+</svg>`; }},
+
+/* 3. SPRING: Tulips Blooming */
+{ season:'🌷 Spring', tag:'Tulips in Bloom', bg:'#87ceeb', barColor:'#ff88bb',
+  render() { return `<svg viewBox="0 0 400 290" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="spBg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#87ceeb"/><stop offset="65%" stop-color="#b8e4ff"/>
+    <stop offset="100%" stop-color="#6abf5e"/></linearGradient>
+  <radialGradient id="sunG" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#fff176"/><stop offset="100%" stop-color="#ffcc00"/></radialGradient>
+</defs>
+<rect width="400" height="290" fill="url(#spBg)"/>
+<ellipse cx="200" cy="275" rx="220" ry="28" fill="#5aad4e"/>
+<rect x="0" y="268" width="400" height="22" fill="#5aad4e"/>
+<g style="transform-box:fill-box;transform-origin:center;animation:pulse 3s infinite ease-in-out">
+${[0,45,90,135,180,225,270,315].map((a,i)=>`<line x1="340" y1="55" x2="${340+Math.cos(a*Math.PI/180)*48}" y2="${55+Math.sin(a*Math.PI/180)*48}" stroke="#ffcc00" stroke-width="3" stroke-linecap="round" opacity=".7" style="transform-origin:340px 55px;animation:rayP 2s ${i*.25}s infinite ease-in-out"/>`).join('')}
+<circle cx="340" cy="55" r="32" fill="url(#sunG)"/>
+</g>
+<g style="animation:bobY 4s 1s infinite ease-in-out">
+  <ellipse cx="60" cy="105" rx="22" ry="9" fill="white" opacity=".85"/>
+  <ellipse cx="100" cy="95" rx="28" ry="11" fill="white" opacity=".9"/>
+  <ellipse cx="75" cy="97" rx="18" ry="9" fill="white" opacity=".85"/>
+</g>
+${tulip(80,'#e74c3c',.2)} ${tulip(130,'#f39c12',.4)} ${tulip(180,'#ff69b4',.6)}
+${tulip(230,'#9b59b6',.8)} ${tulip(290,'#e74c3c',1.0)} ${tulip(340,'#27ae60',1.2)}
+<g style="animation:bfly 5s infinite ease-in-out;transform-box:fill-box;transform-origin:center">
+  <ellipse cx="310" cy="100" rx="14" ry="8" fill="#ff88cc" opacity=".8" style="animation:flap .4s infinite;transform-box:fill-box;transform-origin:center"/>
+  <ellipse cx="324" cy="100" rx="14" ry="8" fill="#ff88cc" opacity=".8" style="animation:flap .4s infinite;transform-box:fill-box;transform-origin:center"/>
+  <circle cx="317" cy="100" r="3.5" fill="#333"/>
+</g>
+</svg>`; }},
+
+/* 4. SPRING: April Showers & Rainbow */
+{ season:'🌧️ Spring', tag:'April Showers Bring May Flowers', bg:'#7a9fb8', barColor:'#7ec8ff',
+  render() { return `<svg viewBox="0 0 400 290" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="rainBg" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%" stop-color="#5a7a90"/><stop offset="100%" stop-color="#7aaa60"/>
+</linearGradient></defs>
+<rect width="400" height="290" fill="url(#rainBg)"/>
+<rect x="0" y="265" width="400" height="25" fill="#5aaa3e"/>
+<ellipse cx="200" cy="268" rx="220" ry="15" fill="#6abb4e"/>
+<g style="animation:drift 5s infinite ease-in-out">
+  <ellipse cx="140" cy="75" rx="55" ry="22" fill="#8faabc"/>
+  <ellipse cx="105" cy="82" rx="35" ry="20" fill="#8faabc"/>
+  <ellipse cx="175" cy="82" rx="38" ry="19" fill="#8faabc"/>
+</g>
+<g style="animation:drift 6s 1.5s infinite ease-in-out">
+  <ellipse cx="290" cy="60" rx="48" ry="20" fill="#7a9db2"/>
+  <ellipse cx="260" cy="68" rx="32" ry="18" fill="#7a9db2"/>
+  <ellipse cx="318" cy="68" rx="34" ry="17" fill="#7a9db2"/>
+</g>
+${Array.from({length:30},(_,i)=>{const x=15+i*13,d=(i%3)*.4,dur=0.7+i%4*.2;return `<line x1="${x}" y1="-20" x2="${x-8}" y2="30" stroke="#aaccee" stroke-width="1.2" opacity=".65" style="animation:rainRow ${dur}s ${d}s infinite linear"/>`;}).join('')}
+<g style="animation:fadeIn 1.5s 1s both">
+  ${[42,38,34,30,26,22,18].map((r,i)=>{const cols=['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#8e44ad','#ec407a'];return `<path d="M 60 260 A ${130+i*r/4} ${130+i*r/4} 0 0 1 ${340+i*2} 260" fill="none" stroke="${cols[i]}" stroke-width="${r-3}" opacity=".55"/>`;}).join('')}
+</g>
+${[60,140,220,310].map((x,i)=>`<line x1="${x}" y1="270" x2="${x}" y2="${245-i*3}" stroke="#3a8a24" stroke-width="2.5" style="animation:growUp .5s ${.8+i*.3}s both"/><circle cx="${x}" cy="${243-i*3}" r="7" fill="${['#e74c3c','#f39c12','#ff69b4','#9b59b6'][i]}" style="animation:bloom .4s ${1.2+i*.3}s both"/>`).join('')}
+</svg>`; }},
+
+/* 5. SUMMER: Lush Garden & Harvest */
+{ season:'☀️ Summer', tag:'Harvest Season', bg:'#87ceeb', barColor:'#ffb74d',
+  render() { return `<svg viewBox="0 0 400 290" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="sun2" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#fff8c0"/><stop offset="100%" stop-color="#ffa500"/></radialGradient>
+  <linearGradient id="sumBg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#5ab4e0"/><stop offset="70%" stop-color="#87ceeb"/>
+    <stop offset="100%" stop-color="#4a9e3a"/></linearGradient>
+</defs>
+<rect width="400" height="290" fill="url(#sumBg)"/>
+<rect x="0" y="262" width="400" height="28" fill="#4a9e3a"/>
+<ellipse cx="200" cy="264" rx="220" ry="16" fill="#5aad4e"/>
+<g style="transform-box:fill-box;transform-origin:center;animation:pulse 3s infinite ease-in-out">
+${Array.from({length:10},(_,i)=>`<line x1="55" y1="55" x2="${55+Math.cos(i*36*Math.PI/180)*56}" y2="${55+Math.sin(i*36*Math.PI/180)*56}" stroke="#ffd700" stroke-width="3.5" stroke-linecap="round" opacity=".75" style="transform-origin:55px 55px;animation:spin 8s infinite linear"/>`).join('')}
+<circle cx="55" cy="55" r="36" fill="url(#sun2)"/>
+</g>
+${[100,200,300].map((x,i)=>`<rect x="${x-3}" y="${185+i*5}" width="6" height="${75-i*5}" fill="#4a7a24" rx="3"/><line x1="${x}" y1="${220-i*3}" x2="${x-18}" y2="${220-i*3-15}" stroke="#4a7a24" stroke-width="3"/><ellipse cx="${x-24}" cy="${218-i*3-17}" rx="10" ry="5" fill="#5aad4e" transform="rotate(-35,${x-24},${218-i*3-17})"/>${Array.from({length:8},(_,p)=>`<ellipse cx="${x}" cy="${178+i*5}" rx="12" ry="6" fill="#f39c12" transform="rotate(${p*45},${x},${178+i*5})" style="animation:pulse 2.5s ${p*.3}s infinite ease-in-out"/>`).join('')}<circle cx="${x}" cy="${178+i*5}" r="11" fill="#7b3f00"/>`).join('')}
+<rect x="350" y="180" width="5" height="80" fill="#3a7a20" rx="2"/>
+<line x1="352" y1="220" x2="375" y2="205" stroke="#3a7a20" stroke-width="3"/>
+<circle cx="378" cy="202" r="13" fill="#c0392b" style="animation:popIn .5s .5s both"/>
+<circle cx="358" cy="195" r="11" fill="#e74c3c" style="animation:popIn .5s .8s both"/>
+<circle cx="370" cy="218" r="10" fill="#c0392b" style="animation:popIn .5s 1.1s both"/>
+<g transform="translate(180,110)"><g style="animation:bee 3s infinite ease-in-out">
+  <ellipse cx="0" cy="0" rx="9" ry="6" fill="#f1c40f"/>
+  <rect x="-7" y="-3" width="4" height="6" rx="2" fill="#1a1a1a" opacity=".6"/>
+  <rect x="-1" y="-3" width="4" height="6" rx="2" fill="#1a1a1a" opacity=".6"/>
+  <rect x="5" y="-3" width="4" height="6" rx="2" fill="#1a1a1a" opacity=".6"/>
+  <ellipse cx="-3" cy="-6" rx="7" ry="4" fill="white" opacity=".7" style="animation:flap .25s infinite"/>
+  <ellipse cx="5" cy="-6" rx="7" ry="4" fill="white" opacity=".7" style="animation:flap .25s .12s infinite"/>
+</g></g>
+</svg>`; }},
+
+/* 6. SUMMER: Garden Thunderstorm */
+{ season:'⛈️ Summer', tag:'Summer Thunderstorm', bg:'#2c3a4a', barColor:'#88ccff',
+  render() { return `<svg viewBox="0 0 400 290" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="stormBg" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%" stop-color="#1a2535"/><stop offset="60%" stop-color="#3a4a5a"/>
+  <stop offset="100%" stop-color="#354535"/></linearGradient></defs>
+<rect width="400" height="290" fill="url(#stormBg)"/>
+<rect x="0" y="258" width="400" height="32" fill="#2d4a20"/>
+<ellipse cx="200" cy="260" rx="220" ry="18" fill="#3a5a28"/>
+<g style="animation:drift 3s infinite ease-in-out">
+  <ellipse cx="150" cy="60" rx="80" ry="35" fill="#3a4a5a"/>
+  <ellipse cx="105" cy="72" rx="55" ry="30" fill="#3a4a5a"/>
+  <ellipse cx="198" cy="72" rx="55" ry="28" fill="#3a4a5a"/>
+</g>
+<g style="animation:drift 4s 1s infinite ease-in-out">
+  <ellipse cx="300" cy="50" rx="70" ry="30" fill="#2a3a4a"/>
+  <ellipse cx="258" cy="62" rx="48" ry="26" fill="#2a3a4a"/>
+  <ellipse cx="340" cy="62" rx="48" ry="25" fill="#2a3a4a"/>
+</g>
+<g style="transform-origin:200px 90px;animation:zap 2.5s .5s infinite">
+  <polygon points="210,90 195,150 205,150 185,220 215,145 202,145" fill="#fff9c4"/>
+  <polygon points="210,90 195,150 205,150 185,220 215,145 202,145" fill="#ffee58" opacity=".5"/>
+</g>
+<g style="transform-origin:310px 60px;animation:zap 3s 1.8s infinite">
+  <polygon points="316,60 306,100 312,100 298,140 318,105 310,105" fill="#fff9c4"/>
+</g>
+${Array.from({length:35},(_,i)=>{const x=10+i*11,d=(i%5)*.15,dur=.45+i%3*.1;return `<line x1="${x}" y1="-15" x2="${x-6}" y2="25" stroke="#8bbdd8" stroke-width="1.5" opacity=".55" style="animation:rainRow ${dur}s ${d}s infinite linear"/>`;}).join('')}
+${[60,170,330].map((x,i)=>`<g style="transform-origin:${x}px 265px;animation:sway ${1.5+i*.3}s infinite ease-in-out"><rect x="${x-3}" y="195" width="6" height="70" fill="#2d6e1a" rx="3"/><ellipse cx="${x+15}" cy="188" rx="22" ry="14" fill="#3a8a24"/><ellipse cx="${x-10}" cy="200" rx="18" ry="12" fill="#2d7a1a"/><ellipse cx="${x+5}" cy="175" rx="15" ry="12" fill="#4a9a2e"/></g>`).join('')}
+</svg>`; }},
+
+/* 7. FALL: Leaves Blowing in Wind */
+{ season:'🍂 Fall', tag:'Leaves in the Wind', bg:'#c0723a', barColor:'#ffab40',
+  render() {
+    const leafCols=['#e67e22','#e74c3c','#c0392b','#f39c12','#a04020','#d35400','#922b21','#f0a500'];
+    const lf=['lf1','lf2','lf3','lf4','lf5'];
+    const leaves=Array.from({length:16},(_,i)=>{
+      const x=20+Math.floor(i/2)*50+i%2*20, y=20+i*8;
+      return leaf(x,y,leafCols[i%leafCols.length],lf[i%lf.length],2.5+i%5*.4,i*.25,i*22);
+    });
+    return `<svg viewBox="0 0 400 290" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="fallBg" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%" stop-color="#8b4513"/><stop offset="50%" stop-color="#c0723a"/>
+  <stop offset="100%" stop-color="#5a3010"/></linearGradient></defs>
+<rect width="400" height="290" fill="url(#fallBg)"/>
+<rect x="0" y="260" width="400" height="30" fill="#3a1808"/>
+<rect x="195" y="140" width="10" height="120" rx="4" fill="#4a2808"/>
+<line x1="200" y1="170" x2="140" y2="120" stroke="#4a2808" stroke-width="7" stroke-linecap="round"/>
+<line x1="140" y1="120" x2="105" y2="90"  stroke="#4a2808" stroke-width="5" stroke-linecap="round"/>
+<line x1="140" y1="120" x2="120" y2="145" stroke="#4a2808" stroke-width="4" stroke-linecap="round"/>
+<line x1="200" y1="150" x2="270" y2="100" stroke="#4a2808" stroke-width="7" stroke-linecap="round"/>
+<line x1="270" y1="100" x2="310" y2="75"  stroke="#4a2808" stroke-width="5" stroke-linecap="round"/>
+<line x1="270" y1="100" x2="290" y2="128" stroke="#4a2808" stroke-width="4" stroke-linecap="round"/>
+<line x1="200" y1="190" x2="155" y2="160" stroke="#4a2808" stroke-width="5" stroke-linecap="round"/>
+<line x1="200" y1="210" x2="240" y2="180" stroke="#4a2808" stroke-width="5" stroke-linecap="round"/>
+<line x1="105" y1="90" x2="75" y2="70"   stroke="#4a2808" stroke-width="4" stroke-linecap="round"/>
+<line x1="310" y1="75" x2="340" y2="55"  stroke="#4a2808" stroke-width="4" stroke-linecap="round"/>
+${[80,120,160,200,235].map((y,i)=>`<line x1="${-20+i*10}" y1="${y}" x2="${80+i*10}" y2="${y}" stroke="white" stroke-width="1.5" opacity=".2" style="animation:bobX ${1.8+i*.2}s ${i*.3}s infinite ease-in-out"/>`).join('')}
+${leaves.join('')}
+${[-40,-20,0,20,40,-30,10,30].map((dx,i)=>`<ellipse cx="${160+dx+i*15}" cy="267" rx="${10+i%3*3}" ry="${5+i%2*2}" fill="${leafCols[i%leafCols.length]}" opacity=".8" transform="rotate(${i*25},${160+dx+i*15},267)"/>`).join('')}
+</svg>`; }},
+
+/* 8. FALL: Pumpkin Patch at Dusk */
+{ season:'🎃 Fall', tag:'Pumpkin Patch at Dusk', bg:'#8b3a12', barColor:'#ff8a65',
+  render() { return `<svg viewBox="0 0 400 290" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="moon" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#fffde7"/><stop offset="100%" stop-color="#ffd54f"/></radialGradient>
+  <linearGradient id="duskBg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#1a0a00"/><stop offset="35%" stop-color="#6b2a08"/>
+    <stop offset="70%" stop-color="#c0521a"/><stop offset="100%" stop-color="#3a2010"/></linearGradient>
+</defs>
+<rect width="400" height="290" fill="url(#duskBg)"/>
+<rect x="0" y="255" width="400" height="35" fill="#2a1505"/>
+<ellipse cx="200" cy="258" rx="220" ry="18" fill="#3a1a08"/>
+<circle cx="340" cy="50" r="30" fill="url(#moon)" style="animation:pulse 5s infinite ease-in-out"/>
+<circle cx="330" cy="42" r="22" fill="#1a0a00"/>
+${[[30,30],[80,15],[155,25],[210,10],[270,30],[20,60],[380,20],[130,50]].map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="2" fill="white" style="animation:twink ${1.5+i*.4}s ${i*.3}s infinite ease-in-out"/>`).join('')}
+${[35,370].map(x=>`<rect x="${x-3}" y="140" width="6" height="115" fill="#8b7355" rx="2"/><ellipse cx="${x}" cy="145" rx="15" ry="40" fill="#c8a84b" transform="rotate(-8,${x},145)"/><ellipse cx="${x+5}" cy="155" rx="14" ry="38" fill="#d4b555" transform="rotate(5,${x+5},155)"/><rect x="${x-6}" y="138" width="12" height="50" rx="6" fill="#e8c84a" opacity=".7"/>`).join('')}
+<g style="animation:riseUp .6s .2s both ease-out">
+  <rect x="170" y="222" width="4" height="14" fill="#4a7a24"/>
+  <ellipse cx="190" cy="248" rx="28" ry="24" fill="#d35400"/>
+  <ellipse cx="175" cy="248" rx="14" ry="22" fill="#c04800" opacity=".6"/>
+  <ellipse cx="205" cy="248" rx="14" ry="22" fill="#c04800" opacity=".6"/>
+  <ellipse cx="190" cy="248" rx="5" ry="22" fill="#ba4200" opacity=".5"/>
+  <polygon points="182,244 188,238 194,244" fill="#1a0a00"/>
+  <polygon points="188,252 192,252 190,256" fill="#1a0a00"/>
+  <path d="M182,257 Q190,263 198,257" fill="none" stroke="#1a0a00" stroke-width="2.5"/>
+</g>
+<g style="animation:riseUp .6s .5s both ease-out">
+  <rect x="97" y="235" width="4" height="12" fill="#4a7a24"/>
+  <ellipse cx="112" cy="256" rx="22" ry="19" fill="#e67e22"/>
+  <ellipse cx="100" cy="256" rx="10" ry="17" fill="#d06010" opacity=".6"/>
+  <ellipse cx="124" cy="256" rx="10" ry="17" fill="#d06010" opacity=".6"/>
+</g>
+<g style="animation:riseUp .6s .8s both ease-out">
+  <rect x="275" y="229" width="4" height="13" fill="#4a7a24"/>
+  <ellipse cx="290" cy="252" rx="25" ry="21" fill="#c0392b"/>
+  <ellipse cx="276" cy="252" rx="12" ry="19" fill="#a02020" opacity=".6"/>
+  <ellipse cx="303" cy="252" rx="12" ry="19" fill="#a02020" opacity=".6"/>
+</g>
+<g transform="translate(200,80)"><g style="animation:bfly 4s infinite ease-in-out">
+  <ellipse cx="0" cy="0" rx="6" ry="8" fill="#1a0a00"/>
+  <path d="M-6,-2 Q-25,-20 -35,-5 Q-25,5 -6,2Z" fill="#1a0a00" style="animation:flap .4s infinite"/>
+  <path d="M 6,-2 Q 25,-20  35,-5 Q 25,5  6,2Z" fill="#1a0a00" style="animation:flap .4s .2s infinite"/>
+</g></g>
+</svg>`; }},
+
+]; // end THEMES
+
+/* Pick a random theme and inject */
+const t = THEMES[Math.floor(Math.random()*THEMES.length)];
+document.getElementById('gal-loader').style.background = t.bg;
+document.getElementById('season-scene').innerHTML = t.render();
+document.getElementById('season-label').textContent = t.season;
+document.getElementById('season-tag').textContent   = t.tag;
+document.getElementById('season-label').style.color = 'rgba(255,255,255,.75)';
+document.getElementById('season-tag').style.color   = 'white';
+document.querySelector('.gal-progress-fill').style.background =
+    `linear-gradient(90deg,${t.barColor},white)`;
+
+})();
+</script>
+
+<!-- ── Gallery Stage ──────────────────────────────────────────── -->
+<div id="gallery-stage" aria-hidden="true">
+    <div id="gallery-canvas-a" class="gallery-canvas"></div>
+    <div id="gallery-canvas-b" class="gallery-canvas"></div>
+</div>
+
+<!-- ── Edge fades ─────────────────────────────────────────────── -->
+<div id="fade-top"    class="fade-edge" aria-hidden="true"></div>
+<div id="fade-bottom" class="fade-edge" aria-hidden="true"></div>
+<div id="fade-left"   class="fade-edge" aria-hidden="true"></div>
+<div id="fade-right"  class="fade-edge" aria-hidden="true"></div>
+
+<!-- ── Empty state ────────────────────────────────────────────── -->
+<div id="gallery-empty" role="status">
+    <span class="empty-icon">📷</span>
+    <p id="empty-msg">No photos found.</p>
+</div>
+
+<!-- ── Search bar — centred desktop / bottom mobile+tablet ────── -->
+<div id="search-wrap" role="search" aria-label="Gallery tag search">
+    <div id="search-box">
+        <!-- Active tag pills inserted here by JS -->
+        <div id="search-input-wrap">
+            <span id="search-icon" aria-hidden="true">⌕</span>
+            <input id="search-input" type="text"
+                   placeholder="Add a tag…"
+                   autocomplete="off" spellcheck="false"
+                   aria-label="Search gallery by tag"
+                   aria-autocomplete="list"
+                   aria-controls="gal-suggestions">
+            <button id="search-clear" title="Clear input" aria-label="Clear">✕</button>
+            <!-- Autocomplete dropdown -->
+            <div id="gal-suggestions" role="listbox" aria-label="Tag suggestions"></div>
+        </div>
+    </div>
+    <div id="search-result" aria-live="polite"></div>
+</div>
+
+<!-- ── Lightbox ───────────────────────────────────────────────── -->
+<div id="lb" role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <button id="lb-close" onclick="lbClose()" aria-label="Close">✕</button>
+    <button id="lb-prev"  class="lb-nav" onclick="lbMove(-1)" aria-label="Previous">←</button>
+    <button id="lb-next"  class="lb-nav" onclick="lbMove(1)"  aria-label="Next">→</button>
+    <img   id="lb-img"   src="" alt="">
+    <video id="lb-video" controls playsinline></video>
+    <div id="lb-info">
+        <div id="lb-name"></div>
+        <div id="lb-tags"></div>
+        <div id="lb-ctr"></div>
+        <a   id="lb-dl" href="#" download>⬇ Download</a>
+
+        <!-- Per-image comments -->
+        <div id="lb-comment-area" style="width:100%;max-width:480px;margin-top:10px;text-align:left;" onclick="event.stopPropagation()">
+            <div id="lb-comment-list" style="max-height:90px;overflow-y:auto;font-size:0.78rem;color:#ccc;margin-bottom:8px;line-height:1.7;"></div>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <input id="lb-cmt-name" placeholder="Name" maxlength="30"
+                       style="flex:0 0 100px;padding:6px 10px;border-radius:20px;border:1.5px solid #888;font-size:0.8rem;background:rgba(255,255,255,0.88);">
+                <input id="lb-cmt-msg" placeholder="Add a comment…" maxlength="200"
+                       style="flex:1;padding:6px 10px;border-radius:20px;border:1.5px solid #888;font-size:0.8rem;background:rgba(255,255,255,0.88);">
+                <button id="lb-cmt-btn"
+                        style="padding:6px 14px;border-radius:20px;background:#2e7d32;color:#fff;border:none;font-weight:700;cursor:pointer;font-size:0.82rem;flex-shrink:0;">
+                    Post
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  Gallery — Infinite 45° masonry brick scroll
+//  Dual-canvas crossfade for flicker-free loop transitions
+// ════════════════════════════════════════════════════════════════
+
+const ALL_PHOTOS = {{ photos_json|safe }};
+
+// ── Layout constants ─────────────────────────────────────────
+const GAP   = 6;
+const COL_W = window.innerWidth < 480 ? 140
+            : window.innerWidth < 768 ? 175
+            : 220;
+const SPEED    = 20;   // px/s
+const MIN_POOL = 80;   // repeat photos until pool reaches this size
+const FADE_MS  = 1000; // crossfade duration at loop boundary (ms)
+
+// ── State ────────────────────────────────────────────────────
+let currentPhotos = [...ALL_PHOTOS];
+let animId        = null;
+let lbIdx         = 0;
+let tileW = 0, tileH = 0, tx = 0, ty = 0, lastTs = 0;
+let videoObserver = null;
+let activeCanvas  = null;
+let standbyCanvas = null;
+let isCrossfading = false;
+
+// ── Loader state ─────────────────────────────────────────────
+let imgLoaded = 0;
+const fill = document.getElementById('gal-pf');
+const lbl  = document.getElementById('gal-pl');
+const lodr = document.getElementById('gal-loader');
+const t0   = Date.now();
+function onMediaLoaded() {
+    imgLoaded++;
+    const pct = Math.round(imgLoaded / Math.max(ALL_PHOTOS.length,1) * 100);
+    fill.style.width = pct + '%';
+    lbl.textContent  = imgLoaded + ' / ' + ALL_PHOTOS.length;
+}
+if (ALL_PHOTOS.length === 0) lodr.classList.add('done');
+setTimeout(() => lodr.classList.add('done'), 8000);
+
+// ── Helpers ──────────────────────────────────────────────────
+function expandPool(photos) {
+    if (!photos.length) return [];
+    let pool = [...photos];
+    while (pool.length < MIN_POOL) pool = [...pool, ...photos];
+    return pool;
+}
+
+function buildLayout(photos) {
+    const VW      = window.innerWidth;
+    const VH      = window.innerHeight;
+    const numCols = Math.ceil(VW / (COL_W + GAP)) + 4;
+    const heights = new Array(numCols).fill(0);
+    const items   = [];
+    const pool    = expandPool(photos);
+
+    pool.forEach(photo => {
+        let ar = (photo.w && photo.h) ? (photo.w / photo.h) : 1.333;
+        if (!isFinite(ar) || ar <= 0) ar = 1.333;
+        const imgH = Math.round(COL_W / ar);
+        let col = 0;
+        for (let c = 1; c < numCols; c++) {
+            if (heights[c] < heights[col]) col = c;
+        }
+        items.push({ photo, x: col * (COL_W + GAP), y: heights[col], w: COL_W, h: imgH });
+        heights[col] += imgH + GAP;
+    });
+
+    const tw = numCols * (COL_W + GAP);
+    const th = Math.max(Math.max(...heights), VH * 2);
+    return { items, tileW: tw, tileH: th };
+}
+
+// ── Canvas builder ────────────────────────────────────────────
+function buildCanvasEl(photos, el, eagerLoad) {
+    el.textContent = '';
+    const emptyEl = document.getElementById('gallery-empty');
+    if (!photos.length) { emptyEl.classList.add('on'); stopAnim(); return null; }
+    emptyEl.classList.remove('on');
+
+    const { items, tileW: tw, tileH: th } = buildLayout(photos);
+    el.style.width  = (3 * tw) + 'px';
+    el.style.height = (3 * th) + 'px';
+
+    const frag = document.createDocumentFragment();
+
+    for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+            const ox       = col * tw;
+            const oy       = row * th;
+            const isCentre = (row === 1 && col === 1);
+
+            items.forEach(item => {
+                const div      = document.createElement('div');
+                div.className  = 'photo-item';
+                div.style.left = (item.x + ox) + 'px';
+                div.style.top  = (item.y + oy) + 'px';
+                div.style.width  = item.w + 'px';
+                div.style.height = item.h + 'px';
+
+                if (item.photo.type === 'video') {
+                    const vid       = document.createElement('video');
+                    vid.src         = item.photo.src;
+                    vid.muted       = true;
+                    vid.loop        = true;
+                    vid.playsInline = true;
+                    vid.preload     = isCentre ? 'auto' : 'none';
+                    const badge     = document.createElement('div');
+                    badge.className = 'video-badge';
+                    badge.textContent = '▶';
+                    div.appendChild(vid);
+                    div.appendChild(badge);
+                } else {
+                    const img    = document.createElement('img');
+                    // Use thumbnail for performance; fall back to full image
+                    img.src      = item.photo.thumb || item.photo.src;
+                    img.alt      = item.photo.name || '';
+                    img.loading  = eagerLoad ? 'eager' : 'lazy';
+                    img.decoding = 'async';
+                    if (isCentre) {
+                        img.addEventListener('load',  onMediaLoaded, { once: true });
+                        img.addEventListener('error', onMediaLoaded, { once: true });
+                    }
+                    div.appendChild(img);
+                }
+
+                const photoSrc = item.photo.src;
+                div.addEventListener('click', () => {
+                    const idx = currentPhotos.findIndex(p => p.src === photoSrc);
+                    if (idx >= 0) lbOpen(idx);
+                });
+                frag.appendChild(div);
+            });
+        }
+    }
+
+    el.appendChild(frag);
+    return { tileW: tw, tileH: th };
+}
+
+// ── Video IntersectionObserver ────────────────────────────────
+function setupVideoObserver() {
+    if (videoObserver) videoObserver.disconnect();
+    const stage = document.getElementById('gallery-stage');
+    videoObserver = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) e.target.play().catch(() => {});
+            else                  e.target.pause();
+        });
+    }, { root: stage, rootMargin: '80px', threshold: 0.01 });
+    activeCanvas.querySelectorAll('video').forEach(v => videoObserver.observe(v));
+}
+
+// ── Animation loop ────────────────────────────────────────────
+function tick(ts) {
+    if (!lastTs) lastTs = ts;
+    const dt = Math.min((ts - lastTs) / 1000, 0.05);
+    lastTs = ts;
+
+    tx += SPEED * dt;   // scroll right
+    ty -= SPEED * dt;   // scroll up
+
+    if (tx >= 0) {
+        crossfadeToNext();
+        animId = requestAnimationFrame(tick);
+        return;
+    }
+    if (ty <= -2 * tileH) ty += tileH;
+
+    activeCanvas.style.transform = `translate3d(${tx}px,${ty}px,0)`;
+    animId = requestAnimationFrame(tick);
+}
+
+function startAnim() { if (animId) return; lastTs = 0; animId = requestAnimationFrame(tick); }
+function stopAnim()  { if (animId) { cancelAnimationFrame(animId); animId = null; } }
+
+// ── Smooth crossfade between loops ────────────────────────────
+function crossfadeToNext() {
+    if (isCrossfading) {
+        tx -= tileW;
+        if (ty <= -2 * tileH) ty += tileH;
+        activeCanvas.style.transform = `translate3d(${tx}px,${ty}px,0)`;
+        return;
+    }
+    isCrossfading = true;
+
+    tx -= tileW;
+    if (ty <= -2 * tileH) ty += tileH;
+    activeCanvas.style.transform = `translate3d(${tx}px,${ty}px,0)`;
+
+    // Fisher-Yates shuffle for next pass
+    for (let i = currentPhotos.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [currentPhotos[i], currentPhotos[j]] = [currentPhotos[j], currentPhotos[i]];
+    }
+
+    if (videoObserver) videoObserver.disconnect();
+    const result = buildCanvasEl(currentPhotos, standbyCanvas, true);
+    if (!result) { isCrossfading = false; return; }
+
+    const ntx = -result.tileW;
+    const nty = -result.tileH;
+
+    standbyCanvas.style.transition = 'none';
+    standbyCanvas.style.opacity    = '0';
+    standbyCanvas.style.zIndex     = '2';
+    standbyCanvas.style.transform  = `translate3d(${ntx}px,${nty}px,0)`;
+
+    requestAnimationFrame(() => {
+        activeCanvas.style.transition  = `opacity ${FADE_MS}ms ease`;
+        standbyCanvas.style.transition = `opacity ${FADE_MS}ms ease`;
+        activeCanvas.style.opacity     = '0';
+        standbyCanvas.style.opacity    = '1';
+
+        setTimeout(() => {
+            const tmp    = activeCanvas;
+            activeCanvas  = standbyCanvas;
+            standbyCanvas = tmp;
+
+            tileW = result.tileW; tileH = result.tileH;
+            tx = ntx; ty = nty;
+
+            standbyCanvas.textContent      = '';
+            standbyCanvas.style.opacity    = '';
+            standbyCanvas.style.transition = '';
+            standbyCanvas.style.zIndex     = '';
+            activeCanvas.style.transition  = '';
+            activeCanvas.style.opacity     = '';
+            activeCanvas.style.zIndex      = '';
+
+            isCrossfading = false;
+            setupVideoObserver();
+        }, FADE_MS + 60);
+    });
+}
+
+// ── Start gallery ─────────────────────────────────────────────
+function startGallery(photos) {
+    stopAnim();
+    isCrossfading = false;
+    if (videoObserver) { videoObserver.disconnect(); videoObserver = null; }
+    lastTs = 0;
+
+    const result = buildCanvasEl(photos, activeCanvas, false);
+    standbyCanvas.textContent      = '';
+    standbyCanvas.style.opacity    = '';
+    standbyCanvas.style.transition = '';
+    standbyCanvas.style.zIndex     = '';
+    activeCanvas.style.opacity     = '';
+    activeCanvas.style.transition  = '';
+    activeCanvas.style.zIndex      = '';
+
+    if (!result) return;
+
+    tileW = result.tileW; tileH = result.tileH;
+    tx = -tileW; ty = -tileH;
+    activeCanvas.style.transform = `translate3d(${tx}px,${ty}px,0)`;
+
+    setupVideoObserver();
+    startAnim();
+
+    // Dismiss loader after some bricks have painted
+    const mediaEls = Array.from(activeCanvas.querySelectorAll('img'));
+    const TARGET   = Math.min(8, mediaEls.length);
+    if (TARGET === 0) { lodr.classList.add('done'); return; }
+    let ready = 0;
+    function onReady() {
+        ready++;
+        if (ready >= TARGET)
+            requestAnimationFrame(() => requestAnimationFrame(() => lodr.classList.add('done')));
+    }
+    mediaEls.slice(0, TARGET).forEach(el => {
+        if (el.complete && el.naturalWidth > 0) onReady();
+        else {
+            el.addEventListener('load',  onReady, { once: true });
+            el.addEventListener('error', onReady, { once: true });
+        }
+    });
+}
+
+// ════════════════════════════════════════════════════════════════
+//  TAG SEARCH — pill-based multi-tag AND filter
+//  Tags load async from CSV so the gallery starts scrolling
+//  immediately while autocomplete builds in the background.
+// ════════════════════════════════════════════════════════════════
+
+const searchInput = document.getElementById('search-input');
+const searchClear = document.getElementById('search-clear');
+const resultEl    = document.getElementById('search-result');
+const sugBox      = document.getElementById('gal-suggestions');
+const searchBox   = document.getElementById('search-box');
+
+// tagMap: filename → ['rose','red','garden',…]  (populated from CSV)
+const tagMap = {};
+// ALL_TAGS: [['rose',42],['red',35],…] sorted by frequency (from CSV)
+let ALL_TAGS = [];
+// Active pill tags (AND logic: photo must have ALL of these)
+let activeTags = new Set();
+let kbIdx = -1;
+
+// Robust CSV line parser. The previous regex (/("..."|[^,]*)/g) emitted an
+// empty phantom field between every real one, doubling the column count and
+// shifting tags from index 6 to 12 — so the search matched a thumbnail path
+// instead of the tags and never found anything. This handles quoted fields
+// and escaped "" correctly and returns exactly the real columns.
+function parseCsvLine(line) {
+    const out = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (inQ) {
+            if (c === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else inQ = false; }
+            else cur += c;
+        } else if (c === '"') { inQ = true; }
+        else if (c === ',') { out.push(cur); cur = ''; }
+        else cur += c;
+    }
+    out.push(cur);
+    return out;
+}
+
+// ── Load CSV async — builds autocomplete without blocking paint ──
+fetch('images/Gallery/tags_cache.csv')
+    .then(r => r.ok ? r.text() : Promise.reject())
+    .then(csv => {
+        const counts = {};
+        const lines  = csv.split('\n').slice(1);   // skip header
+        lines.forEach(line => {
+            if (!line.trim()) return;
+            const cols = parseCsvLine(line);
+            const fn   = cols[0];
+            const tags = cols[6] ? cols[6].split('|').filter(Boolean) : [];
+            if (!fn) return;
+            tagMap[fn] = tags;
+            tags.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
+        });
+        ALL_TAGS = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    })
+    .catch(() => {
+        // CSV not ready — fall back to tags already in ALL_PHOTOS
+        ALL_PHOTOS.forEach(p => {
+            if (p.fn && p.tags) tagMap[p.fn] = p.tags;
+        });
+        const counts = {};
+        ALL_PHOTOS.forEach(p => (p.tags||[]).forEach(t => { counts[t] = (counts[t]||0)+1; }));
+        ALL_TAGS = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    });
+
+// ── Pill rendering ────────────────────────────────────────────
+function renderPills() {
+    // Remove any existing pills (keep #search-input-wrap last)
+    const wrap = document.getElementById('search-input-wrap');
+    while (searchBox.firstChild !== wrap) searchBox.removeChild(searchBox.firstChild);
+
+    let i = 0;
+    activeTags.forEach(tag => {
+        if (i > 0) {
+            const and = document.createElement('span');
+            and.className = 'pill-and';
+            and.textContent = 'AND';
+            searchBox.insertBefore(and, wrap);
+        }
+        const pill = document.createElement('span');
+        pill.className = 'tag-pill';
+        pill.innerHTML =
+            `${escHtml(tag)}<button class="tag-pill-x" aria-label="Remove ${escHtml(tag)}">✕</button>`;
+        pill.querySelector('.tag-pill-x').addEventListener('click', () => removePill(tag));
+        searchBox.insertBefore(pill, wrap);
+        i++;
+    });
+
+    // Clear-all button appears when any pill is active
+    const btn = document.getElementById('pill-clear-all');
+    if (btn) btn.style.display = activeTags.size ? 'inline-flex' : 'none';
+}
+
+function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Add / remove pills ────────────────────────────────────────
+function addPill(tag) {
+    if (activeTags.has(tag)) return;
+    activeTags.add(tag);
+    renderPills();
+    applyFilter();
+}
+
+function removePill(tag) {
+    activeTags.delete(tag);
+    renderPills();
+    applyFilter();
+}
+
+function clearAllPills() {
+    activeTags.clear();
+    renderPills();
+    applyFilter();
+}
+
+// ── AND filter ────────────────────────────────────────────────
+function applyFilter() {
+    let filtered;
+    if (activeTags.size === 0) {
+        filtered = [...ALL_PHOTOS];
+    } else {
+        filtered = ALL_PHOTOS.filter(p => {
+            // Use CSV-loaded tagMap if available, else fall back to inline tags
+            const tags = tagMap[p.fn] || (p.tags || []);
+            return [...activeTags].every(active =>
+                tags.some(t => t.toLowerCase().includes(active.toLowerCase()))
+            );
+        });
+    }
+    currentPhotos = filtered;
+
+    if (activeTags.size > 0) {
+        resultEl.textContent   = filtered.length + ' photo' + (filtered.length === 1 ? '' : 's') + ' found';
+        resultEl.style.display = 'block';
+    } else {
+        resultEl.style.display = 'none';
+    }
+    startGallery(filtered);
+}
+
+// ── Autocomplete ──────────────────────────────────────────────
+function buildSuggestions(q) {
+    sugBox.innerHTML = '';
+    kbIdx = -1;
+    if (!q.trim()) { sugBox.classList.remove('open'); return; }
+    const lq = q.toLowerCase();
+    const matches = ALL_TAGS.filter(([t]) => t.toLowerCase().includes(lq)).slice(0, 20);
+    if (!matches.length) { sugBox.classList.remove('open'); return; }
+
+    matches.forEach(([tag, cnt]) => {
+        const div       = document.createElement('div');
+        div.className   = 'sug-row' + (activeTags.has(tag) ? ' already' : '');
+        div.setAttribute('role', 'option');
+        div.dataset.tag = tag;
+        const hi = escHtml(tag).replace(
+            new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),
+            '<strong>$1</strong>'
+        );
+        div.innerHTML = `<span>${hi}</span><span class="sug-badge">${cnt}</span>`;
+        div.addEventListener('mousedown', e => { e.preventDefault(); commitTag(tag); });
+        sugBox.appendChild(div);
+    });
+    sugBox.classList.add('open');
+}
+
+function commitTag(tag) {
+    addPill(tag);
+    searchInput.value = '';
+    searchClear.style.display = 'none';
+    sugBox.classList.remove('open');
+    kbIdx = -1;
+    searchInput.focus();
+}
+
+// ── Input events ──────────────────────────────────────────────
+searchInput.addEventListener('input', () => {
+    const v = searchInput.value;
+    searchClear.style.display = v ? 'block' : 'none';
+    buildSuggestions(v);
+});
+
+searchInput.addEventListener('keydown', e => {
+    const rows = sugBox.querySelectorAll('.sug-row');
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        kbIdx = Math.min(kbIdx + 1, rows.length - 1);
+        rows.forEach((r, i) => r.classList.toggle('kb-sel', i === kbIdx));
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        kbIdx = Math.max(kbIdx - 1, 0);
+        rows.forEach((r, i) => r.classList.toggle('kb-sel', i === kbIdx));
+    } else if (e.key === 'Enter' || e.key === ' ') {
+        if (sugBox.classList.contains('open') && kbIdx >= 0 && rows[kbIdx]) {
+            e.preventDefault();
+            commitTag(rows[kbIdx].dataset.tag);
+        } else if (searchInput.value.trim()) {
+            e.preventDefault();
+            const q     = searchInput.value.trim().toLowerCase();
+            const exact = ALL_TAGS.find(([t]) => t.toLowerCase() === q);
+            const first = ALL_TAGS.find(([t]) => t.toLowerCase().includes(q));
+            if (exact) commitTag(exact[0]);
+            else if (first) commitTag(first[0]);
+            else commitTag(searchInput.value.trim()); // commit literal input
+        }
+    } else if (e.key === 'Backspace' && !searchInput.value && activeTags.size) {
+        // Backspace on empty input removes the last pill
+        const last = [...activeTags].pop();
+        removePill(last);
+    } else if (e.key === 'Escape') {
+        sugBox.classList.remove('open');
+        searchInput.value = '';
+        searchClear.style.display = 'none';
+    }
+});
+
+searchInput.addEventListener('blur', () => {
+    setTimeout(() => sugBox.classList.remove('open'), 180);
+});
+
+searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    searchClear.style.display = 'none';
+    sugBox.classList.remove('open');
+    searchInput.focus();
+});
+
+// Close suggestions when clicking outside
+document.addEventListener('click', e => {
+    if (!searchBox.contains(e.target)) sugBox.classList.remove('open');
+});
+
+// ── Lightbox ──────────────────────────────────────────────────
+const lbImg = document.getElementById('lb-img');
+const lbVid = document.getElementById('lb-video');
+const preloaded = {};
+
+function lbOpen(idx) {
+    lbIdx = idx; lbShow();
+    document.getElementById('lb').classList.add('on');
+    document.body.style.overflow = 'hidden';
+    stopAnim();
+}
+
+function lbClose() {
+    lbVid.pause(); lbVid.src = '';
+    lbVid.style.display = 'none'; lbImg.style.display = '';
+    document.getElementById('lb').classList.remove('on');
+    document.body.style.overflow = '';
+    lastTs = 0; startAnim();
+}
+
+function lbMove(d) {
+    lbIdx = (lbIdx + d + currentPhotos.length) % currentPhotos.length;
+    lbShow();
+}
+
+function lbShow() {
+    const p = currentPhotos[lbIdx];
+
+    if (p.type === 'video') {
+        lbImg.style.display = 'none';
+        lbVid.style.display = 'block';
+        lbVid.src = p.src; lbVid.load(); lbVid.play().catch(() => {});
+    } else {
+        lbVid.pause(); lbVid.style.display = 'none';
+        lbImg.style.display = '';
+        lbImg.style.opacity = '0';
+        lbImg.src = p.src; lbImg.alt = p.name || '';
+        lbImg.onload = () => { lbImg.style.opacity = '1'; };
+    }
+
+    document.getElementById('lb-name').textContent =
+        p.name || '';
+
+    const tagsEl = document.getElementById('lb-tags');
+    tagsEl.innerHTML = '';
+    (p.tags || []).forEach(t => {
+        const s = document.createElement('span');
+        s.className = 'lb-tag'; s.textContent = t;
+        s.onclick = () => {
+            lbClose();
+            addPill(t);   // adds as a filter pill; AND with any existing pills
+        };
+        tagsEl.appendChild(s);
+    });
+
+    document.getElementById('lb-ctr').textContent =
+        (lbIdx + 1) + ' / ' + currentPhotos.length;
+
+    // Load per-image comments
+    const imgKey  = p.src ? p.src.split('/').pop() : '';
+    const cList   = document.getElementById('lb-comment-list');
+    const cBtn    = document.getElementById('lb-cmt-btn');
+    const cMsg    = document.getElementById('lb-cmt-msg');
+
+    if (cList && imgKey) {
+        cList.innerHTML = '<em style="color:#888;font-size:0.75rem;">Loading…</em>';
+        fetch('comments.php?get_comments=1&type=gallery&key=' + encodeURIComponent(imgKey))
+            .then(r => r.json())
+            .then(d => {
+                const rows = d.comments || [];
+                cList.innerHTML = rows.length
+                    ? rows.map(c =>
+                        '<div style="border-bottom:1px solid rgba(255,255,255,0.08);padding:1px 0;">' +
+                        '<strong style="color:#aed581;">' + c.name + '</strong>' +
+                        '<span style="color:#666;font-size:0.7rem;margin:0 4px;">' + c.date + '</span>' +
+                        c.message + '</div>'
+                      ).join('')
+                    : '<em style="color:#777;font-size:0.75rem;">No comments yet.</em>';
+            }).catch(()=>{ cList.innerHTML=''; });
+    }
+
+    // Re-bind post button to current image key
+    if (cBtn) {
+        cBtn.onclick = async function(e) {
+            e.stopPropagation();
+            const name = (document.getElementById('lb-cmt-name')?.value || '').trim();
+            const msg  = (cMsg?.value || '').trim();
+            if (!msg || !imgKey) return;
+            const fd = new FormData();
+            fd.append('post_comment','1');
+            fd.append('type','gallery');
+            fd.append('key', imgKey);
+            fd.append('name', name || 'Guest');
+            fd.append('message', msg);
+            const res  = await fetch('comments.php',{method:'POST',body:fd});
+            const data = await res.json();
+            if (data.status === 'ok' && cList) {
+                if (cMsg) cMsg.value = '';
+                const ent = data.entry;
+                const div = document.createElement('div');
+                div.style.cssText = 'border-bottom:1px solid rgba(255,255,255,0.08);padding:1px 0;';
+                div.innerHTML = '<strong style="color:#aed581;">' + ent.name + '</strong>' +
+                    '<span style="color:#666;font-size:0.7rem;margin:0 4px;">' + ent.date + '</span>' + ent.message;
+                cList.prepend(div);
+            }
+        };
+    }
+    if (cMsg) {
+        cMsg.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); cBtn && cBtn.click(); } };
+    }
+
+    const dlEl = document.getElementById('lb-dl');
+    if (p.dl) { dlEl.href = p.dl; dlEl.style.display = ''; }
+    else       { dlEl.style.display = 'none'; }
+
+    // Preload next 3
+    for (let i = 1; i <= 3; i++) {
+        const n = (lbIdx + i) % currentPhotos.length;
+        const m = currentPhotos[n];
+        if (m.type === 'image' && !preloaded[m.src]) {
+            const x = new Image(); x.src = m.src; preloaded[m.src] = x;
+        }
+    }
+}
+
+document.addEventListener('keydown', e => {
+    if (!document.getElementById('lb').classList.contains('on')) return;
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    lbMove(-1);
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown')   lbMove(1);
+    if (e.key === 'Escape')                                lbClose();
+});
+document.getElementById('lb').addEventListener('click', e => {
+    if (e.target === document.getElementById('lb')) lbClose();
+});
+let _tx = null;
+document.getElementById('lb').addEventListener('touchstart', e => { _tx = e.touches[0].clientX; }, { passive: true });
+document.getElementById('lb').addEventListener('touchend',   e => {
+    if (_tx === null) return;
+    if (Math.abs(e.changedTouches[0].clientX - _tx) > 40)
+        lbMove(e.changedTouches[0].clientX < _tx ? 1 : -1);
+    _tx = null;
+}, { passive: true });
+
+// ── Boot ──────────────────────────────────────────────────────
+activeCanvas  = document.getElementById('gallery-canvas-a');
+standbyCanvas = document.getElementById('gallery-canvas-b');
+
+if (ALL_PHOTOS.length === 0) {
+    document.getElementById('gallery-empty').classList.add('on');
+    document.getElementById('empty-msg').textContent =
+        'Add photos or videos to images/Gallery/ to get started.';
+    lodr.classList.add('done');
+} else {
+    startGallery(ALL_PHOTOS);
+}
+</script>
+
+<!-- Gallery per-image comments injected by lbShow() into #lb-comment-area -->
+

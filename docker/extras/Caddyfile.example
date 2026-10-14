@@ -1,0 +1,39 @@
+# Caddyfile for guide 04. Copy to /etc/caddy/Caddyfile and change the name.
+#
+#   sudo cp docker/extras/Caddyfile.example /etc/caddy/Caddyfile
+#   sudo nano /etc/caddy/Caddyfile        (change YOUR-NAME.ddns.net)
+#   sudo systemctl reload caddy
+#
+# Caddy gets and renews the HTTPS padlock certificate by itself. For that:
+#   * YOUR-NAME.ddns.net must already point at your home internet address
+#     (the No-IP update client does that),
+#   * ports 80 and 443 on your router must forward to this laptop.
+
+YOUR-NAME.ddns.net {
+    # Send every visitor to the garden container (it listens only on this laptop).
+    reverse_proxy 127.0.0.1:8030
+
+    # Security headers: small rules that make browsers safer for your visitors.
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    # A log file you can read when something is odd.
+    log {
+        output file /var/log/caddy/garden-access.log
+    }
+}
+
+# OPTIONAL, simple password gate for a tool that has no login of its own
+# (for example ESPHome). Do this only AFTER you have another name for it.
+# Make the hash with:   caddy hash-password
+#
+# tools.YOUR-OTHER-NAME.example {
+#     basic_auth {
+#         jun PASTE-THE-HASH-HERE
+#     }
+#     reverse_proxy 127.0.0.1:6052
+# }

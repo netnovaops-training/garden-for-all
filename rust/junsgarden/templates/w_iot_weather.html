@@ -1,0 +1,75 @@
+<div class="widget-card" data-tags="weather temperature rainfall iot">
+    <div class="widget-header">
+        <span class="widget-icon">🌦️</span>
+        <h3>Weather Trends — Clifton Park{% if !live %} (Sample Data){% endif %}</h3>
+    </div>
+    <div class="widget-body">
+        {% if !live %}
+        <div style="background:#fff3e0;border:1px solid #ffe0b2;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:0.78rem;color:#e65100;">
+            <strong>📡 Not connected</strong> — Showing sample data. Set up InfluxDB to see real weather history.
+            See <code>tools/iot/SETUP_INFLUXDB.md</code>
+        </div>
+        {% else %}
+        <div style="background:#e8f5e9;border:1px solid #c8e6c9;border-radius:8px;padding:6px 12px;margin-bottom:12px;font-size:0.75rem;color:#2e7d32;">
+            <strong>✅ Live data</strong> from InfluxDB — updated every 30 minutes
+        </div>
+        {% endif %}
+        <canvas id="wgt-iot-weather"></canvas>
+        <div style="margin-top:8px;display:flex;gap:12px;justify-content:center;font-size:0.72rem;color:#666;flex-wrap:wrap;">
+            <span>❄️ Frost risk: months below 35°F</span>
+            <span>🌱 Growing: May–Sep</span>
+            <span>Last frost: ~May 10</span>
+            <span>First frost: ~Oct 5</span>
+        </div>
+    </div>
+    <script>
+    (function(){
+        new Chart(document.getElementById('wgt-iot-weather').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ months_json|safe }},
+                datasets: [
+                    {
+                        label: 'Rainfall (in)',
+                        data: {{ rain_json|safe }},
+                        backgroundColor: 'rgba(33,150,243,0.5)',
+                        borderColor: '#1565c0', borderWidth: 1, borderRadius: 4,
+                        yAxisID: 'y1', order: 2
+                    },
+                    {
+                        label: 'Snowfall (in)',
+                        data: {{ snow_json|safe }},
+                        backgroundColor: 'rgba(156,39,176,0.3)',
+                        borderColor: '#7B1FA2', borderWidth: 1, borderRadius: 4,
+                        yAxisID: 'y1', order: 3
+                    },
+                    {
+                        label: 'Avg Temp (°F)',
+                        data: {{ temps_json|safe }},
+                        type: 'line',
+                        borderColor: '#F44336',
+                        backgroundColor: 'rgba(244,67,54,0.1)',
+                        borderWidth: 2, pointRadius: 4, fill: true, tension: 0.3,
+                        pointBackgroundColor: {{ point_colors_json|safe }},
+                        yAxisID: 'y', order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: true,
+                plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 14, font: { size: 13 } } } },
+                scales: {
+                    y:  { beginAtZero: true, position: 'left',
+                          title: { display: true, text: 'Temp (°F)', font: { size: 13 } },
+                          ticks: { font: { size: 12 }, callback: function(v){ return v + '°'; } } },
+                    y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false },
+                          title: { display: true, text: 'Precip (in)', font: { size: 13 } },
+                          ticks: { font: { size: 12 } } },
+                    x:  { ticks: { maxRotation: 45, font: { size: 12 } } }
+                }
+            }
+        });
+        if(window.registerWidgetChart) window.registerWidgetChart('wgt-iot-weather', {{ months_json|safe }}, {{ temps_json|safe }}, {label:'Avg Temp °F', indexAxis:'x'});
+    })();
+    </script>
+</div>

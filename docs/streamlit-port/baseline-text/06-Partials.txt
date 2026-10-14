@@ -1,0 +1,278 @@
+⚠️ Incomplete Datasets (Partials)
+
+Plants missing vital fields required for the catalog.
+
+Found 7 plants missing core data.
+
+Edit a Partial Plant
+
+Select plant to manually edit:
+
+Sonic Bloom Punch (ID: 494)
+
+📄 Export as HTML
+
+📋 Export Missing Fields as JSON
+
+📥 Go to JSON Import →
+
+💡 The JSON export contains all current data for this plant, with missing fields flagged at the top under _missing_fields. Review or correct any values, then head to 🔄 JSON Pipeline → 📥 Phase 3 — Import & Review to bring it back in.
+
+🧬 Section 1: Taxonomy & Core Identity
+
+Botanical Name
+
+Company / Brand
+
+Family
+
+Genus
+
+Species
+
+Plant Type
+
+Shrub
+
+Native Status
+
+Cultivar
+📏 Section 2: Growth Metrics, Spacing & Beds
+
+Target Length / Height
+
+Target Width / Spread
+
+Life Expectancy
+
+Plant Spacing Limits
+
+Global Species Hardiness Zones spectrum
+
+Growth Rate Assumption
+
+Fast
+🌦️ Section 3: Microclimatic Profiles & Soil Requirements
+
+Sun Exposure Requirement
+
+Full Sun - Partial Shade
+
+Hydration Needs
+
+Soil Target pH Scale
+
+Soil Consistency Profile
+
+Planting Depth Requirement
+
+Chilling Hours Requirement
+
+💵 Section 4: Investment & Procurement Logistics
+
+Estimated 1-Gallon Regional Retail Cost ($)
+
+Quantity Planted (Manual Override Only)
+
+Year(s) Added to Garden (Manual Override Only)
+
+2025
+
+Year Plant Died (optional, leave blank if alive)
+
+📍 Section 5: Extended Human Bed Location Manager
+
+Assign Plant to Bed (AI Prohibited Field)
+
+Zen Garden
+🌿 Section 6: Foliage & Stem Morphologies
+
+Foliage Color Spec
+
+Stem Color Spec
+
+Foliage Retention (Tags)
+
+Deciduous
+
+Leaf Structural Shape
+
+Elliptic (Oval tapering ends)
+
+Leaf Blade Type
+
+Simple (Single undivided blade)
+
+Leaf Margin / Edge Profile
+
+Serrated (Saw-toothed edges)
+🌸 Section 7: Flower, Scent & Reproduction
+
+Flower/Bloom Color
+
+Aromatics / Scent Descriptors
+
+Flower Symmetry Layout
+
+Zygomorphic (Bilateral symmetry)
+
+Flower / Corolla Shape
+
+Tubular (Cylindrical tube)
+
+Flower Size Class
+
+Small (1-2 in)
+
+Reproduction Mechanism
+
+Hermaphrodite
+🍒 Section 8: Fruit & Berry Yields
+
+Fruit/Berry Type
+
+Fruit Structural Shape
+
+Fruit Color
+
+Fruit Dimension Size
+
+Fruit Edibility Class
+
+Inedible
+🪹 Section 9: Subterranean Anatomy & Root Systems
+
+Primary Root Structure
+
+Fibrous/Adventitious Systems
+
+Root Dimensional Morphology
+
+Mixed Fine & Coarse
+
+Root Order & Function Limits
+
+Absorptive Roots (Lower Orders)
+🛡️ Section 10: Care, Hazards, Propagation & Companions
+
+Attracts Pollinators/Wildlife
+
+Deer/Rabbit Pest Resistance
+
+Deer Resistant
+
+Toxicity Verification Classification
+
+Non-toxic
+
+Local Invasive Status
+
+No
+
+Propagation Method
+
+Cuttings Instructions
+
+Assigned Companion Plant Tokens
+
+Spirea
+Catmint
+Salvia
+Daylily
+
+Assigned Fertilizer Regimens
+
+Flower-tone
+Tree-tone
+📅 Section 11: Growth Calendars
+
+🌸 Multi-Period Mode (non-contiguous months)
+
+Vegetative Grow Start
+
+Apr
+
+Vegetative Grow End
+
+Oct
+
+🚫 Does not bloom
+
+Reproductive Bloom Start
+
+May
+
+Reproductive Bloom End
+
+Sep
+🌱
+Grow
+···AMJJASO··
+...AMJJASO..
+🌸
+Bloom
+····MJJAS···
+....MJJAS...
+
+↑ Preview matches the website card. The code shows the DB bitmap value that will be saved.
+
+📝 Section 12: Long-Form Maintenance Journals & Search Overrides
+
+Seasonal Care & Watering Notes
+
+Pruning & Fertilizer Notes
+
+Winterization & Cleanup Notes
+
+Disease & Insect Vulnerabilities
+
+Extra Details / Culinary Edibility Profile
+
+⚠️ Flag Entry for Further Technical Review
+
+🖼️ Section 13: Digital Asset Gallery Management
+
+📁 No images are currently tracked or linked for this record container row.
+
+Upload custom photo(s) to gallery collection
+
+Drag and drop files here
+Limit 200MB per file • JPG, JPEG, PNG, WEBP
+Browse files
+✅ Section 14: Validation Signing Authority
+
+Jason Gibson Signature Sign-Off
+
+Jun Rae Signature Sign-Off
+
+Save Changes
+
+📊 Log a Quantity Event (optional)
+
+📸 Image Management
+
+No images yet — use the options on the right.
+
+Sonic Bloom Punch | Botanical: Weigela florida 'Verweig 6' SONIC BLOOM PUNCH | Family: Caprifoliaceae
+
+Option 1: Fetch from Web
+
+Searches Wikipedia first, then DuckDuckGo — no API key.
+
+Search term:
+
+🔍 Fetch Image Preview
+
+Option 2: Upload Your Own
+
+Upload photos (multiple allowed)
+
+Drag and drop files here
+Limit 200MB per file • JPG, JPEG, PNG, WEBP
+Browse files
+
+Upload action:
+
+Wipe gallery and replace
+
+Append to current gallery

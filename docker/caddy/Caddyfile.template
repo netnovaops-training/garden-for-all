@@ -1,0 +1,104 @@
+# =============================================================================
+#  Caddy: the front door of Jun's Garden.            (made by garden.sh public)
+#
+#  Caddy is the only program the internet talks to. It answers on ports 80
+#  and 443 (the only two ports the router forwards), gets the HTTPS padlock
+#  certificate for you automatically, and passes each visit to the right
+#  program on this laptop. Nothing else on the laptop is reachable from outside.
+#
+#      visitor --443--> Caddy --> /            website        (127.0.0.1:8030)
+#                             --> /auth        sign-in page   (127.0.0.1:9091)
+#                             --> /beds ...    garden tools   (127.0.0.1:8025)
+#                                              only after signing in at /auth
+#
+#  This is the same layout as the live junsgarden.zapto.org on Jason's server.
+#
+#  Edit carefully: after a change run
+#      sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy
+#  Caddy's own guide: https://caddyserver.com/docs/caddyfile
+# =============================================================================
+{
+	# Let's Encrypt (the free certificate service) sends expiry warnings here.
+	email __EMAIL__
+__LOCAL_CERTS__}
+
+# Things every reverse_proxy below does. A "snippet" is written once and
+# imported where needed.
+(appproxy) {
+	# A visitor may not pretend to be somebody else or somewhere else.
+	# These headers are deleted so no program behind Caddy can be fooled.
+	header_up -X-Real-IP
+	header_up -True-Client-IP
+	header_up -X-Client-IP
+	header_up -X-Originating-IP
+	header_up -X-Forwarded-Host
+	header_up -X-Host
+	header_up -Forwarded
+	# (Caddy itself sets X-Forwarded-For to the real visitor address.)
+}
+
+__NAME__ {
+	encode zstd gzip
+
+	# --- The sign-in page (Authelia) ------------------------------------
+	# One page where Jun signs in. Programs behind the gate ask it
+	# "is this person signed in?" before they open.
+	redir /auth /auth/ 308
+	handle /auth/* {
+		reverse_proxy 127.0.0.1:9091 {
+			import appproxy
+		}
+	}
+
+	# --- Short names for the garden tools --------------------------------
+	redir /checkup /beds/checkup 308
+	redir /spend /beds/spend 308
+	redir /diagnose /beds/diagnose 308
+	redir /tagscan /beds/tag 308
+	redir /wiki-queue /beds/wiki-queue 308
+	redir /beds /beds/plan 308
+
+	# --- The garden tools: SIGNED-IN PEOPLE ONLY ------------------------
+	# forward_auth is the gate. Caddy asks Authelia first; anyone not
+	# signed in is sent to /auth. Authelia's answer carries the person's
+	# email, which Caddy hands to the tools as X-Auth-Email. The tools check
+	# the email again on their own side (BEDS_ALLOWED_EMAILS in .env).
+	# "route" keeps these in the written order: first throw away any identity
+	# headers the visitor sent, THEN ask Authelia (which sets the real ones).
+	handle_path /beds* {
+		route {
+			request_header -X-Auth-Email
+			request_header -Remote-User
+			request_header -Remote-Groups
+			request_header -Remote-Name
+			request_header -Remote-Email
+			forward_auth 127.0.0.1:9091 {
+				uri /auth/api/authz/forward-auth
+				copy_headers Remote-Email>X-Auth-Email Remote-User Remote-Groups Remote-Name
+				header_up X-Forwarded-Uri {http.request.orig_uri}
+			}
+			reverse_proxy 127.0.0.1:8025 {
+				import appproxy
+			}
+		}
+	}
+
+	# --- The plant admin ----------------------------------------------------
+	# The website asks for its own garden login here, so no gate in front.
+	handle /streamlit* {
+		request_header -X-Auth-Email
+		reverse_proxy 127.0.0.1:8030 {
+			import appproxy
+		}
+	}
+
+	# --- Everything else: the public garden website -------------------------
+	handle {
+		# A visitor may never claim to be signed in from outside.
+		request_header -X-Auth-Email
+		reverse_proxy 127.0.0.1:8030 {
+			import appproxy
+		}
+	}
+}
+__WIKI_BLOCK__

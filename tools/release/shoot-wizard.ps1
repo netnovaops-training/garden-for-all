@@ -1,0 +1,28 @@
+# Pictures of each page of the real Windows guided installer (Garden-Setup.ps1).
+# Runs the real script, but instead of waiting for clicks it draws each page
+# to a PNG and closes. Nothing is installed.
+$pkg = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)   # the package folder (two levels up)
+$out = Join-Path $pkg "START-HERE\images"
+New-Item -ItemType Directory -Force $out | Out-Null
+$src = Get-Content (Join-Path $pkg "windows\Garden-Setup.ps1") -Raw
+$shoot = @'
+$names = @("wizard-1-welcome", "wizard-2-where", "wizard-3-about-you", "wizard-4-what-gets-installed", "wizard-5-install", "wizard-6-done")
+$form.add_Shown({
+    $tbEmail.Text = "you@gmail.com"
+    for ($i = 0; $i -lt $pages.Count; $i++) {
+        Show-Page $i
+        [Windows.Forms.Application]::DoEvents()
+        $bmp = New-Object Drawing.Bitmap($form.Width, $form.Height)
+        $form.DrawToBitmap($bmp, (New-Object Drawing.Rectangle(0, 0, $form.Width, $form.Height)))
+        $bmp.Save((Join-Path $OUTDIR ($names[$i] + ".png")), [Drawing.Imaging.ImageFormat]::Png); $bmp.Dispose()
+    }
+    $form.Close()
+})
+[void]$form.ShowDialog()
+'@
+$src = $src.Replace('[void]$form.ShowDialog()', $shoot.Replace('$OUTDIR', "'$out'"))
+# Run it as if it lived in windows\ (it finds its files from there).
+$tmp = Join-Path $pkg "windows\_shoot-tmp.ps1"
+Set-Content $tmp $src -Encoding UTF8
+try { & powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File $tmp } finally { Remove-Item $tmp -Force }
+Get-ChildItem $out -Filter "wizard-*.png" | Select-Object Name, Length

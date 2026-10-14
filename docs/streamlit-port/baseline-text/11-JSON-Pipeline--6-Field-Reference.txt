@@ -1,0 +1,53 @@
+📋 JSON Field Reference
+
+Use this table when filling in a JSON file by hand. Every field exported by Phase 1 is listed here with its expected type, allowed values (for dropdown fields), and an example. Download the JSON Schema to get live validation and autocomplete inside VS Code — just point the schema at your JSON file.
+
+🔍 Filter fields
+
+Full Option Lists (for dropdown / comma-separated fields)
+
+plant_type
+
+growth_rate
+
+is_evergreen
+
+leaf_type
+
+flower_symmetry
+
+flower_size
+
+fruit_edibility
+
+root_morphology
+
+deer_resistance
+
+invasive_local
+
+native_status
+
+sun_exposure
+
+leaf_shape
+
+leaf_margin
+
+flower_shape
+
+reproduction_type
+
+root_system
+
+root_function
+
+toxicity
+
+fertilizer
+
+Download JSON Schema (VS Code validation)
+
+Save this file as plant_schema.json, then add "$schema": "./plant_schema.json" as the first key in any exported plant JSON array wrapper to get red-underline validation and autocomplete in VS Code.
+
+⬇️ Download plant_schema.json

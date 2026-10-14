@@ -1,0 +1,5 @@
+🌱 Add a New Plant
+
+Enter your account email to add plants (Jun or Jason only).
+
+Account email

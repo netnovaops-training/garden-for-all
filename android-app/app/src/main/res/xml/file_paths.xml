@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  What the FileProvider may hand to other apps, and nothing else.
+
+  images/  the photo the camera app writes, for a vision question.
+  updates/ the APK downloaded by the in-app updater, handed to Android's
+           package installer. Scoped to its own directory so a bug in one
+           cannot expose the other, and neither can reach the rest of the
+           app's storage.
+-->
+<paths>
+    <cache-path name="images" path="images/" />
+    <cache-path name="updates" path="updates/" />
+</paths>

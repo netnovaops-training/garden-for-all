@@ -1,0 +1,33 @@
+<div class="weather-wrapper" style="width: 100%; max-width: 1200px; margin: 0 auto;">
+    <div class="cartoony-card holographic-active {{ theme }}" style="padding: 40px; border: 4px solid #333; border-radius: 15px; box-shadow: 6px 6px 0px rgba(0,0,0,0.8); overflow: hidden; position: relative;">
+        
+        <div style="position: relative; z-index: 20; text-align: center;">
+            <h2 class="blog-cartoony-text" style="font-size: 2.5rem; margin-bottom: 20px;">
+                🌱 48-Hour Daytime Garden Outlook
+            </h2>
+
+            <form method="GET" action="index.php" style="display: flex; gap: 15px; justify-content: center; margin-bottom: 40px; flex-wrap: wrap;">
+                <input type="text" name="zip" value="{{ zip }}" placeholder="Zip" maxlength="5" 
+                       style="padding: 15px; border: 4px solid #333; border-radius: 12px; font-weight: 900; width: 140px; font-size: 1.4rem; text-align: center; color: #333 !important;">
+                <button type="submit" style="background: #FFD700; border: 4px solid #333; padding: 15px 30px; border-radius: 12px; font-weight: 900; cursor: pointer; font-size: 1.2rem; box-shadow: 4px 4px 0px #333;">
+                    UPDATE 🔄
+                </button>
+            </form>
+
+            <div id="forecast-container" data-zip="{{ zip }}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
+                {% if zip.is_empty() %}
+                    <div class="blog-cartoony-text" style="grid-column: 1/-1;">Enter a zip code to see your hourly garden forecast!</div>
+                {% else %}
+                    <div class="blog-cartoony-text" style="grid-column: 1/-1;">Checking hourly conditions... ☁️</div>
+                {% endif %}
+            </div>
+
+            <div style="margin-top: 35px; text-align: center;">
+                <button id="toggle-forecast-btn" data-expanded="false" style="display: none; background: #FFD700; border: 4px solid #333; padding: 15px 35px; border-radius: 12px; font-weight: 900; cursor: pointer; font-size: 1.2rem; box-shadow: 4px 4px 0px #333; transition: transform 0.1s ease;">
+                    SHOW MORE 🔽
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="js/weather.js?v={{ weather_v }}" defer></script>

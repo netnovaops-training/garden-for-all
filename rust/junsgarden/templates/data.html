@@ -1,0 +1,209 @@
+<div class="data-page-container">
+
+    <!-- Stats header -->
+    <div class="stats-header">
+        🌿 You have 0 plants across 0 varieties — look at you grow!
+    </div>
+
+    <!-- ── Widget picker bar ─────────────────────────────────── -->
+    <div class="widget-picker-bar">
+        <div class="picker-bar-title">📊 Choose Your Widgets</div>
+        <div class="picker-actions">
+            <button class="picker-action-btn" id="btn-show-all">Show All</button>
+            <button class="picker-action-btn" id="btn-hide-all">Hide All</button>
+            <button class="picker-action-btn picker-chips-toggle" id="btn-toggle-chips">▲ Hide Widgets</button>
+            <script>
+            document.getElementById('btn-toggle-chips').addEventListener('click', function(){
+                var chips = document.getElementById('picker-chips');
+                var isOpen = chips.classList.contains('mobile-open');
+                if (isOpen) {
+                    chips.classList.remove('mobile-open');
+                    chips.style.display = 'none';
+                    this.textContent = '▼ Choose Widgets';
+                } else {
+                    chips.classList.add('mobile-open');
+                    chips.style.display = 'flex';
+                    this.textContent = '▲ Hide Widgets';
+                }
+            });
+            </script>
+        </div>
+        <div class="picker-chips" id="picker-chips"></div>
+    </div>
+
+    <!-- ── Cross-Tab Compare Tool ────────────────────────────── -->
+    <details class="compare-tool-wrap" id="compare-tool">
+        <summary class="compare-summary">🔬 Cross-Reference Data — pick dimensions to find patterns</summary>
+        <div class="compare-controls">
+            <div class="compare-select-group" style="flex:2;">
+                <label>Dimension A (rows)</label>
+                <select id="compare-chart-a"></select>
+                <div style="display:flex; gap:6px; margin-top:6px;">
+                    <select id="compare-filter-dim" class="compare-filter-sm"></select>
+                    <select id="compare-filter-val" class="compare-filter-sm" disabled>
+                        <option value="">— refine —</option>
+                    </select>
+                </div>
+            </div>
+            <div class="compare-mode-group">
+                <label class="compare-radio"><input type="radio" name="compare-mode" value="heatmap" checked> Heatmap</label>
+                <label class="compare-radio"><input type="radio" name="compare-mode" value="yoy"> YoY %</label>
+                <div style="border-top:1px solid #ddd;padding-top:4px;margin-top:4px;">
+                    <label class="compare-radio"><input type="radio" name="compare-scale" value="raw" checked> Raw</label>
+                    <label class="compare-radio"><input type="radio" name="compare-scale" value="pct"> %</label>
+                    <label class="compare-radio"><input type="radio" name="compare-scale" value="zscore"> Z-Score</label>
+                </div>
+            </div>
+            <div class="compare-select-group" style="flex:2;">
+                <label>Dimension B (segments)</label>
+                <select id="compare-chart-b"></select>
+                <div style="display:flex; gap:6px; margin-top:6px;">
+                    <select id="compare-filter-dim2" class="compare-filter-sm"></select>
+                    <select id="compare-filter-val2" class="compare-filter-sm" disabled>
+                        <option value="">— refine —</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="compare-controls compare-controls-row2" style="background:#e8f5e9;border-bottom:2px solid #c8e6c9;">
+            <div class="compare-select-group" style="flex:2;">
+                <label>🌦️ Overlay Weather Data (NOAA 2020+ merged with live Open-Meteo)</label>
+                <select id="compare-weather-metric">
+                    <option value="">— No weather overlay —</option>
+                    <option value="temperature">🌡️ Avg Temperature (°F)</option>
+                    <option value="precipitation">🌧️ Total Precipitation (in)</option>
+                    <option value="snowfall">❄️ Total Snowfall (in)</option>
+                    <option value="humidity">💧 Avg Humidity (%)</option>
+                    <option value="wind_speed">💨 Avg Wind Speed (mph)</option>
+                    <option value="uv_index">☀️ Avg UV Index</option>
+                    <option value="dew_point">💨 Avg Dew Point (°F)</option>
+                    <option value="pressure">🔻 Avg Pressure (hPa)</option>
+                    <option value="soil_temp">🌱 Avg Soil Temp (°F)</option>
+                    <option value="soil_moisture">💦 Avg Soil Moisture</option>
+                </select>
+            </div>
+            <div class="compare-select-group" style="flex:1;">
+                <label>📅 Show Year</label>
+                <select id="compare-weather-year">
+                    <option value="">All years (2020–now)</option>
+                    {% for wy in years %}
+                        <option value="{{ wy }}">{{ wy }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <!-- AI Mode toggle + weather scenarios — hidden while AI is disabled -->
+        <div class="compare-controls compare-controls-row2" style="background:#f0fdf4;border-bottom:2px solid #bbf7d0;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;align-items:center;gap:8px;width:100%;">
+                <input type="checkbox" id="compare-ai-toggle" style="accent-color:#2e7d32;width:16px;height:16px;">
+                <label for="compare-ai-toggle" style="font-size:0.82rem;font-weight:700;color:#065f46;cursor:pointer;">🧠 Use AI Predictions (Garden Brain)</label>
+                <span id="compare-ai-status" style="font-size:0.75rem;color:#888;display:none;"></span>
+            </div>
+            <!-- Weather scenario controls — shown when AI is active -->
+            <div id="ai-weather-controls" style="display:none;width:100%;display:none;gap:12px;flex-wrap:wrap;">
+                <div class="compare-select-group" style="flex:1;min-width:160px;">
+                    <label>🌡️ Simulate Temperature</label>
+                    <select id="ai-temp-scenario" class="compare-filter-sm" style="padding:8px 12px;border-radius:10px;border:2px solid #222;font-size:0.85rem;">
+                        <option value="">Actual averages</option>
+                        <option value="cold">❄️ Cold year (avg 42°F)</option>
+                        <option value="normal">🌤️ Normal (avg 50°F)</option>
+                        <option value="hot">🔥 Hot year (avg 58°F)</option>
+                    </select>
+                </div>
+                <div class="compare-select-group" style="flex:1;min-width:160px;">
+                    <label>🌧️ Simulate Rainfall</label>
+                    <select id="ai-rain-scenario" class="compare-filter-sm" style="padding:8px 12px;border-radius:10px;border:2px solid #222;font-size:0.85rem;">
+                        <option value="">Actual totals</option>
+                        <option value="drought">🏜️ Drought (20" total)</option>
+                        <option value="normal">🌦️ Normal (35" total)</option>
+                        <option value="wet">🌊 Wet year (52" total)</option>
+                    </select>
+                </div>
+                <div style="display:flex;align-items:flex-end;padding-bottom:2px;">
+                    <span style="font-size:0.75rem;color:#065f46;font-weight:600;">
+                        AI re-runs predictions using simulated weather conditions
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="compare-controls compare-controls-row2" style="background:#fff3e0;border-bottom:2px solid #ffe0b2;">
+            <!-- WAS "IoT Mock Data (Demo)" until 2026-08-28: five dropdown
+                 options of invented sensor readings, drawn as if they were
+                 measurements. There are no soil sensors, so it could only ever
+                 illustrate a chart type. Replaced with something that reads the
+                 real database and cannot make a number up.
+
+                 Radio buttons rather than a checkbox because the two views are
+                 alternatives, not toggles -- you are either picking dimensions
+                 yourself or asking for the ones worth picking. -->
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                <label class="compare-radio" style="font-size:0.82rem;font-weight:700;color:#E65100;cursor:pointer;display:flex;align-items:center;gap:5px;">
+                    <input type="radio" name="compare-source" value="manual" checked style="accent-color:#FF9800;">
+                    Pick dimensions myself
+                </label>
+                <label class="compare-radio" style="font-size:0.82rem;font-weight:700;color:#E65100;cursor:pointer;display:flex;align-items:center;gap:5px;">
+                    <input type="radio" name="compare-source" value="discover" style="accent-color:#FF9800;">
+                    🧠 Ask the Brain what's worth looking at
+                </label>
+                <span id="discover-status" style="font-size:0.78rem;color:#8a6d3b;"></span>
+            </div>
+            <div id="discover-output" style="display:none;width:100%;"></div>
+        </div>
+        <div id="compare-hint" style="text-align:center; padding:30px; color:#999;">
+            Pick two dimensions above to cross-reference your garden data.<br>
+            <small>E.g. <em>Year Planted</em> × <em>Sun Exposure</em> = which year needed the most light</small>
+        </div>
+        <div id="compare-output" class="compare-output"></div>
+        <div id="compare-weather-overlay"></div>
+        <div id="compare-iot-overlay"></div>
+        <div id="compare-insights"></div>
+    </details>
+
+    <!-- ── AI Insights (hidden — data powers Plant Weather Detective instead) ── -->
+    <div id="ww-ai-insights" style="display:none;">
+        {{ w_ai_insights|safe }}
+    </div>
+
+    <!-- ── Widget grid ───────────────────────────────────────── -->
+    <div class="widget-grid" id="widget-grid">
+
+        <!-- Plant widgets are loaded via AJAX from widget_data.php -->
+        <!-- Shells are injected by js/widget-loader.js -->
+
+        <!-- ── Weather / IoT Widgets (server-rendered) ─────────── -->
+        <div class="widget-wrapper" id="ww-weather-forecast">
+            {{ w_weather_forecast|safe }}
+        </div>
+        <div class="widget-wrapper" id="ww-iot-current">
+            {{ w_iot_current|safe }}
+        </div>
+        <div class="widget-wrapper" id="ww-plant-weather">
+            {{ w_plant_weather|safe }}
+        </div>
+        <div class="widget-wrapper" id="ww-intelligence">
+            {{ w_garden_intelligence|safe }}
+        </div>
+        <div class="widget-wrapper" id="ww-iot-heatgrid">
+            {{ w_iot_heatgrid|safe }}
+        </div>
+        <div class="widget-wrapper" id="ww-iot-moisture">
+            {{ w_iot_moisture|safe }}
+        </div>
+        <div class="widget-wrapper" id="ww-iot-soil">
+            {{ w_iot_soil|safe }}
+        </div>
+        <div class="widget-wrapper" id="ww-iot-weather">
+            {{ w_iot_weather|safe }}
+        </div>
+        <div class="widget-wrapper" id="ww-iot-water-use">
+            {{ w_iot_water_use|safe }}
+        </div>
+
+    </div><!-- /.widget-grid -->
+
+</div><!-- /.data-page-container -->
+
+<script src="js/chart-compare.js?v={{ chart_compare_v }}"></script>
+
+

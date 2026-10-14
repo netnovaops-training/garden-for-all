@@ -1,0 +1,11 @@
+{
+  "id": "dog-safe-garden",
+  "emoji": "🐾",
+  "title": "Collie-Safe Garden",
+  "tags": [
+    { "emoji": "🚫", "label": "Toxic Alert" },
+    { "emoji": "✅", "label": "Safe Picks" }
+  ],
+  "body": "Rough Collies are sensitive to several common plants — avoid foxglove, oleander, azaleas, and sago palm. Safe choices include sunflowers, snapdragons, and most herbs. Our garden is planned so the dogs can wander freely!",
+  "theme": 1
+}

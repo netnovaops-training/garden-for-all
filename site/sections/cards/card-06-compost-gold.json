@@ -1,0 +1,11 @@
+{
+  "id": "compost-gold",
+  "emoji": "♻️",
+  "title": "Compost: Garden Gold",
+  "tags": [
+    { "emoji": "🥬", "label": "Kitchen Scraps" },
+    { "emoji": "💛", "label": "Black Gold" }
+  ],
+  "body": "Every banana peel, coffee ground, and fallen leaf is free fertilizer. A hot compost pile can cook down in just 6–8 weeks. Turn it weekly, keep it moist, and your plants will thank you come spring.",
+  "theme": 4
+}

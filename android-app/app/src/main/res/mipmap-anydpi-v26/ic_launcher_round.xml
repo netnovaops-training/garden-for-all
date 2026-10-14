@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The adaptive icon. Two layers, because the launcher masks them to whatever
+  shape the phone uses and animates them independently.
+
+  The foreground art is deliberately drawn smaller than the canvas: of the
+  108dp layer, only the middle ~72dp is guaranteed to survive the mask, so
+  anything at the edges is lost on a circular launcher.
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@mipmap/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>

@@ -1,0 +1,116 @@
+================================================================
+ Jun's Garden — Plant Record Field Reference
+ Use this alongside the exported JSON schema to fill in
+ missing data, then import via JSON Pipeline → Phase 3.
+================================================================
+
+REQUIRED FIELDS (plant will appear as a Partial until filled)
+────────────────────────────────────────────────────────────────
+plant_name          Common / display name shown on the website
+                    e.g. "Pussy Willow - Salix Discolor"
+
+botanical_name      Full Latin name, genus + species + cultivar
+                    e.g. "Salix discolor"
+
+family              Plant family name
+                    e.g. "Salicaceae"
+
+genus               Genus only
+                    e.g. "Salix"
+
+species             Species epithet only
+                    e.g. "discolor"
+
+plant_type          One of: Perennial, Annual, Biennial, Shrub,
+                    Tree, Succulent, Vine, Unknown
+
+plant_length        Height at maturity  e.g. "6-10 ft"
+plant_width         Width/spread at maturity  e.g. "4-8 ft"
+spacing             Recommended spacing between plants
+
+zones               USDA hardiness zone range  e.g. "4-8"
+sun_exposure        Full Sun / Partial / Shade / Full Sun - Partial
+water_needs         Low / Moderate / High / Average
+soil_ph             pH range  e.g. "5.5-7.0"
+soil_type           e.g. "Moist, well-drained loam"
+
+bloom_color         Color of flowers
+foliage_color       Leaf/foliage color
+stem_color          Stem color (or "None")
+
+attracts            Wildlife attracted  e.g. "Bees, Butterflies"
+deer_resistance     Deer Resistant / Not Resistant / Rabbit Resistant / Both
+toxicity            Non-toxic / Toxic / Toxic to Dogs/Cats / Toxic to Humans
+                    Toxic to Humans & Pets / Unknown
+
+care_notes          Watering, general care instructions
+maintenance_notes   Pruning, seasonal upkeep
+cleanup_notes       Fall/spring cleanup instructions
+
+disease_susceptibility  Known pests or diseases (or "None")
+propagation_method  e.g. "Stem cuttings, seed"
+cuttings            Instructions for taking cuttings
+
+fertilizer          Brand/type used  e.g. "Plant-tone", "None"
+extra_details       Any additional notes, edibility info, etc.
+companion_plants    Good companion plants
+
+fruit_type          Capsule / Berry / None / etc.
+fruit_shape         Shape of fruit
+fruit_color         Color of fruit
+fruit_size          Size of fruit
+fruit_edibility     Edible / Inedible / Toxic / Wildlife Only / None
+
+leaf_shape          See drop-down options in orchestrator form
+leaf_type           Simple / Pinnately Compound / Palmately Compound
+leaf_margin         Entire / Serrated / Shallowly Serrate / Lobed
+
+flower_shape        Rotate / Campanulate / Tubular / etc.
+flower_size         Tiny (<1 in) / Small (1-2 in) / Medium (2-4 in) /
+                    Large (4-6 in) / Massive (>6 in) / None
+flower_symmetry     Actinomorphic / Zygomorphic / None
+
+growth_rate         Slow / Moderate / Fast
+native_status       Native / Non-native / Introduced / Cultivar / Unknown
+invasive_local      No / Yes / Watchlist
+is_evergreen        Evergreen / Deciduous / Semi-evergreen / Herbaceous /
+                    Deciduous Conifer / Spring Ephemeral / Summer Dormant
+
+life_expectancy     e.g. "10-20 years" or "1 year (grown as annual)"
+chilling_hours      Hours of cold needed  e.g. "500-1000" or "0"
+planting_depth      e.g. "Crown at soil level"
+reproduction_type   Hermaphrodite / Monoecious / Dioecious / Polygamous
+
+root_system         Taproot Systems / Fibrous/Adventitious Systems /
+                    Specialized Systems / Unknown
+root_morphology     Fine Roots (< 2 mm) / Coarse Roots (> 2 mm) /
+                    Mixed Fine & Coarse / Unknown
+root_function       Absorptive Roots / Transport Roots / Mixed Orders
+
+aromatics           Fragrance notes or "None"
+
+ADMIN / INVENTORY FIELDS (set in orchestrator, not via JSON)
+────────────────────────────────────────────────────────────────
+garden_beds         Which bed(s) the plant lives in
+year_added / year_planted   Year(s) added  e.g. "2024" or "2023 / 2024"
+qty                 Current quantity on hand
+company             Brand/nursery  e.g. "Proven Winners", "Monrovia"
+local_store         Where purchased  e.g. "Hewitt's"
+average_cost        Estimated retail cost per gallon  e.g. "8.99"
+picture             Image filename — set via Image Manager tab
+died_year           Year plant died (leave blank if alive)
+
+MONTH FIELDS (use 12-char string: J=Jan F=Feb M=Mar A=Apr M=May J=Jun
+              J=Jul A=Aug S=Sep O=Oct N=Nov D=Dec; use . for absent month)
+────────────────────────────────────────────────────────────────
+grow_months         12-char string  e.g. "....MJJASON.."  (May–Nov)
+bloom_months        12-char string  e.g. "......JAS..."   (Jul–Sep)
+
+================================================================
+ IMPORT INSTRUCTIONS
+================================================================
+1. Fill in blank fields in the exported JSON file.
+2. Open the orchestrator → 🔄 JSON Pipeline tab.
+3. Go to Phase 3 — Import & Review.
+4. Paste or upload the filled JSON and follow the review steps.
+================================================================

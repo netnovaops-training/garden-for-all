@@ -1,0 +1,48 @@
+🏷️ Barcode Lookup
+
+Automatically look up UPC barcodes from UPCitemdb (free: 100 requests/day). Results are cached locally so repeated lookups don't burn API calls.
+
+Cached Lookups
+
+0
+
+Found
+
+0
+
+Not Found
+
+0
+Garden (data_source)
+
+13 / 464 have barcodes (2%)
+
+Wishlist (future_plants)
+
+0 / 6534 have barcodes (0%)
+
+Single Plant Lookup
+
+Table
+
+data_source
+
+Plant ID
+
+🔍 Look Up Barcode
+
+Batch Lookup (Missing Barcodes)
+
+Table
+
+data_source
+
+Max plants to look up
+
+30
+5
+90
+
+⚠️ Free API: 100 requests/day. ~2.5s delay between requests.
+
+🚀 Start Batch Lookup

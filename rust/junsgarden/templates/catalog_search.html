@@ -1,0 +1,167 @@
+        <div class="vine-separator"><h2>🔤 A–Z Plants</h2></div>
+
+        <div id="az-bar" class="az-bar">
+            <span class="az-loading">Loading…</span>
+        </div>
+
+        <div class="vine-separator"><h2>Quick Search</h2></div>
+
+        <div class="quick-filters" style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-bottom:30px; align-items:center;">
+
+            <select onchange="if(this.value) window.runSearch(this.value); this.selectedIndex=0;" style="padding: 10px 15px; border-radius: 20px; border: 2px solid #a5d6a7; background: #f1f8e9; color: #2e7d32; font-weight: bold; cursor: pointer; outline: none; font-size:0.95rem;">
+                <option value="" disabled selected>🌿 Plant Families</option>
+                <option value="Coleus">Coleus</option>
+                <option value="Evergreen">Evergreens</option>
+                <option value="Heuchera">Heuchera</option>
+                <option value="Hosta">Hostas</option>
+                <option value="Hydrangea">Hydrangeas</option>
+                <option value="Japanese Maple">Japanese Maples</option>
+                <option value="Phlox">Phlox</option>
+                <option value="Rose">Roses</option>
+            </select>
+
+            <select onchange="if(this.value) window.runSearch(this.value); this.selectedIndex=0;" style="padding: 10px 15px; border-radius: 20px; border: 2px solid #90caf9; background: #e3f2fd; color: #1565c0; font-weight: bold; cursor: pointer; outline: none; font-size:0.95rem;">
+                <option value="" disabled selected>🏪 Brands &amp; Stores</option>
+                <option value="BlewLabel">BlewLabel</option>
+                <option value="David Austin">David Austin</option>
+                <option value="Home Depot">Home Depot</option>
+                <option value="Lowes">Lowes</option>
+                <option value="Monrovia">Monrovia</option>
+                <option value="Nature's Classic">Nature's Classic</option>
+                <option value="Proven Winners">Proven Winners</option>
+            </select>
+
+            <select onchange="if(this.value) window.runSearch(this.value); this.selectedIndex=0;" style="padding: 10px 15px; border-radius: 20px; border: 2px solid #ce93d8; background: #f3e5f5; color: #6a1b9a; font-weight: bold; cursor: pointer; outline: none; font-size:0.95rem;">
+                <option value="" disabled selected>📅 Year Planted</option>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+                <option value="2021">2021</option>
+            </select>
+
+            <select onchange="if(this.value) window.runSearch(this.value); this.selectedIndex=0;" style="padding: 10px 15px; border-radius: 20px; border: 2px solid #81d4fa; background: #e1f5fe; color: #0277bd; font-weight: bold; cursor: pointer; outline: none; font-size:0.95rem;">
+                <option value="" disabled selected>⭐ Favorites</option>
+                <option value="⭐ Jun's Favs">⭐ Jun's Favs</option>
+                <option value="⭐ Jason's Favs">⭐ Jason's Favs</option>
+                <option value="🐾 Kona's Favs">🐾 Kona's Favs</option>
+            </select>
+
+            <button class="tag tag-community-favs"
+                    data-search="💖 Community Favs"
+                    style="border:none; cursor:pointer; font-size:0.95rem; margin:0;"
+                    onclick="window.runSearch(this.dataset.search)">💖 Community Favs</button>
+
+        </div>
+
+        {% if !current_user.is_empty() %}
+        <div class="vine-separator"><h2>👁️ Views</h2></div>
+        <div class="views-filter-bar" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:24px;">
+            <button class="bed-opt-btn view-btn" data-bed="view:image_approved" onclick="window.bedSearch(this, this.dataset.bed)" style="font-size:0.92rem;">📸 Image Approved</button>
+            <button class="bed-opt-btn view-btn" data-bed="view:image_not_approved" onclick="window.bedSearch(this, this.dataset.bed)" style="font-size:0.92rem;">🚫 Image Not Approved</button>
+            <button class="bed-opt-btn view-btn" data-bed="view:jun_done" onclick="window.bedSearch(this, this.dataset.bed)" style="font-size:0.92rem;">✅ Jun Done</button>
+            <button class="bed-opt-btn view-btn" data-bed="view:jason_done" onclick="window.bedSearch(this, this.dataset.bed)" style="font-size:0.92rem;">✅ Jason Done</button>
+            <button class="bed-opt-btn view-btn" data-bed="view:not_done" onclick="window.bedSearch(this, this.dataset.bed)" style="font-size:0.92rem;">❌ Not Done</button>
+        </div>
+        {% endif %}
+
+        <script>
+        (function(){
+            window.SIMPLE_VIEW = true;
+        })();
+        </script>
+
+        <div class="vine-separator"><h2>🏷️ Tags</h2></div>
+        <div style="text-align:center; margin-bottom:24px;">
+            <button id="qr-tags-btn" onclick="window.toggleQrTags()" style="padding:12px 28px; border-radius:25px; border:2px solid #a5d6a7; background:#e8f5e9; color:#2e7d32; font-weight:bold; cursor:pointer; font-size:1rem; box-shadow:0 2px 5px rgba(0,0,0,0.08); transition:all 0.2s;">
+                🏷️ Show QR Tags
+            </button>
+        </div>
+        <div id="qr-tags-grid" style="display:none;"></div>
+
+        <div class="vine-separator"><h2>🗺️ Bed Search</h2></div>
+
+        <div class="bed-search-grid">
+
+            <!-- North Beds -->
+            <div class="bed-group north-group">
+                <button class="bed-group-btn" onclick="window.toggleBedGroup(this)" aria-expanded="false">
+                    <span>🧭 North Beds</span><span class="bed-caret">▾</span>
+                </button>
+                <div class="bed-options" hidden>
+                    <button class="bed-opt-btn" data-bed="Boo Boo's Garden"                     onclick="window.bedSearch(this, this.dataset.bed)">🐕 Boo Boo's Garden</button>
+                    <button class="bed-opt-btn" data-bed="China Town Garden"                    onclick="window.bedSearch(this, this.dataset.bed)">🏮 China Town Garden</button>
+                    <button class="bed-opt-btn" data-bed="Grandpa Duke of Earl Middleton Garden" onclick="window.bedSearch(this, this.dataset.bed)">🎩 Duke's Garden</button>
+                    <button class="bed-opt-btn" data-bed="Jason's Terrace"                       onclick="window.bedSearch(this, this.dataset.bed)">🪴 Jason's Terrace</button>
+                    <button class="bed-opt-btn" data-bed="Ko-Ja Garden"                         onclick="window.bedSearch(this, this.dataset.bed)">🤝 Ko-Ja Garden</button>
+                    <button class="bed-opt-btn" data-bed="Korea Garden"                         onclick="window.bedSearch(this, this.dataset.bed)">🌸 Korea Garden</button>
+                    <button class="bed-opt-btn" data-bed="River Garden"                         onclick="window.bedSearch(this, this.dataset.bed)">🌊 River Garden</button>
+                    <button class="bed-opt-btn" data-bed="Uncle Dennis Garden"                  onclick="window.bedSearch(this, this.dataset.bed)">🌿 Uncle Dennis</button>
+                </div>
+            </div>
+
+            <!-- South Beds -->
+            <div class="bed-group south-group">
+                <button class="bed-group-btn" onclick="window.toggleBedGroup(this)" aria-expanded="false">
+                    <span>🧭 South Beds</span><span class="bed-caret">▾</span>
+                </button>
+                <div class="bed-options" hidden>
+                    <button class="bed-opt-btn" data-bed="Annuals"                   onclick="window.bedSearch(this, this.dataset.bed)">🌻 Annuals</button>
+                    <button class="bed-opt-btn" data-bed="Barwaz Garden"             onclick="window.bedSearch(this, this.dataset.bed)">🌺 Barwaz Garden</button>
+                    <button class="bed-opt-btn" data-bed="Grandma Emily Barwaz Garden" onclick="window.bedSearch(this, this.dataset.bed)">👵 Grandma Emily's</button>
+                    <button class="bed-opt-btn" data-bed="Karta's Corner Garden"     onclick="window.bedSearch(this, this.dataset.bed)">🌿 Karta's Corner</button>
+                    <button class="bed-opt-btn" data-bed="Orchard Grove"             onclick="window.bedSearch(this, this.dataset.bed)">🍎 Orchard Grove</button>
+                    <button class="bed-opt-btn" data-bed="The Royal Run"             onclick="window.bedSearch(this, this.dataset.bed)">👑 The Royal Run</button>
+                    <button class="bed-opt-btn" data-bed="Oma's Garden"              onclick="window.bedSearch(this, this.dataset.bed)">🌷 Oma's Garden</button>
+                </div>
+            </div>
+
+            <!-- East Beds -->
+            <div class="bed-group east-group">
+                <button class="bed-group-btn" onclick="window.toggleBedGroup(this)" aria-expanded="false">
+                    <span>🧭 East Beds</span><span class="bed-caret">▾</span>
+                </button>
+                <div class="bed-options" hidden>
+                    <button class="bed-opt-btn" data-bed="All Animals Go to Heaven"       onclick="window.bedSearch(this, this.dataset.bed)">🌈 All Animals</button>
+                    <button class="bed-opt-btn" data-bed="Aunt Sharon's Garden"           onclick="window.bedSearch(this, this.dataset.bed)">🌹 Aunt Sharon's</button>
+                    <button class="bed-opt-btn" data-bed="Jimmy John's Blue's Garden"     onclick="window.bedSearch(this, this.dataset.bed)">💙 Jimmy John's</button>
+                    <button class="bed-opt-btn" data-bed="Kona's Garden"                  onclick="window.bedSearch(this, this.dataset.bed)">🐾 Kona's Garden</button>
+                    <button class="bed-opt-btn" data-bed="Sister Elizabeth's Garden"      onclick="window.bedSearch(this, this.dataset.bed)">🕊️ Sister Elizabeth's</button>
+                    <button class="bed-opt-btn" data-bed="The 4 Season Garden"            onclick="window.bedSearch(this, this.dataset.bed)">🍂 4 Season Garden</button>
+                    <button class="bed-opt-btn" data-bed="Zen Garden"                     onclick="window.bedSearch(this, this.dataset.bed)">🧘 Zen Garden</button>
+                </div>
+            </div>
+
+            <!-- Edibility -->
+            <div class="bed-group edibility-group">
+                <button class="bed-group-btn" onclick="window.toggleBedGroup(this)" aria-expanded="false">
+                    <span>🥗 Edibility</span><span class="bed-caret">▾</span>
+                </button>
+                <div class="bed-options" hidden>
+                    <!-- data-bed is the actual search term that matches DB field values -->
+                    <!-- Edibility filters use field-based logic in catalog.php (fruit_edibility + toxicity) -->
+                    <!-- Fully Edible: fruit_edibility='Edible' AND non-toxic -->
+                    <button class="bed-opt-btn edib-full"     data-bed="edible:full"     onclick="window.bedSearch(this, this.dataset.bed)">🍽️ Fully Edible</button>
+                    <!-- Semi Edible: edible fruit but toxic to pets/humans (eat with care) -->
+                    <button class="bed-opt-btn edib-semi"     data-bed="edible:semi"     onclick="window.bedSearch(this, this.dataset.bed)">🥗 Semi Edible</button>
+                    <!-- Wildlife Only: fruit_edibility='Wildlife Only' -->
+                    <button class="bed-opt-btn edib-wildlife" data-bed="edible:wildlife" onclick="window.bedSearch(this, this.dataset.bed)">🦜 Wildlife Only</button>
+                    <!-- Completely Toxic: fruit_edibility Toxic / toxicity Humans & Pets -->
+                    <button class="bed-opt-btn edib-toxic"    data-bed="edible:toxic"    onclick="window.bedSearch(this, this.dataset.bed)">☠️ Completely Toxic</button>
+                </div>
+            </div>
+
+            <!-- Archival & Planning -->
+            <div class="bed-group archive-group">
+                <button class="bed-group-btn" onclick="window.toggleBedGroup(this)" aria-expanded="false">
+                    <span>🗄️ Archival &amp; Planning</span><span class="bed-caret">▾</span>
+                </button>
+                <div class="bed-options" hidden>
+                    <button class="bed-opt-btn" data-bed="Dead or Removed"                       onclick="window.bedSearch(this, this.dataset.bed)">💀 Dead / Removed</button>
+                    <button class="bed-opt-btn" data-bed="To Be Sorted"                          onclick="window.bedSearch(this, this.dataset.bed)">📬 To Be Sorted</button>
+                    <button class="bed-opt-btn" data-bed="Want"                                  onclick="window.bedSearch(this, this.dataset.bed)">🌠 Wishlist</button>
+                </div>
+            </div>
+
+        </div>

@@ -1,0 +1,11 @@
+{
+  "id": "clifton-park-community",
+  "emoji": "🏘️",
+  "title": "Clifton Park in Bloom",
+  "tags": [
+    { "emoji": "🛒", "label": "Farmers Market" },
+    { "emoji": "🤝", "label": "Neighbors" }
+  ],
+  "body": "The Clifton Park Farmers Market runs spring through fall, packed with local perennials, heirloom tomatoes, and native plants you won't find at big-box stores. It's the best place to swap tips — and sometimes extra seedlings!",
+  "theme": 5
+}

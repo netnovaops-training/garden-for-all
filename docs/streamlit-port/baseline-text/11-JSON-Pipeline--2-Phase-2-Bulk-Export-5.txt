@@ -1,0 +1,7 @@
+📦 Bulk Export — up to 5 plants with missing fields
+
+Shows only plants that have incomplete data. Select up to 5, review exactly which fields are missing, then download as a single JSON file. Edit it offline and upload in Phase 3 to commit changes.
+
+🔍 Load Plants with Missing Fields
+
+🔄 Reload

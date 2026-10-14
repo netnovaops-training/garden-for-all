@@ -1,0 +1,19 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 380' font-family='Segoe UI, Malgun Gothic, Noto Sans KR, Arial, sans-serif'>
+  <rect width='720' height='380' fill='#ffffff'/>
+  <text x='360' y='34' text-anchor='middle' font-size='20' font-weight='bold' fill='#1f2a1f'>A virtual machine (VM): a whole extra computer inside your computer</text>
+  <rect x='20' y='58' width='680' height='240' rx='18' fill='none' stroke='#555' stroke-width='3' stroke-dasharray='8 6'/>
+  <text x='36' y='82' font-size='16' fill='#555'>Your computer</text>
+  <rect x='40' y='92' width='300' height='190' rx='14' fill='#fde8d7' stroke='#c0632b' stroke-width='3'/>
+  <text x='190' y='122' text-anchor='middle' font-size='19' font-weight='bold' fill='#8a3b12'>Pretend computer 1</text>
+  <rect x='60' y='138' width='260' height='58' rx='8' fill='#f7c9a6'/>
+  <text x='190' y='173' text-anchor='middle' font-size='17' fill='#5a2508'>Its own Windows or Ubuntu</text>
+  <rect x='110' y='210' width='160' height='52' rx='8' fill='#ffffff' stroke='#c0632b'/>
+  <text x='190' y='242' text-anchor='middle' font-size='17' fill='#5a2508'>One program</text>
+  <rect x='380' y='92' width='300' height='190' rx='14' fill='#fde8d7' stroke='#c0632b' stroke-width='3'/>
+  <text x='530' y='122' text-anchor='middle' font-size='19' font-weight='bold' fill='#8a3b12'>Pretend computer 2</text>
+  <rect x='400' y='138' width='260' height='58' rx='8' fill='#f7c9a6'/>
+  <text x='530' y='173' text-anchor='middle' font-size='17' fill='#5a2508'>Its own Windows or Ubuntu</text>
+  <rect x='450' y='210' width='160' height='52' rx='8' fill='#ffffff' stroke='#c0632b'/>
+  <text x='530' y='242' text-anchor='middle' font-size='17' fill='#5a2508'>One program</text>
+  <text x='360' y='330' text-anchor='middle' font-size='18' fill='#8a3b12'>&#9888; usually needs 2 to 4 GB of memory, starts in minutes</text>
+</svg>

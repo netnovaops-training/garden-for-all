@@ -1,0 +1,31 @@
+# Apache version of the "front door", as an alternative to Caddy (guide 04).
+# Use ONE of them, not both: both want ports 80 and 443.
+#
+#   sudo apt install -y apache2
+#   sudo a2enmod proxy proxy_http headers ssl rewrite
+#   sudo cp docker/extras/apache-garden.conf.example /etc/apache2/sites-available/garden.conf
+#   sudo nano /etc/apache2/sites-available/garden.conf     (change YOUR-NAME.ddns.net)
+#   sudo a2ensite garden
+#   sudo apache2ctl configtest          <- should say "Syntax OK"
+#   sudo systemctl reload apache2
+#
+# Apache does NOT get the padlock certificate by itself. Add it with Certbot:
+#   sudo apt install -y certbot python3-certbot-apache
+#   sudo certbot --apache -d YOUR-NAME.ddns.net
+# Certbot edits this file to add the HTTPS part and renews it automatically.
+
+<VirtualHost *:80>
+    ServerName YOUR-NAME.ddns.net
+
+    # Do not let Apache read the website's folder; it only passes visitors on.
+    ProxyPreserveHost On
+    ProxyPass        / http://127.0.0.1:8030/
+    ProxyPassReverse / http://127.0.0.1:8030/
+
+    # Same small safety headers as the Caddy version.
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    ErrorLog  ${APACHE_LOG_DIR}/garden-error.log
+    CustomLog ${APACHE_LOG_DIR}/garden-access.log combined
+</VirtualHost>

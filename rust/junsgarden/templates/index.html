@@ -1,0 +1,187 @@
+    <div class="page-content {{ page_theme }}" style="position: relative; overflow: hidden; background-color: var(--light-green);">
+            
+            <div class="admin-bar" style="border:none; text-align:center; margin-bottom:30px;">
+                {% if !is_admin %}
+                    <div style="display:inline-block; background:rgba(255,255,255,0.8); border-radius:20px; padding:30px 40px; border:2px dashed rgba(46,125,50,0.4); box-shadow:0 10px 30px rgba(0,0,0,0.05); max-width:380px; width:100%; box-sizing:border-box;">
+                        <h3 style="margin:0 0 16px 0; font-size:1.1rem;">🔒 Login</h3>
+                        <form method="POST" action="/login.php" style="display:flex; flex-direction:column; gap:10px;">
+                            <input type="hidden" name="back" value="/">
+                            <input type="text" name="admin_user" placeholder="Username" required autocomplete="username"
+                                   style="padding:11px 14px; border-radius:10px; border:2px solid #c8e6c9; font-size:0.95rem; width:100%; box-sizing:border-box; background:rgba(255,255,255,0.9);">
+                            <input type="password" name="admin_password" placeholder="Password" required autocomplete="current-password"
+                                   style="padding:11px 14px; border-radius:10px; border:2px solid #c8e6c9; font-size:0.95rem; width:100%; box-sizing:border-box; background:rgba(255,255,255,0.9);">
+                            <button type="submit" name="admin_login" class="btn"
+                                    style="border-radius:10px; padding:11px; font-size:0.95rem; font-weight:700; width:100%;">Login</button>
+                        </form>
+                        <p style="margin:12px 0 0 0; font-size:0.85rem;"><a href="/login.php?forgot=1">Forgot password? / First time?</a></p>
+                    </div>
+                {% else %}
+                    <div style="display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap;">
+                        <h3 style="margin:0;">👋 Welcome back, {{ current_user }}!</h3>
+                        <form method="POST" style="display:inline;">
+                            <button name="logout" class="btn btn-red" style="padding:8px 15px; border-radius:8px;">Logout</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+
+           <div class="vine-separator"><h2>📡 Live Garden Conditions</h2></div>
+            <div style="display: flex; justify-content: center; align-items: center; flex-direction: column; width: 95%; max-width: 1000px; margin: 20px auto 50px auto; background: #fff; padding: 20px; border-radius: 15px; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; overflow: hidden;">
+                {{ weather|safe }}
+            </div>
+
+            <div class="vine-separator"><h2>📖 Garden &amp; Collie Tips</h2></div>
+            
+            <!-- Garden Chronicles — loaded & shuffled by js/garden-chronicles.js -->
+            <!-- To add a card: drop a new card-XX-name.json into /sections/cards/ -->
+            <div id="garden-chronicles-container" class="plant-grid centered-flex-grid" style="margin-bottom: 50px; min-height: 280px;">
+                <p style="text-align:center; width:100%; color:#777; font-size:1rem;">Loading Garden Chronicles…</p>
+            </div>
+            <script src="js/garden-chronicles.js" defer></script>
+
+        <div class="vine-separator"><h2>🌿 Garden News & Updates</h2></div>
+
+            {% if is_admin %}
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <button onclick="document.getElementById('blog-modal').style.display='flex'" 
+                            style="background: #FFD700; color: #333; border-radius: 30px; border: 3px solid #333; padding: 15px 30px; font-size: 1.4rem; font-weight: 900; box-shadow: 3px 4px 0px rgba(0,0,0,0.8); cursor: pointer;">
+                        ➕ Create New Post
+                    </button>
+                </div>
+
+                <div id="blog-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; justify-content:center; align-items:center;">
+                    <div style="background:white; padding:30px; border-radius:20px; border: 4px solid #333; width:90%; max-width:600px; position:relative; box-shadow: 8px 8px 0px rgba(0,0,0,0.8);">
+                        <button onclick="document.getElementById('blog-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:#ff5252; color:white; border:2px solid #333; border-radius:50%; width:35px; height:35px; font-weight:bold; cursor:pointer;">✖</button>
+                        <h3 style="margin-top:0; color:#2e7d32; font-size: 1.5rem;">✍️ Post a New Update</h3>
+                        <form method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:15px;">
+                            <input type="text" name="title" placeholder="Post Title" required style="padding:15px; border-radius:15px; border:2px solid #ccc; font-size:1.1rem;">
+                            <textarea name="content" placeholder="What's happening in the garden today?" required rows="5" style="padding:15px; border-radius:15px; border:2px solid #ccc; font-size:1.1rem;"></textarea>
+                            <div style="background:#f1f8e9; padding:15px; border-radius:15px; border: 2px dashed #a5d6a7;">
+                                <label style="font-weight:bold; color:#2e7d32; display:block; margin-bottom:8px;">📸 Attach Pictures (Select multiple!)</label>
+                                <input type="file" name="blog_images[]" accept="image/*" multiple>
+                            </div>
+                            <button type="submit" name="post_blog" style="background: #2e7d32; color: #fff; border-radius: 30px; border: 3px solid #333; padding: 15px; font-size: 1.2rem; font-weight: 900; box-shadow: 2px 3px 0px rgba(0,0,0,0.8); cursor: pointer;">Publish Post</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="edit-blog-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; justify-content:center; align-items:center;">
+                    <div style="background:white; padding:30px; border-radius:20px; border: 4px solid #333; width:90%; max-width:600px; position:relative; box-shadow: 8px 8px 0px rgba(0,0,0,0.8);">
+                        <button type="button" onclick="document.getElementById('edit-blog-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:#ff5252; color:white; border:2px solid #333; border-radius:50%; width:35px; height:35px; font-weight:bold; cursor:pointer;">✖</button>
+                        <h3 style="margin-top:0; color:#1565c0; font-size: 1.5rem;">✏️ Edit Post</h3>
+                        <form method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:15px;">
+                            <input type="hidden" name="blog_id" id="edit_blog_id">
+                            <input type="text" name="title" id="edit_blog_title" required style="padding:15px; border-radius:15px; border:2px solid #ccc; font-size:1.1rem;">
+                            <textarea name="content" id="edit_blog_content" required rows="5" style="padding:15px; border-radius:15px; border:2px solid #ccc; font-size:1.1rem;"></textarea>
+                            <div style="background:#e3f2fd; padding:15px; border-radius:15px; border: 2px dashed #90caf9;">
+                                <label style="font-weight:bold; color:#1565c0; display:block; margin-bottom:8px;">📸 Overwrite Pictures:</label>
+                                <input type="file" name="edit_blog_images[]" accept="image/*" multiple>
+                            </div>
+                            <button type="submit" name="edit_blog" style="background: #1565c0; color: #fff; border-radius: 30px; border: 3px solid #333; padding: 15px; font-size: 1.2rem; font-weight: 900; box-shadow: 2px 3px 0px rgba(0,0,0,0.8); cursor: pointer;">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="plant-grid" style="display: flex; flex-direction: column; align-items: center; gap: 24px; margin-bottom: 20px; width: 100%; overflow-x: hidden; padding-top: 10px; padding-bottom: 10px;">
+                {% if posts.is_empty() %}
+                   <p style="text-align:center; width:100%; margin: 20px auto; font-weight:bold; color:#2e7d32; font-size: 1.2rem;">No garden updates yet! Post the first one!</p>
+                {% else %}
+                    {% for post in posts %}
+                        
+                        <div class="plant-card cartoony-card holographic-active {{ post.theme }}" style="display: flex; flex-direction: row; flex-wrap: wrap; width: 95%; max-width: 1000px; margin: 0 auto; padding: 20px; gap: 20px; align-items: center; justify-content: center; box-sizing: border-box;">
+                            
+                            <div style="flex: 0 0 auto; width: 280px; display: flex; flex-direction: column; align-items: center; margin: 0 auto;">
+                                <div class="blog-img-scroll">
+                                    {% for img in post.images %}
+                                        <img src="{{ img }}" alt="{{ post.title }}" style="width: 280px; height: 280px; object-fit: cover; border-radius: 12px; scroll-snap-align: center; border: 3px solid #333; flex-shrink: 0; display: block;">
+                                    {% endfor %}
+                                </div>
+                                {% if post.images.len() > 1 %}
+                                    <div class="blog-cartoony-text" style="text-align:center; font-size:0.8rem; margin-top:5px; background: rgba(255,255,255,0.4); padding: 5px; border-radius: 10px; border: 2px solid #333; width: 100%;">⬅️ Swipe for more ➡️</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="plant-details" style="flex: 1 1 300px; display:flex; flex-direction:column; align-items: center; text-align: center; width: 100%; box-sizing: border-box;">
+                                <h3 class="blog-cartoony-text" style="margin:0 0 10px 0; font-size: 1.8rem;">{{ post.title }}</h3>
+                                
+                                <div style="margin-bottom: 15px; display:flex; gap:10px; align-items:center; justify-content: center; flex-wrap:wrap;">
+                                    <span class="blog-cartoony-text" style="background:rgba(255,255,255,0.2); padding:5px 12px; border-radius:15px; border: 2px solid #333; font-size:0.9rem;">📅 {{ post.date }}</span>
+                                    <span class="blog-cartoony-text" style="background:rgba(255,255,255,0.2); padding:5px 12px; border-radius:15px; border: 2px solid #333; font-size:0.9rem;">✍️ {{ post.author }}</span>
+                                </div>
+
+                                <div class="homepage-blog-wrapper" id="home-wrapper-{{ post.id }}" style="width: 100%; text-align: left;">
+                                    <div class="blog-readable-body">
+                                        {{ post.content_html|safe }}
+                                    </div>
+                                    <div class="blog-fade-overlay"></div>
+                                </div>
+
+                                <div style="text-align: center; margin-top: 15px;">
+                                    <button class="blog-toggle-btn" id="toggle-btn-{{ post.id }}" onclick="toggleHomepagePost({{ post.id }})">📖 Read More</button>
+                                </div>
+
+                               {% if is_admin %}
+                                <div style="border-top: 3px dashed #333; padding-top: 15px; display:flex; gap:10px; justify-content: center; flex-wrap:wrap; width: 100%; margin-top: 20px;">
+                                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ post.share_url }}" target="_blank" style="background:#1877F2; color:white; text-decoration:none; padding:8px 15px; border-radius:20px; font-weight:bold; border:2px solid #333; font-size: 0.9rem;">📘 Facebook</a>
+                                    
+                                    <a href="https://twitter.com/intent/tweet?url={{ post.share_url }}&text={{ post.share_text }}" target="_blank" style="background:#1DA1F2; color:white; text-decoration:none; padding:8px 15px; border-radius:20px; font-weight:bold; border:2px solid #333; font-size: 0.9rem;">🐦 Twitter</a>
+
+                                    <a href="https://www.instagram.com/" target="_blank" onclick="navigator.clipboard.writeText('https://junsgarden.zapto.org/'); alert('Link copied to clipboard!');" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color:white; text-decoration:none; padding:8px 15px; border-radius:20px; font-weight:bold; border:2px solid #333; font-size: 0.9rem;">📷 Instagram</a>
+                                </div>
+                                
+                                    <div class="mobile-stack" style="background: rgba(255,255,255,0.3); border-radius: 15px; border: 3px solid #333; padding: 15px; margin-top: 20px; display:flex; gap:10px; justify-content: center; width: 100%; max-width: 400px; box-sizing: border-box;">
+                                        <button type="button" class="edit-blog-btn" style="flex:1; background:#2196F3; color:white; padding: 8px; font-size: 0.9rem; border-radius:10px; border:2px solid #333; font-weight:bold; cursor:pointer;" 
+                                            data-id="{{ post.id }}" data-title="{{ post.title }}" data-content="{{ post.content_raw }}">✏️ Edit</button>
+                                        <form method="POST" onsubmit="return confirm('Delete this post?');" style="flex:1; margin:0; display:flex; width: 100%;">
+                                            <input type="hidden" name="blog_id" value="{{ post.id }}">
+                                            <button type="submit" name="delete_blog" style="width:100%; background:#f44336; color:white; padding: 8px; font-size: 0.9rem; border-radius:10px; border:2px solid #333; font-weight:bold; cursor:pointer;">🗑️ Delete</button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div style="text-align: center; margin: 20px 0 60px 0;">
+                <a href="blog.php" class="archive-redirect-btn">📂 Open Complete Garden Archive</a>
+            </div>
+
+          <div class="vine-separator"><h2 id="guestbook">📝 Sign our Guestbook</h2></div>
+            
+            <div class="comment-section">
+                
+                <form method="POST" class="comment-form">
+                    <input type="text" name="user_name" placeholder="Name" required maxlength="20">
+
+                    <input type="text" name="user_message" placeholder="Leave a note..." required maxlength="100">
+
+                    <button type="submit">Post</button>
+                </form>
+
+                <div class="comment-list" style="margin-top: 30px; width: 100%; text-align: center;">
+                    {% if comments.is_empty() %}
+                        <div class="comment-row" style="text-align:center; color:#888; font-weight: bold;">No comments yet.</div>
+                    {% else %}
+                        {% for (index, line) in comments.iter().enumerate() %}
+                            <div class="comment-row" style="margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <span>{{ line|safe }}</span>
+                                {% if is_admin %}
+                                    <form method="POST" onsubmit="return confirm('Delete this comment?');" style="margin: 0; display: inline-flex;">
+                                        <input type="hidden" name="comment_index" value="{{ index }}">
+                                        <button type="submit" name="delete_comment" title="Delete Comment"
+                                                style="background: #ff5252; color: white; border: 2px solid #333; border-radius: 50%; width: 24px; height: 24px; font-size: 0.8rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 1px 2px 0px rgba(0,0,0,0.8);">✖</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+            </div><!-- /.comment-section -->
+        </div><!-- /.page-content -->
+
+    <script src="js/home-blog.js?v={{ home_blog_v }}" defer></script>
+    <script src="js/home.js?v={{ home_v }}" defer></script>

@@ -1,0 +1,34 @@
+# Caddy AND Apache together (guide 04, part "Using both").
+#
+# Caddy is the front door on ports 80 and 443. Apache sits behind it, on a
+# private port that only this laptop can reach (127.0.0.1:8081). Caddy sends
+# the garden to the Rust site and anything under /learn/ to Apache.
+#
+#   sudo cp docker/extras/Caddyfile.with-apache.example /etc/caddy/Caddyfile
+#   sudo nano /etc/caddy/Caddyfile        (change YOUR-NAME.ddns.net)
+#   sudo caddy validate --config /etc/caddy/Caddyfile
+#   sudo systemctl reload caddy
+
+YOUR-NAME.ddns.net {
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    log {
+        output file /var/log/caddy/garden-access.log
+    }
+
+    # Everything under /learn/ goes to Apache. handle_path removes "/learn"
+    # before passing the request on, so Apache sees "/" for "/learn/".
+    handle_path /learn/* {
+        reverse_proxy 127.0.0.1:8081
+    }
+
+    # Everything else is the garden website.
+    handle {
+        reverse_proxy 127.0.0.1:8030
+    }
+}

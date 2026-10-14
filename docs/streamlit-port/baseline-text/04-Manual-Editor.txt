@@ -1,0 +1,255 @@
+✍️ Global Manual Editor
+
+Instantly find and edit any plant manually. No AI involved.
+
+Search database for a plant to edit:
+
+'Angel Bells' (ID: 509)
+🌿 Related Plants in Database
+
+Botanical Matches (Read Only)
+
+✏️ Edit Active Plant
+
+📄 Export current data as HTML (open in browser → Print → Save as PDF)
+
+🧬 Section 1: Taxonomy & Core Identity
+
+Botanical Name
+
+Company / Brand
+
+Family
+
+Genus
+
+Species
+
+Plant Type
+
+Perennial
+
+Native Status
+
+Non-native
+📏 Section 2: Growth Metrics, Spacing & Beds
+
+Target Length / Height
+
+Target Width / Spread
+
+Life Expectancy
+
+Plant Spacing Limits
+
+Global Species Hardiness Zones spectrum
+
+Growth Rate Assumption
+
+Moderate
+🌦️ Section 3: Microclimatic Profiles & Soil Requirements
+
+Sun Exposure Requirement
+
+Full Sun - Partial
+
+Hydration Needs
+
+Soil Target pH Scale
+
+Soil Consistency Profile
+
+Planting Depth Requirement
+
+Chilling Hours Requirement
+
+💵 Section 4: Investment & Procurement Logistics
+
+Estimated 1-Gallon Regional Retail Cost ($)
+
+Quantity Planted (Manual Override Only)
+
+Year(s) Added to Garden (Manual Override Only)
+
+2026
+
+Year Plant Died (optional, leave blank if alive)
+
+📍 Section 5: Extended Human Bed Location Manager
+
+Assign Plant to Bed (AI Prohibited Field)
+
+To Be Sorted
+🌿 Section 6: Foliage & Stem Morphologies
+
+Foliage Color Spec
+
+Stem Color Spec
+
+Foliage Retention (Tags)
+
+Herbaceous
+
+Leaf Structural Shape
+
+Ovate (Egg-shaped)
+
+Leaf Blade Type
+
+Simple (Single undivided blade)
+
+Leaf Margin / Edge Profile
+
+Serrated (Saw-toothed edges)
+🌸 Section 7: Flower, Scent & Reproduction
+
+Flower/Bloom Color
+
+Aromatics / Scent Descriptors
+
+Flower Symmetry Layout
+
+Actinomorphic (Radial symmetry)
+
+Flower / Corolla Shape
+
+Campanulate (Bell-shaped)
+
+Flower Size Class
+
+Small (1-2 in)
+
+Reproduction Mechanism
+
+Hermaphrodite
+🍒 Section 8: Fruit & Berry Yields
+
+Fruit/Berry Type
+
+Fruit Structural Shape
+
+Fruit Color
+
+Fruit Dimension Size
+
+Fruit Edibility Class
+
+Inedible
+🪹 Section 9: Subterranean Anatomy & Root Systems
+
+Primary Root Structure
+
+Fibrous/Adventitious Systems
+
+Root Dimensional Morphology
+
+Fine Roots (< 2 mm)
+
+Root Order & Function Limits
+
+Mixed Orders
+🛡️ Section 10: Care, Hazards, Propagation & Companions
+
+Attracts Pollinators/Wildlife
+
+Deer/Rabbit Pest Resistance
+
+Rabbit Resistant
+
+Toxicity Verification Classification
+
+Non-toxic
+
+Local Invasive Status
+
+No
+
+Propagation Method
+
+Cuttings Instructions
+
+Assigned Companion Plant Tokens
+
+Geranium
+Nepeta
+Salvia
+
+Assigned Fertilizer Regimens
+
+Flower-tone
+📅 Section 11: Growth Calendars
+
+🌸 Multi-Period Mode (non-contiguous months)
+
+Vegetative Grow Start
+
+Apr
+
+Vegetative Grow End
+
+Oct
+
+🚫 Does not bloom
+
+Reproductive Bloom Start
+
+Jun
+
+Reproductive Bloom End
+
+Aug
+🌱
+Grow
+···AMJJASO··
+...AMJJASO..
+🌸
+Bloom
+·····JJA····
+.....JJA....
+
+↑ Preview matches the website card. The code shows the DB bitmap value that will be saved.
+
+📝 Section 12: Long-Form Maintenance Journals & Search Overrides
+
+Seasonal Care & Watering Notes
+
+Pruning & Fertilizer Notes
+
+Winterization & Cleanup Notes
+
+Disease & Insect Vulnerabilities
+
+Extra Details / Culinary Edibility Profile
+
+⚠️ Flag Entry for Further Technical Review
+
+🖼️ Section 13: Digital Asset Gallery Management
+
+Active Vault Graphics:
+
+Missing File: web/eaa3c9bef67d4b5d.jpg
+
+🗑 Wipe File from Vol
+
+Missing File: web/ce44e39020f1e209.jpg
+
+🗑 Wipe File from Vol
+
+Missing File: web/1be4fea95e3cdbf0.jpg
+
+🗑 Wipe File from Vol
+
+Upload custom photo(s) to gallery collection
+
+Drag and drop files here
+Limit 200MB per file • JPG, JPEG, PNG, WEBP
+Browse files
+✅ Section 14: Validation Signing Authority
+
+Jason Gibson Signature Sign-Off
+
+Jun Rae Signature Sign-Off
+
+Save Changes
+
+📊 Log a Quantity Event (optional)

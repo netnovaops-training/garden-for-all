@@ -1,0 +1,25 @@
+# n8n guides: n8n is a "connect things together" tool. You draw boxes and
+# arrows ("workflows"): when this happens, do that, then send an email.
+# Start:  docker compose -f docker/extras/n8n.yml up -d
+# Open:   http://localhost:5678   (the first visit makes your owner account)
+#
+# network_mode: host puts n8n on the laptop's own network, the same way Home
+# Assistant runs. That lets n8n talk to your garden (127.0.0.1:8030) and to Home
+# Assistant (127.0.0.1:8123) with simple addresses, and lets Home Assistant
+# reach n8n at 127.0.0.1:5678. N8N_LISTEN_ADDRESS keeps n8n private: it listens
+# on this laptop only, not on your home network and not on the internet.
+# (This is the Linux way. It is how it runs on your Ubuntu laptop.)
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      N8N_LISTEN_ADDRESS: 127.0.0.1
+      N8N_PORT: "5678"
+      TZ: America/New_York                 # change to your time zone
+      GENERIC_TIMEZONE: America/New_York   # the time zone n8n schedules use
+    volumes:
+      # Your workflows and saved logins live here. Back this folder up.
+      - ./n8n-data:/home/node/.n8n

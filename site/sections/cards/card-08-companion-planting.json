@@ -1,0 +1,11 @@
+{
+  "id": "companion-planting",
+  "emoji": "🌿",
+  "title": "Plant Friendships",
+  "tags": [
+    { "emoji": "🍅", "label": "Companions" },
+    { "emoji": "🌼", "label": "Pest Control" }
+  ],
+  "body": "Tomatoes love basil — it repels aphids and improves flavor. Marigolds scare off nematodes. Nasturtiums lure aphids away from roses. Nature's own pest control is free, colorful, and delicious!",
+  "theme": 0
+}

@@ -1,0 +1,52 @@
+# =============================================================================
+#  What git leaves out: ONLY the files your own computer makes while the
+#  garden runs (your settings, passwords, keys, photos you add, new backups,
+#  logs). Everything needed to install the garden from scratch IS kept,
+#  including the starter backup of your garden and the phone app download.
+# =============================================================================
+
+# Build output and caches (made again by every build).
+*.pyc
+__pycache__/
+rust/target/
+android-app/build/
+android-app/app/build/
+android-app/.gradle/
+android-app/local.properties
+
+# Your private settings, passwords and keys (made by the install). NEVER commit these.
+.env
+*.env
+garden-users*
+
+# Your garden's live data (photos, database, wiki, sign-in page, n8n, AI gateway).
+local/
+
+# Backups, including the starter backup of your garden (800 MB). The full
+# package on Google Drive carries the starter backup; git keeps the program.
+backups/
+
+# Made by garden.sh while it runs.
+.garden-remote
+.garden-mode
+.garden-lang
+.garden-built
+.garden-target-windows.txt
+CHECKLIST.txt
+CHECKLIST-*.txt
+checklist-history.log
+MY-ADDRESSES.txt
+logs/
+help/
+# The garden's wiki pages are data, a separate download (junsgarden-wiki-addon.zip).
+# Only their fingerprint (docker/wiki/seed/wiki-pages.sha256) is kept here.
+docker/wiki/seed/*.json.gz
+docker/wiki/seed/*.new
+junsgarden-wiki-addon.zip
+# PDF copies of the guides are made from the .md files (they go in the download).
+PDF/
+# The handbook (00-WELCOME.html, handbook/) and the English PDFs are built into each
+# download by tools/release/build_release.py (with Jason's emblem, which stays out of git).
+/00-WELCOME.html
+/handbook/
+/Setup documentation/

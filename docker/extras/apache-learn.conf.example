@@ -1,0 +1,37 @@
+# Apache BEHIND Caddy: a private web server for learning (guide 04).
+# It listens on 127.0.0.1:8081, so only this laptop (and Caddy) can reach it.
+#
+#   sudo apt install -y apache2
+#   sudo systemctl disable --now apache2            <- stop the default (it wants port 80)
+#   sudo mkdir -p /var/www/learn
+#   echo '<h1>Hello from Apache</h1>' | sudo tee /var/www/learn/index.html
+#   sudo cp docker/extras/apache-learn.conf.example /etc/apache2/sites-available/learn.conf
+#   sudo nano /etc/apache2/ports.conf               <- change the line "Listen 80" to
+#                                                      "Listen 127.0.0.1:8081"
+#   sudo a2dissite 000-default
+#   sudo a2ensite learn
+#   sudo apache2ctl configtest                      <- should say "Syntax OK"
+#   sudo systemctl enable --now apache2
+#   curl http://127.0.0.1:8081/                     <- should show your hello page
+#
+# Check ports.conf afterwards with:  grep -n Listen /etc/apache2/ports.conf
+# It must NOT say "Listen 80" and must NOT listen on every address.
+# If you see a line you do not understand, paste it to Gemini (prompt 2).
+
+<VirtualHost 127.0.0.1:8081>
+    ServerName localhost
+    DocumentRoot /var/www/learn
+
+    <Directory /var/www/learn>
+        # No directory listing and no .htaccess surprises.
+        Options -Indexes
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    # Hide the Apache version from visitors.
+    ServerSignature Off
+
+    ErrorLog  ${APACHE_LOG_DIR}/learn-error.log
+    CustomLog ${APACHE_LOG_DIR}/learn-access.log combined
+</VirtualHost>

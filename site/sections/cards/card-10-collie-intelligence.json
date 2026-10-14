@@ -1,0 +1,11 @@
+{
+  "id": "collie-intelligence",
+  "emoji": "🧠",
+  "title": "Collie Intelligence",
+  "tags": [
+    { "emoji": "🏆", "label": "Smart Dogs" },
+    { "emoji": "🎓", "label": "Training" }
+  ],
+  "body": "Rough Collies rank among the top 20 smartest dog breeds. They learn commands in under 5 repetitions and obey the first time 95% of the time. Ours figured out which beds are off-limits — mostly.",
+  "theme": 2
+}

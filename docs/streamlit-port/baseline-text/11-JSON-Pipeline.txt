@@ -1,0 +1,24 @@
+🔄 JSON Export / Enrich / Import Pipeline
+🔄
+
+Four-phase workflow. Phase 1 exports one plant at a time. Phase 2 bulk-exports up to 5 plants as one JSON for manual editing. Phase 2 Enrich runs Claude + Perenual AI in-app. Phase 3 uploads any JSON and lets you review every change before committing.
+
+📤 Phase 1 — Export
+
+📦 Phase 2 — Bulk Export 5
+
+🤖 Phase 2 — Batch Enrich
+
+📥 Phase 3 — Import & Review
+
+🌟 Wishlist (Future Plants)
+
+📋 Field Reference
+
+📤 Export Plants with Missing Fields — One at a Time
+
+Works through every incomplete plant one by one. Export the plant's JSON, then check Mark as Done to remove it from the queue and move to the next one. Your progress is remembered for the session.
+
+🔍 Load Plants with Missing Fields
+
+🔄 Reload List

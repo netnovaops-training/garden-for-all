@@ -1,0 +1,11 @@
+{
+  "id": "fun-gardening-facts",
+  "emoji": "🪱",
+  "title": "Fun Gardening Facts",
+  "tags": [
+    { "emoji": "🌻", "label": "Green Thumb" },
+    { "emoji": "🤎", "label": "Soil Health" }
+  ],
+  "body": "We believe in feeding the soil, not just the plants. Did you know a single teaspoon of healthy organic soil contains more living microorganisms than there are people on earth?",
+  "theme": 4
+}

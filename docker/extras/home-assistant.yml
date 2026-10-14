@@ -1,0 +1,35 @@
+# Project 3: Home Assistant (the smart-home hub) plus the helpers it likes.
+# Start:  docker compose -f docker/extras/home-assistant.yml up -d
+# Open:   http://localhost:8123   (first visit makes your owner account)
+#
+# network_mode: host means Home Assistant sees your home network directly.
+# That is how it finds lights (Govee) and other gadgets by themselves.
+# On Linux this is the normal way to run it.
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      TZ: America/New_York      # change to your time zone
+    volumes:
+      - ./homeassistant-config:/config
+      - /etc/localtime:/etc/localtime:ro
+
+  # Project 6: the message postman between sensors and Home Assistant.
+  # Start it when you reach Project 6 (leave this block here until then; it
+  # starts with the rest, which is fine and uses very little memory).
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    restart: unless-stopped
+    # Sensors on your home Wi-Fi must reach this, so it listens on the home
+    # network (not only this computer). It is NOT on the internet: the router
+    # forwards only 80 and 443, never 1883. Every sensor needs the Mosquitto
+    # password (mosquitto/config/mosquitto.conf, Project 6).
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data

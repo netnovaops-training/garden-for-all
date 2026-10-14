@@ -1,0 +1,57 @@
+<div class="widget-card" data-tags="weather forecast ai lstm prediction">
+    <div class="widget-header">
+        <span class="widget-icon">🤖</span>
+        <h3>AI Next-Day Forecast{{ title_suffix }}</h3>
+    </div>
+    <div class="widget-body">
+
+        {% if has_err %}
+        <div style="background:#fff3e0;border:1px solid #ffe0b2;border-radius:8px;padding:10px 14px;font-size:0.82rem;color:#e65100;">
+            <strong>⚠️ {{ err }}</strong>
+        </div>
+
+        {% else %}
+        <div style="background:#e8f5e9;border:1px solid #c8e6c9;border-radius:8px;padding:6px 12px;margin-bottom:14px;font-size:0.75rem;color:#2e7d32;">
+            <strong>🧠 LSTM model</strong> — trained on 76 years of Clifton Park station data (USW00014735) · Generated {{ gen_at }}
+        </div>
+
+        <!-- Forecast summary cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
+            <div style="background:#fff8e1;border:2px solid #f9a825;border-radius:12px;padding:14px 10px;text-align:center;">
+                <div style="font-size:1.6rem;font-weight:800;color:#e65100;">{{ tmax_f }}°F</div>
+                <div style="font-size:0.72rem;font-weight:700;color:#888;margin-top:2px;">HIGH</div>
+            </div>
+            <div style="background:#e3f2fd;border:2px solid #1565c0;border-radius:12px;padding:14px 10px;text-align:center;">
+                <div style="font-size:1.6rem;font-weight:800;color:#1565c0;">{{ tmin_f }}°F</div>
+                <div style="font-size:0.72rem;font-weight:700;color:#888;margin-top:2px;">LOW</div>
+            </div>
+            <div style="background:#e1f5fe;border:2px solid #0277bd;border-radius:12px;padding:14px 10px;text-align:center;">
+                <div style="font-size:1.6rem;font-weight:800;color:#0277bd;">{{ prcp_in }}"</div>
+                <div style="font-size:0.72rem;font-weight:700;color:#888;margin-top:2px;">PRECIP</div>
+            </div>
+        </div>
+
+        <!-- Condition summary -->
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;">
+            <span style="background:#f1f8e9;border:1.5px solid #aed581;border-radius:20px;padding:5px 14px;font-size:0.82rem;font-weight:700;color:#33691e;">{{ temp_desc }}</span>
+            <span style="background:#e1f5fe;border:1.5px solid #81d4fa;border-radius:20px;padding:5px 14px;font-size:0.82rem;font-weight:700;color:#01579b;">{{ prcp_desc }}</span>
+        </div>
+
+        <!-- Temp range bar -->
+                <div style="margin-bottom:14px;">
+            <div style="font-size:0.75rem;font-weight:700;color:#555;margin-bottom:4px;">Temperature Range</div>
+            <div style="position:relative;height:18px;background:#eee;border-radius:9px;overflow:hidden;">
+                <div style="position:absolute;left:{{ bar_left }}%;width:{{ bar_width }}%;height:100%;background:linear-gradient(90deg,#42a5f5,#ff7043);border-radius:9px;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#888;margin-top:2px;">
+                <span>0°F</span><span>50°F</span><span>100°F</span>
+            </div>
+        </div>
+
+        <div style="font-size:0.7rem;color:#aaa;text-align:center;">
+            Based on observations through {{ win_end }} · LSTM 14-day window · Not a certified forecast
+        </div>
+        {% endif %}
+
+    </div>
+</div>

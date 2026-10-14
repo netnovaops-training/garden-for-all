@@ -1,0 +1,37 @@
+[package]
+name = "junsgarden"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "junsgarden"
+path = "src/main.rs"
+
+[dependencies]
+common.workspace = true
+axum.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
+askama.workspace = true
+serde.workspace = true
+serde_json = { workspace = true, features = ["preserve_order"] }
+tracing.workspace = true
+anyhow.workspace = true
+sqlx.workspace = true
+# For garden_blog.created_at (DATETIME). sqlx's own `chrono` feature
+# maps it to NaiveDateTime; this brings the type itself into scope so the
+# template can format it.
+chrono.workspace = true
+rand.workspace = true
+time.workspace = true
+serde_urlencoded = "0.7"
+image.workspace = true
+webp.workspace = true
+md5.workspace = true
+multer.workspace = true
+futures-util.workspace = true
+reqwest.workspace = true
+# The two logins: password hashes, reset-link hashes, the reset email.
+argon2.workspace = true
+sha2.workspace = true
+lettre.workspace = true

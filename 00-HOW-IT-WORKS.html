@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jun's Garden: how it all works</title>
+<style>
+  /* The same look as 00-READ-ME-FIRST.html. Each step keeps the soft colour of its PDF folder. */
+  :root { --bg:#f7f8f3; --card:#ffffff; --ink:#1f2a1f; --muted:#5b6b5b; --line:#d7e2d1; --accent:#2f6b3a;
+          --s0:#9c3d54; --b0:#fbeef1; --s1:#9a4f1c; --b1:#fdf1e6; --s2:#7d6200; --b2:#fdf8e1; --s3:#2f6b3a; --b3:#edf6ea;
+          --s4:#136a6a; --b4:#e8f6f5; --s5:#2a5a9a; --b5:#ebf2fb; --s6:#45459a; --b6:#efeffb; --lav:#7a63b5; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#121712; --card:#1b221b; --ink:#e7efe4; --muted:#a8b8a5; --line:#2e3d2e; --accent:#8fd19b;
+          --b0:#2d1c21; --b1:#2e2318; --b2:#2c2914; --b3:#1d2b1f; --b4:#162b2a; --b5:#18233a; --b6:#1f1f37;
+          --s0:#f0a3b6; --s1:#f2b27f; --s2:#e8cf66; --s3:#8fd19b; --s4:#7fd4cf; --s5:#9cc0f0; --s6:#b4b4f0; --lav:#c4b3ec; color-scheme:dark; } }
+  :root[data-theme="dark"] { --bg:#121712; --card:#1b221b; --ink:#e7efe4; --muted:#a8b8a5; --line:#2e3d2e; --accent:#8fd19b;
+          --b0:#2d1c21; --b1:#2e2318; --b2:#2c2914; --b3:#1d2b1f; --b4:#162b2a; --b5:#18233a; --b6:#1f1f37;
+          --s0:#f0a3b6; --s1:#f2b27f; --s2:#e8cf66; --s3:#8fd19b; --s4:#7fd4cf; --s5:#9cc0f0; --s6:#b4b4f0; --lav:#c4b3ec; color-scheme:dark; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.6 system-ui, "Segoe UI", Ubuntu, "Malgun Gothic", sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:24px 16px 64px; }
+  h1 { color:var(--accent); margin:.2em 0 .1em; font-size:2rem; text-wrap:balance; }
+  h2 { margin:1.4em 0 .5em; font-size:1.3rem; }
+  .lead { color:var(--muted); margin-top:0; }
+  .flow { display:grid; gap:0; }
+  .stage { border-radius:12px; padding:14px 16px; border:1px solid var(--line); }
+  .stage h3 { margin:0 0 .3em; font-size:1.1rem; display:flex; align-items:center; gap:10px; }
+  .sticker { flex:0 0 34px; height:34px; border-radius:50%; color:#fff; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
+  .arrow { text-align:center; color:var(--muted); font-size:1.3rem; line-height:1.6; }
+  .s0 { background:var(--b0); } .s0 .sticker { background:var(--s0); } .s0 h3 { color:var(--s0); }
+  .s1 { background:var(--b1); } .s1 .sticker { background:var(--s1); } .s1 h3 { color:var(--s1); }
+  .s2 { background:var(--b2); } .s2 .sticker { background:var(--s2); } .s2 h3 { color:var(--s2); }
+  .s3 { background:var(--b3); } .s3 .sticker { background:var(--s3); } .s3 h3 { color:var(--s3); }
+  .s4 { background:var(--b4); } .s4 .sticker { background:var(--s4); } .s4 h3 { color:var(--s4); }
+  .s5 { background:var(--b5); } .s5 .sticker { background:var(--s5); } .s5 h3 { color:var(--s5); }
+  .s6 { background:var(--b6); } .s6 .sticker { background:var(--s6); } .s6 h3 { color:var(--s6); }
+  .two { display:grid; grid-template-columns:1fr; gap:10px; margin:8px 0; }
+  @media (min-width:680px) { .two { grid-template-columns:1fr 1fr; } }
+  .two > div { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; min-width:0; }
+  .two h4 { margin:0 0 .3em; }
+  table { border-collapse:collapse; width:100%; font-size:.95rem; background:var(--card); }
+  th, td { border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+  th { background:var(--b3); }
+  .scroll { overflow-x:auto; }
+  code, kbd { font-family:ui-monospace, "Cascadia Mono", Consolas, monospace; font-size:.92em; }
+  kbd { border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:0 5px; background:var(--card); }
+  a { color:var(--accent); }
+  ul { padding-left:1.2em; margin:.3em 0; } li { margin:.15em 0; }
+  footer { color:var(--lav); font-size:.9rem; margin-top:40px; }
+</style>
+</head>
+<body>
+<main>
+<h1>How it all works</h1>
+<p class="lead">One page with the whole path: from the download to a running garden, and every feature after that. Each box has
+the same colour as its folder of PDFs ("Setup documentation"), so you can find the full guide quickly. The installer explains
+every step on screen too. If you are ever unsure where you are, come back to this page.</p>
+
+<div class="flow">
+  <section class="stage s0"><h3><span class="sticker">0</span>Get ready</h3>
+    <ul>
+      <li>Read <a href="START-HERE/00b-before-you-start.md">Before you start</a>: what you need, what is necessary and what is optional, and how long each part takes.</li>
+      <li>Download from Google Drive: <code>junsgarden-for-jun.zip</code> (needed), <code>junsgarden-photos-addon.zip</code> (the photos), <code>junsgarden-wiki-addon.zip</code> (only for the wiki).</li>
+      <li>Keep them on the <strong>Desktop</strong> (Windows) or in your <strong>Home</strong> folder (Ubuntu). Unzip only the first one.</li>
+    </ul></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s1"><h3><span class="sticker">1</span>The garden computer</h3>
+    <ul>
+      <li><strong>A separate Ubuntu laptop or a Raspberry Pi</strong> (recommended; needed to put the garden online): <a href="START-HERE/01-ubuntu-laptop.md">guide 01</a> puts Ubuntu on it. This is the only part the installer cannot do for you.</li>
+      <li><strong>Or this Windows PC</strong>: the installer adds Windows' own Ubuntu (WSL). Good for using the garden on this PC. One Windows restart the first time.</li>
+    </ul></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s2"><h3><span class="sticker">2</span>Start the install</h3>
+    <div class="two">
+      <div><h4>On Windows</h4>Double-click <code>Start-Here-Windows.cmd</code>. <strong>Garden Bridge</strong> opens: five pages with <kbd>Next</kbd>:
+        <ol><li>Welcome (and this map)</li><li>Where the garden runs</li><li>About you, and your web name</li><li>What gets installed (tick the parts)</li><li>Install: a black window opens and does the work</li></ol></div>
+      <div><h4>On Ubuntu</h4>Right-click <code>Start-Here-Ubuntu.sh</code>, <strong>Run as a Program</strong>. The menu opens. Type <kbd>1</kbd> and <kbd>Enter</kbd>.</div>
+    </div>
+    <p>Then it asks once: <strong>EASY</strong> or <strong>CUSTOM</strong>.</p>
+    <div class="two">
+      <div><h4>1) EASY (recommended)</h4><ul><li>Asks only your name, email, the database password (<kbd>Enter</kbd> makes one), and whether to keep the web name.</li><li>Installs everything necessary plus the garden tools.</li><li>Loads your photos by itself.</li><li>Wiki and n8n: off (add them later).</li></ul></div>
+      <div><h4>2) CUSTOM</h4><ul><li>The same questions, plus each optional part, one by one.</li><li>You choose: photos now or later; wiki yes or no; n8n yes or no.</li><li>You can start at any step number.</li></ul></div>
+    </div></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s2"><h3><span class="sticker">2</span>The 14 steps</h3>
+    <p>Each step says what it does, why, where to read more, and how long it usually takes; afterwards it says how long it took.
+    Stop any time: choose <kbd>1</kbd> again and it carries on.</p>
+    <div class="scroll"><table>
+      <tr><th>Steps</th><th>What happens</th><th>Usually</th></tr>
+      <tr><td>1 to 2</td><td>Checks the computer and the folder</td><td>under a minute</td></tr>
+      <tr><td>3 to 7</td><td>Updates, SSH, firewall, Docker, swap (on small computers)</td><td>10 to 25 minutes</td></tr>
+      <tr><td>8 to 11</td><td>Settings file, parts, folders, change history</td><td>about a minute</td></tr>
+      <tr><td>12</td><td>Builds the website, loads your plants and photos, starts everything</td><td>15 to 45 minutes (up to an hour on a very old laptop or a Pi)</td></tr>
+      <tr><td>13 to 14</td><td>Nightly backup, desktop icon</td><td>under a minute</td></tr>
+    </table></div>
+    <p><strong>At the end:</strong> EASY asks your login name (just <kbd>Enter</kbd>), then your password (nothing shows while you type),
+    then your AI keys (<kbd>Enter</kbd> with nothing skips). CUSTOM offers the password, email and reserving the address.
+    It may ask for your Ubuntu password again after the long build.</p></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s6"><h3><span class="sticker">6</span>Every day: the menu</h3>
+    <div class="scroll"><table>
+      <tr><th>Press</th><th>What it does</th></tr>
+      <tr><td><kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></td><td>Start the garden, stop it, open the website</td></tr>
+      <tr><td><kbd>5</kbd></td><td>The checklist: PASS, WARN or FAIL for everything, with what to do</td></tr>
+      <tr><td><kbd>6</kbd> <kbd>7</kbd></td><td>Backups (also to your NAS and Google Drive, and the photos download), restore a backup</td></tr>
+      <tr><td><kbd>8</kbd> <kbd>9</kbd></td><td>Settings (name, time zone, folders...), parts on or off (garden tools, wiki, n8n)</td></tr>
+      <tr><td><kbd>U</kbd> <kbd>K</kbd> <kbd>A</kbd></td><td>Users and passwords, your API keys, your addresses</td></tr>
+      <tr><td><kbd>H</kbd> <kbd>L</kbd></td><td>A help file to show someone (no passwords in it), language (English, Korean, both)</td></tr>
+      <tr><td><kbd>M</kbd></td><td>More: the front door, email, network, logs, database, local AI, subdomains, LiteLLM, the Website name swap, uninstall (Windows: shortcuts too)</td></tr>
+    </table></div>
+    <p>Every single option, explained: <a href="START-HERE/19-every-menu-option.md">guide 19</a>.</p></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s3"><h3><span class="sticker">3</span>Later, only if you want: going online</h3>
+    <ul>
+      <li><strong>Menu <kbd>M</kbd>, <kbd>1</kbd> (the front door):</strong> 1) home Wi-Fi only, 2) practice, 3) your real web name with the padlock.</li>
+      <li>Needs a free No-IP name and the router: <a href="START-HERE/04-go-public-no-ip-caddy.md">guide 04</a>, <a href="START-HERE/14-reserve-your-ip.md">guide 14</a>. Only ports 80 and 443, ever.</li>
+      <li>Extra addresses for other things (DuckDNS subdomains), working from another room (SSH, Remote Desktop: <a href="START-HERE/20-ssh-and-remote-desktop.md">guide 20</a>).</li>
+    </ul></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s4"><h3><span class="sticker">4</span>Later: email, keys and AI</h3>
+    <ul>
+      <li>A Gmail app password, so "forgot password" emails reach you (menu <kbd>M</kbd>, <kbd>3</kbd>).</li>
+      <li>Your own free AI keys (menu <kbd>K</kbd>): <a href="START-HERE/16-ai-studio.md">guide 16</a>. Local AI on a desktop: guide 15. The phone app: guide 17.</li>
+    </ul></section>
+  <div class="arrow" aria-hidden="true">&darr;</div>
+
+  <section class="stage s5"><h3><span class="sticker">5</span>Later: three copies of everything</h3>
+    <ul>
+      <li>Nightly backups are automatic (kept 7 days). Add a NAS and Google Drive (menu <kbd>6</kbd>): <a href="START-HERE/13-backups-and-folders.md">guide 13</a>.</li>
+    </ul></section>
+</div>
+
+<h2>If you are stuck</h2>
+<ol>
+  <li><strong>Nothing is lost.</strong> Choose <kbd>1</kbd> again: it shows which steps are done and carries on.</li>
+  <li><strong>Menu <kbd>5</kbd></strong>, the checklist, says what is wrong and what to do.</li>
+  <li><a href="START-HERE/09-troubleshooting.md">Guide 09</a>: fixes by what you see.</li>
+  <li><strong>Menu <kbd>H</kbd></strong> makes a help file (no passwords) to show a friend or an AI.</li>
+</ol>
+
+<footer>Garden Bridge: from Windows to Linux. Imagined by Jason, prototyped by Claude.</footer>
+</main>
+</body>
+</html>

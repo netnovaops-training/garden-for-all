@@ -1,0 +1,34 @@
+🌟 Wishlist — Future Plants
+🌱
+
+Backfill placeholder data for plants you don't own yet. Everything here writes only to the future_plants table — your main juns_garden_db / data_source is never touched until you promote a plant from the Wishlist tab.
+
+➕ Add a Plant
+
+📦 Bulk Export 20
+
+📥 Backfill Import & Review
+
+Add a plant that isn't in your garden yet. Only the name is required — fill in whatever you know now and backfill the rest later.
+
+Plant Name *
+
+Company / Brand
+
+Botanical Name
+
+Family
+
+Plant Type
+
+Zones
+
+Sun Exposure
+
+Bloom Color
+
+Approx. Cost ($)
+
+Notes
+
+➕ Add to Wishlist

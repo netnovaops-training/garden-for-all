@@ -1,0 +1,7 @@
+📤 Export Plants with Missing Fields — One at a Time
+
+Works through every incomplete plant one by one. Export the plant's JSON, then check Mark as Done to remove it from the queue and move to the next one. Your progress is remembered for the session.
+
+🔍 Load Plants with Missing Fields
+
+🔄 Reload List

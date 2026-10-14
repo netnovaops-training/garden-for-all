@@ -1,0 +1,17 @@
+# Line endings: store text with LF (the server is Linux; shell scripts with
+# CRLF fail there). Binary files are never touched.
+* text=auto eol=lf
+*.pdf binary
+*.zip binary
+*.mp3 binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.apk binary
+*.gz binary

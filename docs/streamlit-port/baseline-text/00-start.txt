@@ -1,0 +1,44 @@
+Deploy
+⚙️ Settings
+
+👤 **Logged in as: **
+
+Logout
+
+Claude Model Name
+
+🌱 Jun & Kona's Garden Orchestrator
+
+🌱 Add Plant
+
+📝 Manual Review (AI)
+
+✨ Fill Missing Data (AI)
+
+✍️ Manual Editor
+
+📸 Manual Image Replace
+
+⚠️ Partials
+
+🔍 Awaiting Approval
+
+🏆 Fully Approved & Verified
+
+🚩 Flagged for Review
+
+🔒 AI — Missing Only
+
+🔄 JSON Pipeline
+
+🗺️ Bed Assignment
+
+🌟 Wishlist
+
+🏷️ Barcodes
+
+🌱 Add a New Plant
+
+Enter your account email to add plants (Jun or Jason only).
+
+Account email

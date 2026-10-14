@@ -1,0 +1,25 @@
+# Projects 6 and 7: ESPHome. Write a few lines of settings and it builds the
+# program for your little ESP32 sensor board, then sends it over USB or Wi-Fi.
+# Start:  docker compose -f docker/extras/esphome.yml up -d
+# Open:   http://localhost:6052
+#
+# Putting a board on USB for the very first time from a browser needs a secure
+# page (https or localhost). Opening http://localhost:6052 on the laptop itself
+# counts as secure, so do the first flash sitting at the laptop.
+services:
+  esphome:
+    image: ghcr.io/esphome/esphome
+    container_name: esphome
+    restart: unless-stopped
+    network_mode: host
+    # The dashboard (port 6052) can be opened from your home Wi-Fi, so give it
+    # a login: two lines in the garden's .env file,
+    #     ESPHOME_USERNAME=jun
+    #     ESPHOME_PASSWORD=a-password-only-for-this
+    # (Empty = no login.) Not on the internet: the router forwards only 80 and 443.
+    environment:
+      USERNAME: ${ESPHOME_USERNAME:-}
+      PASSWORD: ${ESPHOME_PASSWORD:-}
+    volumes:
+      - ./esphome-config:/config
+      - /etc/localtime:/etc/localtime:ro

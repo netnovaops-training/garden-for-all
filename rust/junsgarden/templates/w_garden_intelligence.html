@@ -1,0 +1,115 @@
+<div class="widget-card" data-tags="intelligence insights weather correlation survival" style="grid-column: span 2;">
+    <div class="widget-header">
+        <span class="widget-icon">🧠</span>
+        <h3>Garden Intelligence{% if !live %} (Demo){% endif %}</h3>
+    </div>
+    <div class="widget-body" style="padding:14px 16px;">
+        {% if live %}
+        <div style="font-size:0.72rem;color:#888;margin-bottom:10px;">Correlating {{ years_count }} years of weather data with {{ plants_total }} plant records</div>
+        {% endif %}
+
+        {% if has_ai %}
+        <!-- Kept in its own box, and labelled with the model, for the same
+             reason the comparison tool does it: everything below is
+             arithmetic and always true, this is an interpretation and can be
+             wrong. Blending them would hide which is which. -->
+        <div style="background:#F0FDF4;border:2px solid #86EFAC;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:#D1FAE5;color:#065F46;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:9px;margin-bottom:8px;">
+                🧠 Read by {{ ai_model }}
+            </div>
+            {% if !ai_headline.is_empty() %}
+            <div style="font-weight:700;color:#14532D;font-size:0.92rem;margin-bottom:6px;">{{ ai_headline }}</div>
+            {% endif %}
+            {% for f in ai_findings %}
+            <div style="font-size:0.85rem;color:#166534;margin-bottom:4px;">• {{ f }}</div>
+            {% endfor %}
+            {% if !ai_advice.is_empty() %}
+            <div style="font-weight:700;color:#14532D;font-size:0.82rem;margin:8px 0 4px;">Next season</div>
+            {% for a in ai_advice %}
+            <div style="font-size:0.85rem;color:#166534;margin-bottom:3px;">→ {{ a }}</div>
+            {% endfor %}
+            {% endif %}
+            <div style="font-size:0.72rem;color:#4B7C5A;border-top:1px dashed #86EFAC;padding-top:6px;margin-top:8px;">
+                The figures below are counted from the database. This box is the model's reading of them.
+            </div>
+        </div>
+        {% endif %}
+
+        {% if !wins.is_empty() %}
+        <div style="background:#E8F5E9;border-radius:10px;padding:12px 14px;margin-bottom:12px;border-left:4px solid #4CAF50;">
+            <div style="font-weight:700;color:#1B5E20;font-size:0.85rem;margin-bottom:6px;">✅ Wins</div>
+            {% for w in wins %}
+            <div style="font-size:0.85rem;color:#333;margin-bottom:4px;">{{ w|safe }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if !risks.is_empty() %}
+        <div style="background:#FFF3E0;border-radius:10px;padding:12px 14px;margin-bottom:12px;border-left:4px solid #FF9800;">
+            <div style="font-weight:700;color:#E65100;font-size:0.85rem;margin-bottom:6px;">⚠️ Watch List</div>
+            {% for r in risks %}
+            <div style="font-size:0.85rem;color:#333;margin-bottom:4px;">{{ r|safe }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if !insights.is_empty() %}
+        <div style="font-weight:700;color:#333;font-size:0.85rem;margin-bottom:8px;">🔍 Weather × Plant Correlations</div>
+        {% for insight in insights %}
+        <div style="display:flex;gap:10px;padding:10px 12px;margin-bottom:8px;background:#fafafa;border-radius:10px;border-left:4px solid {{ insight.color }};">
+            <div style="font-size:1.2rem;flex-shrink:0;">{{ insight.icon }}</div>
+            <div>
+                <div style="font-size:0.85rem;color:#333;line-height:1.5;">{{ insight.text|safe }}</div>
+                <div style="font-size:0.78rem;color:#2E7D32;font-weight:600;margin-top:4px;">💡 {{ insight.action|safe }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if live && !years_json.is_empty() && years_json != "[]" %}
+        <div style="margin-top:14px;border-top:1px solid #eee;padding-top:12px;">
+            <div style="font-weight:700;color:#333;font-size:0.85rem;margin-bottom:8px;">📊 Year-by-Year Weather vs Survival</div>
+            <canvas id="wgt-gi-chart" style="max-height:220px;"></canvas>
+        </div>
+        <script>
+        (function(){
+            const years = {{ years_json|safe }};
+            const survData = {{ surv_json|safe }};
+            const wxData = {{ wx_json|safe }};
+
+            const survRates = years.map(yr => survData[yr]?.rate ?? null);
+            const avgTemps = years.map(yr => wxData[yr]?.avg_temp ?? null);
+            const frostDays = years.map(yr => wxData[yr]?.frost_days ?? null);
+
+            new Chart(document.getElementById('wgt-gi-chart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [
+                        { label: 'Survival Rate (%)', data: survRates, backgroundColor: 'rgba(76,175,80,0.7)',
+                          borderRadius: 6, yAxisID: 'y' },
+                        { label: 'Frost Days', data: frostDays, backgroundColor: 'rgba(33,150,243,0.5)',
+                          borderRadius: 6, yAxisID: 'y' },
+                        { label: 'Avg Temp (°F)', data: avgTemps, type: 'line',
+                          borderColor: '#F44336', borderWidth: 3, pointRadius: 5,
+                          pointBackgroundColor: '#F44336', fill: false, tension: 0.3, yAxisID: 'y1' },
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    plugins: { legend: { display: true, position: 'top' },
+                               tooltip: { mode: 'index', intersect: false } },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, position: 'left',
+                             title: { display: true, text: 'Survival % / Frost Days' } },
+                        y1: { position: 'right', grid: { drawOnChartArea: false },
+                              title: { display: true, text: 'Avg Temp (°F)', color: '#F44336' },
+                              ticks: { color: '#F44336', callback: function(v){return v+'°F';} } },
+                    },
+                },
+            });
+        })();
+        </script>
+        {% endif %}
+    </div>
+</div>

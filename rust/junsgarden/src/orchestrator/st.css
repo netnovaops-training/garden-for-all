@@ -1,0 +1,113 @@
+/* Streamlit's look, for the Rust plant admin (served at /streamlit/st.css).
+   Colours, sizes and spacing copied from Streamlit 1.32's default light
+   theme so the pages look like the app they replace. */
+:root {
+  --st-text: #31333f; --st-muted: rgba(49,51,63,.6); --st-red: #ff4b4b;
+  --st-bg2: #f0f2f6; --st-border: rgba(49,51,63,.2);
+  --st-font: "Source Sans Pro", "Source Sans 3", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #fff; color: var(--st-text); font-family: var(--st-font); font-size: 16px; line-height: 1.6; }
+.st-decoration { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #ff4b4b, #fffd80); z-index: 10; }
+.st-app { display: flex; min-height: 100vh; }
+.st-sidebar { width: 336px; flex: 0 0 336px; background: var(--st-bg2); padding: 6rem 1.5rem 2rem; }
+.st-sidebar h2 { font-size: 1.25rem; margin: 0 0 1rem; font-weight: 600; }
+.st-main { flex: 1; min-width: 0; padding: 6rem 5rem 4rem; max-width: 100%; }
+h1 { font-size: 2.75rem; font-weight: 700; margin: 0 0 .5rem; line-height: 1.2; padding: 1.25rem 0 1rem; }
+.st-h2 { font-size: 2.25rem; font-weight: 600; margin: 1rem 0 .5rem; line-height: 1.2; }
+.st-h3 { font-size: 1.75rem; font-weight: 600; margin: 1rem 0 .5rem; }
+.st-h4 { font-size: 1.25rem; font-weight: 600; margin: 1.25rem 0 .5rem; }
+.st-text { margin: 0 0 1rem; }
+.st-caption { color: var(--st-muted); font-size: .875rem; margin: .25rem 0 .75rem; }
+.st-hr { border: 0; border-top: 1px solid var(--st-border); margin: 2rem 0; }
+code { background: var(--st-bg2); color: #09ab3b; padding: .1em .25em; border-radius: .25rem; font-size: .85em; }
+
+/* tabs */
+.st-tabs { display: flex; gap: 1rem; overflow-x: auto; border-bottom: 1px solid var(--st-border); margin-bottom: 1rem; white-space: nowrap; scrollbar-width: thin; }
+.st-tabs a { color: var(--st-text); text-decoration: none; font-size: .875rem; padding: .5rem 0; border-bottom: 2px solid transparent; }
+.st-tabs a:hover, .st-tabs a.on { color: var(--st-red); }
+.st-tabs a.on { border-bottom-color: var(--st-red); }
+
+/* alerts */
+.st-alert { padding: 1rem; border-radius: .5rem; margin: 0 0 1rem; }
+.st-success { background: rgba(33,195,84,.1); color: #177233; }
+.st-info { background: rgba(28,131,225,.1); color: #004280; }
+.st-warning { background: rgba(255,227,18,.1); color: #926c05; }
+.st-error { background: rgba(255,43,43,.09); color: #7d353b; }
+
+/* inputs */
+.st-cols { display: grid; gap: 1rem; align-items: start; }
+.st-field { display: block; margin: 0 0 1rem; }
+.st-label { display: block; font-size: .875rem; margin-bottom: .25rem; }
+.st-help { display: inline-block; width: 1em; height: 1em; line-height: 1em; text-align: center; border: 1px solid var(--st-muted); border-radius: 50%; font-size: .7em; color: var(--st-muted); cursor: help; }
+.st-input, .st-select, .st-multi { width: 100%; font: inherit; color: var(--st-text); background: var(--st-bg2); border: 1px solid transparent; border-radius: .5rem; padding: .5rem .75rem; }
+textarea.st-input { resize: vertical; }
+.st-input:focus, .st-select:focus { outline: none; border-color: var(--st-red); }
+.st-check, .st-toggle { display: flex; align-items: center; gap: .5rem; margin: .25rem 0 1rem; font-size: 1rem; cursor: pointer; }
+.st-toggle input { display: none; }
+.st-switch { width: 2rem; height: 1rem; border-radius: 1rem; background: #d4d4d4; position: relative; flex: 0 0 auto; transition: background .2s; }
+.st-switch::after { content: ""; position: absolute; top: -2px; left: -2px; width: 1.25rem; height: 1.25rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.4); transition: left .2s; }
+.st-toggle input:checked + .st-switch { background: var(--st-red); }
+.st-toggle input:checked + .st-switch::after { left: .875rem; }
+.st-radio label { display: block; margin: .25rem 0; cursor: pointer; }
+.st-radio-h label { display: inline-block; margin-right: 1rem; }
+.st-radio input, .st-check input { accent-color: var(--st-red); }
+
+/* multiselect chips (st.js) */
+.st-ms { background: var(--st-bg2); border-radius: .5rem; padding: .3rem .5rem; display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; min-height: 2.5rem; }
+.st-chip { background: var(--st-red); color: #fff; border-radius: .25rem; padding: 0 .4rem; font-size: .875rem; display: inline-flex; gap: .3rem; align-items: center; }
+.st-chip button { background: none; border: 0; color: #fff; cursor: pointer; padding: 0; font-size: 1rem; line-height: 1; }
+.st-ms select { border: 0; background: transparent; font: inherit; color: var(--st-muted); flex: 1; min-width: 8rem; }
+
+/* buttons */
+.st-btn { display: inline-flex; align-items: center; justify-content: center; font: inherit; color: var(--st-text); background: #fff; border: 1px solid var(--st-border); border-radius: .5rem; padding: .25rem .75rem; min-height: 2.5rem; margin: 0 .5rem .75rem 0; cursor: pointer; text-decoration: none; }
+.st-btn:hover { border-color: var(--st-red); color: var(--st-red); }
+.st-primary { background: var(--st-red); border-color: var(--st-red); color: #fff; }
+.st-primary:hover { background: #ff3333; color: #fff; }
+.st-full { width: 100%; margin-right: 0; }
+
+/* expander, metric, dataframe */
+.st-expander { border: 1px solid var(--st-border); border-radius: .5rem; margin: 0 0 1rem; }
+.st-expander summary { padding: .75rem 1rem; cursor: pointer; }
+.st-exp-body { padding: 0 1rem 1rem; }
+.st-metric-l { font-size: .875rem; }
+.st-metric-v { font-size: 2.25rem; line-height: 1.2; }
+.st-df { max-height: 400px; overflow: auto; border: 1px solid var(--st-border); border-radius: .5rem; margin: 0 0 1rem; }
+.st-df table { border-collapse: collapse; width: 100%; font-size: .875rem; }
+.st-df th { position: sticky; top: 0; background: #fff; color: var(--st-muted); font-weight: 400; text-align: left; }
+.st-df th, .st-df td { border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; padding: .2rem .5rem; height: 35px; vertical-align: middle; }
+/* st.status (the AI tabs' "working on it" box) */
+.st-status { display: flex; align-items: center; gap: .75rem; border: 1px solid var(--st-border); border-radius: .5rem; padding: .75rem 1rem; margin: 0 0 1rem; }
+.st-spin { width: 1rem; height: 1rem; border: 2px solid var(--st-bg2); border-top-color: var(--st-red); border-radius: 50%; animation: st-spin 1s linear infinite; flex: 0 0 auto; }
+@keyframes st-spin { to { transform: rotate(360deg); } }
+/* markdown tables (the plant-tag guide) */
+.st-md-table { border-collapse: collapse; margin: 0 0 1rem; font-size: .9rem; }
+.st-md-table th, .st-md-table td { border: 1px solid var(--st-border); padding: .25rem .75rem; text-align: left; }
+/* st.progress and st.slider */
+.st-progress { height: .5rem; background: var(--st-bg2); border-radius: .25rem; overflow: hidden; margin: .5rem 0 .25rem; }
+.st-progress div { height: 100%; background: var(--st-red); }
+.st-slider { width: 100%; accent-color: var(--st-red); }
+.st-slider-v { display: block; color: var(--st-red); font-size: .875rem; }
+.st-slider-ends { display: flex; justify-content: space-between; font-size: .875rem; color: var(--st-muted); }
+/* st.file_uploader's drop zone */
+.st-drop { display: flex; align-items: center; gap: 1rem; background: var(--st-bg2); border-radius: .5rem; padding: 1rem; cursor: pointer; position: relative; }
+.st-drop input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.st-drop-icon { font-size: 2rem; color: var(--st-muted); }
+.st-drop-t { display: block; }
+.st-drop-s { display: block; font-size: .875rem; color: var(--st-muted); }
+.st-drop-b { margin: 0 0 0 auto; }
+.st-num { display: block; text-align: right; }
+.st-thumb { height: 30px; display: block; margin: 0 auto; }
+
+/* images */
+.st-gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.st-gallery img { max-width: 300px; width: 100%; display: block; }
+.st-img-cap { color: var(--st-muted); font-size: .875rem; text-align: center; }
+
+@media (max-width: 900px) {
+  .st-app { display: block; }
+  .st-sidebar { width: auto; padding: 1.5rem 1rem; }
+  .st-main { padding: 2rem 1rem; }
+  .st-cols { grid-template-columns: 1fr !important; }
+  .st-gallery { grid-template-columns: repeat(2, 1fr); }
+}

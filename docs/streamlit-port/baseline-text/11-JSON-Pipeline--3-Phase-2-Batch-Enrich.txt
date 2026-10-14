@@ -1,0 +1,17 @@
+🤖 Batch AI Enrichment
+
+Processes plants with missing fields through Claude + Perenual (+ optional web search), applying the same strict lock rule as the 🔒 AI — Missing Only tab: existing values are never touched. Plants are enriched in parallel, so a batch finishes in roughly (per-plant time ÷ workers).
+
+🔍 Load Plants with Missing Fields
+
+🌐 Include web search (DuckDuckGo)
+
+⚡ Parallel workers
+
+8
+1
+16
+
+🚀 Start Batch Enrichment
+
+🔄 Reset

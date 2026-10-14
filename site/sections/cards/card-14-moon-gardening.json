@@ -1,0 +1,11 @@
+{
+  "id": "moon-gardening",
+  "emoji": "🌕",
+  "title": "Garden by the Moon",
+  "tags": [
+    { "emoji": "🌙", "label": "Lunar Planting" },
+    { "emoji": "📖", "label": "Old Wisdom" }
+  ],
+  "body": "Lunar gardening syncs planting with the moon's phases. Plant leafy crops during the waxing moon, root vegetables during the waning moon, and let the soil rest on a new moon. Grandma swore by it — and her tomatoes were legendary.",
+  "theme": 0
+}
