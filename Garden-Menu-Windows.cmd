@@ -22,3 +22,4 @@ if not exist "%~dp0windows\Garden-Menu.ps1" (
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0windows\Garden-Menu.ps1" %*
 echo.
 pause
+REM CI test line (added to prove the fingerprint bot; removed in the next commit)
