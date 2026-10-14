@@ -1,6 +1,6 @@
 """Build a release of Jun's Garden (the original package is never written to).
 
-    python tools/release/build_release.py OUT_FOLDER EMBLEM.png --commit <40-hex public commit>
+    python tools/release/build_release.py OUT_FOLDER EMBLEM.png --ref main | --commit <40-hex public commit>
                                           [--repo owner/name] [--allow-differences]
                                           [--pdf-english FOLDER --pdf-korean FOLDER]
 
@@ -21,8 +21,14 @@ there. So the release is built from exactly what Jun will get:
 4. Builds the handbook into it (00-WELCOME.html, handbook/), with the emblem as
    its logo (the emblem is never kept in git).
 5. Makes the three downloads (make_zip.py): the main zip holds only what is not
-   on GitHub, plus CODE-SOURCE.txt (the commit) and FILES-FROM-AUTHOR.txt (the
-   fingerprint of every file of the finished folder).
+   on GitHub, plus CODE-SOURCE.txt and FILES-FROM-AUTHOR.txt.
+   With --commit, CODE-SOURCE.txt names that commit (fixed version) and the list
+   holds the fingerprint of every file of the finished folder.
+   With --ref main (what new zips use), main is first looked up on GitHub and
+   resolved to its current commit (that commit is what is compared and tested,
+   and the build stops if main moves meanwhile); CODE-SOURCE.txt says ref=main and
+   FILES-FROM-AUTHOR.txt lists only what is not on GitHub: the program itself is
+   checked on Jun's computer against the public CODE-FINGERPRINTS.txt.
 6. Checks the main zip the way Jun's computer will: tools/get-code.py --check
    against the downloaded code. It must say ALL MATCH.
 FILES-FROM-AUTHOR.txt (and the add-on fingerprints) are written in the copy;
@@ -40,7 +46,8 @@ PKG = HERE.parents[1]
 ap = argparse.ArgumentParser()
 ap.add_argument("out")
 ap.add_argument("logo", nargs="?", default="")
-ap.add_argument("--commit", required=True)
+ap.add_argument("--commit", default="", help="a fixed version: the 40-character public commit")
+ap.add_argument("--ref", default="", help="follow a branch (main): resolved to its current commit for the build; the zip says ref=main")
 ap.add_argument("--repo", default="netnovaops-training/garden-for-all")
 ap.add_argument("--allow-differences", action="store_true")
 ap.add_argument("--pdf-english", default="")
@@ -49,10 +56,13 @@ ap.add_argument("--photos-key", default="", help="photos.key (made outside every
 ap.add_argument("--photos-token", default="", help="photos-access.token (read-only token of the private backup repository); goes only into the main zip")
 ap.add_argument("--photo-parts", default="", help="PHOTO-PARTS.json from make_photo_parts.py; goes into the main zip, not into the public code")
 A = ap.parse_args()
+if bool(A.commit) == bool(A.ref):
+    sys.exit("give exactly one of --ref main or --commit <40 hex>")
 OUT = pathlib.Path(A.out).resolve()
 STAGE = OUT / "build" / "junsgarden-for-jun"
 CRLF_EXT = (".cmd", ".ps1", ".bat")
-OFF_GITHUB = {"README.md", "site/Boogie.mp3", "FILES-FROM-AUTHOR.txt", "DOWNLOADS-SHA256.txt", "photos.key", "photos-access.token", "PHOTO-PARTS.json"}
+sys.path.insert(0, str(HERE))
+from make_fingerprints import OFF_GITHUB      # the files kept off GitHub on purpose (never on CODE-FINGERPRINTS.txt)
 STARTERS = ["Start-Here-Ubuntu.sh", "Start-Here-Windows.cmd", "Garden-Menu-Windows.cmd",
             "tools/get-code.py", "tools/get-code.ps1"]
 
@@ -68,8 +78,18 @@ def normalized(rel, data):
     return data
 
 
+if A.ref:
+    # Follow-main mode: look up where the branch is now and build from exactly that commit.
+    def resolve(ref):
+        r = subprocess.run(["git", "ls-remote", f"https://github.com/{A.repo}.git", f"refs/heads/{ref}"], capture_output=True, text=True, timeout=120)
+        out = r.stdout.split()
+        if r.returncode != 0 or len(out) != 2 or len(out[0]) != 40:
+            sys.exit(f"STOP: could not find branch {ref} of {A.repo} on GitHub ({r.stderr.strip()[:200]})")
+        return out[0]
+    A.commit = resolve(A.ref)
+    print(f"0. {A.ref} of {A.repo} is at {A.commit}")
 print(f"1. The public code at {A.commit[:12]} ({A.repo})")
-assert len(A.commit) == 40, "--commit must be the full 40-character commit"
+assert len(A.commit) == 40 and all(c in "0123456789abcdef" for c in A.commit), "--commit must be the full 40-character commit"
 if STAGE.exists():
     shutil.rmtree(STAGE)
 url = f"https://codeload.github.com/{A.repo}/tar.gz/{A.commit}"
@@ -136,7 +156,13 @@ run([sys.executable, HERE / "make_handbook.py", STAGE], GARDEN_LOGO=A.logo)
 
 print("5. The three downloads")
 run([sys.executable, HERE / "make_zip.py", OUT / "junsgarden-for-jun.zip"],
-    GARDEN_SRC=STAGE, GARDEN_CODE_COMMIT=A.commit, GARDEN_CODE_REPO=A.repo, GARDEN_PHOTOS_KEY=A.photos_key, GARDEN_PHOTOS_TOKEN=A.photos_token)
+    GARDEN_SRC=STAGE, GARDEN_CODE_COMMIT="" if A.ref else A.commit, GARDEN_CODE_REF=A.ref, GARDEN_CODE_REPO=A.repo, GARDEN_PHOTOS_KEY=A.photos_key, GARDEN_PHOTOS_TOKEN=A.photos_token)
+# The add-on fingerprints the zip carries must be the ones the public code carries too.
+for rel in ("docker/tools/photos.sha256", "docker/wiki/seed/wiki-pages.sha256"):
+    if (STAGE / rel).read_bytes() != code.get(rel):
+        print(f"   DIFFERENT from the public code: {rel}")
+        if not A.allow_differences:
+            sys.exit("STOP: the add-ons built now are not the ones the public code names. Fix the public code first.")
 
 if A.pdf_english and A.pdf_korean:
     print("5b. The two PDF guide downloads (for the GitHub release; not on Drive)")
@@ -163,4 +189,9 @@ print("   " + r.stdout.strip().replace("\n", "\n   "))
 shutil.rmtree(check)
 if r.returncode != 0 and not A.allow_differences:
     sys.exit("STOP: the download would not install (see above).")
+if A.ref:
+    now = resolve(A.ref)
+    if now != A.commit:
+        sys.exit(f"STOP: {A.ref} moved while the release was built ({A.commit[:12]} -> {now[:12]}). Build again.")
+    print(f"   {A.ref} is still at {A.commit}")
 print(f"done: {OUT}")

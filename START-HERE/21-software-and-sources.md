@@ -7,7 +7,7 @@
   in one or two sentences each, with a link to its maker's own documentation.
 - Each program comes from its **official** source: Ubuntu's own store, the
   maker's own package, or the maker's official Docker image. The garden's own
-  code comes from its public GitHub page, at the commit in `CODE-SOURCE.txt`.
+  code comes from its public GitHub page, at the version named in `CODE-SOURCE.txt` (`main`, or one commit).
 - The version the garden uses is shown, so you can read the right documents.
 - HTTPS (the padlock) comes from **Let's Encrypt**, for free and by itself;
   how that works is explained below.
@@ -25,7 +25,7 @@ stays within that version, so the documents linked here keep matching.
 |---|---|---|---|
 | **Ubuntu** | 24.04 LTS | The operating system the garden runs on. "LTS" means free safety updates for years | <https://ubuntu.com/server/docs> |
 | **Raspberry Pi OS** (instead of Ubuntu, on a Pi) | 64-bit | The Pi's own system, for a Raspberry Pi 5 | <https://www.raspberrypi.com/documentation/computers/os.html> |
-| **The garden's own code** (`garden.sh`, the website, the guides) | the commit in `CODE-SOURCE.txt` | Fetched from GitHub at the first start (`python3 tools/get-code.py`) and checked against `FILES-FROM-AUTHOR.txt` (guide 18) | <https://github.com/netnovaops-training/garden-for-all> |
+| **The garden's own code** (`garden.sh`, the website, the guides) | the version in `CODE-SOURCE.txt` (`main`, or one commit) | Fetched from GitHub at the first start (`python3 tools/get-code.py`) and checked against the public list `CODE-FINGERPRINTS.txt` (guide 18) | <https://github.com/netnovaops-training/garden-for-all> |
 | **apt** updates, `python3` (already in Ubuntu), `git`, `curl`, `openssl`, `rsync`, `unzip`, `ca-certificates` | from Ubuntu's store | Basic tools: updates, the change history, downloads, making strong random passwords, copying, unzipping the add-ons | <https://ubuntu.com/server/docs/how-to/software/package-management/> |
 | **OpenSSH server** | from Ubuntu's store | Lets your Windows PC work on the garden computer, encrypted (guide 20) | <https://www.openssh.com/manual.html> |
 | **ufw** (firewall) | from Ubuntu's store | Blocks everything coming in, except what the garden allows | <https://ubuntu.com/server/docs/how-to/security/firewalls/> |

@@ -159,9 +159,30 @@ function svEvergreen(p) {
     return e === 'evergreen' || (e.startsWith('evergreen') && !e.includes('semi'));
 }
 function svEscHtml(s) {
-    return (s == null ? '' : String(s)).replace(/[&<>"]/g,
-        c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+    return (s == null ? '' : String(s)).replace(/[&<>"']/g,
+        c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
+// <sv-guest-thumbs>
+// Photo strip for visitors who are not signed in. The file name is only ever written
+// into an attribute (data-guest-file) and read back with a click listener: it is never
+// placed inside a piece of script text, so no character in a file name can break out.
+function svGuestThumbHtml(file, isDefault, imgBase) {
+    return `<img class="tg-thumb${isDefault ? ' is-default' : ''}" src="${imgBase + svEscHtml(file)}" alt=""
+                          title="View photo" data-guest-file="${svEscHtml(file)}">`;
+}
+function svOpenGuestThumb(imgEl, imgBase, plantId) {
+    const file = imgEl && imgEl.dataset ? imgEl.dataset.guestFile : null;
+    if (!file) return;
+    const full = imgBase + file;
+    const main = document.getElementById('tg-main-img');
+    if (main) main.src = full;
+    if (window.openLightbox) window.openLightbox(full, plantId);
+}
+function svBindGuestThumbs(root, imgBase, plantId) {
+    root.querySelectorAll('.tg-thumb[data-guest-file]').forEach(t =>
+        t.addEventListener('click', () => svOpenGuestThumb(t, imgBase, plantId)));
+}
+// </sv-guest-thumbs>
 // Animated "Coming Soon" placeholder SVG (spinner rotates, text stays still)
 function _comingSoonSVG() {
     const pills = [];
@@ -1105,8 +1126,7 @@ window.openTagGuide = function (p) {
                     return `<img class="tg-thumb${f === imgs[0] ? ' is-default' : ''}" src="${fullSrc}" alt=""
                           title="Set as default" data-file="${E(f)}" onclick="window.setDefaultPhoto(${p.id}, this)">`;
                 } else {
-                    return `<img class="tg-thumb${f === imgs[0] ? ' is-default' : ''}" src="${fullSrc}" alt=""
-                          title="View photo" onclick="document.getElementById('tg-main-img').src='${fullSrc}'; window.openLightbox && window.openLightbox('${fullSrc}', ${p.id})">`;
+                    return svGuestThumbHtml(f, f === imgs[0], imgBase);
                 }
              }).join('')}</div></div>`;
     }
@@ -1227,6 +1247,7 @@ window.openTagGuide = function (p) {
         </div>`;
     back.addEventListener('click', e => { if (e.target === back) back.remove(); });
     document.body.appendChild(back);
+    svBindGuestThumbs(back, imgBase, p.id);
     // Apply favorite glow, info bar, and stamp
     updateTagGuideFavUI(p.id);
     function onKey(ev) { if (ev.key === 'Escape') { back.remove(); document.removeEventListener('keydown', onKey); } }

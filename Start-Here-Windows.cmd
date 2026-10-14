@@ -15,8 +15,9 @@ rem  only and changes no Windows settings. "-STA" is needed for windows and
 rem  buttons in PowerShell.
 rem  The first time, it gets the program itself from GitHub (tools\get-code.ps1):
 rem  the zip from Google Drive carries only what is not on GitHub (the starter
-rem  backup, the music file, the handbook). Every file is checked against
-rem  FILES-FROM-AUTHOR.txt before it is used.
+rem  backup, the music file, the handbook). Every file is checked against the
+rem  public list CODE-FINGERPRINTS.txt before it is used (CODE-SOURCE.txt says
+rem  which version: ref=main, or one commit).
 rem ===========================================================================
 title Garden Bridge: from Windows to Linux
 cd /d "%~dp0"

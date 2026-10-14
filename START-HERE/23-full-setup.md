@@ -79,7 +79,7 @@ building the app yourself (about 3 hours, guide 17).
   from several hosts, with the key `photos.key` that comes in the main zip; menu 6, then 11.) Where to put them: `00-READ-ME-FIRST.html` (one folder up), step 1.
   The main zip is small: the first start gets the program itself from GitHub
   (about 75 MB, so the garden computer needs the internet then) and checks every
-  file against `FILES-FROM-AUTHOR.txt` before using it.
+  file against its public list, `CODE-FINGERPRINTS.txt`, before using it.
 - **A password manager.** This route makes many passwords and keys. Each one
   goes in it first. Guide 00b, "Write these down", lists them.
 

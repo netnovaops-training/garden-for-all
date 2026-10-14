@@ -8,8 +8,9 @@
 #
 #  The first time, it gets the program itself from GitHub (tools/get-code.py):
 #  the zip from Google Drive carries only what is not on GitHub (the starter
-#  backup, the music file, the handbook). Every file is checked against
-#  FILES-FROM-AUTHOR.txt before it is used.
+#  backup, the music file, the handbook). Every file is checked against the
+#  public list CODE-FINGERPRINTS.txt before it is used (CODE-SOURCE.txt says
+#  which version: ref=main, or one commit).
 #
 #  No "Run as a Program" in the right-click menu? Then:
 #    1. right-click an empty spot in this folder, choose "Open in Terminal"
