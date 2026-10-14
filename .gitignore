@@ -29,6 +29,12 @@ backups/
 # The PDF guides: an optional download the installer fetches (tools/get-pdfs.*), never kept in git.
 PDF guides/
 .garden-pdfs
+# The key to the encrypted public photos (in the private data zip only) and the download records/parts.
+photos.key
+photos-access.token
+# The list of the photo parts is made at release time and travels in the private data zip (not in the public code).
+/PHOTO-PARTS.json
+.garden-downloads/
 
 # Made by garden.sh while it runs.
 .garden-remote

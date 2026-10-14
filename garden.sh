@@ -821,12 +821,12 @@ build_and_start() {
     # The photos are a separate download. Load them if they are here; if not,
     # the garden works without pictures until they are (menu 6, then 11).
     # EASY loads them now. CUSTOM may leave them for later (a slow day, a busy network).
-    if ! have_photos && [ "$GARDEN_MODE" = custom ] && [ "${ASSUME_YES:-0}" != 1 ] && find_download "$PHOTOS_ZIP" >/dev/null &&
+    if ! have_photos && [ "$GARDEN_MODE" = custom ] && [ "${ASSUME_YES:-0}" != 1 ] && { find_download "$PHOTOS_ZIP" >/dev/null || [ -n "$PHOTOS_PID" ]; } &&
         ! confirm "Load the photos now (a few minutes)? Or later: menu 6, then 11" y; then
         note "Photos left for later: menu 6, then 11 (or: bash garden.sh photos). The garden works without them."
     elif ! have_photos; then
         photos_addon_load || {
-            note "No photos yet: they are a separate download, $PHOTOS_ZIP (Google Drive)."
+            note "No photos yet: they are a separate download (menu 6, then 11), or the photos zip from your Google Drive folder."
             if [ -n "${GARDEN_REMOTE_INSTALL:-}" ]; then
                 note "The garden works without them. Later: put the zip next to Start-Here-Windows.cmd"
                 note "(in the garden folder on your PC) and choose INSTALL again in the Windows menu."
@@ -871,6 +871,7 @@ need_unzip() { command -v unzip >/dev/null 2>&1 || run sudo DEBIAN_FRONTEND=noni
 PHOTOS_ZIP=junsgarden-photos-addon.zip
 photos_addon_load() {
     local zip want got dir
+    photos_wait      # the photos download that started with the install, if it is still arriving
     zip=$(find_download "$PHOTOS_ZIP") || return 1
     want=$(cut -d' ' -f1 docker/tools/photos.sha256 2>/dev/null)
     need_unzip
@@ -884,20 +885,63 @@ photos_addon_load() {
     mkdir -p "$dir"
     note "It matches. Unpacking the photos into $dir (photos you already have are kept)..."
     unzip -p "$zip" images.tar | tar -x --skip-old-files -C "$dir" || { fail "unpacking the photos failed"; return 1; }
+    # Plain files the author put beside images.tar (zip entries "extras/<name>") go to the top of the
+    # photos folder, as they are. A name that already exists there is kept.
+    local x
+    while IFS= read -r x; do
+        case "$x" in extras/*/*|*..*|*[\*\?\[]*) continue ;; esac
+        [ -e "$dir/${x#extras/}" ] || { unzip -p "$zip" "$x" > "$dir/${x#extras/}.part" && mv "$dir/${x#extras/}.part" "$dir/${x#extras/}"; }
+    done < <(unzip -Z1 "$zip" 2>/dev/null | grep '^extras/.')
     chmod -R a+rwX "$dir" 2>/dev/null || true
     note "Photos ready: $(find "$dir" -type f | wc -l) files."
 }
 have_photos() { [ -n "$(find "$(env_get IMAGES_DIR)" -type f -print -quit 2>/dev/null)" ]; }
 
+# The photos download (tools/get-parts.py): 32 small encrypted parts from several hosts at once, each
+# checked, put together and unlocked with photos.key (in the private data package) into
+# junsgarden-photos-addon.zip in this folder; then photos_addon_load unpacks it as always. It starts
+# with the install, in the background, and never delays or stops it: if it fails, nothing is written and
+# menu 6, then 11 tries again (parts already in are kept; a version that is in is never fetched again).
+PHOTOS_PID=
+photos_start() {
+    [ -f tools/get-parts.py ] && [ -f PHOTO-PARTS.json ] || return 0
+    have_photos && return 0
+    find_download "$PHOTOS_ZIP" >/dev/null && return 0
+    mkdir -p logs
+    python3 tools/get-parts.py photos --dest "$HERE" > logs/photos-download.log 2>&1 &
+    PHOTOS_PID=$!
+    note "The photos are arriving in the background (small parts, several hosts at once). The install does not wait for them."
+}
+# At the step that needs the photos: show the one progress line while they arrive; a failure only says so.
+photos_wait() {
+    [ -n "$PHOTOS_PID" ] || return 0
+    local last= cur rc
+    while kill -0 "$PHOTOS_PID" 2>/dev/null; do
+        cur=$(grep ' parts, ' logs/photos-download.log 2>/dev/null | tail -1)
+        [ -n "$cur" ] && [ "$cur" != "$last" ] && { printf '%s\n' "$cur"; last=$cur; }
+        sleep 3
+    done
+    wait "$PHOTOS_PID"; rc=$?
+    PHOTOS_PID=
+    if [ "$rc" = 5 ]; then photos_fetch_now; return 0; fi    # openssl was not installed yet when it started
+    [ "$rc" = 0 ] || tail -n 8 logs/photos-download.log
+}
+photos_fetch_now() {   # in the foreground (menu 6, 11); false when nothing was fetched
+    [ -f tools/get-parts.py ] && [ -f PHOTO-PARTS.json ] || return 1
+    python3 tools/get-parts.py photos --dest "$HERE"
+}
+
 # Menu 6, 11 (or: bash garden.sh photos): load the photos download, now or again.
 do_photos() {
     explain "Your photos (a separate download)" \
-        "The photos are a separate download from the same Google Drive folder: $PHOTOS_ZIP (about 800 MB). This unpacks it into your photos folder. Photos you already have, and photos you added yourself, are kept." \
+        "The photos are a separate download (about 800 MB). If the photos zip is not here yet, this fetches it in small parts from several places at once, checks every part, and unlocks it with photos.key (in your private data package). Then it unpacks it into your photos folder. Photos you already have, and photos you added yourself, are kept." \
         "So the first download stays small, and you can fetch the photos when your internet is quiet, or again later." \
         "START-HERE/13-backups-and-folders.md"
+    # No zip here yet: fetch the encrypted parts (tools/get-parts.py); a version that is in is not fetched again.
+    find_download "$PHOTOS_ZIP" >/dev/null || photos_fetch_now
     if photos_addon_load; then redo_renames; return 0; fi
-    note "Not found. Download $PHOTOS_ZIP from the Google Drive folder and leave it zipped in your"
-    note "Home folder (or Downloads, or Desktop), then choose this again (menu 6, then 11)."
+    note "Not found. Choose this again (menu 6, then 11) to try the download again."
+    note "Or download the photos zip from the Google Drive folder and leave it zipped in your Home folder (or Downloads, or Desktop)."
     return 1
 }
 
@@ -1051,6 +1095,9 @@ pdf_start() {
     [ -f tools/get-pdfs.py ] || return 0
     local c; c=$(pdf_choice)
     mkdir -p logs
+    if [ "$c" != none ] && python3 tools/get-pdfs.py "$c" --is-current; then
+        note "PDF guides: already up to date (nothing to fetch)."; return 0
+    fi
     python3 tools/get-pdfs.py "$c" > logs/pdf-guides.log 2>&1 &
     PDF_PID=$!
     if [ "$c" = none ]; then note "PDF guides: not now. Menu P gets them any time."
@@ -1077,6 +1124,13 @@ do_pdfs() {
     pdf_ask
     local c; c=$(pdf_choice)
     [ "$c" = none ] && { note "Nothing to fetch."; return 0; }
+    # A version that is already in is never fetched again; ask before fetching it anyway.
+    if python3 tools/get-pdfs.py "$c" --is-current; then
+        note "Already up to date: nothing to fetch."
+        confirm "Get them again anyway?" n || return 0
+        python3 tools/get-pdfs.py "$c" --again || note "Nothing was written for the set that failed. Try again later."
+        return 0
+    fi
     python3 tools/get-pdfs.py "$c" || note "Nothing was written for the set that failed. Try again later."
 }
 
@@ -1237,6 +1291,7 @@ do_install() {
     choose_mode || return 0
     if [ "$GARDEN_MODE" = custom ] && [ "${ASSUME_YES:-0}" != 1 ] && [ "${GARDEN_WIZARD:-}" != 1 ] && [ -z "${GARDEN_REMOTE_INSTALL:-}" ]; then pdf_ask; fi
     pdf_start      # the overview opens, and the PDF guides start arriving in the background
+    photos_start   # the photos too (small parts, several hosts); the install does not wait for either
     show_plan
     local from=1 last n=0 entry fn what pick t0 took
     last=$(last_done_step)

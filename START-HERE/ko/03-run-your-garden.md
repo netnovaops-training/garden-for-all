@@ -114,7 +114,7 @@ Google의 도움말: <https://support.google.com/accounts/answer/185833>
 | 페이지가 열리지 않아요 | 메뉴 `2`(시작), 그다음 메뉴 `5`. 어느 부분이 꺼져 있는지 알려 줘요. |
 | 로그인에서 비밀번호가 틀렸다고 해요 | 메뉴 `U`, `5`로 다시 정하세요. 5번 틀리면 15분 기다려야 해요. |
 | 비밀번호 이메일이 안 와요 | 설정, `3`, 그리고 테스트 이메일을 보내세요. Gmail이 무엇을 싫어했는지 알려 줘요. |
-| 식물은 있는데 사진이 없어요 | 사진 zip을 아직 불러오지 않았어요: `junsgarden-photos-addon.zip`을 압축을 풀지 말고 홈이나 다운로드에 두고, 메뉴 `6`, 그다음 `11`(또는 `bash garden.sh photos`). 안내서 13([13-backups-and-folders.md](13-backups-and-folders.md)). |
+| 식물은 있는데 사진이 없어요 | 사진을 아직 불러오지 않았어요: 메뉴 `6`, 그다음 `11`(또는 `bash garden.sh photos`)이 내려받아요(데이터 꾸러미의 `photos.key`가 필요해요). 또는 `junsgarden-photos-addon.zip`을 압축을 풀지 말고 먼저 홈이나 다운로드에 두세요. 안내서 13([13-backups-and-folders.md](13-backups-and-folders.md)). |
 | 그 밖의 것 | 메뉴 `H`가 도움 파일을 만들어요. 안내서 09([영어](../09-troubleshooting.md))에 해결 방법이 더 있어요. |
 
 ## 내 것으로 만들기

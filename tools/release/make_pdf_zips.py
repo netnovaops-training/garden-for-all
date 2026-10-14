@@ -1,7 +1,7 @@
 """Make the two PDF guide downloads (one per language) and their fingerprints.
 
     python tools/release/make_pdf_zips.py OUT_FOLDER --english "PDF guides/English" --korean "PDF guides/Korean"
-                                          [--tag pdf-guides-2026-10-14] [--list-file PDF-GUIDES-SHA256.txt]
+                                          [--tag pdf-guides-2026-10-14b] [--list-file PDF-GUIDES-SHA256.txt]
 
 The PDF guides are not in the program (not in git). They are attached to a
 release on GitHub, one zip per language, and the installer fetches them
@@ -20,7 +20,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("out")
 ap.add_argument("--english", required=True)
 ap.add_argument("--korean", required=True)
-ap.add_argument("--tag", default="pdf-guides-2026-10-14")
+ap.add_argument("--tag", default="pdf-guides-2026-10-14b")
 ap.add_argument("--list-file", default="")
 A = ap.parse_args()
 OUT = pathlib.Path(A.out)
@@ -48,7 +48,8 @@ for code, folder, src, name in (("en", "English", A.english, "junsgarden-pdf-gui
 
 if A.list_file:
     lines = ["# Fingerprints of the optional PDF guides (one zip per language), checked by tools/get-pdfs.py",
-             "# and tools/get-pdfs.ps1 before anything is written. Format: sha256, file, bytes, language.",
+             "# and tools/get-pdfs.ps1 before anything is written. Format: sha256, file, bytes, language[, hosts].",
+             "# hosts (optional): host[:id],host[:id] (default: github); their addresses are in DOWNLOAD-HOSTS.txt.",
              f"url=https://github.com/{REPO}/releases/download/{A.tag}"]
     lines += [f"{sha}  {name} {size} {code}" for sha, name, size, code in rows]
     pathlib.Path(A.list_file).write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")

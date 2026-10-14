@@ -75,7 +75,8 @@ building the app yourself (about 3 hours, guide 17).
 - **The three downloads** from the Google Drive folder:
   `junsgarden-for-jun.zip` (unzip this one), `junsgarden-photos-addon.zip` and
   `junsgarden-wiki-addon.zip` (leave these two zipped). The full setup needs
-  all three. Where to put them: `00-READ-ME-FIRST.html` (one folder up), step 1.
+  all three. (The photos can also be downloaded by the install itself, in small parts
+  from several hosts, with the key `photos.key` that comes in the main zip; menu 6, then 11.) Where to put them: `00-READ-ME-FIRST.html` (one folder up), step 1.
   The main zip is small: the first start gets the program itself from GitHub
   (about 75 MB, so the garden computer needs the internet then) and checks every
   file against `FILES-FROM-AUTHOR.txt` before using it.
@@ -219,6 +220,9 @@ garden installs, in the background, and never slow the install down.
 - If a download fails or a fingerprint does not match, nothing is written, a plain
   message says so, and the install finishes anyway. Menu **P** (PDF guides) fetches or
   refreshes them later.
+- A set that is already in (the same version) is not fetched again: running the install
+  or menu **P** again says "already up to date" and downloads nothing. Menu **P** then
+  asks "Get them again anyway?" (default No). A cut-off download carries on where it stopped.
 
 <a id="help-summary"></a>
 

@@ -738,8 +738,15 @@ choose menu 6, then 11 (or: bash garden.sh photos).	메뉴 6, 그다음 11을 �
 that photos download does not match its fingerprint (damaged, or a different one). Download it again.	그 사진 파일이 지문과 맞지 않아요(손상되었거나 다른 파일이에요). 다시 내려받으세요.
 unpacking the photos failed	사진 압축 풀기에 실패했어요
 Your photos (a separate download)	내 사진(따로 내려받는 파일)
+The photos are a separate download (about 800 MB). If the photos zip is not here yet, this fetches it in small parts from several places at once, checks every part, and unlocks it with photos.key (in your private data package). Then it unpacks it into your photos folder. Photos you already have, and photos you added yourself, are kept.	사진은 따로 받는 파일이에요(약 800 MB). 사진 zip이 아직 없으면, 여러 곳에서 작은 조각으로 동시에 받아 모든 조각을 확인하고, 개인 데이터 꾸러미의 photos.key로 엽니다. 그다음 사진 폴더에 풀어 넣어요. 이미 있는 사진과 직접 넣은 사진은 그대로 둬요.
 So the first download stays small, and you can fetch the photos when your internet is quiet, or again later.	그래서 첫 다운로드는 작고, 사진은 인터넷이 한가할 때나 나중에 다시 가져올 수 있어요.
-Home folder (or Downloads, or Desktop), then choose this again (menu 6, then 11).	Home 폴더(또는 Downloads나 바탕 화면)에 두고, 이것을 다시 고르세요(메뉴 6, 그다음 11).
+Not found. Choose this again (menu 6, then 11) to try the download again.	찾지 못했어요. 다운로드를 다시 하려면 이것을 다시 고르세요(메뉴 6, 그다음 11).
+Or download the photos zip from the Google Drive folder and leave it zipped in your Home folder (or Downloads, or Desktop).	또는 구글 드라이브 폴더에서 사진 zip을 받아, 압축을 풀지 말고 Home 폴더(또는 Downloads나 바탕 화면)에 두세요.
+No photos yet: they are a separate download (menu 6, then 11), or the photos zip from your Google Drive folder.	아직 사진이 없어요. 사진은 따로 받는 파일이에요(메뉴 6, 그다음 11). 또는 구글 드라이브 폴더의 사진 zip을 쓰세요.
+The photos are arriving in the background (small parts, several hosts at once). The install does not wait for them.	사진이 뒤에서 오고 있어요(작은 조각으로, 여러 곳에서 동시에). 설치는 기다리지 않아요.
+PDF guides: already up to date (nothing to fetch).	PDF 안내서: 이미 최신이에요(받을 것이 없어요).
+Already up to date: nothing to fetch.	이미 최신이에요. 받을 것이 없어요.
+Get them again anyway?	그래도 다시 받을까요?
 connect your NAS first (menu 6, then 4)	먼저 NAS를 연결하세요(메뉴 6, 그다음 4)
 Its fingerprint matches: the garden's wiki pages are ready.	지문이 맞아요: 정원의 위키 페이지가 준비됐어요.
 that wiki add-on does not match its fingerprint (damaged download, or a different one). Download it again.	그 위키 추가 파일이 지문과 맞지 않아요(손상되었거나 다른 파일이에요). 다시 내려받으세요.

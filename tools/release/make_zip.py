@@ -24,6 +24,8 @@ CODE-SOURCE.txt), and checks every file against FILES-FROM-AUTHOR.txt.
   that does not match.
 - The main zip carries the add-ons' fingerprints (docker/tools/photos.sha256,
   docker/wiki/seed/wiki-pages.sha256), so garden.sh refuses a wrong add-on.
+- GARDEN_PHOTOS_KEY=<path to photos.key> puts the key to the encrypted public photos
+  (PHOTO-PARTS.json) into the main zip as photos.key; it is not listed anywhere else.
 - Skips local state: .env, local/, logs/, help/, .git, build output.
 
 Test-only: SMALL_DIR swaps in a small backup and a small wiki seed, so a full
@@ -41,17 +43,22 @@ TAG = "-TEST-small" if "TEST" in os.path.basename(OUT) else ""
 PHOTOS = os.path.join(os.path.dirname(OUT), f"junsgarden-photos-addon{TAG}.zip")
 WIKI = os.path.join(os.path.dirname(OUT), f"junsgarden-wiki-addon{TAG}.zip")
 TOP = "junsgarden-for-jun/"
-SKIP_DIRS = {"target", ".git", "local", "logs", "help", "__pycache__", "node_modules", "from-garden-computer", "PDF-src", "PDF guides"}
+SKIP_DIRS = {"target", ".git", "local", "logs", "help", "__pycache__", "node_modules", "from-garden-computer", "PDF-src", "PDF guides", ".garden-downloads"}
 SKIP_FILES = {".env", ".garden-remote", ".garden-target-windows.txt", ".garden-remote-windows.txt", ".garden-mode",
               ".garden-lang", ".garden-pdfs", ".garden-built", "MY-ADDRESSES.txt", "CHECKLIST.txt", "CHECKLIST-laptop.txt",
               "CHECKLIST-windows.txt", "checklist-history.log", "FILES-FROM-AUTHOR.txt",
-              "junsgarden-wiki-addon.zip", "junsgarden-photos-addon.zip"}
+              "junsgarden-wiki-addon.zip", "junsgarden-photos-addon.zip", "photos.key", "photos-access.token"}
 TEXT_EXT = {".sh", ".md", ".yml", ".yaml", ".py", ".rs", ".html", ".css", ".js", ".json", ".toml",
             ".conf", ".example", ".txt", ".sql", ".lock", ".template", ".ini", ".cfg", ".csv", ".gitignore",
             ".gitattributes", ".dockerignore", ".svg", ".xml", ".j2", ".sha256"}
 CRLF_EXT = {".cmd", ".ps1", ".bat"}
 STORE_EXT = {".tar", ".apk", ".jpg", ".jpeg", ".png", ".webp", ".gif", ".mp3", ".mp4", ".gz", ".zip", ".pdf", ".woff", ".woff2"}
 SMALL = os.environ.get("SMALL_DIR")
+# The key to the encrypted public photos (tools/release/make_photo_parts.py made it, outside every repo).
+# It goes ONLY into this private zip: not into FILES-FROM-AUTHOR.txt, not into git, never printed.
+PHOTOS_KEY = os.environ.get("GARDEN_PHOTOS_KEY", "")
+# The read-only access token for the private backup repository (the part that is not public): same rules as the key.
+PHOTOS_TOKEN = os.environ.get("GARDEN_PHOTOS_TOKEN", "")
 SEED_REL = "docker/wiki/seed/wiki-pages.json.gz"
 SEED_SHA_REL = "docker/wiki/seed/wiki-pages.sha256"
 PHOTOS_SHA_REL = "docker/tools/photos.sha256"
@@ -63,7 +70,9 @@ CODE_COMMIT = os.environ.get("GARDEN_CODE_COMMIT", "")
 assert len(CODE_COMMIT) == 40 and all(c in "0123456789abcdef" for c in CODE_COMMIT), \
     "set GARDEN_CODE_COMMIT to the full public commit (40 hex characters) the download fetches"
 # What goes in the main zip: what is NOT on GitHub, and the starters that fetch the rest.
-NOT_ON_GITHUB = {"README.md", "site/Boogie.mp3", "00-WELCOME.html"}
+# PHOTO-PARTS.json (the list of the photo parts, with each host's file ids) is made at release time and rides in
+# this zip, so adding a host's ids never changes the public code (see tools/release/README.md).
+NOT_ON_GITHUB = {"README.md", "site/Boogie.mp3", "00-WELCOME.html", "PHOTO-PARTS.json"}
 STARTERS = {"Start-Here-Ubuntu.sh", "Start-Here-Windows.cmd", "Garden-Menu-Windows.cmd",
             "tools/get-code.py", "tools/get-code.ps1"}
 
@@ -207,6 +216,10 @@ with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
     for rel, data in generated.items():
         lines.append(f"{hashlib.sha256(data).hexdigest()}  ./{rel}\n")
         z.writestr(info_for(TOP + rel), data)
+    if PHOTOS_KEY:
+        z.writestr(info_for(TOP + "photos.key", mode=0o600), open(PHOTOS_KEY, "rb").read())
+    if PHOTOS_TOKEN:
+        z.writestr(info_for(TOP + "photos-access.token", mode=0o600), open(PHOTOS_TOKEN, "rb").read())
     listing = "".join(sorted(lines, key=lambda l: l.split("  ", 1)[1])).encode()
     z.writestr(info_for(TOP + "FILES-FROM-AUTHOR.txt"), listing)
 

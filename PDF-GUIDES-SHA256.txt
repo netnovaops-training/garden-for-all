@@ -1,5 +1,6 @@
 # Fingerprints of the optional PDF guides (one zip per language), checked by tools/get-pdfs.py
-# and tools/get-pdfs.ps1 before anything is written. Format: sha256, file, bytes, language.
-url=https://github.com/netnovaops-training/garden-for-all/releases/download/pdf-guides-2026-10-14
-c661edd3eebdf24fefc0ac2c8165b39c42ec16734b80c574c5358949f0090cd1  junsgarden-pdf-guides-english.zip 13701888 en
-0b957929bde93368f96e89bde4a9baf4670fd226925c2e5c50e9011fe897e870  junsgarden-pdf-guides-korean.zip 15239863 ko
+# and tools/get-pdfs.ps1 before anything is written. Format: sha256, file, bytes, language[, hosts].
+# hosts (optional): host[:id],host[:id] (default: github); their addresses are in DOWNLOAD-HOSTS.txt.
+url=https://github.com/netnovaops-training/garden-for-all/releases/download/pdf-guides-2026-10-14b
+a29e455fbbc8671c7a05fd885ab2d8e430ce36651951a27913e0f57bcd995124  junsgarden-pdf-guides-english.zip 27038070 en
+d6820632d9519736605ba90e4a2b17bfbf92d306999a265e0987351fe8da1739  junsgarden-pdf-guides-korean.zip 24554694 ko

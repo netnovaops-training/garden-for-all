@@ -146,7 +146,7 @@ A few words used below:
 - **Command:** `bash garden.sh helpme`. Guide: `09-troubleshooting.md`.
 
 ### P) PDF guides: get or refresh them
-- **What it does:** Shows `PDF guides/STATUS.txt`, asks English, Korean, both or not now, and downloads that set from GitHub. Each download is checked against its fingerprint in `PDF-GUIDES-SHA256.txt`; if it does not match, nothing is written.
+- **What it does:** Shows `PDF guides/STATUS.txt`, asks English, Korean, both or not now, and downloads that set from GitHub (other hosts listed in `DOWNLOAD-HOSTS.txt` are tried if one does not answer). Each download is checked against its fingerprint in `PDF-GUIDES-SHA256.txt`; if it does not match, nothing is written. A set that is already in (the same version) is **not** fetched again: the menu says "Already up to date" and asks "Get them again anyway?" (default No). A cut-off download carries on where it stopped.
 - **When to use it:** If the PDF guides did not arrive during the install, or you want the other language, or a fresh copy.
 - **What it installs or changes:** Writes the PDFs into `PDF guides/English` and/or `PDF guides/Korean` and updates `PDF guides/STATUS.txt`. On Windows they land on the PC. Nothing else.
 - **To undo it:** Delete the folder `PDF guides/Korean` (or English) if you do not want it.
@@ -388,9 +388,9 @@ Guide for all of these: `13-backups-and-folders.md`.
 - **To undo it:** Delete it on the NAS.
 
 ### 11) Load the photos download (now, or again)
-- **What it does:** Finds `junsgarden-photos-addon.zip` (in the garden folder, Home, Downloads, Desktop, or the folder above; on a Korean Ubuntu also `~/다운로드` and `~/바탕화면`), checks its fingerprint, and unpacks it into your photos folder. Photos you already have are kept.
+- **What it does:** Finds `junsgarden-photos-addon.zip` (in the garden folder, Home, Downloads, Desktop, or the folder above; on a Korean Ubuntu also `~/다운로드` and `~/바탕화면`). If it is not there, it downloads it: about 32 small encrypted parts, from several hosts at once (`PHOTO-PARTS.json` lists the parts and their fingerprints, `DOWNLOAD-HOSTS.txt` the hosts). Every part is checked before it is used; a host that is down or answers wrong hands its parts to the others (the first part is fetched from Google Drive first; if Drive does not answer, it comes from a backup, which needs the access file `photos-access.token` from the same data package; the install says so plainly, and removes that access file once all the photos are in); a cut-off part carries on where it stopped. The parts are put together and unlocked with `photos.key` (it came in your private data package, `junsgarden-for-jun.zip`; it is never on a public host and never shown), and the finished zip is checked as a whole. Then it checks the zip's fingerprint and unpacks it into your photos folder. Photos you already have are kept. Plain files the author added to the zip (folder `extras/`) are copied to the top of the photos folder as they are. A version that is already downloaded is not fetched again. If `photos.key` is missing, it says so, writes nothing, and the garden carries on without photos.
 - **When to use it:** If the install ran before the photos were downloaded, or to get them again.
-- **What it installs or changes:** Photos in `local/images/`. Installs `unzip` if it is missing.
+- **What it installs or changes:** Photos in `local/images/`, and `junsgarden-photos-addon.zip` in the garden folder. Installs `unzip` if it is missing. While downloading, the parts wait in `.garden-downloads/` and are removed when the zip is complete.
 - **To undo it:** Nothing simple to undo (the photos are plain files).
 - **Command:** `bash garden.sh photos`
 

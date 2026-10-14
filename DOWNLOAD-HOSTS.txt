@@ -1,0 +1,19 @@
+# Where the big downloads can be fetched from (read by tools/get-parts.py).
+# One host per line:  <host id>  <address>.   In the address, {tag} is the release name,
+# {name} the file name and {id} the file's id on that host (taken from PHOTO-PARTS.json).
+# A line whose address is "-" or a PLACEHOLDER is not set up yet and is left out; the
+# download works with the hosts that are set up (any number). Add a host = add a line.
+#
+# GitHub: a release of the public code repository.
+github    https://github.com/netnovaops-training/garden-for-all/releases/download/{tag}/{name}
+# Google Drive: a public-link copy, one Drive file per part. This is the direct-download
+# form; the parts are small (25 MB), so Drive does not show its "large file" confirmation page.
+drive     https://drive.google.com/uc?export=download&id={id}
+# A private GitHub repository: the backup for the part that is not public. It is read through GitHub's
+# contents API with the access file photos-access.token (in the private data package); {id} is owner/repo
+# and {ref} the branch, both taken from PHOTO-PARTS.json.
+ghprivate https://api.github.com/repos/{id}/contents/parts/{name}?ref={ref}
+# The author's own server: holds only some of the parts. Optional: the download works if it is off.
+author    PLACEHOLDER-the-author-server-address/{name}
+# A mirror (Codeberg, GitLab ...) can be added the same way:
+# codeberg  PLACEHOLDER-https://codeberg.org/<owner>/<repo>/releases/download/{tag}/{name}

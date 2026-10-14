@@ -15,7 +15,7 @@ ok() { if eval "$2"; then pass=$((pass + 1)); echo "PASS  $1"; else fail=$((fail
 
 # Made-up zips, the list that names them, and a copy of the scripts in a fake garden folder.
 mkdir -p "$T/serve" "$T/garden/tools"
-cp "$HERE/tools/get-pdfs.py" "$HERE/tools/get-pdfs.ps1" "$T/garden/tools/"
+cp "$HERE/tools/get-pdfs.py" "$HERE/tools/get-pdfs.ps1" "$HERE/tools/get-parts.py" "$T/garden/tools/"
 $PY - "$T" <<'PY'
 import hashlib, sys, zipfile
 t = sys.argv[1]
@@ -98,6 +98,17 @@ if command -v powershell.exe >/dev/null 2>&1; then
     D7="$T/d7"; mkdir -p "$D7"
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(W "$G/tools/get-pdfs.ps1")" -Lang en -Dest "$(W "$D7")" -UrlBase "$(U "$T/serve-bad")" > "$T/out.txt" 2>&1
     ok "PowerShell: a wrong fingerprint writes no pdf and says so" "[ -z \"\$(find \"$D7\" -name '*.pdf')\" ] && grep -q 'did not pass the check' \"$T/out.txt\" && grep -q '^English: not downloaded' \"$D7/PDF guides/STATUS.txt\""
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(W "$G/tools/get-pdfs.ps1")" -Lang ko -Dest "$(W "$D6")" -UrlBase "$(U "$T/serve-bad")" > "$T/out.txt" 2>&1
+    ok "PowerShell: a second run is 'already up to date' and fetches nothing (even from a bad address)" "grep -q 'already up to date' \"$T/out.txt\""
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(W "$G/tools/get-pdfs.ps1")" -Lang ko -Dest "$(W "$D6")" -IsCurrent > "$T/out.txt" 2>&1
+    ok "PowerShell: -IsCurrent exits 0 when current" "[ $? -eq 0 ]"
+    # A second host: the first address (GitHub's) is dead, the list names "author" for the file.
+    mkdir -p "$T/garden2/tools"; cp "$G/tools/get-pdfs.ps1" "$T/garden2/tools/"
+    sed 's#^\(.* ko\)$#\1 github,author#' "$G/PDF-GUIDES-SHA256.txt" > "$T/garden2/PDF-GUIDES-SHA256.txt"
+    printf 'author  %s/{name}\n' "$(U "$T/serve")" > "$T/garden2/DOWNLOAD-HOSTS.txt"
+    D8="$T/d8"; mkdir -p "$D8"
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(W "$T/garden2/tools/get-pdfs.ps1")" -Lang ko -Dest "$(W "$D8")" -UrlBase "$(U "$T/nothing-here")" > "$T/out.txt" 2>&1
+    ok "PowerShell: the first host is dead, the second host gives the file" "[ \$(find \"$D8/PDF guides/Korean\" -name '*.pdf' | wc -l) -eq 1 ] && grep -q '^Korean: ready' \"$D8/PDF guides/STATUS.txt\""
 fi
 echo "RESULT: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

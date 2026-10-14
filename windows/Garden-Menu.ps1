@@ -502,7 +502,7 @@ function Copy-Garden {
     # "PDF guides" stays on this PC: Windows' own tar.exe crashes on the Korean file
     # names in it (PDF guides\Korean), and the guides are read here, not there.
     & $TarExe -czf $tmp --exclude=./local --exclude=./.env --exclude=./.git --exclude=./backups --exclude=./logs --exclude="./junsgarden-*-addon*.zip" `
-        --exclude="./PDF guides" --exclude=./.garden-target-windows.txt --exclude="./CHECKLIST*.txt" --exclude=./checklist-history.log -C $Root .
+        --exclude="./PDF guides" --exclude=./.garden-downloads --exclude=./.garden-target-windows.txt --exclude="./CHECKLIST*.txt" --exclude=./checklist-history.log -C $Root .
     if ($LASTEXITCODE -ne 0) { Fail "packing failed"; return $false }
     Note ("packed {0:N0} MB" -f ((Get-Item $tmp).Length / 1MB))
     $backups = Join-Path $Root "backups"
@@ -622,7 +622,16 @@ function Do-Pdfs {
     if (-not $pick) { Note "Nothing changed."; return }
     Set-Content -Path $PdfChoiceFile -Value $pick -Encoding ASCII
     if ($pick -eq "none") { Note "Nothing to fetch."; return }
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root "tools\get-pdfs.ps1") -Lang $pick
+    $script = Join-Path $Root "tools\get-pdfs.ps1"
+    # A version that is already in is never fetched again; ask before fetching it anyway.
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script -Lang $pick -IsCurrent
+    if ($LASTEXITCODE -eq 0) {
+        Note "Already up to date: nothing to fetch."
+        if (-not (Confirm-Step "Get them again anyway?" $false)) { return }
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script -Lang $pick -Again
+    } else {
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script -Lang $pick
+    }
     if ($LASTEXITCODE -ne 0) { Note "Nothing was written for the set that failed. Try again later." }
 }
 

@@ -147,7 +147,7 @@
 - **명령:** `bash garden.sh helpme`. **안내서:** [`09-troubleshooting.md`](../09-troubleshooting.md)(영어).
 
 ### P) PDF guides: get or refresh them — PDF 안내서: 받기 또는 새로 고치기
-- **무엇을 하나요:** `PDF guides/STATUS.txt`를 보여 주고, 영어/한국어/둘 다/지금은 안 함을 물은 뒤 고른 묶음을 GitHub에서 내려받아요. 내려받은 파일은 `PDF-GUIDES-SHA256.txt`의 지문과 맞는지 확인하고, 맞지 않으면 아무것도 쓰지 않아요.
+- **무엇을 하나요:** `PDF guides/STATUS.txt`를 보여 주고, 영어/한국어/둘 다/지금은 안 함을 물은 뒤 고른 묶음을 GitHub에서 내려받아요(한 곳이 답하지 않으면 `DOWNLOAD-HOSTS.txt`의 다른 곳을 써요). 내려받은 파일은 `PDF-GUIDES-SHA256.txt`의 지문과 맞는지 확인하고, 맞지 않으면 아무것도 쓰지 않아요. 이미 받은 묶음(같은 버전)은 다시 받지 않아요. "이미 최신이에요"라고 알려 주고 "그래도 다시 받을까요?"(기본값 아니요)라고 물어요. 중간에 끊긴 다운로드는 멈춘 곳에서 이어서 받아요.
 - **언제 쓰나요:** 설치하는 동안 PDF 안내서가 오지 않았을 때, 다른 언어가 필요할 때, 새로 받고 싶을 때.
 - **무엇을 설치하거나 바꾸나요:** `PDF guides/English`나 `PDF guides/Korean`에 PDF를 쓰고 `PDF guides/STATUS.txt`를 고쳐요. Windows에서는 PC에 들어와요. 그 밖에는 없어요.
 - **되돌리려면:** 필요 없는 언어의 폴더 `PDF guides/Korean`(또는 English)을 지우세요.
@@ -382,9 +382,9 @@
 - **되돌리려면:** NAS에서 지우세요.
 
 ### 11) Load the photos download (now, or again) — 사진 파일 불러오기(지금, 또는 다시)
-- **무엇을 하나요:** `junsgarden-photos-addon.zip`을 찾아서(정원 폴더, Home, Downloads, Desktop, 또는 한 단계 위 폴더. 한국어 Ubuntu에서는 `~/다운로드`와 `~/바탕화면`에서도), 지문을 확인하고, 사진 폴더에 압축을 풀어요. 이미 있는 사진은 그대로 둬요.
+- **무엇을 하나요:** `junsgarden-photos-addon.zip`을 찾아서(정원 폴더, Home, Downloads, Desktop, 또는 한 단계 위 폴더. 한국어 Ubuntu에서는 `~/다운로드`와 `~/바탕화면`에서도), 없으면 내려받아요: 암호로 잠근 작은 조각 약 32개를 여러 곳에서 동시에 받아요(`PHOTO-PARTS.json`에 조각과 지문이, `DOWNLOAD-HOSTS.txt`에 받는 곳이 있어요). 조각마다 쓰기 전에 확인하고, 한 곳이 꺼져 있거나 이상하게 답하면 그 조각은 다른 곳이 받고(첫 조각은 먼저 구글 드라이브에서 받아요. 드라이브가 응답하지 않으면 백업에서 받는데, 같은 데이터 꾸러미에 있는 접근 파일 `photos-access.token`이 필요해요. 설치가 그렇다고 쉬운 말로 알려 주고, 사진이 모두 들어오면 그 접근 파일을 지워요), 끊긴 조각은 멈춘 곳에서 이어서 받아요. 조각을 모아 `photos.key`로 열고(개인 데이터 꾸러미 `junsgarden-for-jun.zip`에 들어 있었어요. 공개된 곳에는 절대 없고 화면에도 보이지 않아요), 완성된 zip 전체를 다시 확인해요. 그다음 zip의 지문을 확인하고 사진 폴더에 압축을 풀어요. 이미 있는 사진은 그대로 둬요. 제작자가 zip에 넣어 둔 평범한 파일(`extras/` 폴더)은 사진 폴더의 맨 위에 그대로 복사해요. 이미 받은 버전은 다시 받지 않아요. `photos.key`가 없으면 그렇다고 알려 주고 아무것도 쓰지 않고, 정원은 사진 없이 계속 진행해요.
 - **언제 쓰나요:** 사진을 내려받기 전에 설치를 했다면, 또는 사진을 다시 받고 싶을 때.
-- **무엇을 설치하거나 바꾸나요:** `local/images/`의 사진. `unzip`이 없으면 설치해요.
+- **무엇을 설치하거나 바꾸나요:** `local/images/`의 사진, 그리고 정원 폴더의 `junsgarden-photos-addon.zip`. `unzip`이 없으면 설치해요. 받는 동안 조각은 `.garden-downloads/`에 있다가 zip이 완성되면 지워져요.
 - **되돌리려면:** 쉽게 되돌릴 방법은 없어요(사진은 평범한 파일이에요).
 - **명령:** `bash garden.sh photos`
 

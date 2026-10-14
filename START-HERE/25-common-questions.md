@@ -212,9 +212,13 @@ again, and pick the `before-restore` one.
 **More:** [guide 13](13-backups-and-folders.md)
 
 ### My photos are missing.
-The photos are a separate download: `junsgarden-photos-addon.zip`. Leave it
-zipped in your Home, Downloads or Desktop folder on the garden computer, then
-choose menu `6`, then `11`. (With the Windows menu and another garden computer:
+The photos are a separate download: `junsgarden-photos-addon.zip`. Choose menu
+`6`, then `11`: it downloads the photos (about 32 small encrypted parts from
+several hosts at once, each one checked, a cut-off part carries on; a version
+that is already in is not fetched again) and unlocks them with `photos.key` from
+your private data package. If `photos.key` is missing it says so and writes nothing.
+Or leave the zip zipped in your Home, Downloads or Desktop folder on the garden
+computer first, and the menu uses that. (With the Windows menu and another garden computer:
 put the zip in the garden folder on the PC and run menu `1` again, which carries
 it over, or copy it to the garden computer yourself.) Photos you already have are kept. Photos you added yourself and then
 lost come back with a backup (menu `7`).

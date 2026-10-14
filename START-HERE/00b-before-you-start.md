@@ -32,7 +32,7 @@ The install asks this once. Both use the same 14 numbered steps.
 |---|---|---|
 | Questions | Your name, email, database password (Enter = made for you), keep the web name or choose a new one. At the end: your password, email (Gmail, optional) and your AI keys | The same, plus each optional part, one by one, and which step to start at |
 | Installs | Everything necessary, plus the garden tools | What you choose: garden tools (default Yes), wiki (default No), n8n (default No) |
-| Photos | Loaded by itself, when the photos download is there | You choose: now, or later (menu 6, then 11) |
+| Photos | Downloaded in the background while the install runs (small parts, several hosts at once; needs `photos.key` from your data package) and loaded by itself; or loaded from the zip if you put it there | You choose: now, or later (menu 6, then 11) |
 | Wiki | Off. Switch it on any time (menu 9) | Asked (default No) |
 
 Either way you can add or remove parts later (guide 19 lists every option).
@@ -44,7 +44,7 @@ Either way you can add or remove parts later (guide 19 lists every option).
 | **A garden computer** that can stay on: an Ubuntu laptop (tested), this Windows PC with Windows' own Ubuntu (tested; for using the garden on this PC only, see below), or a Raspberry Pi 5 (tested on 64-bit Raspberry Pi OS; it needs good cooling, a fan, because it gets hot while the website is built) | The garden runs on it | Laptop: 2 to 3 hours to put Ubuntu on it the first time (guide 01). A Pi 5 with its starter kit: about 1 hour. Windows: set up by the installer (one restart) |
 | **Free disk space**: about 60 GB on an Ubuntu laptop; on Windows, about 60 GB free on C: | Docker, the website, the photos, and the automatic backups (about a week of them; about 6 GB together) | Nothing to do; just check before you start |
 | **A USB stick, 16 GB or larger** (only to put Ubuntu on a laptop) | To install Ubuntu (it is erased) | Included in the 2 to 3 hours |
-| **The three downloads** from the Google Drive folder | The garden (about 5 MB; the first start then gets the program from GitHub, about 75 MB), the photos (about 800 MB), the wiki pages (under 1 MB; only if you want the wiki) | Garden: 1 to 2 minutes. Photos: about 2 minutes on fast internet, 15 to 20 minutes on slow internet |
+| **The three downloads** from the Google Drive folder | The garden (about 5 MB; the first start then gets the program from GitHub, about 75 MB), the photos (about 800 MB; optional by hand, the install can fetch them itself, which uses the key `photos.key` inside the garden zip), the wiki pages (under 1 MB; only if you want the wiki) | Garden: 1 to 2 minutes. Photos: about 2 minutes on fast internet, 15 to 20 minutes on slow internet, in the background while the install runs |
 | **The install** (menu 1) | Puts everything together | 30 to 90 minutes, mostly waiting. Each step shows its own time. The longest step, building the website, takes 15 to 45 minutes (up to an hour on a very old laptop or a Pi) |
 | **Your password** for the garden | Your login, and your sign-in page | 1 minute |
 

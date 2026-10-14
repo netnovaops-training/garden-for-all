@@ -6,7 +6,7 @@ sorted into numbered step folders.
 
 Default output: "Setup documentation" next to this package folder.
 Every page gets a small lavender step label in its top right corner (English
-or Korean). If the environment variable GARDEN_WATERMARK names an image file,
+or Korean). If the environment variable GARDEN_LOGO (or GARDEN_WATERMARK) names an image file,
 that image is printed very faintly in the bottom right corner of every page
 (it is read from that file only; nothing personal is kept in this repository). Needs Google
 Chrome (or Microsoft Edge) to print the pages, and python-markdown:
@@ -116,7 +116,8 @@ def quick_part(text):
     return f"{title}\n\n{m.group(0)}" if m else None
 
 
-WATERMARK = os.environ.get("GARDEN_WATERMARK", "")
+# GARDEN_LOGO (the emblem image, also used by make_handbook.py) or GARDEN_WATERMARK (this script only): a path, never tracked in git.
+WATERMARK = os.environ.get("GARDEN_WATERMARK") or os.environ.get("GARDEN_LOGO", "")
 
 
 def faint_image_uri(path, opacity=0.16):

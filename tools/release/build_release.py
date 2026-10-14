@@ -45,11 +45,14 @@ ap.add_argument("--repo", default="netnovaops-training/garden-for-all")
 ap.add_argument("--allow-differences", action="store_true")
 ap.add_argument("--pdf-english", default="")
 ap.add_argument("--pdf-korean", default="")
+ap.add_argument("--photos-key", default="", help="photos.key (made outside every repo); goes only into the main zip")
+ap.add_argument("--photos-token", default="", help="photos-access.token (read-only token of the private backup repository); goes only into the main zip")
+ap.add_argument("--photo-parts", default="", help="PHOTO-PARTS.json from make_photo_parts.py; goes into the main zip, not into the public code")
 A = ap.parse_args()
 OUT = pathlib.Path(A.out).resolve()
 STAGE = OUT / "build" / "junsgarden-for-jun"
 CRLF_EXT = (".cmd", ".ps1", ".bat")
-OFF_GITHUB = {"README.md", "site/Boogie.mp3", "FILES-FROM-AUTHOR.txt", "DOWNLOADS-SHA256.txt"}
+OFF_GITHUB = {"README.md", "site/Boogie.mp3", "FILES-FROM-AUTHOR.txt", "DOWNLOADS-SHA256.txt", "photos.key", "photos-access.token", "PHOTO-PARTS.json"}
 STARTERS = ["Start-Here-Ubuntu.sh", "Start-Here-Windows.cmd", "Garden-Menu-Windows.cmd",
             "tools/get-code.py", "tools/get-code.ps1"]
 
@@ -106,6 +109,14 @@ if diffs:
 else:
     print("   yes, every file")
 
+if A.photos_key and A.photo_parts:      # the key and the list must belong together (the key id is in the list)
+    import json
+    kid = pathlib.Path(A.photos_key).read_text(encoding="utf-8").splitlines()[1][3:]
+    if json.loads(pathlib.Path(A.photo_parts).read_text(encoding="utf-8"))["encryption"]["key_id"] != kid:
+        sys.exit("STOP: photos.key is not the key of this PHOTO-PARTS.json (the key ids differ).")
+for leak in ("photos.key", "photos-access.token", "PHOTO-PARTS.json"):
+    if leak in code:
+        sys.exit(f"STOP: {leak} is in the public code. It must not be: remove it from git.")
 print("3. What is not on GitHub")
 for rel in ["README.md", "site/Boogie.mp3"] + STARTERS:
     (STAGE / rel).parent.mkdir(parents=True, exist_ok=True)
@@ -116,14 +127,16 @@ for p in data:
     dst = STAGE / p.relative_to(PKG)
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(p, dst)
-print(f"   {2 + len(STARTERS)} files and {len(data)} data files")
+if A.photo_parts:
+    shutil.copy2(A.photo_parts, STAGE / "PHOTO-PARTS.json")
+print(f"   {2 + len(STARTERS)} files and {len(data)} data files" + (" and PHOTO-PARTS.json" if A.photo_parts else ""))
 
 print("4. The handbook")
 run([sys.executable, HERE / "make_handbook.py", STAGE], GARDEN_LOGO=A.logo)
 
 print("5. The three downloads")
 run([sys.executable, HERE / "make_zip.py", OUT / "junsgarden-for-jun.zip"],
-    GARDEN_SRC=STAGE, GARDEN_CODE_COMMIT=A.commit, GARDEN_CODE_REPO=A.repo)
+    GARDEN_SRC=STAGE, GARDEN_CODE_COMMIT=A.commit, GARDEN_CODE_REPO=A.repo, GARDEN_PHOTOS_KEY=A.photos_key, GARDEN_PHOTOS_TOKEN=A.photos_token)
 
 if A.pdf_english and A.pdf_korean:
     print("5b. The two PDF guide downloads (for the GitHub release; not on Drive)")

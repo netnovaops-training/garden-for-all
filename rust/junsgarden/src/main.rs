@@ -158,7 +158,10 @@ async fn healthz(State(state): State<Arc<AppState>>) -> Response {
 /// with the known-dangerous shapes refused first. A file type not listed
 /// is a 404, not a download.
 fn servable(path: &str) -> bool {
-    let p = path.trim_start_matches('/');
+    // Judge the path the way the file server will read it: with the %XX codes decoded
+    // ("%2e" is ".", "%69mages" is "images"). A path that does not decode is refused.
+    let Some(decoded) = percent_decode(path) else { return false };
+    let p = decoded.trim_start_matches('/');
     if p.is_empty() || p.contains("..") || p.contains('\\') || p.contains('\0') {
         return false;
     }
@@ -176,11 +179,53 @@ fn servable(path: &str) -> bool {
         return false;
     }
     let Some((_, ext)) = lower.rsplit_once('.') else { return false };
+    // The photos folder (mounted at /www/images) holds the garden's own files: only photos and
+    // videos are served from it. A PDF, text, zip, json or script file there is a 404, whatever
+    // its name looks like, and however the address is written.
+    if lower.starts_with("images/") {
+        return IMAGE_TYPES.contains(&ext);
+    }
     matches!(
         ext,
         "css" | "js" | "png" | "jpg" | "jpeg" | "webp" | "gif" | "svg" | "ico" | "pdf" | "apk"
             | "mp3" | "mp4" | "mov" | "webm" | "m4v" | "woff" | "woff2" | "ttf" | "html" | "json" | "xmp"
-    ) && (ext != "json" || lower.starts_with("sections/cards/") || lower.starts_with("apps/") || lower.starts_with("images/"))
+    ) && (ext != "json" || lower.starts_with("sections/cards/") || lower.starts_with("apps/"))
+}
+
+/// The only file types served from the photos folder (/images/...): photos and videos.
+const IMAGE_TYPES: [&str; 13] = [
+    "jpg", "jpeg", "png", "gif", "webp", "avif", "heic", "heif", "ico", "mp4", "webm", "mov", "m4v",
+];
+
+/// Decode the %XX codes of an address path. None if a code is broken, the result is not
+/// text, or it hides a slash or backslash ("%2f", "%5c"), which no real file name needs.
+fn percent_decode(s: &str) -> Option<String> {
+    let b = s.as_bytes();
+    let mut out = Vec::with_capacity(b.len());
+    let mut i = 0;
+    while i < b.len() {
+        if b[i] == b'%' {
+            let hex = std::str::from_utf8(b.get(i + 1..i + 3)?).ok()?;
+            let v = u8::from_str_radix(hex, 16).ok()?;
+            if v == b'/' || v == b'\\' || v == 0 {
+                return None;
+            }
+            out.push(v);
+            i += 3;
+        } else {
+            out.push(b[i]);
+            i += 1;
+        }
+    }
+    String::from_utf8(out).ok()
+}
+
+/// The router for static files: the site folder behind the allowlist (`servable`).
+fn static_files(www: &std::path::Path) -> Router {
+    Router::new()
+        .fallback_service(ServeDir::new(www))
+        .layer(middleware::from_fn(asset_headers))
+        .layer(middleware::from_fn(only_servable))
 }
 
 /// Middleware (a step every request passes through) that only lets a request on to
@@ -330,10 +375,7 @@ async fn run() -> anyhow::Result<()> {
     // The router for static files (CSS, scripts, photos). `ServeDir` hands out files from
     // the site folder. The layers run in a set order: the outer layer `only_servable` first
     // checks the path is allowed, then `asset_headers` adds the cache rules.
-    let assets = Router::new()
-        .fallback_service(ServeDir::new(&www))
-        .layer(middleware::from_fn(asset_headers))
-        .layer(middleware::from_fn(only_servable));
+    let assets = static_files(&www);
 
     // `use pages::*;` brings every page module (index, blog, catalog, ...) into scope.
     use pages::*;
@@ -392,15 +434,19 @@ fn main() -> anyhow::Result<()> {
     common::runtime()?.block_on(run())
 }
 
-// Tests: only compiled when running `cargo test`; they check `servable()`.
+// Tests: only compiled when running `cargo test`; they check `servable()` and the static router.
 #[cfg(test)]
 mod tests {
-    use super::servable;
+    use super::{servable, static_files};
+    use axum::{body::Body, http::{Request, StatusCode}};
+    use tower::ServiceExt;
 
     // Ordinary public files must be allowed.
     #[test]
     fn serves_ordinary_assets() {
-        for ok in ["/style.css", "/js/hero.js", "/images/Database/a.webp", "/privacy.html", "/sections/cards/card-01.json", "/images/Gallery/x.mp4"] {
+        for ok in ["/style.css", "/js/hero.js", "/images/Database/a.webp", "/privacy.html", "/sections/cards/card-01.json", "/images/Gallery/x.mp4",
+                   "/images/Gallery/My%20Photo.JPG", "/images/plan/a.jpeg", "/images/Database/b.png", "/images/Gallery/c.gif",
+                   "/images/Gallery/d.MOV", "/images/Gallery/e.heic", "/images/Database/f.avif"] {
             assert!(servable(ok), "{ok} should be served");
         }
     }
@@ -416,5 +462,55 @@ mod tests {
         ] {
             assert!(!servable(bad), "{bad} must not be served");
         }
+    }
+
+    // From the photos folder only photos and videos are served, however the address is written.
+    #[test]
+    fn photos_folder_serves_only_media() {
+        for bad in [
+            "/images/My%20Note.pdf", "/images/note.PDF", "/images/Gallery/x.pdf", "/images/a/b/c/d.pdf", "/images/x.pdf/", "/images/x.pdf.",
+            "/images/x.jpg.pdf", "/images/x.pdf%2ejpg.pdf", "/images/x%2Epdf", "/%69mages/x.pdf", "/Images/x.pdf", "/images/x.txt", "/images/x.zip",
+            "/images/x.json", "/images/x.php", "/images/x.py", "/images/x.csv", "/images/x.xmp", "/images/x.svg", "/images/x.html", "/images/x.js",
+            "/images/x.mp3", "/images/x", "/images/x.pdf%00.jpg", "/images/a%2fb.pdf", "/images//x.pdf", "/images/x.p%64f", "/images/%zz.jpg",
+        ] {
+            assert!(!servable(bad), "{bad} must not be served");
+        }
+    }
+
+    // The real router: a media file is served, a PDF is a 404 even when the file is on the disk.
+    #[tokio::test]
+    async fn router_serves_media_and_refuses_pdf_in_photos() {
+        let dir = std::env::temp_dir().join(format!("garden-static-test-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("images/Gallery/deep")).unwrap();
+        std::fs::write(dir.join("images/Gallery/a.jpg"), b"jpg").unwrap();
+        std::fs::write(dir.join("images/Gallery/b.mp4"), b"mp4").unwrap();
+        std::fs::write(dir.join("images/My Note.pdf"), b"%PDF").unwrap();
+        std::fs::write(dir.join("images/Gallery/deep/x.pdf"), b"%PDF").unwrap();
+        std::fs::write(dir.join("images/notes.txt"), b"t").unwrap();
+        std::fs::write(dir.join("style.css"), b"a{}").unwrap();
+        std::fs::write(dir.join("guide.pdf"), b"%PDF").unwrap();
+        let get = |path: &'static str| {
+            let app = static_files(&dir);
+            async move {
+                app.oneshot(Request::builder().uri(path).body(Body::empty()).unwrap()).await.unwrap().status()
+            }
+        };
+        for (path, want) in [
+            ("/images/Gallery/a.jpg", StatusCode::OK),
+            ("/images/Gallery/b.mp4", StatusCode::OK),
+            ("/style.css", StatusCode::OK),
+            ("/guide.pdf", StatusCode::OK), // other folders are unchanged
+            ("/images/My%20Note.pdf", StatusCode::NOT_FOUND),
+            ("/images/Gallery/deep/x.pdf", StatusCode::NOT_FOUND),
+            ("/images/My%20Note.PDF", StatusCode::NOT_FOUND),
+            ("/images/My%20Note.pdf/", StatusCode::NOT_FOUND),
+            ("/%69mages/My%20Note.pdf", StatusCode::NOT_FOUND),
+            ("/images/My%20Note%2epdf", StatusCode::NOT_FOUND),
+            ("/images/notes.txt", StatusCode::NOT_FOUND),
+        ] {
+            assert_eq!(get(path).await, want, "{path}");
+        }
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

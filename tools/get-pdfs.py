@@ -11,15 +11,25 @@ program. Only when the fingerprint matches and every name inside is a plain
     python3 tools/get-pdfs.py [en|ko|both]     fetch, check, unpack (default: en)
         --dest FOLDER        where "PDF guides" goes (default: the garden folder)
         --url-base URL       another place for the zips (a test; file:// works)
+        --again              fetch even if this version is already in
+        --is-current         only say (exit 0) if the chosen sets are already up to date, else exit 2
         --check ZIP en|ko    only check a zip against the list (used by the release build)
+
+A set that is already in (same version) is never fetched again. The zips come through
+tools/get-parts.py, so they can be offered by more than one host (DOWNLOAD-HOSTS.txt, and an
+optional fifth field on a line of PDF-GUIDES-SHA256.txt: host[:id],host[:id]; default github).
 
 The garden runs without them. A failure is not an install failure: it prints
 what happened in plain words and exits 1; the garden menu (P) tries again.
 Needs only Python 3. No git, no extra programs.
 """
-import hashlib, os, shutil, sys, tempfile, urllib.request, zipfile
+import hashlib, importlib.util, os, shutil, sys, tempfile, zipfile
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # the garden folder
+_spec = importlib.util.spec_from_file_location("get_parts", os.path.join(os.path.dirname(os.path.abspath(__file__)), "get-parts.py"))
+parts = importlib.util.module_from_spec(_spec)      # the one download program (several hosts, small parts, once per version)
+_spec.loader.exec_module(parts)
+
 LANGS = {"en": "English", "ko": "Korean"}
 
 
@@ -29,15 +39,16 @@ def say(en, ko):
 
 
 def read_list(path):
-    """PDF-GUIDES-SHA256.txt -> (url base, {lang code: (file name, sha256, bytes)})."""
+    """PDF-GUIDES-SHA256.txt -> (url base, {lang code: (file name, sha256, bytes, hosts)})."""
     base, files = "", {}
     for line in open(path, encoding="utf-8"):
         line = line.strip()
         if line.startswith("url="):
             base = line[4:].strip().rstrip("/")
         elif len(line) > 66 and line[64:66] == "  " and not line.startswith("#"):
-            sha, name, size, code = (line[:64], *line[66:].split())[:4]
-            files[code] = (name, sha, int(size))
+            fields = line[66:].split()
+            sha, name, size, code = (line[:64], *fields)[:4]
+            files[code] = (name, sha, int(size), fields[3] if len(fields) > 3 else "github")
     if not base or set(files) != set(LANGS):
         sys.exit("PDF-GUIDES-SHA256.txt is damaged. / PDF-GUIDES-SHA256.txt 파일이 손상됐어요.")
     return base, files
@@ -45,7 +56,7 @@ def read_list(path):
 
 def problems_in(zip_path, folder, want):
     """Reasons this zip must not be used (empty = fine)."""
-    name, sha, size = want
+    name, sha, size = want[:3]
     bad = []
     if os.path.getsize(zip_path) != size:
         bad.append("wrong size")
@@ -114,23 +125,6 @@ def set_status(dest, folder, state, detail=""):
     os.replace(tmp, path)
 
 
-def fetch(url, dst, label):
-    req = urllib.request.Request(url, headers={"User-Agent": "garden-get-pdfs"})
-    with urllib.request.urlopen(req, timeout=120) as r, open(dst, "wb") as out:
-        total = int(r.headers.get("Content-Length") or 0)
-        got, shown = 0, -1
-        while True:
-            block = r.read(1 << 20)
-            if not block:
-                break
-            out.write(block)
-            got += len(block)
-            pct = int(got * 100 / total) // 25 * 25 if total else -1
-            if total and pct != shown:
-                shown = pct
-                print(f"   {label}: {got // (1 << 20)} / {total // (1 << 20)} MB")
-
-
 def install(zip_path, folder, dest):
     """Unpack into dest/PDF guides/<folder>; each file lands whole (temporary name, then in place)."""
     root = os.path.join(dest, "PDF guides")
@@ -160,6 +154,8 @@ def main(argv):
     for a in it:
         if a in ("--dest", "--url-base", "--list"):
             opts[a] = next(it, "")
+        elif a in ("--again", "--is-current"):
+            opts[a] = True
         elif a == "--check":
             opts[a] = (next(it, ""), next(it, ""))
         else:
@@ -185,36 +181,67 @@ def main(argv):
     for c in LANGS:
         if c not in codes:
             set_status(dest, LANGS[c], "none")
+    tag = os.path.basename(base.rstrip("/"))             # the version name comes from the list, not from a test address
     base = (opts.get("--url-base") or base).rstrip("/")
+    hosts = parts.load_hosts(os.path.join(HERE, "DOWNLOAD-HOSTS.txt"))
+    hosts["github"] = base + "/{name}"             # the list's own address (or --url-base) wins
+    again = "--again" in opts
     failed = False
-    with tempfile.TemporaryDirectory(prefix="garden-pdfs-") as tmp:
-        for code in codes:
-            name, sha, size = files[code]
-            folder = LANGS[code]
-            say(f"PDF guides arriving ({folder}, {size // (1 << 20)} MB)...", f"PDF 안내서를 받고 있어요 ({folder}, {size // (1 << 20)} MB)...")
-            zp = os.path.join(tmp, name)
-            set_status(dest, folder, "arriving")
-            try:
-                fetch(f"{base}/{name}", zp, folder)
-            except Exception as e:
-                say(f"Could not download the {folder} PDF guides ({e.__class__.__name__}). Nothing was written. "
-                    "The garden works without them; try again later with menu P.",
-                    f"{folder} PDF 안내서를 받지 못했어요. 아무것도 쓰지 않았어요. 안내서 없이도 정원은 잘 돌아가요. 나중에 메뉴 P로 다시 해 보세요.")
-                failed = True
-                set_status(dest, folder, "failed")
-                continue
-            bad = problems_in(zp, folder, files[code])
-            if bad:
-                say(f"The {folder} PDF guides did not pass the check ({'; '.join(bad)}), so nothing was written. "
+
+    def pset_for(code):
+        name, sha, size, hostlist = files[code]
+        return parts.PartSet(f"pdf-{code}", tag, name, [parts.Part(name, size, sha, parts.holders_of(hostlist.split(",")))], size, sha)
+
+    def current(code):
+        rec = parts.read_record(dest, f"pdf-{code}")
+        d = os.path.join(dest, "PDF guides", LANGS[code])
+        n = sum(1 for _r, _d, fs in os.walk(d) for f in fs if f.lower().endswith(".pdf")) if os.path.isdir(d) else 0
+        return rec.get("version") == pset_for(code).version and n >= rec.get("count", 1 << 30) > 0
+
+    if "--is-current" in opts:
+        return 0 if all(current(c) for c in codes) else 2
+    for code in codes:
+        name, sha, size = files[code][:3]
+        folder = LANGS[code]
+        if not again and current(code):
+            say(f"The {folder} PDF guides are already up to date; nothing was fetched.",
+                f"{folder} PDF 안내서는 이미 최신이에요. 아무것도 받지 않았어요.")
+            set_status(dest, folder, "ready", f"{parts.read_record(dest, f'pdf-{code}').get('count')} PDFs")
+            continue
+        say(f"PDF guides arriving ({folder}, {size // (1 << 20)} MB)...", f"PDF 안내서를 받고 있어요 ({folder}, {size // (1 << 20)} MB)...")
+        cache = os.path.join(dest, parts.STATE_DIR, f"pdf-{code}")
+        zp = os.path.join(cache, name)
+        set_status(dest, folder, "arriving")
+        pset = pset_for(code)
+        if not parts.fetch_parts(pset, hosts, cache, f"{folder} PDF", f"{folder} PDF"):
+            notes = " ".join(pset.report["notes"]) if hasattr(pset, "report") else ""
+            if "fingerprint" in notes or "too long" in notes or "web page" in notes:
+                say(f"The {folder} PDF guides did not pass the check ({notes[:120]}), so nothing was written. "
                     "Try again later with menu P.",
                     f"{folder} PDF 안내서가 확인을 통과하지 못해서 아무것도 쓰지 않았어요. 나중에 메뉴 P로 다시 해 보세요.")
-                failed = True
-                set_status(dest, folder, "failed")
-                continue
-            n = install(zp, folder, dest)
-            set_status(dest, folder, "ready", f"{n} PDFs")
-            say(f"Done: {n} {folder} PDF guides in the folder \"PDF guides/{folder}\", fingerprint checked.",
-                f"끝: \"PDF guides/{folder}\" 폴더에 PDF {n}개, 지문을 확인했어요.")
+            else:
+                say(f"Could not download the {folder} PDF guides ({notes[:120] or 'no host answered'}). Nothing was written. "
+                    "The garden works without them; try again later with menu P.",
+                    f"{folder} PDF 안내서를 받지 못했어요. 아무것도 쓰지 않았어요. 안내서 없이도 정원은 잘 돌아가요. 나중에 메뉴 P로 다시 해 보세요.")
+            failed = True
+            set_status(dest, folder, "failed")
+            shutil.rmtree(cache, ignore_errors=True)
+            continue
+        bad = problems_in(zp, folder, files[code])
+        if bad:
+            say(f"The {folder} PDF guides did not pass the check ({'; '.join(bad)}), so nothing was written. "
+                "Try again later with menu P.",
+                f"{folder} PDF 안내서가 확인을 통과하지 못해서 아무것도 쓰지 않았어요. 나중에 메뉴 P로 다시 해 보세요.")
+            failed = True
+            set_status(dest, folder, "failed")
+            shutil.rmtree(cache, ignore_errors=True)
+            continue
+        n = install(zp, folder, dest)
+        parts.write_record(dest, f"pdf-{code}", pset.version, count=n)
+        shutil.rmtree(cache, ignore_errors=True)
+        set_status(dest, folder, "ready", f"{n} PDFs")
+        say(f"Done: {n} {folder} PDF guides in the folder \"PDF guides/{folder}\", fingerprint checked.",
+            f"끝: \"PDF guides/{folder}\" 폴더에 PDF {n}개, 지문을 확인했어요.")
     return 1 if failed else 0
 
 
