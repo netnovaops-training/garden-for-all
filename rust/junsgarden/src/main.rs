@@ -480,7 +480,7 @@ mod tests {
     // The real router: a media file is served, a PDF is a 404 even when the file is on the disk.
     #[tokio::test]
     async fn router_serves_media_and_refuses_pdf_in_photos() {
-        let dir = std::env::temp_dir().join(format!("garden-static-test-{}", std::process::id()));
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../target").join(format!("garden-static-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("images/Gallery/deep")).unwrap();
         std::fs::write(dir.join("images/Gallery/a.jpg"), b"jpg").unwrap();
