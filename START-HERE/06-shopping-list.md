@@ -13,8 +13,8 @@
 
 ---
 
-You need **nothing** to do guides 01 to 03 and Projects 1 to 3, 5 and the
-Home Assistant part of Project 3 beyond the laptop. Buy things only when you
+You need **nothing** to do guides 01 to 03 and Projects 1, 2, 3 and 5 beyond
+the laptop. Buy things only when you
 reach the project that needs them.
 
 Prices are rough ranges and change. Check the current price before you buy.
@@ -26,9 +26,6 @@ Prices are rough ranges and change. Check the current price before you buy.
 | Same | The **official Raspberry Pi 27 W USB-C power supply** | Same | A weaker phone charger makes a Pi 5 unstable. |
 | Same | The official **Active Cooler** (a fan), or the official **Case** with its fan | Same | Needed: without a fan, the Pi slowed itself down at 84.5 °C while building the garden (guide 01). |
 | Same | An **SSD** with the **M.2 HAT+**, or a USB 3 SSD; or a 128 GB+ microSD card | Same | An SSD is faster and lasts much longer than a memory card (the garden writes every day). |
-
-Raspberry Pi's official products and their list of approved shops:
-<https://www.raspberrypi.com/products/>.
 | Project 4 | A Govee light that supports **LAN control** | $15 to $40 | Check the model's page or the Govee app for "LAN Control" before buying. Older models only work through the cloud. |
 | Project 6 | **ESP32 dev board** (ESP32-WROOM-32, with USB) | $6 to $12 | Buy 2; one is a spare for mistakes. |
 | Project 6 | **Capacitive** soil moisture sensor v1.2 (not "resistive") | $2 to $4 each | Capacitive ones do not rust. Buy 2 to 4. |
@@ -41,6 +38,9 @@ Raspberry Pi's official products and their list of approved shops:
 | Project 7 | Waterproof box (IP65), hose fittings, Teflon tape, drip tubing | $15 to $30 | Electronics and water must be kept apart. |
 | Project 7 | 2 A fuse and holder for the 12 V line | $3 | A fuse stops a fire if something shorts. |
 | Any | Breadboard, jumper wires, small screwdriver set | $10 to $15 | A starter kit has all of this. |
+
+Raspberry Pi's official products and their list of approved shops:
+<https://www.raspberrypi.com/products/>.
 
 **Total for the whole ladder:** about $80 to $150, spread over weeks.
 

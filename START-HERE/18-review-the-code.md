@@ -4,7 +4,7 @@
 *No time to read it all? This is the short version. The full guide is below.*
 
 - Everything in this package is plain text you can read. This guide shows how you, a friend or an AI can check it.
-- The same code is public: <https://github.com/netnovaops-training/garden-for-all>. Anyone can read it there.
+- Your code comes from this public page, at the one commit written in `CODE-SOURCE.txt`: <https://github.com/netnovaops-training/garden-for-all>. Anyone can read it there.
 - Check nothing changed on the way: menu `M`, then `11`.
 - See every change: `git log --oneline`, `git show`, `git diff`. `CHANGES.md` explains the changes made before you got it.
 - Scan for secrets and security mistakes (5 minutes): `sh tools/check-secrets.sh`. It prints `CLEAN`, or what it found.
@@ -19,28 +19,41 @@ compiled ahead of time: the website is built on your computer from the code in
 `rust/`, and every program comes from its official home. This guide shows how
 **you**, a friend, or an AI helper can check it, as much or as little as you like.
 
-![The Windows guided installer: every page links to what it installs](images/wizard-1-welcome.png)
+**Where the code comes from.** The download from Google Drive
+(`junsgarden-for-jun.zip`) holds only what is not on GitHub: the handbook, the
+starter backup, the music file, `CODE-SOURCE.txt`, `FILES-FROM-AUTHOR.txt` and
+the start files. All the code (`garden.sh`, `windows/`, `rust/`, `START-HERE/`
+and the rest) is fetched at the first start from the public page
+<https://github.com/netnovaops-training/garden-for-all>, at the one commit written in `CODE-SOURCE.txt` (never "whatever is
+newest"). Every file is checked against `FILES-FROM-AUTHOR.txt`, and if any file
+does not match, nothing is written. So the code you review here IS the public
+code at that commit.
+
+![The Windows setup wizard: every page has Help, and links to what it installs](images/wizard-1-welcome.png)
 
 ## 1. What is where (a map)
 
 | Folder or file | What it is |
 |---|---|
 | `garden.sh` | The one program for Ubuntu: the menu and every install step (heavily commented) |
-| `windows/` | The Windows guided installer and the Windows menu (PowerShell, commented) |
+| `windows/` | The Windows setup wizard and the Windows menu (PowerShell, commented) |
 | `rust/` | The website's code (Rust). `docs/rust-port/CODE-TOUR.md` walks through it |
 | `beds/` | The garden tools' code (Python) |
 | `docker/` | The recipes (Dockerfiles) for each program, the Caddy settings template, the wiki helper |
-| `docker-compose.yml` | Which programs run, and on which ports (all on this computer only, except Caddy) |
+| `docker-compose.yml` | Which programs run, and on which ports (all on this computer only; Caddy, installed by the front door step, is the only door to the internet) |
 | `android-app/` | The phone app's code |
 | `site/` | The pictures, styles and scripts the website serves |
 | `CHANGES.md` | Every change made for your copy, and why |
 | `FILES-FROM-AUTHOR.txt` | A fingerprint (SHA-256) of every file exactly as it came |
+| `CODE-SOURCE.txt` | Which public commit on GitHub the code came from |
+| `tools/get-code.py`, `tools/get-code.ps1` | The first start (Ubuntu, Windows): they fetch the code at that commit and check every file against `FILES-FROM-AUTHOR.txt` |
 | `WHAT-GETS-INSTALLED.md` | Every program that can be installed, and where it comes from |
 
 ## 2. Check that nothing was changed on the way
 Menu `M`, then `11` (on Windows: More, `11`). It compares every file with its
 fingerprint in `FILES-FROM-AUTHOR.txt` and lists any that differ. (After a
-Website name swap, those files differ: that is expected.)
+Website name swap, those files differ: that is expected.) The first start
+already did this check once, before it wrote any file; `M`, `11` repeats it any time.
 
 ## 3. See every change, line by line
 The install keeps a git history of your folder (guide 11). In a terminal in the
@@ -85,8 +98,9 @@ contacts while running are Google (Gemini, only with YOUR key), OpenRouter
 (only with YOUR key), No-IP and DuckDNS (only when you set them up).
 
 ## 6. Ask an AI to review it
-The same code is public at <https://github.com/netnovaops-training/garden-for-all> (everything except your private
-garden data and one song). An AI that can read web pages can check it there:
+Your code comes from the public page <https://github.com/netnovaops-training/garden-for-all>, at the commit in
+`CODE-SOURCE.txt` (the zip carries only what is not on GitHub: your garden data,
+the handbook and one song). An AI that can read web pages can check it there:
 
 - "Review the public repository https://github.com/netnovaops-training/garden-for-all. Is there anything harmful or
   hidden, or anything that sends my data elsewhere? Show me the files you checked."
@@ -109,8 +123,8 @@ into an AI: those hold your passwords and keys.
 
 ## 7. Ask a friend to review it
 Share the **code**, not your garden: everything except `.env`, `local/`,
-`backups/` and `logs/`. If the code is on a public git page, simply send the
-link. Your friend can read it, run the scanner in section 4, or install their own
+`backups/` and `logs/`. The code is on a public page: send that link (and the
+commit from `CODE-SOURCE.txt`). Your friend can read it, run the scanner in section 4, or install their own
 empty copy to try it. That copy is theirs: it has none of your plants, photos,
 passwords or keys, and it cannot reach your garden.
 

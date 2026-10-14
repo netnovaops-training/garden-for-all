@@ -1,7 +1,7 @@
 # 22. Bash, step by step: a first walkthrough of the terminal
 
-> The terminal way is harder than Garden Bridge, but not tough: you have my
-> walkthrough, one step at a time. (Jason)
+> The terminal way is harder than the Windows setup wizard (Garden Bridge), but
+> not tough: you have this walkthrough, one step at a time. (the author)
 
 ## Quick version
 *No time to read it all? This is the short version. The full guide is below.*
@@ -10,7 +10,7 @@
 - Open it on Ubuntu with **Ctrl+Alt+T**. On Windows, use the **Garden terminal** shortcut (Windows menu, More, 18).
 - Type a command, press **Enter**, read what it prints. Nothing happens until you press Enter.
 - Five commands take you a long way: `pwd` (where am I?), `ls` (what is here?), `cd` (go to a folder), `less` (read a file), `clear` (clean the screen).
-- Run the garden program with `cd ~/junsgarden-for-jun` and then `bash garden.sh`.
+- Run the garden program with `cd ~/junsgarden-for-jun` and then `bash garden.sh`. The very first time, use `bash Start-Here-Ubuntu.sh` instead: it gets the program (`garden.sh` and the rest) from GitHub and checks it.
 - When the computer asks for your password, **nothing shows while you type**. That is normal: type it and press Enter.
 - **Ctrl+C** stops what is running. In a terminal, copy is **Ctrl+Shift+C** and paste is **Ctrl+Shift+V**.
 - `rm` deletes for good (there is no Recycle Bin). Never paste commands from people you do not know.
@@ -264,8 +264,11 @@ nano's own manual: <https://www.nano-editor.org/dist/latest/nano.html>
 
 ## Running the garden program
 
-The garden's program is one file, `garden.sh`, in the garden folder. Go there
-first, then start it:
+The garden's program is one file, `garden.sh`, in the garden folder. Right after
+unzipping it is not there yet: the very first time, start `Start-Here-Ubuntu.sh`
+instead (`bash Start-Here-Ubuntu.sh` in the garden folder, or right-click it and
+choose **Run as a Program**). It gets the program from GitHub, checks every
+file, and opens the menu. After that, go to the garden folder and start it:
 
 ```
 cd ~/junsgarden-for-jun
@@ -307,9 +310,12 @@ These are the everyday ones (from the program's own list):
 The other words are `public`, `remote`, `nas`, `cloud`, `password`, `email`,
 `network`, `parts`, `ai`, `wiki`, `rebuild`, `dbweb`, `dbweb-stop`, `db`,
 `icon`, `uninstall`, `files`, `keys`, `subdomains`, `offline`, `llm`,
-`language`, `users`, `lockdown`, `webname`, `photos` and `test`. Guide 19
+`language`, `users`, `lockdown`, `webname`, `tailscale`, `rename`, `renames`,
+`redo-renames`, `power`, `off`, `on`, `checkup`, `cleanup`, `photos` and `test`
+(and `backup auto`, which the automatic backup schedule runs every hour). Guide 19
 explains each one ("Every command word"). A word the program does not know
-shows its short help, so `bash garden.sh help` is a safe way to see the list.
+shows the short list of everyday commands, so `bash garden.sh help` is a safe
+way to see it; guide 19 has them all.
 
 ## sudo and your password
 
@@ -381,7 +387,8 @@ asks you to restart afterwards, type `sudo reboot`.
 through apt. The install (menu `1`) downloads fresh copies of them when it builds
 the garden; it skips that step when the garden is already built and working.
 Docker itself and Caddy (the front door, once you set it up) came from their
-makers' own lists, so `sudo apt upgrade` keeps those up to date too.
+makers' own lists, so `sudo apt upgrade` keeps those up to date too. (With
+Docker Desktop on Windows, Docker is a Windows program that updates itself.)
 
 Ubuntu's official page: <https://ubuntu.com/server/docs/how-to/software/package-management/>
 

@@ -157,7 +157,7 @@ AI helpers know Caddy and DuckDNS well: if you want something unusual, paste
 
 Want another name than `junsgarden.zapto.org` (for example one for your mom's
 garden)? Menu `M`, then `16` (on Windows: More, `17`), or `bash garden.sh webname`.
-It works right after downloading too, before installing.
+It works before installing too, once the first start (`Start-Here-Ubuntu.sh`) has got the program.
 1. Add the new name in YOUR No-IP account first (Part A). The No-IP updater (DUC)
    updates every name on your DDNS key, so it needs no change.
 2. Type the new name. `https://`, `http://`, `www.` and anything after `/` are left

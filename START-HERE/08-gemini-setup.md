@@ -33,7 +33,7 @@ Start with A. Add B when you want Gemini to see your actual files.
    do I undo it?" every time. Do not run something you cannot explain.
 4. **One change at a time.** Run one command. Look at the result. Then the
    next. If two things change at once you cannot tell which one broke it.
-5. **Keep a backup before big changes.** `sh docker/backup.sh` takes seconds.
+5. **Keep a backup before big changes.** Menu `6`, then `1` (or `bash garden.sh backup`) takes a few minutes.
 
 ## Way A. A saved Gem (Gemini website)
 1. Open <https://gemini.google.com> signed in with your Google account.
@@ -107,7 +107,7 @@ to read `.env` or `docker/.ha.env` (tell it: "Never open files named .env").
 
 ## Way C. A free Gemini key for the website
 1. Open <https://aistudio.google.com/apikey> and create a key.
-2. In the garden menu choose `K` (keys), then `1` (Gemini), and paste the key
+2. In the garden menu choose `K` (keys), then `1` (Gemini), then `1` (Paste a new key), and paste the key
    (nothing shows while you paste). The menu checks the key with Google, saves it
    in your private settings file and restarts what uses it. No file editing needed.
 3. That is all: the menu did the restart.

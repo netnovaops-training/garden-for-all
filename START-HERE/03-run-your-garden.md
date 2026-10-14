@@ -17,7 +17,8 @@
 
 ## What you will build
 Your garden running on the garden computer at `http://localhost:8030`, with all
-your plants and photos, your own password, email for "forgot password" links,
+your plants and photos (the photos come from their own download, menu `6`,
+then `11`), your own password, email for "forgot password" links,
 and the AI boxes working.
 
 ## Time and cost
@@ -114,7 +115,7 @@ window is the secure tunnel.
 | The page does not open | Menu `2` (start), then menu `5`. It says which part is down. |
 | Login says wrong password | Menu `U`, `5` to set it again. After 5 wrong tries it waits 15 minutes. |
 | No password email | Settings, `3`, and send the test email. It says what Gmail did not like. |
-| Plants but no photos | Checklist section 4: the images folder must have files. Guide 13. |
+| Plants but no photos | The photos zip is not loaded yet: put `junsgarden-photos-addon.zip` (still zipped) in Home or Downloads, then menu `6`, then `11` (or `bash garden.sh photos`). Guide 13. |
 | Anything else | Menu `H` makes a help file; guide 09 has more fixes. |
 
 ## Make it yours

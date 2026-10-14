@@ -1,0 +1,27 @@
+<div class="page-content no-hero page-garden-bg help-page" lang="{{ lang }}">
+    <div class="help-top">
+        <a class="help-back" href="/help{{ q_lang }}">&larr; {% if ko %}모든 안내서{% else %}All guides{% endif %}</a>
+        <nav class="help-lang" aria-label="Language">
+            <a href="/help?guide={{ name }}" {% if !ko %}aria-current="page"{% endif %}>English</a>
+            {% if has_ko %}<a href="/help?guide={{ name }}&amp;lang=ko" lang="ko" {% if ko %}aria-current="page"{% endif %}>한국어</a>{% endif %}
+        </nav>
+    </div>
+    <p class="help-where">{% if ko %}{{ step_num }}단계{% else %}Step {{ step_num }}{% endif %}: {{ step_label }}</p>
+    <h1>{{ title }}</h1>
+    {% if english_only %}
+    <p class="help-note" lang="ko">이 안내서는 영어로만 있어요. 아래는 영어 원문이에요.</p>
+    {% endif %}
+    {% if !sections.is_empty() %}
+    <details class="help-toc">
+        <summary>{% if ko %}이 페이지의 내용{% else %}On this page{% endif %}</summary>
+        <ul>{% for s in sections %}<li><a href="#{{ s.0 }}">{{ s.1 }}</a></li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+    <article class="help-guide" {% if english_only %}lang="en"{% endif %}>
+        {{ body|safe }}
+    </article>
+    <nav class="help-pager" aria-label="{% if ko %}이전, 다음 안내서{% else %}Previous and next guide{% endif %}">
+        {% if let Some(p) = prev %}<a href="/help?guide={{ p.0 }}{{ amp }}"><small>{% if ko %}이전{% else %}Previous{% endif %}</small>&larr; {{ p.1 }}</a>{% else %}<span></span>{% endif %}
+        {% if let Some(n) = next %}<a class="help-next" href="/help?guide={{ n.0 }}{{ amp }}"><small>{% if ko %}다음{% else %}Next{% endif %}</small>{{ n.1 }} &rarr;</a>{% endif %}
+    </nav>
+</div>

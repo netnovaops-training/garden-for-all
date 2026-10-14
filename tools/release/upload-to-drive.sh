@@ -18,8 +18,8 @@
 #      Drive's own MD5 fingerprint of each file must match).
 #   3. Prints the SHA-256 fingerprints for DOWNLOADS-SHA256.txt, so anyone who
 #      downloads can check a file is exactly the published one.
-#  The PDFs are part of the program on GitHub ("PDF guides/"), so they are no
-#  longer uploaded. A Drive folder still holding the old "Setup documentation"
+#  The PDF guides are not uploaded here: they are two zips attached to a GitHub
+#  release (make_pdf_zips.py) that the installer fetches (tools/get-pdfs.*). A Drive folder still holding the old "Setup documentation"
 #  PDFs is reported; remove it there (rclone purge moves it to Drive's trash).
 #  Sharing the folder ("anyone with the link") is done once, by hand, in Google Drive.
 # =============================================================================

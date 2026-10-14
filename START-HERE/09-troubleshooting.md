@@ -87,7 +87,7 @@ problems with the exact check and fix for each.
 ## The internet side (Caddy, Apache, No-IP, router)
 | Problem | Check | Fix |
 |---|---|---|
-| Name does not resolve | `getent hosts YOUR-NAME.ddns.net` | `sudo systemctl status noip-duc`; check the key; confirm the free name on noip.com (No-IP emails you a link every 30 days: click **Confirm**) |
+| Name does not resolve | `getent hosts junsgarden.zapto.org` (or your web name) | `sudo systemctl status noip-duc`; check the key; confirm the free name on noip.com (No-IP emails you a link every 30 days: click **Confirm**) |
 | Name shows the wrong address | Compare with `curl -s https://api.ipify.org` | Wait 5 to 10 minutes; make sure only ONE updater is running for that name |
 | Works at home, not on a phone | Test with Wi-Fi off | Router port forwarding for 80 and 443 (guide 04, Part D); some routers cannot reach their own name from inside, which is normal |
 | Padlock or certificate error | `sudo journalctl -u caddy -n 50` | Ports 80 and 443 must reach the laptop from outside; the name must resolve first |

@@ -2,6 +2,7 @@
 
     python tools/release/build_release.py OUT_FOLDER EMBLEM.png --commit <40-hex public commit>
                                           [--repo owner/name] [--allow-differences]
+                                          [--pdf-english FOLDER --pdf-korean FOLDER]
 
 The program is public code on GitHub; the download carries only what is not
 there. So the release is built from exactly what Jun will get:
@@ -26,8 +27,11 @@ there. So the release is built from exactly what Jun will get:
    against the downloaded code. It must say ALL MATCH.
 FILES-FROM-AUTHOR.txt (and the add-on fingerprints) are written in the copy;
 copy FILES-FROM-AUTHOR.txt into the package for the final commit.
-The PDFs are part of the program ("PDF guides/", English and Korean), so there
-is no separate PDF upload any more.
+The PDF guides are NOT part of the program or of the Drive downloads: they are two
+zips attached to a GitHub release (tools/release/make_pdf_zips.py), fetched by the
+installer (tools/get-pdfs.py). With --pdf-english / --pdf-korean (the folders the PDFs
+were built in) step 5b builds those two zips into OUT_FOLDER/pdf, prints their SHA-256
+and checks they are the ones PDF-GUIDES-SHA256.txt (in the public code) names.
 """
 import argparse, hashlib, io, os, pathlib, shutil, subprocess, sys, tarfile, urllib.request, zipfile
 
@@ -39,6 +43,8 @@ ap.add_argument("logo", nargs="?", default="")
 ap.add_argument("--commit", required=True)
 ap.add_argument("--repo", default="netnovaops-training/garden-for-all")
 ap.add_argument("--allow-differences", action="store_true")
+ap.add_argument("--pdf-english", default="")
+ap.add_argument("--pdf-korean", default="")
 A = ap.parse_args()
 OUT = pathlib.Path(A.out).resolve()
 STAGE = OUT / "build" / "junsgarden-for-jun"
@@ -118,6 +124,19 @@ run([sys.executable, HERE / "make_handbook.py", STAGE], GARDEN_LOGO=A.logo)
 print("5. The three downloads")
 run([sys.executable, HERE / "make_zip.py", OUT / "junsgarden-for-jun.zip"],
     GARDEN_SRC=STAGE, GARDEN_CODE_COMMIT=A.commit, GARDEN_CODE_REPO=A.repo)
+
+if A.pdf_english and A.pdf_korean:
+    print("5b. The two PDF guide downloads (for the GitHub release; not on Drive)")
+    run([sys.executable, HERE / "make_pdf_zips.py", OUT / "pdf", "--english", A.pdf_english, "--korean", A.pdf_korean])
+    listed = code.get("PDF-GUIDES-SHA256.txt", b"").decode("utf-8")
+    for z in sorted((OUT / "pdf").glob("*.zip")):
+        sha = hashlib.sha256(z.read_bytes()).hexdigest()
+        if f"{sha}  {z.name} {z.stat().st_size} " not in listed:
+            print(f"   NOT the one PDF-GUIDES-SHA256.txt names: {z.name}")
+            if not A.allow_differences:
+                sys.exit("STOP: the PDF zips do not match the list in the public code.")
+        else:
+            print(f"   {z.name}: matches the list")
 
 print("6. The main zip checked the way Jun's computer will check it")
 check = OUT / "check"

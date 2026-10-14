@@ -24,7 +24,7 @@ use crate::AppState;
 const DEFAULT_DESC: &str =
     "Jun's and Kona's Garden — a plant catalog, garden journal, and growing guide for our home garden.";
 /// The title used when a page does not give its own.
-const DEFAULT_TITLE: &str = "Jun's and Kona's Garden";
+pub const DEFAULT_TITLE: &str = "Jun's and Kona's Garden";
 
 /// What one page tells the frame about itself. The PHP pages did this by
 /// setting variables before including `layout_open.php`; the field names

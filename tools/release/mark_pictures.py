@@ -7,7 +7,7 @@ them there), so marks are always drawn on a clean copy and never pile up. Run it
 again after shoot-wizard.ps1 retakes the pictures: it refreshes the clean copy
 first when the picture is newer.
 """
-import pathlib, shutil
+import json, pathlib, shutil
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -18,17 +18,6 @@ ORANGE = (255, 140, 26)
 # picture: [(box (left, top, right, bottom), note, where the note goes: "left"/"right"/"above"/"below" or (x, y))]
 MARKS = {
     "wizard-0-onedrive.png": [((28, 203, 616, 231), "click this one", "above")],
-    "wizard-1-welcome.png": [((624, 547, 721, 567), "click Next", "above")],
-    "wizard-2-where.png": [((178, 195, 358, 219), "↑ type the IP address", (370, 233)),
-                           ((538, 194, 638, 222), "↑ or let it find it", (560, 233)),
-                           ((178, 226, 358, 251), "your user name", (180, 284)),
-                           ((624, 547, 721, 567), "then Next", "above")],
-    "wizard-2b-this-pc.png": [((44, 439, 592, 461), "the easy way", (600, 412)),
-                              ((624, 547, 721, 567), "then Next", "above")],
-    "wizard-3-about-you.png": [((624, 547, 721, 567), "check, then Next", "above")],
-    "wizard-4-what-gets-installed.png": [((624, 547, 721, 567), "then Next", "above")],
-    "wizard-5-install.png": [((37, 165, 145, 192), "click to start", "right")],
-    "wizard-6-done.png": [((37, 182, 158, 211), "your garden", "below"), ((209, 182, 322, 211), "everyday jobs", "below")],
 }
 
 
@@ -67,6 +56,14 @@ def mark(name, marks):
     Image.alpha_composite(im, layer).convert("RGB").save(src)
     shutil.copystat(clean, src)            # same time as the clean copy, so it is not taken for a new picture
     return True
+
+
+# The setup wizard's pictures: shoot-wizard.ps1 writes where the buttons are
+# (clean-pictures/wizard-marks.json), so the rings follow the window's layout.
+WIZ = CLEAN / "wizard-marks.json"
+if WIZ.exists():
+    for name, rings in json.loads(WIZ.read_text(encoding="utf-8")).items():
+        MARKS[name] = [((l, t, r, b), note, side) for l, t, r, b, note, side in rings]
 
 
 if __name__ == "__main__":

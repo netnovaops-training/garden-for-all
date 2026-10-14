@@ -27,6 +27,8 @@
 //!   JUNSGARDEN_AI_CACHE_DIR   where AI readings are cached, default <www>/cashe/AI
 //!   JUNSGARDEN_FORECAST_FILE  the LSTM forecast JSON, see data.rs
 //!   JUNSGARDEN_WEATHER_LATEST the collector's latest-reading JSON, see data.rs
+//!   JUNSGARDEN_GUIDES_DIR     the guides (the garden folder's START-HERE) for the
+//!                             /help pages, default /guides (pages/help.rs)
 //! IMPORTANT for anyone running their own copy of this site: set JUNSGARDEN_USERS and
 //! JUNSGARDEN_PUBLIC_URL yourself. If you leave them unset, the program falls back to the
 //! defaults written in the code, which belong to the live site. Your copy would then send
@@ -48,6 +50,7 @@
 mod accounts;
 mod brain;
 mod formdata;
+mod guides;
 mod images;
 mod layout;
 mod normalise;
@@ -115,6 +118,9 @@ pub struct AppState {
     pub forecast_file: PathBuf,
     /// Path of the newest sensor-reading JSON file written by the weather collector.
     pub weather_latest: PathBuf,
+    /// The guides folder (START-HERE: the .md files, ko/, images/, help-ids.tsv),
+    /// read by the /help pages. Read-only.
+    pub guides: PathBuf,
 }
 
 /// Methods that belong to `AppState`. `&self` means a method only reads the value.
@@ -318,6 +324,7 @@ async fn run() -> anyhow::Result<()> {
         ai_cache_dir,
         forecast_file: PathBuf::from(common::env_or("JUNSGARDEN_FORECAST_FILE", "/var/www/html/data/latest_prediction.json")),
         weather_latest: PathBuf::from(common::env_or("JUNSGARDEN_WEATHER_LATEST", "/var/www/html/data/weather_latest.json")),
+        guides: PathBuf::from(common::env_or("JUNSGARDEN_GUIDES_DIR", "/guides")),
     });
 
     // The router for static files (CSS, scripts, photos). `ServeDir` hands out files from
@@ -360,6 +367,8 @@ async fn run() -> anyhow::Result<()> {
         .route("/streamlit/st.js", get(orchestrator::js))
         // The app's camera tools, for people logged in (garden_camera.rs).
         .route("/app/garden/{action}", axum::routing::post(garden_camera::garden_camera))
+        // The guides, for people logged in (help.rs): /help, /help/images/...
+        .merge(help::routes())
         // Layers wrap every route above them. First, work out who the visitor is (session.rs).
         // Then add the security headers to every response.
         .layer(middleware::from_fn_with_state(state.clone(), session::with_visitor))

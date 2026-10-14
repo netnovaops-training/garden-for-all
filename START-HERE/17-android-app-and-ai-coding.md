@@ -47,7 +47,9 @@ next to this guide.
   start: <https://developer.android.com/studio/install>. For the pretend
   phone (emulator), Google recommends 16 GB of memory (RAM) and 16 GB of free
   disk space: <https://developer.android.com/studio/run/emulator>.
-- The `android-app` folder from your garden package. Copy it to your
+- The `android-app` folder in your garden folder (it appears at the first
+  start, which gets the program from GitHub), or download it from the public
+  page <https://github.com/netnovaops-training/garden-for-all>. Copy it to your
   desktop computer, for example to `C:\Users\<you>\junsgarden-app\`.
 - An Android phone and its USB cable (or use the emulator instead).
 - A Google account (for Gemini).

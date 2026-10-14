@@ -82,6 +82,158 @@ building the app yourself (about 3 hours, guide 17).
 - **A password manager.** This route makes many passwords and keys. Each one
   goes in it first. Guide 00b, "Write these down", lists them.
 
+<a id="help-wizard"></a>
+
+## The setup wizard on Windows, page by page
+
+On a Windows PC, double-click `Start-Here-Windows.cmd`: the setup wizard opens.
+Your steps are on the left (a tick for each one done; click one to go back to
+it), a progress bar is on top, and **Help**, **Back** and **Next** are at the
+bottom, big enough for a finger. **Help** opens this guide at the question on
+that page, in the language you chose on the first page. The bold **#words** in
+the top-right corner do the same for each topic, with a one-line overview next
+to them. Make the window as big as you like: the pages follow.
+
+Close it half way and open it again: it carries on at the same page, with your
+answers. They are kept in `garden-setup.json` in the garden folder (plain text,
+never a password or a key: type those again).
+
+![The setup wizard: your steps on the left, the topic's #words top right, Help, Back and Next below](images/wizard-1-welcome.png)
+
+<a id="help-level"></a>
+
+### Easy or Custom (the level)
+
+![The level: EASY (automatic) or CUSTOM (you choose, page by page)](images/wizard-1b-level.png)
+
+- **EASY** (recommended): the necessary parts and the garden tools, chosen for
+  you. The install window asks your password (hidden while you type) and does
+  the rest, as in Part 1 with EASY.
+- **CUSTOM**: you tick the optional software, each part gets a page, and you
+  type your passwords and keys in the wizard. The install window then only
+  installs: it does not ask for them again.
+
+<a id="help-where"></a>
+
+### Where the garden runs
+
+![Where it runs: another computer at home, or this PC](images/wizard-2-where.png)
+
+**Another computer at home** (recommended): type its IP address, or click
+**Find it for me**, and your user name there (on it, `whoami`). **Test the
+connection** only checks that its SSH door answers. **This Windows PC** runs the
+garden inside Windows' own Ubuntu (WSL), with Docker Desktop (the easy way) or
+Docker inside Ubuntu.
+
+![This PC: then Docker Desktop or Docker inside Ubuntu](images/wizard-2b-this-pc.png)
+
+<a id="help-about-you"></a>
+
+### About you and your web name
+
+![About you: your name, email, and your web name (keep it, or a new one)](images/wizard-3-about-you.png)
+
+Your first name is your login (letters only); your email gets the "forgot
+password" links. **Keep** `junsgarden.zapto.org` (recommended), or type a new
+web name; either way, add it to your own free No-IP account before going online
+(Part 9).
+
+<a id="help-optional-software"></a>
+
+### Optional software
+
+![Optional software: set up now, or later from the menu](images/wizard-4-optional-software.png)
+
+**Set up now, during the install:** the garden tools, the wiki, n8n, email
+(Gmail), your AI keys, the plant data key, and a reserved address in the router
+(not when the garden runs on this PC). **Later, from the menu:** the front door,
+NAS and Google Drive backups, subdomains, Tailscale, LiteLLM and a local AI
+computer. Ticking a "later" part gives it a page that says what you will need,
+and the wizard's last page reminds you where it is in the menu. Each part you
+tick gets its own page next.
+
+<a id="help-garden-parts"></a>
+
+### Garden tools, wiki and n8n
+
+The garden tools and n8n need nothing typed. The wiki asks for its admin
+password (10 or more characters, typed twice); leave it empty and the install
+window asks for it instead. Your wiki pages come from the wiki add-on zip.
+
+![A part's page: Email (Gmail), with the steps and the app password](images/wizard-4b-a-part-page.png)
+
+Email, the AI keys, the plant data key and the reserved address are Parts 4, 3
+and 5 below (the **Help** button on their pages opens them).
+
+<a id="help-later-parts"></a>
+
+### Later, from the menu
+
+| Part | Windows menu | You need |
+|---|---|---|
+| The front door (Part 10) | More, `1` | a free web name (No-IP), your router's admin login |
+| Backups on your NAS (Part 6) | `6`, then `4` | the NAS's address, a shared folder and a user |
+| Backups on Google Drive (Part 7) | `6`, then `5` | your Google account |
+| Subdomains with DuckDNS (Part 11) | More, `14` | a free DuckDNS account; the front door first |
+| Tailscale (Part 13) | More, `19` | a free Tailscale account, and its app on your phone |
+| AI cost control (LiteLLM) | More, `16` | an AI key |
+| A local AI computer | More, `9` | another computer running Ollama ([guide 15](15-local-ai.md)) |
+
+<a id="help-passwords"></a>
+
+### Passwords
+
+![Passwords: yours, and the database's under More options](images/wizard-4c-passwords.png)
+
+One password for your garden's login and your sign-in page, at least 10
+characters, typed twice. **More options** has the database's password: leave it
+empty and a strong one is made for you (recommended).
+
+How they travel: when you click **Start the install**, the wizard writes the
+passwords and keys into one private file that only your Windows user can read,
+hands it to the garden computer through a program's input (never on a command
+line, never in a log) and deletes it on this PC. On the garden computer it is
+`.garden-wizard-secrets` (permission 600), and the install wipes it when it
+ends, finished or not. The wizard forgets them too: if the install stops, type
+them again (Back) before you start it again.
+
+<a id="help-pdf-guides"></a>
+
+### PDF guides
+
+Every guide as a PDF, to read or print. They are an optional download, not part of
+the program: **English** (about 13 MB) and **Korean** (about 15 MB) are two separate
+files on GitHub, and each one is checked against a fingerprint (SHA-256) kept in the
+program (`PDF-GUIDES-SHA256.txt`) before anything is written. They download while the
+garden installs, in the background, and never slow the install down.
+
+- EASY fetches them in the language you chose on the first page, without a page.
+- CUSTOM has this page: English, Korean, both, or **Not now**. It starts on the
+  language of the first page.
+- They land in `PDF guides/English` and `PDF guides/Korean` next to the starter files, on
+  the computer you ran the installer from (the Windows PC, for the wizard).
+- `PDF guides/STATUS.txt` says where each set is: `arriving`, `ready` or
+  `not downloaded`. While a set arrives, its folder holds a small `_arriving.txt`.
+- If a download fails or a fingerprint does not match, nothing is written, a plain
+  message says so, and the install finishes anyway. Menu **P** (PDF guides) fetches or
+  refreshes them later.
+
+<a id="help-summary"></a>
+
+### Summary, install and done
+
+![Summary: every answer, and the ones answered for you](images/wizard-4e-summary.png)
+
+The summary lists every answer (passwords and keys only as "set" or "not set")
+and the questions answered for you because they only matter once: the folder,
+where to start, the time zone, the long passwords the programs use between
+themselves, the firewall, swap, and the backup schedule. **Start the install**
+opens the black window; the page ticks off the steps as they finish.
+
+![Install: the steps appear as they finish](images/wizard-5-install.png)
+
+![Done: open your garden or the menu, and the parts you ticked for later](images/wizard-6-done.png)
+
 ## Part 1. Install the garden (beer)
 
 **What you get:** the website with all your plants and photos and the garden
@@ -131,14 +283,12 @@ right-click `Start-Here-Ubuntu.sh` and choose **Run as a Program** (or type
 
 Capital letters show what `Enter` means: `(Y/n)` is yes, `(y/N)` is no.
 
-**From a Windows PC instead** (the guided installer, `Start-Here-Windows.cmd`):
-on page 2 choose **Another computer at home** and type its IP address (or click
-**Find it for me**) and your user name there. Page 3 asks your name, your email and the web name (keep it).
-On page 4 tick **Garden tools** and **Wiki** (n8n is your choice). Then **Start
-the install**: in the black window choose `2` (CUSTOM). Your name, your email,
-the web name and the parts are already answered, so the black window asks the
-rest of the questions above. The photos and wiki zips go along by themselves
-when they are in the garden folder, on the Desktop or in Downloads.
+**From a Windows PC instead:** use the setup wizard (`Start-Here-Windows.cmd`),
+page by page [above](#help-wizard). For the Full level choose **CUSTOM** and tick
+**Garden tools** and **Wiki** (n8n is your choice). The wizard asks the questions
+in this table itself (the folder, the database password, the parts, the wiki
+password), so the install window does not. The photos and wiki zips go along by
+themselves when they are in the garden folder, on the Desktop or in Downloads.
 
 Changed your mind about a part later? Menu `9` (Parts) switches each one on or off:
 
@@ -146,7 +296,8 @@ Changed your mind about a part later? Menu `9` (Parts) switches each one on or o
 
 **At the end, keep the window open.** CUSTOM finishes with "Three short
 follow-ups (each can also be done later)". They are Parts 2 to 5 below, in the
-same order.
+same order. (Started from the setup wizard with CUSTOM, it says "Your answers
+from the setup wizard" instead, and uses what you typed there.)
 
 **You know it worked when:** the window says **ALL DONE** with
 `Your garden: http://localhost:8030` and `Your wiki: http://localhost:3000`, and
@@ -176,6 +327,8 @@ on the garden computer (from Windows: Windows menu `4`, then add `/login.php`).
 
 **Full details:** [03, Part B](03-run-your-garden.md#part-b-your-password).
 
+<a id="help-ai-keys"></a>
+
 ## Part 3. Your AI keys (wine)
 
 **What you get:** the AI boxes on the website and in the garden tools (tag
@@ -203,6 +356,8 @@ today's free limit is used up.)
 **Full details:** [16, section 4](16-ai-studio.md#4-a-free-api-key-for-the-gardens-ai-boxes),
 [19, API keys (K)](19-every-menu-option.md#api-keys-k).
 
+<a id="help-email"></a>
+
 ## Part 4. Email for 'forgot password' links (wine)
 
 **What you get:** "forgot password" emails for you and for the friends you add
@@ -228,6 +383,8 @@ or menu `8`, then `3`.
 **You know it worked when:** the test email arrives (check spam the first time).
 
 **Full details:** [03, Part C](03-run-your-garden.md#part-c-email-for-forgot-password-links-optional).
+
+<a id="help-reserve-ip"></a>
 
 ## Part 5. A reserved address in the router (wine)
 
@@ -255,9 +412,11 @@ is also the way to do it later.
 
 **Full details:** [14, Step 2](14-reserve-your-ip.md#step-2-reserve-it-in-the-router).
 
+<a id="help-nas-add"></a>
+
 ## Part 6. Backups 1: your NAS, and more network places (wine)
 
-**What you get:** a copy of every nightly backup on your NAS at home (the newest
+**What you get:** a copy of every backup (automatic, or nightly if you chose that) on your NAS at home (the newest
 14 are kept), and, if you like, on up to two more network places (a second NAS,
 or a folder a Windows PC shares). Also, if you say yes, a weekly copy of the
 whole garden folder on the NAS.
@@ -293,6 +452,8 @@ of menu `6` shows your NAS copies, and `logs/offsite.log` has a line with `NAS O
 
 **Full details:** [13, Connect your NAS](13-backups-and-folders.md#connect-your-nas-menu-6-then-4)
 and [More than one network place](13-backups-and-folders.md#more-than-one-network-place-menu-6-then-13).
+
+<a id="help-google-drive"></a>
 
 ## Part 7. Backups 2: Google Drive (wine)
 
@@ -351,6 +512,8 @@ in the garden folder on the PC says `OK`.
 **Full details:** [13, A copy on your Windows PC](13-backups-and-folders.md#a-copy-on-your-windows-pc-automatic-if-you-want-it),
 and the whole 3-2-1 picture: [13, 3-2-1](13-backups-and-folders.md#3-2-1-your-nas-and-google-drive).
 
+<a id="help-webname"></a>
+
 ## Part 9. Your web name at No-IP, and two checks (champagne)
 
 **What you get:** your own free No-IP account with your web name in it
@@ -385,6 +548,8 @@ DDNS key is in your password manager, and the CGNAT check shows the same address
 **Full details:** [04, Part A](04-go-public-no-ip-caddy.md#part-a-your-own-no-ip-account-and-the-name-once),
 [Part B](04-go-public-no-ip-caddy.md#part-b-check-you-are-not-behind-cgnat),
 [Part C](04-go-public-no-ip-caddy.md#part-c-practise-first-recommended).
+
+<a id="help-front-door"></a>
 
 ## Part 10. Online: HTTPS and your sign-in page (champagne)
 
@@ -426,6 +591,8 @@ after you sign in; and the checklist (menu `5`), section 6, says
 **Full details:** [04, Part D](04-go-public-no-ip-caddy.md#part-d-the-real-thing),
 [14, Step 3](14-reserve-your-ip.md#step-3-open-exactly-two-ports-only-when-you-put-the-site-online),
 [07 Your sign-in page](07-sso-gate.md).
+
+<a id="help-subdomains"></a>
 
 ## Part 11. Subdomains with DuckDNS (champagne)
 

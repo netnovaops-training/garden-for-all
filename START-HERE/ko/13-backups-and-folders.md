@@ -62,6 +62,8 @@ junsgarden-backup_2026-10-13_0230_nightly.tar
   `before-restore` 백업을 만들고, 웹사이트를 멈추고, 모든 것을 되돌려 놓고,
   다시 시작해요.
 
+<a id="help-backup-schedule"></a>
+
 ## 자동 백업 일정(Ubuntu, 설치가 설정해요)
 설치가 내 **cron**(Ubuntu의 알람 시계)에 한 줄을 추가해요. 그 줄은 한 시간마다
 `bash garden.sh backup auto`를 실행하고, 지난 백업 뒤로 바뀐 것을 세어서 정해요:
@@ -206,7 +208,6 @@ ls /mnt/garden-nas
 fstab에는 아래 줄을 추가한 뒤 저장하세요.)
 (내 NAS 주소와 폴더를 쓰세요. `uid=1000`은 내 사용자 번호예요: `id -u`가 보여 줘요.)
 공식 참고 자료: <https://manpages.ubuntu.com/manpages/noble/man8/mount.cifs.8.html>
-그리고 Ubuntu 안내서: <https://manpages.ubuntu.com/manpages/noble/man8/mount.cifs.8.html>
 
 ### 네트워크 장소를 여러 곳에(메뉴 `6`, 그다음 `13`)
 NAS 하나도 좋아요. 두 곳이면 더 좋아요: 한 기기가 고장 나도 다른 곳에 정원이 남아
@@ -217,7 +218,7 @@ Windows PC가 공유하는 폴더.
 
 - 장소는 **모두 3곳까지** 둘 수 있어요. 장소 1은 `4`에서 연결한 NAS예요(바뀌지 않아요).
   `13`이 장소 2를, 그다음 장소 3을 더해요.
-- 매일 밤 백업이 끝나면 사본이 **장소마다** 가고, 장소마다 최신 14개를 보관해요.
+- 백업이 끝날 때마다 사본이 **장소마다** 가고, 장소마다 최신 14개를 보관해요.
 - 질문은 첫 NAS와 같아요(네트워크에서 찾거나 주소 입력, 사용자 이름, 비밀번호, 공유 폴더
   고르기). 새 장소는 `/mnt/garden-nas-2`(또는 `-3`)에 나타나고, 로그인 파일도 따로
   `/etc/garden-nas-2.credentials`에 있어요.
@@ -232,8 +233,8 @@ PC가 공유하는 `GardenCopies`라는 폴더예요:
 오른쪽 클릭해서 **Give access to**(액세스 권한 부여, Windows 11에서는 **Show more
 options**(추가 옵션 표시) 안에 있어요), 그다음 **Specific people**(특정 사용자)을 고르고,
 사용자를 골라 **Read/Write**(읽기/쓰기) 권한을 주세요. 정원 메뉴에서는 그 PC의 주소와,
-그 Windows 계정의 사용자 이름과 비밀번호를 입력하세요. 그 PC는 새벽 2시 30분에 켜져 있어야
-해요. 꺼져 있으면 그날 밤 그곳으로 가는 사본은 빠져요(메뉴가 `logs/offsite.log`에
+그 Windows 계정의 사용자 이름과 비밀번호를 입력하세요. 그 PC는 백업이 만들어질 때 켜져 있어야
+해요(자동 일정이면 어느 시간이든, "매일 밤"을 골랐으면 새벽 2시 30분). 꺼져 있으면 그때 그곳으로 가는 사본은 빠져요(메뉴가 `logs/offsite.log`에
 `NAS2 FAILED (not reachable)`라고 적고, 다른 장소들은 그대로 사본을 받아요).
 Microsoft의 안내서:
 <https://support.microsoft.com/windows/file-sharing-over-a-network-in-windows-b58704b2-f53a-4b82-7bc1-80f9994725bf>
@@ -252,7 +253,7 @@ Microsoft의 안내서:
 제거하기(More, `12`)도 모든 네트워크 장소의 연결을 같은 방법으로 끊어요.
 
 ### NAS에 정원 폴더 '전체' 두기(메뉴 `6`, 그다음 `10`)
-매일 밤 백업 말고도, 메뉴는 **정원 폴더 전체**(코드, 설정, 사진, 백업)의 사본을 NAS(네트워크 장소 1)의
+정기 백업 말고도, 메뉴는 **정원 폴더 전체**(코드, 설정, 사진, 백업)의 사본을 NAS(네트워크 장소 1)의
 `whole-garden-folder/`에 둘 수 있어요. 매주 만들고, 최신 2개를 보관해요. 데이터베이스의
 작업 파일은 빼요(정원이 돌아가는 동안 계속 바뀌기 때문이에요). 대신 사본 안의 최신
 백업에 데이터베이스가 안전하게 들어 있어요. 이 사본에는 설정 파일 `.env`(비밀번호 포함)도
@@ -351,7 +352,7 @@ Drive에 `JunsGarden-backups`라는 폴더가 생겨요. rclone의 설정은
 
 **정원 폴더 전체 옮기기**(예: 더 큰 디스크로): 메뉴 `M`, 그다음 `18`, 그다음 `3`.
 정원을 멈추고, 옮기고, 파일 수를 세고, 폴더의 전체 경로를 기억하는 바탕화면 아이콘,
-매일 밤 백업 줄, Docker의 프로그램을 고쳐 줘요. 안내서 26.
+백업 일정 줄, Docker의 프로그램을 고쳐 줘요. 안내서 26.
 
 ## 더 읽기
 - tar(압축 파일 형식): <https://www.gnu.org/software/tar/manual/>

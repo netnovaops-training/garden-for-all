@@ -7,7 +7,7 @@
 - Your plants are in the table `data_source`.
 - Look inside in your browser with Adminer: menu `M`, then `8`, then open <http://localhost:8082>. Stop it afterwards with `bash garden.sh dbweb-stop`.
 - Or type SQL: `bash garden.sh db`.
-- Back up first (menu `6`) every time you change data by hand. Made a mistake? Restore that backup (menu `7`).
+- Back up first (menu `6`, then `1`) every time you change data by hand. Made a mistake? Restore that backup (menu `7`).
 - Always use `WHERE` on `UPDATE` and `DELETE`. Without it, every row changes.
 - Most changes are easier and safer in the plant admin (`/streamlit/`).
 
@@ -41,8 +41,8 @@ The wiki keeps its pages in a second database, `junsgarden_wiki`.
 
 **The easy way, in your browser (Adminer):** menu `M`, then `8`. Open
 <http://localhost:8082> and fill in: System **MySQL**, Server **db**, Username
-**dbadmin**, Database **juns_garden_db**. For the password, see Settings, or
-type `grep ^DB_PASSWORD= .env` in the garden folder. Stop it afterwards:
+**dbadmin**, Database **juns_garden_db**. For the password, type
+`grep ^DB_PASSWORD= .env` in the garden folder. Stop it afterwards:
 `bash garden.sh dbweb-stop`.
 
 **The command line (SQL):** `bash garden.sh db`, then try:
@@ -50,14 +50,14 @@ type `grep ^DB_PASSWORD= .env` in the garden folder. Stop it afterwards:
 ```sql
 SHOW TABLES;
 SELECT COUNT(*) FROM data_source;
-SELECT id, common_name FROM data_source ORDER BY id DESC LIMIT 10;
+SELECT id, plant_name FROM data_source ORDER BY id DESC LIMIT 10;
 exit
 ```
 
 (If a column name is different, `DESCRIBE data_source;` lists the real ones.)
 
 ## Safe habits
-1. **Back up first** (menu `6`), every time you change data by hand.
+1. **Back up first** (menu `6`, then `1`), every time you change data by hand.
 2. **Look before you change:** run the `SELECT` with the same `WHERE` first, and
    check it finds only the rows you mean.
 3. **Always use `WHERE`** on `UPDATE` and `DELETE`. Without it, every row changes.

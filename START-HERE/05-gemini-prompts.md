@@ -32,7 +32,7 @@ what a command does before I run it.
 My setup:
 - An old laptop running Ubuntu 24.04 LTS, with Docker and Docker Compose.
 - My garden website runs from a folder called junsgarden-for-jun (Rust website,
-  MariaDB database, two containers) at http://localhost:8030.
+  MariaDB database, a few containers) at http://localhost:8030.
 - Projects I use or plan to use: Home Assistant (Docker), Govee lights,
   Mosquitto (MQTT), ESPHome with an ESP32 board, Uptime Kuma, Caddy, No-IP.
 - I am a beginner. I am careful. I do not run anything that I do not understand.
@@ -84,7 +84,7 @@ PASTE THE FILE OR A PART OF IT
 ```
 In my Rust garden website I want to change THIS: DESCRIBE IT.
 Show me the smallest change, which file it goes in, and how to rebuild with
-"docker compose up -d --build". Explain what each part of the change does.
+the garden menu (M, then 7, or "bash garden.sh rebuild"). Explain what each part of the change does.
 Tell me how I can undo it.
 ```
 

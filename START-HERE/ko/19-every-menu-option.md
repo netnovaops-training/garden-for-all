@@ -6,10 +6,10 @@
 *다 읽을 시간이 없나요? 짧은 버전이에요. 전체 안내서는 아래에 있어요.*
 
 - 모든 메뉴의 모든 선택을 찾아보는 목록이에요: 무엇을 하는지, 언제 쓰는지, 무엇을 바꾸는지, 어떻게 되돌리는지.
-- 메뉴 열기: 바탕화면의 "Jun's Garden" 아이콘, 또는 정원 폴더에서 `bash garden.sh`. Windows에서는 `Garden-Menu-Windows.cmd`.
+- 메뉴 열기: 바탕화면의 "Jun's Garden" 아이콘, 또는 정원 폴더에서 `bash garden.sh`. Windows에서는 `Garden-Menu-Windows.cmd`. 맨 처음에는 `Start-Here-Ubuntu.sh`(Windows에서는 설치 마법사 `Start-Here-Windows.cmd`)로 열어요. 이것이 프로그램도 받아 와요.
 - 모든 선택은 무언가를 바꾸기 전에 화면에서 스스로 설명하고, 명령을 실행하기 전에 보여 줘요.
 - 평소에 쓰는 선택: `1` 설치(또는 이어서 하기, 고치기), `2` 시작, `3` 멈추기, `4` 웹사이트 열기, `5` 점검표, `6` 백업, `7` 복원.
-- 다른 선택: `8` 설정, `9` 구성 요소, `U` 사용자, `K` API 키, `A` 내 주소, `H` 도움 파일, `M` More(고급), `L` 언어.
+- 다른 선택: `8` 설정, `9` 구성 요소, `U` 사용자, `K` API 키, `A` 내 주소, `H` 도움 파일, `P` PDF 안내서, `M` More(고급), `L` 언어.
 - 대부분의 선택은 명령으로도 돼요: `bash garden.sh WORD`, 예를 들면 `bash garden.sh backup`.
 - 제거(Uninstall)는 More, `12`예요. 그 안의 선택 `2`는 모든 것을 지우지만, 먼저 마지막 백업을 만들고 `DELETE`를 입력하라고 해요.
 
@@ -21,6 +21,10 @@
 
 **메뉴 여는 방법**
 
+- **맨 처음:** 압축을 막 풀었을 때는 아이콘도 `garden.sh`도 아직 없어요. Ubuntu에서는
+  `Start-Here-Ubuntu.sh`를 오른쪽 클릭하고 **Run as a Program**을 고르세요(또는
+  `bash Start-Here-Ubuntu.sh`를 입력하세요). GitHub에서 프로그램을 받아 파일을 하나하나 확인하고,
+  이 메뉴를 열어요. Windows에서는 `Start-Here-Windows.cmd`(설치 마법사)를 두 번 클릭하세요.
 - **Ubuntu:** 바탕화면의 "Jun's Garden" 아이콘을 두 번 클릭하거나, 정원 폴더에서
   터미널을 열고 `bash garden.sh`를 입력하세요.
 - **Windows:** 정원 폴더의 `Garden-Menu-Windows.cmd`를 두 번 클릭하세요.
@@ -62,7 +66,7 @@
 
 - **무엇을 하나요:** 정원 전체를 14단계로 설정해요. 전에 중간에 멈췄다면, 그 단계부터 이어서 해요. 이미 끝나서 잘 작동하는 단계는 건너뛰어요. 처음에는 이렇게 물어봐요: 이 컴퓨터인지 다른 컴퓨터인지, EASY인지 CUSTOM인지, 웹 이름을 그대로 쓸지 새로 고를지.
 - **언제 쓰나요:** 처음에. 설치가 중간에 멈춘 뒤에. 또는 점검표가 고장 났다고 하는 것을 고칠 때.
-- **무엇을 설치하거나 바꾸나요:** Ubuntu 업데이트와 git, curl, openssl, rsync, unzip. SSH 서버. 방화벽(ufw): 집 네트워크에서 오는 SSH 말고는 들어오는 것을 모두 막아요. Docker. 작은 컴퓨터에는 4 GB 스왑 파일. `.env` 설정 파일, `local/` 안의 폴더들, git 기록. 정원을 만들고 시작하고(웹사이트는 127.0.0.1:8030에서만), `backups/`에서 식물을, 사진 다운로드 파일(`junsgarden-photos-addon.zip`, 있으면)에서 사진을 불러오고, 새벽 2시 30분의 매일 밤 백업(cron)과 바탕화면 아이콘을 추가해요. EASY는 정원 도구도 켜고, 그다음 비밀번호와 AI 키를 물어봐요.
+- **무엇을 설치하거나 바꾸나요:** Ubuntu 업데이트와 git, curl, openssl, rsync, unzip. SSH 서버. 방화벽(ufw): 집 네트워크에서 오는 SSH 말고는 들어오는 것을 모두 막아요. Docker. 작은 컴퓨터에는 4 GB 스왑 파일. `.env` 설정 파일, `local/` 안의 폴더들, git 기록. 정원을 만들고 시작하고(웹사이트는 127.0.0.1:8030에서만), `backups/`에서 식물을, 사진 다운로드 파일(`junsgarden-photos-addon.zip`, 있으면)에서 사진을 불러오고, 자동 백업 일정(cron이 한 시간마다 살펴봐요. Backups 7에서 매일 밤 새벽 2시 30분으로 바꿀 수 있어요)과 바탕화면 아이콘을 추가해요. EASY는 정원 도구도 켜고, 그다음 비밀번호를 묻고, 이메일(Gmail) 설정을 권하고, AI 키를 물어봐요.
 - **되돌리려면:** More, 12(Uninstall, 제거하기).
 - **명령:** `bash garden.sh install`. **안내서:** [`01-ubuntu-laptop.md`](../01-ubuntu-laptop.md)(영어), [`03-run-your-garden.md`](03-run-your-garden.md), 그리고 [`WHAT-GETS-INSTALLED.ko.md`](../../WHAT-GETS-INSTALLED.ko.md)(정원 폴더 맨 위에 있어요).
 
@@ -106,6 +110,7 @@
 - **언제 쓰나요:** 실수한 뒤에, 또는 예전 날로 돌아가고 싶을 때.
 - **무엇을 설치하거나 바꾸나요:** 데이터베이스, 사진, 댓글, 그 밖에 저장된 조각들을 백업에 있는 것으로 바꿔요.
 - **되돌리려면:** 다시 복원하고 `before-restore` 백업을 고르세요.
+- **알아 두면 좋아요:** 이름을 바꾸기 전의 백업이면, 이름 바꾸기를 다시 할지 물어봐요(안내서 26).
 - **명령:** `bash garden.sh restore`(또는 `bash garden.sh restore FILE-NAME`). **안내서:** [`13-backups-and-folders.md`](13-backups-and-folders.md).
 
 ### 8) Settings: names, emails, passwords, keys, folders — 설정: 이름, 이메일, 비밀번호, 키, 폴더
@@ -141,6 +146,13 @@
 - **되돌리려면:** 필요 없으면 파일을 지우세요.
 - **명령:** `bash garden.sh helpme`. **안내서:** [`09-troubleshooting.md`](../09-troubleshooting.md)(영어).
 
+### P) PDF guides: get or refresh them — PDF 안내서: 받기 또는 새로 고치기
+- **무엇을 하나요:** `PDF guides/STATUS.txt`를 보여 주고, 영어/한국어/둘 다/지금은 안 함을 물은 뒤 고른 묶음을 GitHub에서 내려받아요. 내려받은 파일은 `PDF-GUIDES-SHA256.txt`의 지문과 맞는지 확인하고, 맞지 않으면 아무것도 쓰지 않아요.
+- **언제 쓰나요:** 설치하는 동안 PDF 안내서가 오지 않았을 때, 다른 언어가 필요할 때, 새로 받고 싶을 때.
+- **무엇을 설치하거나 바꾸나요:** `PDF guides/English`나 `PDF guides/Korean`에 PDF를 쓰고 `PDF guides/STATUS.txt`를 고쳐요. Windows에서는 PC에 들어와요. 그 밖에는 없어요.
+- **되돌리려면:** 필요 없는 언어의 폴더 `PDF guides/Korean`(또는 English)을 지우세요.
+- **명령:** `bash garden.sh pdfs`(Windows: `Garden-Menu.ps1 -Action pdfs`).
+
 ### M) More (advanced) — 더 보기(고급)
 - **무엇을 하나요:** More(더 보기) 메뉴를 열어요(아래에 따로 부분이 있어요).
 
@@ -171,6 +183,7 @@
 - **무엇을 하나요:** 이 컴퓨터의 네트워크 카드, IP 주소, MAC 주소(카드의 고정된 ID), 공유기의 주소를 보여 주고, 공유기에서 IP를 예약하는 단계도 보여 줘요. 예약했다고 대답하면 그 IP를 기억해 두고, 나중에 IP가 바뀌면 점검표가 알려 줘요.
 - **언제 쓰나요:** 인터넷에 올리기 전에. 포트 전달(port forwarding)에는 절대 바뀌지 않는 주소가 필요해요.
 - **무엇을 설치하거나 바꾸나요:** yes라고 대답할 때만 `.env`에 `LAPTOP_IP`를 저장해요. 예약 자체는 공유기에서 직접 해요.
+- **Windows 안의 Ubuntu(WSL)에서는:** 이 숫자가 WSL 안쪽의 사설 주소라고 알려 줘요. 예약하거나 전달하지 마세요. 다른 기기에서 보거나 인터넷에 올리려면 따로 정원 컴퓨터를 쓰세요(안내서 00b).
 - **되돌리려면:** 되돌릴 것이 없어요.
 - **명령:** `bash garden.sh network`. **안내서:** [`14-reserve-your-ip.md`](14-reserve-your-ip.md).
 
@@ -231,8 +244,8 @@
 - **명령:** `bash garden.sh icon`
 
 ### 11) Look at the files that came from the author (and check them) — 제작자가 보낸 파일 보기(그리고 확인하기)
-- **무엇을 하나요:** zip에서 온 각 폴더가 무엇인지, 파일 개수와 크기와 함께 보여 줘요. 모든 파일의 지문을 `FILES-FROM-AUTHOR.txt`와 비교해서 바뀐 파일의 목록을 보여 줄지 물어봐요. Files(파일) 앱에서 폴더를 열지도 물어봐요.
-- **언제 쓰나요:** zip에 정확히 무엇이 들어 있었는지 보거나, 그 뒤로 무엇이 바뀌었는지 찾을 때.
+- **무엇을 하나요:** 제작자가 보낸 각 폴더(zip, 그리고 첫 시작 때 GitHub에서 받은 것)가 무엇인지, 파일 개수와 크기와 함께 보여 줘요. 모든 파일의 지문을 `FILES-FROM-AUTHOR.txt`와 비교해서 바뀐 파일의 목록을 보여 줄지 물어봐요. Files(파일) 앱에서 폴더를 열지도 물어봐요.
+- **언제 쓰나요:** 제작자가 보낸 것이 정확히 무엇인지 보거나, 그 뒤로 무엇이 바뀌었는지 찾을 때.
 - **무엇을 설치하거나 바꾸나요:** 없어요.
 - **되돌리려면:** 되돌릴 것이 없어요.
 - **명령:** `bash garden.sh files`. **안내서:** [`18-review-the-code.md`](18-review-the-code.md).
@@ -246,10 +259,10 @@
 - **명령:** `bash garden.sh subdomains`. **안내서:** [`04-go-public-no-ip-caddy.md`](04-go-public-no-ip-caddy.md)(고급).
 
 ### 14) On / off: the whole garden, or only off the internet; check-up, clean-up — 켜기 / 끄기: 정원 전체, 또는 인터넷에서만 내리기; 점검, 정리
-- **무엇을 하나요:** 여섯 가지 선택이 있는 화면 하나예요. `1`은 모두 꺼요(`docker compose down`, `-v` 없이: 아무것도 지우지 않아요). 현관문도 멈춰요. `2`는 몇 달 뒤에도 모두 다시 켜고 웹사이트를 확인해요. `4`는 멈춘 프로그램을 다시 시작해요. `5`는 Docker의 남은 것(7일이 넘은 정원 프로그램의 옛 버전, 오래된 빌드 기록)을 물어본 뒤 지워요. Enter는 '아니요'예요. `6`은 6시간마다 점검을 해요.
+- **무엇을 하나요:** 여섯 가지 선택이 있는 화면 하나예요. `1`은 모두 꺼요(`docker compose down`, `-v` 없이: 아무것도 지우지 않아요). 정문도 멈춰요. `2`는 몇 달 뒤에도 모두 다시 켜고 웹사이트를 확인해요. `4`는 멈춘 프로그램을 다시 시작해요. `5`는 Docker의 남은 것(7일이 넘은 정원 프로그램의 옛 버전, 오래된 빌드 기록)을 물어본 뒤 지워요. Enter는 '아니요'예요. `6`은 6시간마다 점검을 해요.
 - **`3`, 인터넷에서만 내리기:** Caddy를 멈추고, 방화벽에서 문 80과 443(그리고 집에서만 쓰는 문)을 닫고, No-IP 업데이트 프로그램과 DuckDNS 업데이트 프로그램을 멈추고, 로그인 페이지를 꺼요. 정원은 집에서 계속 실행돼요.
 - **언제 쓰나요:** `1`은 한동안 사이트를 운영하고 싶지 않을 때나 접속이 너무 많을 때. `3`은 인터넷에서는 내리고 집에서는 쓰고 싶을 때, 또는 옮기기 전에. `5`는 디스크가 찰 때.
-- **무엇을 설치하거나 바꾸나요:** `1`은 `.garden-off`를 만들어요(그 파일이 있는 동안 밤 백업도 쉬어요). `3`: Caddy와 No-IP 업데이트 프로그램은 꺼져요(지워지지는 않아요). DuckDNS cron 줄은 지워지고, `.env`의 웹 이름이 비워지고 주소가 localhost로 돌아가요. `6`은 cron 한 줄이에요.
+- **무엇을 설치하거나 바꾸나요:** `1`은 `.garden-off`를 만들어요(그 파일이 있는 동안 예약된 백업도 쉬어요). `3`: Caddy와 No-IP 업데이트 프로그램은 꺼져요(지워지지는 않아요). DuckDNS cron 줄은 지워지고, `.env`의 웹 이름이 비워지고 주소가 localhost로 돌아가요. `6`은 cron 한 줄이에요.
 - **되돌리려면:** `1`: `2`를 고르세요. `3`: More, 1을 다시 하세요(No-IP 업데이트 프로그램을 다시 켜요). 하위 도메인이 있었다면 Subdomains, 1도 하세요. 완전히 닫고 싶다면 공유기에서 80과 443 전달도 직접 지우세요. `6`: 다시 고르세요.
 - **명령:** `bash garden.sh power`, 또는 바로 `bash garden.sh off`, `bash garden.sh on`, `bash garden.sh offline`(`3`), `bash garden.sh checkup`, `bash garden.sh cleanup`. 안내서: [`26-rename-move-and-switch.md`](26-rename-move-and-switch.md).
 
@@ -385,8 +398,8 @@
 
 ![13: 장소 2 더하기, 192.168.1.30에 있는 PC의 공유 폴더 GardenCopies](../images/screen-21-nas-add.png)
 
-- **무엇을 하나요:** 이미 있는 장소를 보여 주고, 새 곳이 몇 번이 되는지 알려 준 다음, 4와 같은 질문을 해요(찾기 또는 주소, 사용자 이름, 비밀번호, 공유 폴더). 네트워크 장소는 모두 3곳까지예요. 장소 1은 4에서 연결한 곳이고 바뀌지 않아요. 그다음부터는 매일 밤 백업이 장소마다 가고, 장소마다 최신 14개를 보관해요. 3곳이 모두 쓰이고 있으면 그렇다고 알려 주고 아무것도 바꾸지 않아요.
-- **언제 쓰나요:** 집 안의 다른 기기에 사본을 하나 더 두고 싶을 때: 두 번째 NAS, 또는 Windows PC가 공유하는 폴더(그 PC는 새벽 2시 30분에 켜져 있어야 해요).
+- **무엇을 하나요:** 이미 있는 장소를 보여 주고, 새 곳이 몇 번이 되는지 알려 준 다음, 4와 같은 질문을 해요(찾기 또는 주소, 사용자 이름, 비밀번호, 공유 폴더). 네트워크 장소는 모두 3곳까지예요. 장소 1은 4에서 연결한 곳이고 바뀌지 않아요. 그다음부터는 모든 백업이 장소마다 가고, 장소마다 최신 14개를 보관해요. 3곳이 모두 쓰이고 있으면 그렇다고 알려 주고 아무것도 바꾸지 않아요.
+- **언제 쓰나요:** 집 안의 다른 기기에 사본을 하나 더 두고 싶을 때: 두 번째 NAS, 또는 Windows PC가 공유하는 폴더(그 PC는 백업할 때 켜져 있어야 해요. 빠진 사본은 `logs/offsite.log`에 나와요).
 - **무엇을 설치하거나 바꾸나요:** 4와 같고, 장소 번호가 붙어요: 로그인 파일 `/etc/garden-nas-2.credentials`(또는 `-3`), `/etc/fstab`의 한 줄, `/mnt/garden-nas-2`(또는 `-3`)의 폴더, `.env`의 `BACKUP_NAS_DIR_2` / `BACKUP_NAS_HOST_2`(또는 `_3`). 정원 폴더 '전체'의 매주 사본은 장소 1에만 가요.
 - **되돌리려면:** Backups, 8, 그리고 그 장소의 번호를 입력하세요.
 
@@ -433,7 +446,7 @@
 ### 8) Rename or move a file or folder — 파일이나 폴더 이름 바꾸기 또는 옮기기
 - **무엇을 하나요:** 더 보기 18과 같아요(네 가지 선택). `2`를 고르면 정원 폴더 8개(웹사이트 파일, 사진, 데이터, 캐시, 데이터베이스, n8n, 로그인 페이지, 백업)를 보여 줘요. 하나를 고르고 새 위치를 입력하세요. 정원 폴더 안이나 다른 Linux 디스크도 돼요. 정원을 멈추고, 폴더를 옮기고, `.env`를 업데이트하고, 다시 시작해요.
 - **언제 쓰나요:** 폴더를 다른 곳에 두고 싶을 때, 또는 웹사이트의 파일이나 폴더에 내 이름을 붙이고 싶을 때(`1`).
-- **무엇을 설치하거나 바꾸나요:** 폴더의 위치와 `.env`의 그 줄. 백업 폴더를 옮기면 매일 밤 백업의 cron 줄도 다시 써요.
+- **무엇을 설치하거나 바꾸나요:** 폴더의 위치와 `.env`의 그 줄. 백업 폴더를 옮기면 백업 일정의 cron 줄도 다시 써요.
 - **되돌리려면:** 8을 다시 고르고 원래 자리로 옮기세요.
 - **안내서:** [`13-backups-and-folders.md`](13-backups-and-folders.md), [`26-rename-move-and-switch.md`](26-rename-move-and-switch.md).
 
@@ -600,6 +613,7 @@ More, 1에서 나와요(또는 Settings, 7, 또는 `bash garden.sh public`).
 - **무엇을 하나요:** 집 Wi-Fi에 있는 휴대폰과 컴퓨터가 `http://THIS-COMPUTER.local`이나 이 컴퓨터의 IP 주소로 정원을 열어요. 집 밖에서는 아무도 닿을 수 없어요. 정원 도구(/beds)는 여기서는 닫혀 있어요.
 - **언제 쓰나요:** No-IP 이름이 준비되기 전에, 집에서 정원을 쓸 때.
 - **무엇을 설치하거나 바꾸나요:** Caddy를 (공식 출처에서) 시스템 서비스로 설치해요. `/etc/caddy/Caddyfile`을 써요(예전 것은 `Caddyfile.bak`으로 남겨요). 방화벽: 집 네트워크에서만 포트 80. 공유기는 건드리지 않아요.
+- **Windows 안의 Ubuntu(WSL)에서는:** 이 방법으로는 다른 기기가 닿을 수 없어요. 경고하고 "Carry on anyway?"(그래도 계속할까요?)라고 물어요(Enter = 아니요). 거기서는 2만 돼요. 인터넷에 올리려면 따로 정원 컴퓨터를 쓰세요(안내서 00b).
 - **되돌리려면:** More, 14.
 
 ### 2) PRACTICE — 연습
@@ -613,6 +627,7 @@ More, 1에서 나와요(또는 Settings, 7, 또는 `bash garden.sh public`).
 - **언제 쓰나요:** 인터넷에 올릴 준비가 됐을 때(먼저 안내서 04의 A 부분을 하세요).
 - **무엇을 설치하거나 바꾸나요:** Caddy, 로그인 페이지, `/etc/caddy/Caddyfile`, 방화벽 문 80과 443, 내 DDNS 키가 든 No-IP 업데이트 프로그램(`/etc/default/noip-duc`). `.env`: 웹 이름과 주소. 공유기 단계는 직접 해요.
 - **되돌리려면:** More, 14, 그다음 공유기에서 80과 443 전달을 지우세요.
+- **Windows 안의 Ubuntu(WSL)에서는:** 인터넷이 닿을 수 없어요. 1처럼 먼저 경고해요. 따로 정원 컴퓨터를 쓰세요(안내서 00b).
 - **안내서:** [`04b-take-over-junsgarden-zapto.md`](../04b-take-over-junsgarden-zapto.md)(영어), [`07-sso-gate.md`](../07-sso-gate.md)(영어).
 
 ---
@@ -699,7 +714,7 @@ LiteLLM은 이 컴퓨터에 있는 비공개 AI 주소 하나예요(`http://loca
 
 ### 1) Remove the PROGRAMS, keep my garden — 프로그램만 지우고 정원은 남기기
 - **무엇을 하나요:** 먼저 물어봐요(기본은 No). 설치가 Ubuntu에 더한 것을 지우지만, 정원은 지우지 않아요.
-- **무엇을 설치하거나 바꾸나요:** 정원의 컨테이너와 여기서 만든 이미지를 멈추고 지워요. 매일 밤 백업 줄, 바탕화면 아이콘, 모든 네트워크 장소의 연결(거기 있는 파일은 남아요), Caddy, No-IP 업데이트 프로그램과 그 키, DuckDNS 업데이트 프로그램을 지워요. 방화벽 문 80과 443을 닫아요. `/etc/hosts`의 `garden.test` 줄을 지워요. 남기는 것: 이 폴더, `local/`(사진과 데이터베이스), 백업. 지우지 않는 것(본인이 정해요): Docker, SSH 서버, git, 4 GB 스왑 파일(화면이 방법을 보여 줘요).
+- **무엇을 설치하거나 바꾸나요:** 정원의 컨테이너와 여기서 만든 이미지를 멈추고 지워요. 백업 일정과 자동 점검(cron), 바탕화면 아이콘, 모든 네트워크 장소의 연결(거기 있는 파일은 남아요), Caddy, No-IP 업데이트 프로그램과 그 키, DuckDNS 업데이트 프로그램을 지워요. 방화벽 문 80과 443을 닫아요. `/etc/hosts`의 `garden.test` 줄을 지워요. 남기는 것: 이 폴더, `local/`(사진과 데이터베이스), 백업. 지우지 않는 것(본인이 정해요): Docker, SSH 서버, git, 4 GB 스왑 파일(화면이 방법을 보여 줘요).
 - **되돌리려면:** 메인 메뉴 1(INSTALL)을 다시 하세요.
 
 ### 2) Remove EVERYTHING (start completely fresh) — '모두' 지우기(완전히 새로 시작)
@@ -717,8 +732,9 @@ Windows 메인 메뉴는 Ubuntu와 **같은 번호와 글자**를 쓰고, **T**�
 작동해요:
 
 ### 1) INSTALL  (first time, or carry on, or repair) — 설치(처음, 이어서 하기, 또는 고치기)
+- **처음에는:** `Start-Here-Windows.cmd`가 설치 마법사(안내서 00b와 23)를 열고, 마법사가 내 대답으로 이 설치를 실행해요. 그래서 설치가 같은 것을 다시 묻지 않아요. 메뉴 1은 그 뒤에 이어서 하거나 고칠 때 써요.
 - **시작하기 전에:** 정원 폴더가 OneDrive 안에 있으면, `Start-Here-Windows.cmd`가 먼저 폴더를 OneDrive 밖으로(`C:\Users\<you>\junsgarden-for-jun`, 또는 내가 고른 곳으로) 옮기자고 해요. 모든 파일이 도착했는지 확인하고, 새 위치에서 설치 프로그램을 열어요. 예전 폴더는 절대 대신 지우지 않아요. Windows 메뉴의 INSTALL도 이것을 알려 줘요. 안내서: [`00b-before-you-start.md`](00b-before-you-start.md), "바탕 화면이 OneDrive 안에 있다면".
-- **무엇을 하나요:** 아직 고르지 않았다면 정원이 어디서 실행될지 물어봐요(T를 보세요). 다른 컴퓨터: SSH 포트를 확인하고, 이 PC의 SSH 키를 만들어 거기에 추가해요(그 컴퓨터의 비밀번호를 한 번 입력해요). 이 PC: WSL을 켜고(그다음 Windows를 한 번 다시 시작해요), `JunsGarden`이라는 이름으로 Ubuntu 24.04를 설치하고, Ubuntu 사용자를 만들어요. Docker Desktop을 고르면 필요할 때 Docker Desktop을 설치하고(winget) WSL integration 스위치를 기다려요(안내서 26). 그다음 물어봐요: 웹 이름을 그대로 쓸지, 새로 고를지. 정원 폴더와 최신 백업을 복사하고, 사진 zip과 위키 zip을 정원 폴더, 바탕화면(OneDrive 바탕화면도), 또는 Downloads에서 바로 그쪽으로 보내고(PC에 사본을 하나 더 만들지 않아요), 거기서 `garden.sh install`을 실행해요.
+- **무엇을 하나요:** 아직 고르지 않았다면 정원이 어디서 실행될지 물어봐요(T를 보세요). 다른 컴퓨터: SSH 포트를 확인하고, 이 PC의 SSH 키를 만들어 거기에 추가해요(그 컴퓨터의 비밀번호를 한 번 입력해요). 이 PC: WSL을 켜고(그다음 Windows를 한 번 다시 시작해요), `JunsGarden`이라는 이름으로 Ubuntu 24.04를 설치하고, Ubuntu 사용자를 만들어요. Docker Desktop을 고르면 필요할 때 Docker Desktop을 설치하고(winget) WSL integration 스위치를 기다려요(안내서 26). 그다음 물어봐요: 웹 이름을 그대로 쓸지, 새로 고를지. 정원 폴더(`PDF guides` 폴더는 이 PC에 남아요)와 최신 백업을 복사하고, 사진 zip과 위키 zip을 정원 폴더, 바탕화면(OneDrive 바탕화면도), 또는 Downloads에서 바로 그쪽으로 보내고(PC에 사본을 하나 더 만들지 않아요), 거기서 `garden.sh install`을 실행해요.
 - **무엇을 설치하거나 바꾸나요:** 이 PC에: `.ssh\id_ed25519`(새로 만든 경우), `.garden-target-windows.txt`. WSL을 쓰면 Windows 안의 Ubuntu, 그리고(yes라고 하면) 작업 스케줄러(Task Scheduler) 작업 "Jun's Garden keep running". 이 작업은 내가 로그인해 있는 동안 Ubuntu가 계속 켜져 있게 해요. 정원 컴퓨터에: 메뉴 1이 설치하는 모든 것.
 - **되돌리려면:** 정원 컴퓨터에서 More 12(Uninstall). Windows 안의 Ubuntu와 작업 스케줄러 작업은 메뉴가 지우지 않아요. Windows에서 직접 지우세요.
 
@@ -811,7 +827,7 @@ Windows 메인 메뉴는 Ubuntu와 **같은 번호와 글자**를 쓰고, **T**�
 정원 폴더에서 `bash garden.sh WORD`를 입력하세요. 이 목록에 없는 단어를 쓰면
 `garden.sh` 맨 위에 있는 짧은 도움말이 나와요. 명령을 입력하는 것이 처음인가요?
 터미널을 한 단계씩 처음부터 안내하는 bash 입문서가 영어로 있어요:
-[`22-bash-walkthrough.md`](../22-bash-walkthrough.md)(영어).
+[`22-bash-walkthrough.md`](22-bash-walkthrough.md)(짧은 버전은 한국어, 전체는 영어).
 
 | 단어 | 같은 메뉴 | 단어 | 같은 메뉴 |
 |---|---|---|---|
@@ -844,6 +860,7 @@ Windows 메인 메뉴는 Ubuntu와 **같은 번호와 글자**를 쓰고, **T**�
 - `bash garden.sh redo-renames`: 옛 백업을 손으로 복원한 뒤, 그 이름 바꾸기를 다시 해요.
 - `bash garden.sh db`: 데이터베이스 명령줄이에요(SQL을 입력해요. 나가려면 `exit`). 안내서: [`12-your-database.md`](../12-your-database.md)(영어).
 - `bash garden.sh test`: 웹사이트의 Rust 테스트를 실행해요(처음에는 느려요).
+- `bash garden.sh backup auto`: 자동 일정이 한 시간마다 실행하는 것이에요(백업할 때가 됐는지 정해요). `backups/backup.log`에 한 줄을 남겨요.
 
 ---
 

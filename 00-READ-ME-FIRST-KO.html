@@ -63,7 +63,7 @@
 <p><strong>놀랄 일이 없도록:</strong> <a href="START-HERE/ko/00b-before-you-start.md">시작하기 전에</a>가 필요한 모든 것을 꼭 필요한 것과 선택으로 나눠서 보여 줘요(가입할 곳, 키, 포트, 적어 둘 이름과 주소). 각각 얼마나 걸리는지도 있어요. <strong>Easy</strong>와 <strong>Custom</strong>도 설명해요. 모든 안내서는 <strong>짧은 버전</strong>(Quick version)으로 시작해요.</p>
 <ul>
   <li><strong>정원 서버가 될 컴퓨터</strong> 한 대. 계속 켜 둘 수 있어야 해요: Ubuntu 노트북(추천), Raspberry Pi, 또는 데스크톱.
-      <a href="START-HERE/ko/01-ubuntu-laptop.md">안내서 01</a>(짧은 버전은 한국어, 전체는 <a href="START-HERE/01-ubuntu-laptop.md">영어</a>)에서 오래된 노트북을 Ubuntu 컴퓨터로 바꾸는 방법을 볼 수 있어요.</li>
+      <a href="START-HERE/ko/01-ubuntu-laptop.md">안내서 01</a>에서 오래된 노트북을 Ubuntu 컴퓨터로 바꾸는 방법을 볼 수 있어요.</li>
   <li>그 컴퓨터의 <strong>인터넷</strong> 연결(랜선이 가장 안정적이에요).</li>
   <li>그 컴퓨터에 <strong>디스크 빈 공간 약 60 GB</strong>(Windows에서는 <code>C:</code>에 약 60 GB).</li>
   <li><strong>약 1~2시간.</strong> 대부분은 웹사이트가 만들어지는 동안 기다리는 시간이에요(15~45분. 아주 오래된 노트북이나 Pi에서는 1시간까지).</li>
@@ -170,10 +170,12 @@
     <div data-show="windows" class="hidden">
       압축을 푼 <code>junsgarden-for-jun</code> 폴더를 열고 <code>Start-Here-Windows.cmd</code>를 더블클릭하세요.
       Windows가 "Windows protected your PC"(Windows의 PC 보호)라고 하면 <strong>More info</strong>(추가 정보)를 누르고, 그다음 <strong>Run anyway</strong>(실행)를 누르세요
-      (이 파일은 일반 텍스트 파일이라서 먼저 메모장으로 열어 읽어 볼 수 있어요). <strong>안내 설치 프로그램</strong>(guided installer)이 열려요:
-      <strong>Next</strong>(다음)와 <strong>Back</strong>(뒤로) 버튼이 있는 창이에요.
-      <div class="note">안내 설치 프로그램과 검은 창은 <strong>영어</strong>로 나와요. 설치가 끝난 뒤 메뉴 <kbd>L</kbd>에서
-        한국어를 고를 수 있어요.</div>
+      (이 파일은 일반 텍스트 파일이라서 먼저 메모장으로 열어 읽어 볼 수 있어요). <strong>설치 마법사</strong>(setup wizard)가 열려요:
+      왼쪽에 내 단계, 아래에 <strong>Help</strong>(도움말), <strong>Back</strong>(뒤로), <strong>Next</strong>(다음)가 있어요. 먼저
+      <strong>EASY</strong>(자동, 추천) 또는 <strong>CUSTOM</strong>(한 쪽씩 내가 골라요:
+      <a href="START-HERE/ko/23-full-setup.md#help-wizard">안내서 23</a>)을 고르세요.
+      <div class="note">설치 마법사는 <strong>영어</strong>로 나와요. 첫 쪽에서 <strong>한국어</strong>를 고르면, Help 버튼과 #낱말이
+        한국어 안내서를 열고 검은 창도 한국어로 나와요. 나중에 메뉴 <kbd>L</kbd>에서 바꿀 수 있어요.</div>
       <div class="note">정원은 항상 <strong>Ubuntu에서 실행돼요</strong>. 설치 프로그램이 어디에서 실행할지 물어봐요:
         <br>&bull; <strong>집에 있는 다른 컴퓨터</strong>(Ubuntu 노트북 또는 Raspberry Pi, 추천): 그 컴퓨터의
         <strong>로컬 IP 주소</strong>(그 컴퓨터에서 <code>hostname -I</code>를 입력하세요. <code>192.168.1.50</code>처럼 생겼어요.
@@ -203,12 +205,12 @@
         <li><code>C:</code>에 빈 공간이 약 60 GB 필요해요.</li>
       </ul>
       <p><strong>검은 창.</strong> Install(설치) 페이지에서 <strong>Start the install</strong>(설치 시작)을 누르면 검은 창이 열려요.
-        진짜 일은 그 창이 하고, 질문도 거기서 해요(영어로). <strong>1 EASY</strong>를 고르세요. 마지막에 EASY가 물어봐요:
+        진짜 일은 그 창이 하고, 질문도 거기서 해요(EASY 또는 CUSTOM은 마법사에서 이미 골랐어요). 마지막에 EASY가 물어봐요:
         <code>Login name [Jun]</code>(그냥 <kbd>Enter</kbd>를 누르세요), 그다음 새 비밀번호(입력하는 동안 아무것도 보이지 않아요),
-        그다음 <code>Add your Google Gemini key (AI Studio) now? (Y/n)</code>(<kbd>Enter</kbd>는 yes예요. 붙여 넣는 곳에서
+        그다음 <code>Set up email (Gmail) now, for 'forgot password' links? (y/N)</code>(<kbd>Enter</kbd>는 no예요. 그러면 <code>Are you sure? ... Skip email for now? (Y/n)</code>라고 다시 묻고, <kbd>Enter</kbd>를 누르면 건너뛰어요. 나중에 메뉴 <code>8</code>, 그다음 <code>3</code>으로 추가할 수 있어요), 그다음 <code>Add your Google Gemini key (AI Studio) now? (Y/n)</code>(<kbd>Enter</kbd>는 yes예요. 붙여 넣는 곳에서
         아무것도 넣지 않고 <kbd>Enter</kbd>를 누르면 건너뛰어요. 나중에 메뉴 <code>K</code>로 추가할 수 있어요), 그다음
         OpenRouter 키에 대한 같은 질문(<kbd>Enter</kbd>는 no예요). <strong>EASY install finished</strong>(EASY 설치 끝)라고 할 때까지
-        검은 창을 열어 두세요. 그다음에는 닫아도 돼요. 안내 설치 프로그램의 마지막 페이지는 비밀번호와 키가 끝난 뒤에만 나와요.</p>
+        검은 창을 열어 두세요. 그다음에는 닫아도 돼요. 설치 마법사의 마지막 페이지는 비밀번호와 키가 끝난 뒤에만 나와요.</p>
       그 뒤 평소 작업은 <code>Garden-Menu-Windows.cmd</code>를 더블클릭하세요(Ubuntu와 같은 메뉴예요).
     </div>
   </div>
@@ -241,13 +243,13 @@
   <div>
     <h3>마지막: 비밀번호를 정하고 정원 열기</h3>
     <strong>EASY</strong>는 이렇게 끝나요: <code>Login name [Jun]</code>(괄호 안은 내 이름이에요: 그냥 <kbd>Enter</kbd>를 누르세요),
-    그다음 새 비밀번호(입력하는 동안 아무것도 보이지 않아요), 그다음 <code>Add your Google Gemini key (AI Studio) now? (Y/n)</code>
+    그다음 새 비밀번호(입력하는 동안 아무것도 보이지 않아요), 그다음 <code>Set up email (Gmail) now, for 'forgot password' links? (y/N)</code>(<kbd>Enter</kbd>는 no예요. 그러면 <code>Are you sure? ... Skip email for now? (Y/n)</code>라고 다시 묻고, <kbd>Enter</kbd>를 누르면 건너뛰어요. 나중에 메뉴 <code>8</code>, 그다음 <code>3</code>으로 추가할 수 있어요), 그다음 <code>Add your Google Gemini key (AI Studio) now? (Y/n)</code>
     (<kbd>Enter</kbd>는 yes예요. 붙여 넣는 곳에서 아무것도 넣지 않고 <kbd>Enter</kbd>를 누르면 건너뛰어요. 나중에 메뉴 <code>K</code>로
     추가할 수 있어요), 그다음 OpenRouter 키에 대한 같은 질문(<kbd>Enter</kbd>는 no예요). <strong>EASY install finished</strong>(EASY 설치 끝)라고
     할 때까지 창을 열어 두세요. 그다음에는 닫아도 돼요.
     <br><br>
-    <strong>CUSTOM</strong>은 대신 후속 작업 세 가지를 제안해요: 비밀번호 정하기(이것은 꼭 하세요), 이메일, 그리고 공유기(router)에서
-    컴퓨터 주소 예약하기.
+    <strong>CUSTOM</strong>은 대신 이렇게 끝나요: 비밀번호(이것은 꼭 하세요), AI 키, 이메일, 그리고 공유기(router)에서
+    컴퓨터 주소 예약하기(설치 마법사에서 시작했다면 거기서 입력한 대답을 써요).
     <br><br>
     그다음 정원 컴퓨터에서 <a href="http://localhost:8030">http://localhost:8030</a>을 여세요(Windows에서 따로 있는 정원 컴퓨터를 쓰면:
     Windows 메뉴 <code>4</code>). 식물과 사진이 이미 들어 있어요.
@@ -273,7 +275,7 @@
   <li><strong>메뉴 <code>5</code></strong>: 점검표가 모든 것에 PASS(통과), WARN(주의), FAIL(실패)을 표시하고, FAIL마다 무엇을 하면 되는지 알려 줘요.</li>
   <li><strong>메뉴 <code>H</code></strong>는 도움 파일(비밀번호 없음)을 만들어요. Gemini에 붙여 넣거나 도와주는 사람에게 보여 주세요.</li>
   <li>오래된 노트북에서는 만드는(빌드) 단계가 몇 분 동안 멈춘 것처럼 보일 수 있어요. 글자가 천천히라도 계속 나오면 작동하고 있는 거예요.</li>
-  <li>더 많은 해결 방법: <a href="START-HERE/09-troubleshooting.md">START-HERE/09-troubleshooting.md</a>(영어).</li>
+  <li>더 많은 해결 방법: <a href="START-HERE/ko/09-troubleshooting.md">START-HERE/ko/09-troubleshooting.md</a>.</li>
 </ul>
 
 <h2>정원을 인터넷에 올리기(나중에)</h2>
@@ -309,16 +311,18 @@
 
 <h2>더 배우기</h2>
 <ul>
+  <li>같은 안내서가 내 웹사이트의 <code>/help</code>에도 있어요(예: <code>http://localhost:8030/help</code>). 로그인한 뒤 볼 수 있고, English나 한국어를 고르고 찾기 칸으로 찾아요. PDF와 같은 파일에서 만들어요.</li>
   <li><a href="START-HERE/ko/00-READ-ME-FIRST.md">START-HERE(한국어 목록)</a>: 안내서와 재미있는 프로젝트, 쉬운 것부터 어려운 것까지(Home Assistant, Govee 조명, 흙 센서, 물 주기).
       영어 전체 목록: <a href="START-HERE/00-READ-ME-FIRST.md">START-HERE/00-READ-ME-FIRST.md</a>.</li>
   <li><a href="START-HERE/ko/11-maintain-your-site.md">안내서 11</a>(짧은 버전은 한국어, 전체는 <a href="START-HERE/11-maintain-your-site.md">영어</a>): 웹사이트가 어떻게 작동하고, 어떻게 안전하게 바꾸는지.</li>
   <li><a href="START-HERE/ko/18-review-the-code.md">안내서 18</a>: <strong>코드를 직접 검토하기</strong>, 또는 친구나 AI와 함께: 파일 지도, 지문 확인, git 기록, 비밀 정보 검사기. 코드를 안다고 해서 누군가 나로 로그인할 수는 없어요.</li>
   <li><a href="START-HERE/ko/12-your-database.md">안내서 12</a>(짧은 버전은 한국어, 전체는 <a href="START-HERE/12-your-database.md">영어</a>): 데이터베이스. <a href="START-HERE/ko/13-backups-and-folders.md">안내서 13</a>: 백업과 폴더 이름.</li>
+  <li>모든 안내서의 PDF, 영어와 한국어: 설치하는 동안 설치 프로그램이 받아 오는 선택 사항이고, <code>PDF guides</code> 폴더에 들어와요(<code>PDF guides/STATUS.txt</code>가 각 묶음의 상태를 알려 주고, 메뉴 <code>P</code>로 받거나 새로 고쳐요).</li>
   <li><a href="START-HERE/ko/16-ai-studio.md">안내서 16</a>: 조사, 코딩 도움, 컴퓨터 공부에 쓰는 Google AI Studio와 Gemini.</li>
-  <li><a href="START-HERE/22-bash-walkthrough.md">안내서 22</a>(영어): <strong>터미널(bash)로 하는 방법</strong>. 조금 더 어렵지만 힘들지 않아요: 처음 쓰는 사람을 위한 bash 입문서로, 한 단계씩 안내해요.</li>
+  <li><a href="START-HERE/ko/22-bash-walkthrough.md">안내서 22</a>(짧은 버전은 한국어, 전체는 <a href="START-HERE/22-bash-walkthrough.md">영어</a>): <strong>터미널(bash)로 하는 방법</strong>. 조금 더 어렵지만 힘들지 않아요: 처음 쓰는 사람을 위한 bash 입문서로, 한 단계씩 안내해요.</li>
 </ul>
 
-<footer>Jun's Garden. 이 페이지는 인터넷 없이도 작동해요. 위의 모든 링크는 이 폴더 안의 파일이거나 공식 웹사이트예요.</footer>
+<footer>Jun's Garden. 이 페이지는 첫 시작 때 프로그램과 함께 와요(그 전에는 폴더의 <code>00-WELCOME.html</code>에 같은 안내서가 있어요). 인터넷 없이도 작동해요. 위의 모든 링크는 이 폴더 안의 파일이거나 공식 웹사이트예요.</footer>
 </main>
 <script>
   // 고른 컴퓨터(Ubuntu 또는 Windows)의 단계를 보여 줘요.

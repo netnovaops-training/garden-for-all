@@ -12,8 +12,8 @@ COPY of the package; the default is this package). It writes:
   handbook/assets/         the style sheet, and the logo (GARDEN_LOGO, if set)
 
 Everything works from the disk (file://): no server, no internet. The PDF
-buttons open "PDF guides/English/...", which is part of the program (in git,
-and on GitHub). The logo is the author's emblem: it is passed in at release time
+buttons open "PDF guides/English/...", an optional download the installer fetches
+(tools/get-pdfs.py; not in git), so a button works once the PDFs have arrived. The logo is the author's emblem: it is passed in at release time
 (GARDEN_LOGO=path) and is not kept in git.
 """
 import html, json, os, pathlib, re, shutil, sys, urllib.parse
@@ -630,6 +630,11 @@ def build():
             kt = kt.split("\n", 1)[1] if kt.startswith("# ") else kt
             from markdown.extensions.toc import slugify_unicode
             ko = fix_links(conv(kt, slugify_unicode), HB, SRC / "ko")
+            # The stable help anchors (<a id="help-ID"> above a section, listed in
+            # START-HERE/help-ids.tsv) are in both languages on one page: the
+            # Korean view's are help-ID-ko, and its links to them follow.
+            ko = re.sub(r'id="help-([a-z0-9-]+)"', r'id="help-\1-ko"', ko)
+            ko = re.sub(r'(href="[^"#]*)#help-([a-z0-9-]+)"', r'\1#help-\2-ko"', ko)
         else:
             ko = '<p lang="ko">이 안내서는 영어로만 있어요. <b>Full</b>(전체)을 눌러 영어로 읽어 보세요.</p>'
         # The search index: the short version, every section of the full guide, and the Korean.
@@ -729,7 +734,7 @@ def build():
                f'Everything opens from this computer, so you need no internet. Looking for something? Use the search box at the top '
                f'(or press /), in English, Korean or both.</p>'
                f'<p class="quiet">Your garden itself: <a href="http://localhost:8030">http://localhost:8030</a> '
-               f'(on Windows, the garden menu, 4). The same PDFs are in the folder "PDF guides" (English and Korean).</p>'
+               f'(on Windows, the garden menu, 4). The same PDFs arrive in the folder "PDF guides" (English and Korean) while the install runs; PDF guides/STATUS.txt says where they are.</p>'
                f'<div class="begin"><a class="btn solid" href="handbook/{first}.html">Start with the first guide</a>'
                f'<a class="btn" href="00-HOW-IT-WORKS.html">See the whole path on one page</a>'
                f'<a class="btn" href="#map">Stuck? See every topic</a></div></div>{mark}</section>'

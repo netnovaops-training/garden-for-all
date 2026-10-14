@@ -50,10 +50,18 @@ def short_version(text):
     return "영어 원문(전체 안내서)" in text or "전체 내용은 영어 안내서에 있어요" in text
 
 
+# English guides with no Korean file, on purpose (ko/00-READ-ME-FIRST.md says so).
+ENGLISH_ONLY = {"24-optional-tools.md", "MY-WINS.md"}
+
 bad = 0
 for en in sorted(ROOT.glob("*.md")):
     ko = ROOT / "ko" / en.name
     if not ko.exists():
+        if en.name in ENGLISH_ONLY:
+            print(f"--  {en.name} (English only, on purpose)")
+        else:
+            bad += 1
+            print(f"\n== {en.name}: no Korean file (add at least a short version)")
         continue
     te, tk = en.read_text(encoding="utf-8"), ko.read_text(encoding="utf-8")
     eu, ec, ei, ep = facts(te)

@@ -136,7 +136,7 @@ Do steps 2 and 3 again on the new router. The garden computer itself needs nothi
 Some routers (often ones from the internet company) have no reservation page, or
 it is locked. Then the garden computer's address may change after a restart.
 
-**Your Windows PC keeps finding it anyway.** The guided installer's "Find it for
+**Your Windows PC keeps finding it anyway.** The setup wizard's "Find it for
 me" button lists the computers at home with the SSH door open (port 22), so you
 can pick it. The Windows menu then remembers the garden computer by its network
 card's fixed ID (the MAC address) and its name. Whenever nothing answers at the

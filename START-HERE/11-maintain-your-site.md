@@ -65,7 +65,7 @@ git add -A && git commit -m "Changed the catalogue heading"   # keeps it
 
 ## Example 1: change a colour (no rebuild)
 1. Open `site/style.css` in the Text Editor (right-click it, then "Open With Text Editor").
-2. Search (`Ctrl+F`) for a colour such as `#2f7d32` and change it.
+2. Search (`Ctrl+F`) for a colour such as `#2e7d32` and change it.
 3. Save, then reload the website with `Ctrl+Shift+R`.
 
 ## Example 2: change words on a page (rebuild)
@@ -75,7 +75,7 @@ git add -A && git commit -m "Changed the catalogue heading"   # keeps it
 4. Reload the page.
 
 ## Run the tests (optional)
-`bash garden.sh test` runs the 64 automatic checks that come with the code. The
+`bash garden.sh test` runs the automatic checks (about 70) that come with the code. The
 first time downloads Rust (about 1.5 GB) and takes a while. After that it is quick.
 
 ## Working with Gemini on the code

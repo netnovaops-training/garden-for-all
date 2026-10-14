@@ -26,6 +26,9 @@
         <li><a href="/beds" title="Draw the beds and plan what goes in them">Beds &amp; Planner</a></li>
         <li><a href="/checkup" title="Photograph a plant and see what can be read off it">Plant Check-up</a></li>
 {% endif %}
+{% if is_admin %}
+        <li><a href="/help" title="The garden guides, in English and Korean">Help</a></li>
+{% endif %}
                 <li>
                     <a href="/apps/junsgarden.apk" download="JunsGarden.apk" title="Download the Jun's Garden Android app"
                        style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.35); border-radius:20px; padding:4px 12px 4px 8px; font-size:0.85rem; white-space:nowrap;">

@@ -169,8 +169,10 @@ sign-in page and still through only the two router ports. Guide 04, "Advanced". 
     <div data-show="windows" class="hidden">
       Open the extracted <code>junsgarden-for-jun</code> folder and double-click <code>Start-Here-Windows.cmd</code>.
       If Windows says "Windows protected your PC", click <strong>More info</strong>, then <strong>Run anyway</strong>
-      (it is a plain text file you can open in Notepad to read first). The <strong>guided installer</strong> opens:
-      a window with <strong>Next</strong> and <strong>Back</strong> buttons.
+      (it is a plain text file you can open in Notepad to read first). The <strong>setup wizard</strong> opens:
+      your steps on the left, <strong>Help</strong>, <strong>Back</strong> and <strong>Next</strong> below. First choose
+      <strong>EASY</strong> (automatic, recommended) or <strong>CUSTOM</strong> (you choose, page by page:
+      <a href="START-HERE/23-full-setup.md#help-wizard">guide 23</a>).
       <div class="note">The garden always <strong>runs on Ubuntu</strong>. The installer asks where:
         <br>&bull; <strong>Another computer at home</strong> (an Ubuntu laptop or a Raspberry Pi, recommended): you type its
         <strong>local IP address</strong> (on that computer type <code>hostname -I</code>; it looks like <code>192.168.1.50</code>,
@@ -200,12 +202,12 @@ sign-in page and still through only the two router ports. Guide 04, "Advanced". 
         <li>About 60 GB free on <code>C:</code> is needed.</li>
       </ul>
       <p><strong>The black window.</strong> On the Install page, <strong>Start the install</strong> opens a black window that
-        does the real work and asks its questions there. Choose <strong>1 EASY</strong>. At the end, EASY asks:
+        does the real work and asks its questions there (EASY or CUSTOM is already chosen in the wizard). At the end, EASY asks:
         <code>Login name [Jun]</code> (just press <kbd>Enter</kbd>), then your new password (nothing shows while you type),
-        then <code>Add your Google Gemini key (AI Studio) now? (Y/n)</code> (<kbd>Enter</kbd> means yes; at the paste
+        then <code>Set up email (Gmail) now, for 'forgot password' links? (y/N)</code> (<kbd>Enter</kbd> means no; it then asks <code>Are you sure? ... Skip email for now? (Y/n)</code>, and <kbd>Enter</kbd> skips it; menu <code>8</code>, then <code>3</code> adds it later), then <code>Add your Google Gemini key (AI Studio) now? (Y/n)</code> (<kbd>Enter</kbd> means yes; at the paste
         prompt, <kbd>Enter</kbd> with nothing skips it; menu <code>K</code> adds it later), then the same question for an
         OpenRouter key (<kbd>Enter</kbd> means no). Keep the black window open until
-        it says <strong>EASY install finished</strong>; then you can close it. The guided installer's last page only
+        it says <strong>EASY install finished</strong>; then you can close it. The setup wizard's last page only
         appears after the password and keys are done.</p>
       For everyday jobs afterwards, double-click <code>Garden-Menu-Windows.cmd</code> (the same menu as on Ubuntu).
     </div>
@@ -240,13 +242,13 @@ sign-in page and still through only the two router ports. Guide 04, "Advanced". 
   <div>
     <h3>At the end: your password, then open your garden</h3>
     <strong>EASY</strong> ends with: <code>Login name [Jun]</code> (your name in brackets: just press <kbd>Enter</kbd>),
-    then your new password (nothing shows while you type), then <code>Add your Google Gemini key (AI Studio) now? (Y/n)</code>
+    then your new password (nothing shows while you type), then <code>Set up email (Gmail) now, for 'forgot password' links? (y/N)</code> (<kbd>Enter</kbd> means no; it then asks <code>Are you sure? ... Skip email for now? (Y/n)</code>, and <kbd>Enter</kbd> skips it; menu <code>8</code>, then <code>3</code> adds it later), then <code>Add your Google Gemini key (AI Studio) now? (Y/n)</code>
     (<kbd>Enter</kbd> means yes; at the paste prompt, <kbd>Enter</kbd> with nothing skips it; menu <code>K</code> adds it
     later), then the same question for an OpenRouter key (<kbd>Enter</kbd> means no). Keep the window open until it says
     <strong>EASY install finished</strong>; then you can close it.
     <br><br>
-    <strong>CUSTOM</strong> instead offers three follow-ups: set your password (do this one), email, and reserving the
-    computer's address in the router.
+    <strong>CUSTOM</strong> instead ends with your password (do this one), your AI keys, email and reserving the
+    computer's address in the router (from the setup wizard, it uses the answers you typed there).
     <br><br>
     Then open <a href="http://localhost:8030">http://localhost:8030</a> on the garden computer (from Windows with a separate
     garden computer: the Windows menu <code>4</code>). Your plants and photos are already there.
@@ -310,14 +312,16 @@ garden computer.</p>
 <h2>Learning more</h2>
 <ul>
   <li><a href="START-HERE/00-READ-ME-FIRST.md">START-HERE</a>: guides and fun projects, from easy to hard (Home Assistant, Govee lights, soil sensors, watering).</li>
+  <li>The same guides are on your own website too, at <code>/help</code> (for example <code>http://localhost:8030/help</code>), after you log in: English or 한국어, with a search box. They are made from the same files as the PDFs.</li>
   <li><a href="START-HERE/11-maintain-your-site.md">Guide 11</a>: how the website works and how to change it safely.</li>
+  <li>Every guide as a PDF, English and Korean: an optional download the installer fetches while it works, into the <code>PDF guides</code> folder (<code>PDF guides/STATUS.txt</code> says where each set is; menu <code>P</code> gets or refreshes them).</li>
   <li><a href="START-HERE/12-your-database.md">Guide 12</a>: your database. <a href="START-HERE/13-backups-and-folders.md">Guide 13</a>: backups and folder names.</li>
   <li><a href="START-HERE/16-ai-studio.md">Guide 16</a>: Google AI Studio and Gemini for research, coding help and learning about your computer.</li>
   <li><a href="START-HERE/18-review-the-code.md">Guide 18</a>: <strong>review the code yourself</strong>, or with a friend or an AI: a map of the files, the fingerprint check, git history, and a secret scanner. Knowing the code does not let anyone sign in as you.</li>
   <li><a href="START-HERE/22-bash-walkthrough.md">Guide 22</a>: <strong>the terminal way (bash)</strong>, harder but not tough: a first walkthrough of the terminal, one step at a time.</li>
 </ul>
 
-<footer>Jun's Garden. This page works without internet. Every link above is a file in this folder or an official website.</footer>
+<footer>Jun's Garden. This page arrives with the program at the first start (before that, <code>00-WELCOME.html</code> in the folder has the same guides). It works without internet. Every link above is a file in this folder or an official website.</footer>
 </main>
 <script>
   // Show the steps for the chosen computer (Ubuntu or Windows).

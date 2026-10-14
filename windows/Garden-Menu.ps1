@@ -30,7 +30,20 @@ param(
     [string]$Parts = $null,
     [string]$WebName = "",
     [ValidateSet("", "desktop", "engine")][string]$Engine = "",
-    [switch]$Yes
+    [switch]$Yes,
+    # From the setup wizard (Garden-Setup.ps1): its answers, so the install does not ask again.
+    [switch]$Wizard,
+    [ValidateSet("", "easy", "custom")][string]$Level = "",
+    [ValidateSet("", "en", "ko", "both")][string]$Lang = "",
+    # The PDF guides to fetch on this PC while the install runs (the wizard asks; empty = follow -Lang).
+    [ValidateSet("", "en", "ko", "both", "none")][string]$Pdfs = "",
+    [string]$SmtpUser = "",
+    [switch]$ReserveIp,
+    # This PC only: keep Windows' Ubuntu running while signed in (the wizard asks; empty = ask here).
+    [ValidateSet("", "off", "on")][string]$KeepRunning = "",
+    # A private file with the passwords and keys typed in the wizard (only this
+    # Windows user can read it). Handed to the garden computer, then deleted here.
+    [string]$SecretsFile = ""
 )
 
 $PartsGiven = $PSBoundParameters.ContainsKey('Parts')   # was -Parts given? (read here: inside a function it would mean that function's own options)
@@ -486,8 +499,10 @@ function Copy-Garden {
     }
     $tmp = Join-Path $env:TEMP "junsgarden-upload.tgz"
     if (Test-Path $tmp) { Remove-Item $tmp -Force }
+    # "PDF guides" stays on this PC: Windows' own tar.exe crashes on the Korean file
+    # names in it (PDF guides\Korean), and the guides are read here, not there.
     & $TarExe -czf $tmp --exclude=./local --exclude=./.env --exclude=./.git --exclude=./backups --exclude=./logs --exclude="./junsgarden-*-addon*.zip" `
-        --exclude=./.garden-target-windows.txt --exclude="./CHECKLIST*.txt" --exclude=./checklist-history.log -C $Root .
+        --exclude="./PDF guides" --exclude=./.garden-target-windows.txt --exclude="./CHECKLIST*.txt" --exclude=./checklist-history.log -C $Root .
     if ($LASTEXITCODE -ne 0) { Fail "packing failed"; return $false }
     Note ("packed {0:N0} MB" -f ((Get-Item $tmp).Length / 1MB))
     $backups = Join-Path $Root "backups"
@@ -522,11 +537,105 @@ function Copy-Garden {
     return $true
 }
 
+# The setup wizard's private file (passwords and keys) goes to the garden computer
+# as ~/GARDEN/.garden-wizard-secrets, readable only by you there (umask 077). It is
+# sent through the program's input, never on a command line, so it is not shown
+# or logged. garden.sh wipes it when the install ends. Returns $true when sent.
+function Send-Wizard-Secrets {
+    if (-not $SecretsFile -or -not (Test-Path $SecretsFile)) { return $false }
+    Note "Handing your passwords and keys from the setup wizard to the garden computer (privately)."
+    if ($T.mode -eq "remote") {
+        $p = Start-Process -FilePath $SshExe -ArgumentList "$($T.user)@$($T.ip) `"umask 077; cat > ~/$RemoteDir/.garden-wizard-secrets`"" `
+            -RedirectStandardInput $SecretsFile -NoNewWindow -Wait -PassThru
+    } else {
+        $p = Start-Process -FilePath "wsl.exe" -ArgumentList "-d $($T.distro) --cd ~ -- bash -c `"umask 077; cat > ~/$RemoteDir/.garden-wizard-secrets`"" `
+            -RedirectStandardInput $SecretsFile -NoNewWindow -Wait -PassThru
+    }
+    if ($p.ExitCode -ne 0) { Warn "they did not arrive; the install asks for them in this window instead"; return $false }
+    return $true
+}
+# Delete the wizard's private file on this PC (overwritten first).
+function Forget-Wizard-Secrets {
+    if ($SecretsFile -and (Test-Path $SecretsFile)) {
+        try { $n = (Get-Item $SecretsFile).Length; [IO.File]::WriteAllBytes($SecretsFile, (New-Object byte[] $n)) } catch { }
+        Remove-Item $SecretsFile -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# ---------- the PDF guides: an optional download that arrives while the install runs ----------
+# Not part of the program: two small downloads from GitHub, each checked against
+# PDF-GUIDES-SHA256.txt (tools\get-pdfs.ps1). They land in "PDF guides" on THIS PC. They start
+# when the install starts, in the background, and never delay or stop it; if a download fails,
+# nothing is written and menu P tries again.
+$PdfChoiceFile = Join-Path $Root ".garden-pdfs"
+$script:PdfProc = $null
+function Pdf-Choice {
+    if ($Pdfs) { return $Pdfs }
+    $c = ""
+    if (Test-Path $PdfChoiceFile) { $c = [string](Get-Content $PdfChoiceFile -ErrorAction SilentlyContinue | Select-Object -First 1) }
+    if ($c -in "en", "ko", "both", "none") { return $c }
+    if ($Lang) { return $Lang }
+    return "en"
+}
+# The overview is the first thing shown when the install starts: the handbook page if the
+# handbook is there, else the Markdown file itself.
+function Open-Overview {
+    $page = Join-Path $Root "handbook\00-OVERVIEW.html"
+    $md = Join-Path $Root $(if ($Lang -eq "ko") { "START-HERE\ko\00-OVERVIEW.md" } else { "START-HERE\00-OVERVIEW.md" })
+    if (Test-Path $page) { Note "Opening the overview: what the install does, in order."; Start-Process $page }
+    elseif (Test-Path $md) { Note "Opening the overview: what the install does, in order."; Start-Process notepad.exe -ArgumentList "`"$md`"" }
+}
+function Start-Pdfs {
+    $c = Pdf-Choice
+    $script = Join-Path $Root "tools\get-pdfs.ps1"
+    if (-not (Test-Path $script)) { return }
+    New-Item -ItemType Directory -Force (Join-Path $Root "logs") | Out-Null
+    Set-Content -Path $PdfChoiceFile -Value $c -Encoding ASCII
+    try {
+        $script:PdfProc = Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$script`" -Lang $c" `
+            -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $Root "logs\pdf-guides.log")
+        if ($c -eq "none") { Note "PDF guides: not now. Menu P gets them any time." }
+        else { Note "PDF guides arriving in the background (about a minute). The install does not wait for them." }
+    } catch { Note "The PDF guides could not be started; menu P tries again. The install goes on." }
+}
+function Finish-Pdfs {
+    if (-not $script:PdfProc) { return }
+    [void]$script:PdfProc.WaitForExit(60000)
+    if (-not $script:PdfProc.HasExited) { Note "The PDF guides are still arriving. See PDF guides\STATUS.txt; the install is not affected." }
+    elseif ((Pdf-Choice) -eq "none") { }
+    elseif ($script:PdfProc.ExitCode -eq 0) { Note "PDF guides: ready. See PDF guides\STATUS.txt." }
+    else { Note "The PDF guides could not be fetched (nothing was written). The garden works without them."; Note "Menu P tries again; the reason is in logs\pdf-guides.log." }
+    $script:PdfProc = $null
+}
+# Menu P: get or refresh the PDF guides, now.
+function Do-Pdfs {
+    Say "PDF guides"
+    $st = Join-Path $Root "PDF guides\STATUS.txt"
+    if (Test-Path $st) { Get-Content $st | ForEach-Object { Note $_ } }
+    Note "PDF guides: every guide as a PDF to read or print (about 15 MB each language)."
+    Note "1) English   2) Korean   3) both   0) not now"
+    $cur = Pdf-Choice
+    $def = @{ en = "1"; ko = "2"; both = "3"; none = "0" }[$cur]
+    $c = Read-Host "  Type 1, 2, 3 or 0 [$def]"
+    if (-not $c) { $c = $def }
+    $pick = @{ "1" = "en"; "2" = "ko"; "3" = "both"; "0" = "none" }[$c]
+    if (-not $pick) { Note "Nothing changed."; return }
+    Set-Content -Path $PdfChoiceFile -Value $pick -Encoding ASCII
+    if ($pick -eq "none") { Note "Nothing to fetch."; return }
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root "tools\get-pdfs.ps1") -Lang $pick
+    if ($LASTEXITCODE -ne 0) { Note "Nothing was written for the set that failed. Try again later." }
+}
+
 # Menu 1: get the garden computer ready, copy the garden, run garden.sh install there.
 function Do-Install {
+    try { Do-Install-Steps } finally { Forget-Wizard-Secrets }
+}
+function Do-Install-Steps {
     if (-not (Need-Target)) { return }
     Save-Target   # remember the garden computer for next time (no passwords are saved)
     Say "Install on the garden computer: $(Target-Text)"
+    Open-Overview   # the first thing shown: what the install does, in order
+    Start-Pdfs      # the PDF guides arrive in the background
     OneDrive-Note
     if ($T.mode -eq "remote") { if (-not (Prepare-Remote)) { return }; Remember-Garden-Computer }
     else {
@@ -544,9 +653,18 @@ function Do-Install {
     if ($Yes) { $envs += "ASSUME_YES=1 " }
     # Which Docker runs it on this PC (garden.sh remembers it in .garden-docker).
     if ($T.mode -eq "wsl") { $envs += "GARDEN_DOCKER=$($T.engine) " }
+    # The setup wizard's answers (each one checked by its parameter's list above).
+    if ($Wizard) { $envs += "GARDEN_WIZARD=1 " }
+    if ($Level) { $envs += "GARDEN_MODE_IN=$Level " }
+    if ($Lang) { $envs += "GARDEN_LANG_IN=$Lang " }
+    if ($SmtpUser -match '^[^@\s"''`$;&|<>]+@[^@\s"''`$;&|<>]+\.[A-Za-z]{2,}$') { $envs += "GARDEN_SMTP_USER=$SmtpUser " }
+    if ($ReserveIp) { $envs += "GARDEN_RESERVE_IP=1 " }
+    if (Send-Wizard-Secrets) { $envs += "GARDEN_SECRETS_FILE=.garden-wizard-secrets " }
+    Forget-Wizard-Secrets   # on the garden computer now (or not sent): gone from this PC
     Say "Running the install ON the garden computer (it explains every step)"
     if ((Invoke-Garden "install" $envs) -ne 0) { Fail "the install stopped. Read the lines above; choose INSTALL again to carry on."; return }
     if ($T.mode -eq "wsl") { Keep-Wsl-Running }
+    Finish-Pdfs
     Say "Finished. Menu 4 opens your garden."
     # The welcome page: every guide (web page and PDF), one click away, from this PC.
     $welcome = Join-Path $Root "00-WELCOME.html"
@@ -557,7 +675,8 @@ function Do-Install {
 function Keep-Wsl-Running {
     Note "Windows switches its Ubuntu off when nothing uses it. A small task can keep it"
     Note "running while you are signed in to Windows, so the website stays up."
-    if (-not (Confirm-Step "Add that task (Task Scheduler, 'Jun's Garden keep running')?")) { return }
+    if ($KeepRunning -eq "off") { Note "Not added (chosen in the setup wizard). Later: run the wizard again."; return }
+    if ($KeepRunning -ne "on" -and -not (Confirm-Step "Add that task (Task Scheduler, 'Jun's Garden keep running')?")) { return }
     $act = New-ScheduledTaskAction -Execute "wsl.exe" -Argument "-d $($T.distro) -- sleep infinity"
     $trg = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
     $set = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -Hidden
@@ -897,6 +1016,7 @@ function Show-Menu {
    A) My addresses: every web address, and which need signing in
 
    H) Help file for someone helping you (no passwords in it)
+   P) PDF guides: get or refresh them (English / Korean)
    M) More (advanced)        T) Choose the garden computer
    L) Language on the garden computer: English / Korean / both
    0) Quit
@@ -917,6 +1037,7 @@ function Show-Menu {
             { $_ -in "a", "A" } { Invoke-Garden "addresses" | Out-Null }
             { $_ -in "l", "L" } { Invoke-Garden "language" | Out-Null }
             { $_ -in "h", "H" } { Invoke-Garden "helpme" | Out-Null }
+            { $_ -in "p", "P" } { Do-Pdfs }
             { $_ -in "m", "M" } { Show-More; continue }
             { $_ -in "t", "T" } { Choose-Target | Out-Null }
             "0" { return }
@@ -1001,6 +1122,7 @@ switch ($Action) {
             else { Set-Status "DONE"; Say "All done here. You can close this window now." }
         }
     }
+    "pdfs"    { Do-Pdfs }
     "target"  { Choose-Target | Out-Null }
     "copy-backup" { Copy-Backup-Here }
     "open-website" { Open-Website }

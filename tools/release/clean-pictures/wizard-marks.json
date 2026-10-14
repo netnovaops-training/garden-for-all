@@ -1,0 +1,192 @@
+{
+    "wizard-1-welcome.png":  [
+                                 [
+                                     864,
+                                     650,
+                                     1014,
+                                     698,
+                                     "click Next",
+                                     "above"
+                                 ],
+                                 [
+                                     276,
+                                     650,
+                                     426,
+                                     700,
+                                     "the guide, at this page",
+                                     "above"
+                                 ],
+                                 [
+                                     285,
+                                     310,
+                                     605,
+                                     338,
+                                     "the guides\u0027 language",
+                                     "right"
+                                 ]
+                             ],
+    "wizard-1b-level.png":  [
+                                [
+                                    285,
+                                    153,
+                                    532,
+                                    183,
+                                    "automatic",
+                                    "right"
+                                ],
+                                [
+                                    285,
+                                    264,
+                                    553,
+                                    294,
+                                    "page by page",
+                                    "right"
+                                ],
+                                [
+                                    864,
+                                    650,
+                                    1014,
+                                    698,
+                                    "then Next",
+                                    "above"
+                                ]
+                            ],
+    "wizard-2-where.png":  [
+                               [
+                                   311,
+                                   256,
+                                   858,
+                                   292,
+                                   "its address, or Find it",
+                                   "right"
+                               ],
+                               [
+                                   311,
+                                   300,
+                                   794,
+                                   333,
+                                   "your user name there",
+                                   "right"
+                               ],
+                               [
+                                   864,
+                                   650,
+                                   1014,
+                                   698,
+                                   "then Next",
+                                   "above"
+                               ]
+                           ],
+    "wizard-2b-this-pc.png":  [
+                                  [
+                                      311,
+                                      526,
+                                      906,
+                                      556,
+                                      "the easy way",
+                                      "above"
+                                  ],
+                                  [
+                                      864,
+                                      650,
+                                      1014,
+                                      698,
+                                      "then Next",
+                                      "above"
+                                  ]
+                              ],
+    "wizard-3-about-you.png":  [
+                                   [
+                                       864,
+                                       650,
+                                       1014,
+                                       698,
+                                       "check, then Next",
+                                       "above"
+                                   ]
+                               ],
+    "wizard-4-optional-software.png":  [
+                                           [
+                                               285,
+                                               487,
+                                               584,
+                                               517,
+                                               "tick what you want",
+                                               "right"
+                                           ],
+                                           [
+                                               654,
+                                               45,
+                                               793,
+                                               71,
+                                               "#words: the guide",
+                                               "below"
+                                           ]
+                                       ],
+    "wizard-4b-a-part-page.png":  [
+                                      [
+                                          285,
+                                          486,
+                                          682,
+                                          519,
+                                          "paste the 16 letters",
+                                          "right"
+                                      ],
+                                      [
+                                          276,
+                                          650,
+                                          426,
+                                          700,
+                                          "stuck? Help",
+                                          "above"
+                                      ]
+                                  ],
+    "wizard-4c-passwords.png":  [
+                                    [
+                                        285,
+                                        231,
+                                        682,
+                                        264,
+                                        "10 or more characters",
+                                        "right"
+                                    ],
+                                    [
+                                        325,
+                                        489,
+                                        762,
+                                        522,
+                                        "empty = made for you",
+                                        "right"
+                                    ]
+                                ],
+    "wizard-4e-summary.png":  [
+                                  [
+                                      864,
+                                      650,
+                                      1014,
+                                      698,
+                                      "Looks right",
+                                      "above"
+                                  ]
+                              ],
+    "wizard-5-install.png":  [
+                                 [
+                                     285,
+                                     224,
+                                     515,
+                                     276,
+                                     "click to start",
+                                     "right"
+                                 ]
+                             ],
+    "wizard-6-done.png":  [
+                              [
+                                  285,
+                                  197,
+                                  655,
+                                  245,
+                                  "your garden, or the menu",
+                                  "right"
+                              ]
+                          ]
+}

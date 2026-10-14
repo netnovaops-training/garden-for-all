@@ -93,7 +93,7 @@ photos to a bigger disk: type the whole path, like `/mnt/bigdisk/garden-photos`.
 Menu `M`, `18`, then `3`. For example `/mnt/bigdisk/junsgarden`.
 
 It moves everything, counts the files before and after, and fixes what points at the
-folder: the nightly backup schedule, the automatic check-up, the desktop icon, and
+folder: the backup schedule, the automatic check-up, the desktop icon, and
 Docker's programs (they are made again from the new place). It offers to leave a
 **signpost** (a link) at the old place: say yes on Windows, because the Windows
 menu looks for the garden there. To move it back, choose `3` again and type the old
@@ -109,7 +109,7 @@ Menu `M`, then `14`.
 - **`1` Everything OFF.** For when you do not want to host the site for a while, or
   the internet traffic is too much. It runs `docker compose down` (**without** `-v`)
   and stops the front door. Your plants, photos, data, cache, backups and settings
-  stay in their folders. The nightly backup rests too: nothing changes while it is off.
+  stay in their folders. Automatic backups rest too: nothing changes while it is off.
 - **`2` Everything ON again,** after a day or after months. It starts everything,
   waits for the website, and says how many plants it found. If it was off a while,
   it offers a backup.
@@ -145,10 +145,10 @@ with `-v`. It only runs while the garden is on, so it can see what the garden us
 ![The clean-up shows what it would remove, and asks](images/screen-29-cleanup.png)
 
 ## 7. On Windows: two ways to run Docker
-When you install on **this Windows PC**, the installer asks which Docker runs the
-garden's programs:
+When you install on **this Windows PC**, the setup wizard asks (its "Where it runs"
+page) which Docker runs the garden's programs:
 
-![Page 2: this PC, then Docker Desktop or Docker inside Ubuntu](images/wizard-2b-this-pc.png)
+![The setup wizard, where it runs: this PC, then Docker Desktop or Docker inside Ubuntu](images/wizard-2b-this-pc.png)
 
 | | Docker Desktop (the easy way) | Docker inside Ubuntu (the hands-on way) |
 |---|---|---|

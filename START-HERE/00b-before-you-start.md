@@ -11,7 +11,7 @@ I chose the automatic route so you can have your own Linux web server without
 the steep learning curve. The setup does the work and explains every step as it
 goes, so it stays easy, and Custom lets you choose every part yourself. It is
 designed to be done in parts: stop, come back, carry on. Later you can move the
-main folders (menu 8) and choose your own web name (the Website name swap).
+main folders (menu 8, then 8; guide 26) and choose your own web name (the Website name swap).
 
 It is built to protect your home network and your computer. Only the front door
 (Caddy) is reachable from the internet, and only on the two web ports. Everything
@@ -30,7 +30,7 @@ The install asks this once. Both use the same 14 numbered steps.
 
 | | **1) EASY** (recommended) | **2) CUSTOM** |
 |---|---|---|
-| Questions | Your name, email, database password (Enter = made for you), keep the web name or choose a new one. At the end: your password and your AI keys | The same, plus each optional part, one by one, and which step to start at |
+| Questions | Your name, email, database password (Enter = made for you), keep the web name or choose a new one. At the end: your password, email (Gmail, optional) and your AI keys | The same, plus each optional part, one by one, and which step to start at |
 | Installs | Everything necessary, plus the garden tools | What you choose: garden tools (default Yes), wiki (default No), n8n (default No) |
 | Photos | Loaded by itself, when the photos download is there | You choose: now, or later (menu 6, then 11) |
 | Wiki | Off. Switch it on any time (menu 9) | Asked (default No) |
@@ -42,7 +42,7 @@ Either way you can add or remove parts later (guide 19 lists every option).
 | What | Why | Time |
 |---|---|---|
 | **A garden computer** that can stay on: an Ubuntu laptop (tested), this Windows PC with Windows' own Ubuntu (tested; for using the garden on this PC only, see below), or a Raspberry Pi 5 (tested on 64-bit Raspberry Pi OS; it needs good cooling, a fan, because it gets hot while the website is built) | The garden runs on it | Laptop: 2 to 3 hours to put Ubuntu on it the first time (guide 01). A Pi 5 with its starter kit: about 1 hour. Windows: set up by the installer (one restart) |
-| **Free disk space**: about 60 GB on an Ubuntu laptop; on Windows, about 60 GB free on C: | Docker, the website, the photos, and the 7 nightly backups (about 6 GB together) | Nothing to do; just check before you start |
+| **Free disk space**: about 60 GB on an Ubuntu laptop; on Windows, about 60 GB free on C: | Docker, the website, the photos, and the automatic backups (about a week of them; about 6 GB together) | Nothing to do; just check before you start |
 | **A USB stick, 16 GB or larger** (only to put Ubuntu on a laptop) | To install Ubuntu (it is erased) | Included in the 2 to 3 hours |
 | **The three downloads** from the Google Drive folder | The garden (about 5 MB; the first start then gets the program from GitHub, about 75 MB), the photos (about 800 MB), the wiki pages (under 1 MB; only if you want the wiki) | Garden: 1 to 2 minutes. Photos: about 2 minutes on fast internet, 15 to 20 minutes on slow internet |
 | **The install** (menu 1) | Puts everything together | 30 to 90 minutes, mostly waiting. Each step shows its own time. The longest step, building the website, takes 15 to 45 minutes (up to an hour on a very old laptop or a Pi) |
@@ -62,15 +62,19 @@ account anywhere.
 
 ### On a Windows PC (the garden inside Windows' own Ubuntu, WSL)
 
-![Garden Bridge, page 1: welcome, with the map of how it all works](images/wizard-1-welcome.png)
+![The setup wizard: welcome, your steps on the left, Help, Back and Next below](images/wizard-1-welcome.png)
 
-![Page 2: where the garden runs](images/wizard-2-where.png)
+![The level: EASY (automatic) or CUSTOM (you choose, page by page)](images/wizard-1b-level.png)
 
-![Page 3: about you, and your web name](images/wizard-3-about-you.png)
+![Where the garden runs](images/wizard-2-where.png)
 
-![Page 4: what gets installed, each with its official page](images/wizard-4-what-gets-installed.png)
+![About you and your web name](images/wizard-3-about-you.png)
 
-![Page 5: start the install; the steps appear as they finish](images/wizard-5-install.png)
+![CUSTOM: the optional software, then one page for each part you tick](images/wizard-4-optional-software.png)
+
+![Install: the steps appear as they finish](images/wizard-5-install.png)
+
+Every page, and what to answer: [guide 23, The setup wizard on Windows](23-full-setup.md#help-wizard).
 
 - **What it is for:** using the garden on this PC itself. Putting the garden on
   the internet, and showing it to phones and other computers at home, does not
@@ -79,7 +83,7 @@ account anywhere.
   use a separate garden computer (an Ubuntu laptop or a Raspberry Pi). To learn
   more, Microsoft explains WSL's networking here (reading only; the garden does
   not set it up): <https://learn.microsoft.com/windows/wsl/networking>
-- **Which Docker (page 2):** **Docker Desktop**, the easy way: a Windows app with
+- **Which Docker (the "Where it runs" page):** **Docker Desktop**, the easy way: a Windows app with
   buttons that shows the garden's programs, starts with Windows, and is free for
   personal use. The installer gets it for you and waits for one switch (Settings >
   Resources > WSL integration: `JunsGarden` on). Or **Docker inside Ubuntu**, the

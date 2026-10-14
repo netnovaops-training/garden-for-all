@@ -35,7 +35,7 @@
 
 | 무엇 | 무엇인가요 | 왜 | 실행되는 곳 | 공식 페이지 |
 |---|---|---|---|---|
-| Ubuntu 업데이트 | `apt`(Ubuntu의 앱 스토어)를 통한 Ubuntu 자체 업데이트 | 보안 수정이 가장 먼저예요 | Ubuntu | <https://ubuntu.com/server/docs/package-management> |
+| Ubuntu 업데이트 | `apt`(Ubuntu의 앱 스토어)를 통한 Ubuntu 자체 업데이트 | 보안 수정이 가장 먼저예요 | Ubuntu | <https://ubuntu.com/server/docs/how-to/software/package-management/> |
 | git, curl, openssl, rsync | 작은 기본 도구 | git은 변경 기록을 보관해요. curl은 웹 페이지를 가져와요. openssl은 무작위 비밀번호를 만들어요. rsync는 다른 프로그램이 쓰는 복사 도구예요(직접 실행할 일은 없어요). | Ubuntu | <https://git-scm.com/doc>, <https://curl.se/docs/> |
 | OpenSSH 서버 | 집에 있는 다른 컴퓨터에서 이 컴퓨터의 터미널을 쓸 수 있게 해 줘요 | 노트북 뚜껑을 닫은 채로 관리할 수 있어요 | Ubuntu, 포트 22, 집 네트워크에서만 | <https://ubuntu.com/server/docs/openssh-server> |
 | ufw 방화벽 | 어떤 연결이 들어와도 되는지 정해요 | 집에서 오는 SSH와 나중에 80, 443 말고는 모두 막아요 | Ubuntu | <https://ubuntu.com/server/docs/how-to/security/firewalls/> |
@@ -103,10 +103,10 @@
 | 정문 설정 | `cat /etc/caddy/Caddyfile` |
 | 설치 프로그램이 언제 무엇을 했는지 | `logs/` 안의 파일들, 그리고 `logs/install-progress.txt` |
 | 방화벽 규칙 | `sudo ufw status verbose` |
-| 매일 밤 백업 줄 | `crontab -l` |
+| 백업 일정 줄 | `crontab -l` |
 
 ## 지우기
 
-메뉴 `M`, 그다음 `12`(Uninstall, 제거하기)는 정원의 프로그램, 매일 밤 백업, 아이콘을
+메뉴 `M`, 그다음 `12`(Uninstall, 제거하기)는 정원의 프로그램, 백업 일정, 아이콘을
 멈추고 지우고, Caddy와 No-IP 업데이트 프로그램도 지워요. 사진, 데이터베이스, 백업은
 남겨 둬요. Docker를 지우는 명령은 화면에 보여 주기만 해요. 지울지는 본인이 정해요.

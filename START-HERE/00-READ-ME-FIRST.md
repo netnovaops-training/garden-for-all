@@ -3,7 +3,7 @@
 ## Quick version
 *No time to read it all? This is the short version. The full guide is below.*
 
-- These guides explain what the menu installed, how to look after your garden, and what to build next. The install itself is done by the menu (`00-READ-ME-FIRST.html`, one folder up).
+- These guides explain what the menu installed, how to look after your garden, and what to build next. The install itself is done by `Start-Here-Ubuntu.sh` (the menu) or, on Windows, the setup wizard (`Start-Here-Windows.cmd`); `00-READ-ME-FIRST.html`, one folder up, walks you through it.
 - Rule 1: change things through the menu: Settings (menu `8`), users (menu `U`), parts (menu `9`), the front door (menu `M`, `1`). Back up (menu `6`) before any bigger change.
 - Rule 2: passwords and keys live only in `.env`. Never put them in a chat, a screenshot, an email or an AI chat.
 - Rule 3: for watering projects, use only low-voltage parts (5 V or 12 V). Never cut or wire anything that plugs into a wall outlet.
@@ -14,8 +14,8 @@
 ---
 
 This folder holds the guides for **your** garden website and for building your
-own home and garden projects. The install itself is done by the menu (see
-`00-READ-ME-FIRST.html` one folder up). These guides explain what the menu did,
+own home and garden projects. The install itself is done by `Start-Here-Ubuntu.sh` (the menu) or, on Windows, the setup wizard (`Start-Here-Windows.cmd`); see
+`00-READ-ME-FIRST.html` one folder up. These guides explain what the menu did,
 how to look after the garden, and what to build next.
 
 Everything here is made to be done one small step at a time. You can stop at
@@ -46,6 +46,9 @@ any step and come back.
 | Wiki | Your garden encyclopedia (optional part) |
 | `garden.sh` | The menu that installs and looks after everything |
 | `START-HERE/` | These guides |
+| `Start-Here-Ubuntu.sh`, `Start-Here-Windows.cmd` | The first start: they get the program from GitHub at one fixed version (`CODE-SOURCE.txt`) and check every file against `FILES-FROM-AUTHOR.txt` |
+| `windows/` | The Windows setup wizard and the Windows menu |
+| `PDF guides/` | Every guide as a PDF, English and Korean. An optional download the installer fetches while it works (on a Windows install it lands on the PC); `PDF guides/STATUS.txt` says where each set is, and menu `P` gets or refreshes them |
 | `lab/` | Practice scripts that do single jobs, for learning (`lab/README.md`) |
 | `docker/` | How each program is built, plus ready-made files for Uptime Kuma, Home Assistant, ESPHome and Apache |
 | `AGENTS.md`, `GEMINI.md` | Rules that AI helpers read, so they help you safely |
@@ -53,7 +56,7 @@ any step and come back.
 
 ## Searching the guides
 The guides are many, so the handbook has a search box at the top of every page.
-Open `00-WELCOME.html` (in the garden folder; on Windows it opens after the install).
+Open `00-WELCOME.html` in the garden folder (it is there from the moment you unzip).
 
 1. Click the search box at the top (or press `/`). With nothing typed, it shows
    common topics: click one, for example **router**, **backup** or **rename**.
@@ -67,6 +70,11 @@ Open `00-WELCOME.html` (in the garden folder; on Windows it opens after the inst
 It searches every guide here, in both languages, and the other guides too (the n8n
 and project guides, what gets installed, the summary, the journal). It works on
 this computer, with no internet, and nothing you type is sent anywhere.
+
+The same guides are also on your own website, at `/help` (for example
+<http://localhost:8030/help>), after you log in: click **Help** at the top. Choose
+English or 한국어, and type in the search box to find a guide by its title or #tags.
+They are made from the same files as the PDFs, so they always match.
 
 ## Looking after your garden
 
@@ -199,7 +207,7 @@ Official beginner pages: [Change the device name (host name)](https://help.gnome
 | localhost | "This computer". Only you can see addresses that start with it |
 | `.env` | The file holding your private settings. The menu changes it for you |
 | Reverse proxy | A front door program (Caddy) that sends visitors to the right container |
-| SSO / sign-in page | One login page in front of several tools (yours is Authelia) |
+| Sign-in page (Authelia) | Your own login page in front of the garden tools and subdomains; the website itself has its own login |
 | DDNS | A service that keeps a web name pointed at your home internet address |
 | HTTPS | The padlock in the browser. It means the connection is private |
 

@@ -33,7 +33,7 @@ downloads programs from the official places listed below.
 
 | What | What it is | Why | Where it runs | Official page |
 |---|---|---|---|---|
-| Ubuntu updates | Ubuntu's own updates through `apt` (its app store) | Safety fixes come first | Ubuntu | <https://ubuntu.com/server/docs/package-management> |
+| Ubuntu updates | Ubuntu's own updates through `apt` (its app store) | Safety fixes come first | Ubuntu | <https://ubuntu.com/server/docs/how-to/software/package-management/> |
 | git, curl, openssl, rsync | Small standard tools | git keeps a history of your changes. curl fetches web pages. openssl makes random passwords. rsync is a copying tool other programs use (you never need to run it yourself). | Ubuntu | <https://git-scm.com/doc>, <https://curl.se/docs/> |
 | OpenSSH server | Lets you use this computer's terminal from another computer at home | So you can manage the laptop with the lid closed | Ubuntu, port 22, home network only | <https://ubuntu.com/server/docs/openssh-server> |
 | ufw firewall | Decides which connections may come in | Blocks everything except SSH from home, and later 80 and 443 | Ubuntu | <https://ubuntu.com/server/docs/how-to/security/firewalls/> |
@@ -102,10 +102,10 @@ The checklist (menu `5`) checks all of this every time you run it.
 | The front door's settings | `cat /etc/caddy/Caddyfile` |
 | What the setup did and when | the files in `logs/`, and `logs/install-progress.txt` |
 | The firewall rules | `sudo ufw status verbose` |
-| Your nightly backup line | `crontab -l` |
+| Your backup schedule line | `crontab -l` |
 
 ## Removing it
 
-Menu `M`, then `12` (Uninstall), stops and removes the garden's programs, the nightly
-backup and the icon, and removes Caddy and the No-IP updater too. It keeps your photos,
+Menu `M`, then `12` (Uninstall), stops and removes the garden's programs, the backup
+schedule and the icon, and removes Caddy and the No-IP updater too. It keeps your photos,
 database and backups. It prints the command that removes Docker, so you decide.

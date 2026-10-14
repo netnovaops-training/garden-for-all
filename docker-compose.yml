@@ -98,6 +98,8 @@ services:
       - ${IMAGES_DIR:-./local/images}:/www/images
       - ${DATA_DIR:-./local/data}:/www/data
       - ${CACHE_DIR:-./local/cashe}:/www/cashe
+      # The guides, for the site's /help pages (read-only: the site never writes them).
+      - ./START-HERE:/guides:ro
     ports:
       - "127.0.0.1:${SITE_PORT:-8030}:8030"
 

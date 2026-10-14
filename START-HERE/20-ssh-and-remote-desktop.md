@@ -8,8 +8,8 @@
 - **First time?** Open PowerShell, check with `ssh -V`, then type
   `ssh jun@192.168.1.50` (your user name and IP address). `exit` brings you back
   to Windows. Step by step below.
-- The Windows garden menu sets it up for you when it installs on another
-  computer, including a **key**, so you do not type a password every time.
+- The setup wizard (or the Windows menu, `T`) sets it up for you when the
+  garden goes on another computer, including a **key**, so you do not type a password every time.
 - A small `config` file gives the computer a short name (`ssh garden`) and keeps
   the connection open while you step away.
 - **Copy files** between the Linux computer and Windows with the free program **WinSCP** (drag and drop, step by step below).
@@ -159,8 +159,8 @@ the two halves prove who you are without sending any password.
 - **RSA** is the older kind. It still works (use 4096 bits) if some old program
   insists on it; otherwise choose ed25519.
 
-**The Windows garden menu does this for you** when it installs on another
-computer (menu 1, "another computer"): it makes the key if there is none
+**The setup wizard does this for you** when the garden goes on another computer
+(its "Where it runs" page; in the Windows menu, `T` then `1`): it makes the key if there is none
 (`C:\Users\YOU\.ssh\id_ed25519`) and puts the public half on the garden computer.
 
 **By hand, in three steps** (in PowerShell):

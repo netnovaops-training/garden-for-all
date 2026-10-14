@@ -25,7 +25,7 @@
 |---|---|---|---|
 | Windows Terminal | A window for typing commands, with tabs | Yes, in Windows 11 | <https://learn.microsoft.com/windows/terminal/> |
 | PowerShell | Windows' own command language (guide 20) | Yes, in Windows | <https://learn.microsoft.com/powershell/> |
-| WSL | A real Ubuntu inside Windows | Yes, if the garden runs on this PC (the Windows menu switched it on) | <https://learn.microsoft.com/windows/wsl/install> |
+| WSL | A real Ubuntu inside Windows | Yes, if you chose "This Windows PC" in the setup wizard (the install switched it on) | <https://learn.microsoft.com/windows/wsl/install> |
 | Visual Studio Code | An editor for code and text files | No | <https://code.visualstudio.com/> |
 | Git | Keeps a history of changes to your files | No | <https://git-scm.com/downloads/win> |
 | Python | A beginner-friendly programming language | No | <https://www.python.org/downloads/windows/> |

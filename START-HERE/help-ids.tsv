@@ -1,0 +1,38 @@
+# START-HERE/help-ids.tsv: the stable help ids. One row per guide section that
+# the setup wizard (and, next, the website's help pages) can open directly.
+# Plain UTF-8 text, TAB between columns, lines starting with # are notes, the
+# first other line is the column names. Columns:
+#   id         short and stable; never changes, even when a heading is reworded
+#   guide      the guide's file name in START-HERE/ (and START-HERE/ko/), without .md
+#   anchor_en  the English heading's own anchor (for information; it can change)
+#   anchor_ko  the Korean heading's own anchor (the same)
+#   tags_en    2 to 4 hot words, each starting with #, space between
+#   tags_ko    the same, in Korean
+#   brief_en   a one-line overview
+#   brief_ko   the same, in Korean
+#   wizard     the setup wizard's pages that show this id (comma between); the
+#              first row that names a page is that page's main help
+# In the guides, the line  <a id="help-ID"></a>  sits right above the section, in
+# the English and the Korean guide. In the handbook the English one is #help-ID
+# and the Korean one #help-ID-ko. tools/release/check_help_ids.py checks it all.
+id	guide	anchor_en	anchor_ko	tags_en	tags_ko	brief_en	brief_ko	wizard
+overview	00-OVERVIEW	quick-version	짧은-버전	#overview #install-steps #pdf	#한눈에 #설치순서 #pdf	What the install does, in order, where help is, and where the PDF guides arrive.	설치가 하는 일을 순서대로, 도움이 있는 곳, PDF 안내서가 오는 곳.	
+wizard	23-full-setup	the-setup-wizard-on-windows-page-by-page	windows-설치-마법사-한-쪽씩	#wizard #setup	#마법사 #설치	The setup wizard on Windows, page by page: Help, Back, Next, and carrying on later.	Windows 설치 마법사를 한 쪽씩: 도움말, 뒤로, 다음, 나중에 이어서 하기.	welcome
+level	23-full-setup	easy-or-custom-the-level	easy-또는-custom단계	#easy #custom #level	#쉽게 #사용자지정 #단계	EASY installs for you; CUSTOM lets you choose every part and type the passwords here.	EASY는 대신 설치해 주고, CUSTOM은 부분마다 고르고 비밀번호를 여기서 입력해요.	level
+where	23-full-setup	where-the-garden-runs	정원이-실행되는-곳	#where #ssh #wsl	#어디서 #ssh #wsl	Another computer at home (recommended), found by its address, or this PC inside WSL.	집에 있는 다른 컴퓨터(추천, 주소로 찾아요) 또는 WSL 안의 이 PC.	where
+about-you	23-full-setup	about-you-and-your-web-name	나와-내-웹-이름에-대해	#you #email	#나 #이메일	Your login name and email, and your web name: keep junsgarden.zapto.org or choose a new one.	내 로그인 이름과 이메일, 그리고 웹 이름: junsgarden.zapto.org를 그대로 두거나 새 이름을 골라요.	you
+webname	23-full-setup	part-9-your-web-name-at-no-ip-and-two-checks-champagne	9-부분-no-ip의-내-웹-이름-그리고-확인-두-가지샴페인	#webname #no-ip	#웹이름 #no-ip	A free web name from No-IP, so people can find your garden on the internet.	No-IP의 무료 웹 이름: 사람들이 인터넷에서 내 정원을 찾을 수 있게 해요.	you
+optional-software	23-full-setup	optional-software	선택-소프트웨어	#optional #parts	#선택 #부분	Tick what to set up now, and what you want to be reminded of for later.	지금 설정할 것과 나중에 다시 알려 줄 것에 체크해요.	parts
+garden-parts	23-full-setup	garden-tools-wiki-and-n8n	정원-도구-위키-n8n	#garden-tools #wiki #n8n	#정원도구 #위키 #n8n	The garden tools, the wiki and n8n: what each one is, and what to type.	정원 도구, 위키, n8n: 각각 무엇인지, 무엇을 입력하는지.	part-beds,part-wiki,part-n8n
+email	23-full-setup	part-4-email-for-forgot-password-links-wine	4-부분-비밀번호-찾기-링크용-이메일와인	#email #gmail #app-password	#이메일 #gmail #앱비밀번호	Gmail sends your password links; it needs a 16-letter app password.	Gmail이 비밀번호 링크를 보내요. 16글자 앱 비밀번호가 필요해요.	part-email
+ai-keys	23-full-setup	part-3-your-ai-keys-wine	3-부분-내-ai-키와인	#ai-keys #gemini #perenual	#ai키 #gemini #perenual	Your own free keys for the AI boxes and the plant facts; each one is optional.	AI 상자와 식물 정보에 쓰는 내 무료 키. 하나하나 선택이에요.	part-keys,part-plantdata
+reserve-ip	23-full-setup	part-5-a-reserved-address-in-the-router-wine	5-부분-공유기에서-주소-예약하기와인	#reserve-ip #router	#주소예약 #공유기	Reserve the garden computer's address in the router, so it never changes.	공유기에서 정원 컴퓨터의 주소를 예약해서 바뀌지 않게 해요.	part-network
+front-door	23-full-setup	part-10-online-https-and-your-sign-in-page-champagne	10-부분-인터넷에-올리기-https와-로그인-페이지샴페인	#front-door #https #sign-in	#대문 #https #로그인	Online safely: HTTPS, your sign-in page, and router ports 80 and 443.	안전하게 인터넷에: HTTPS, 로그인 페이지, 공유기 포트 80과 443.	part-frontdoor
+nas-add	23-full-setup	part-6-backups-1-your-nas-and-more-network-places-wine	6-부분-백업-1-nas-그리고-다른-네트워크-장소와인	#nas #backup	#nas #백업	A second copy of every backup on a network drive at home.	집에 있는 네트워크 드라이브에 모든 백업의 두 번째 사본.	part-nas
+google-drive	23-full-setup	part-7-backups-2-google-drive-wine	7-부분-백업-2-google-drive와인	#google-drive #backup	#구글드라이브 #백업	A weekly copy of your newest backup in your own Google Drive.	가장 새 백업을 매주 내 Google Drive에 복사해요.	part-drive
+subdomains	23-full-setup	part-11-subdomains-with-duckdns-champagne	11-부분-duckdns로-하위-도메인샴페인	#subdomains #duckdns	#하위도메인 #duckdns	More free web names (wiki., n8n.) with DuckDNS, each with its own padlock.	DuckDNS로 무료 웹 이름 더 만들기(wiki., n8n.), 각각 자물쇠가 있어요.	part-subdomains
+later-parts	23-full-setup	later-from-the-menu	나중에-메뉴에서	#later #menu	#나중에 #메뉴	The parts you set up from the menu after the install, and where they are.	설치가 끝난 뒤 메뉴에서 설정하는 부분과 그 자리.	part-tailscale,part-litellm,part-localai
+passwords	23-full-setup	passwords	비밀번호	#password #database	#비밀번호 #데이터베이스	One password for your garden and sign-in page; the database's is made for you.	정원과 로그인 페이지에 쓰는 비밀번호 하나. 데이터베이스 비밀번호는 대신 만들어 줘요.	passwords
+summary	23-full-setup	summary-install-and-done	요약-설치-끝	#summary #install	#요약 #설치	Check every answer, start the install, and what comes after.	모든 답을 확인하고, 설치를 시작하고, 그다음에 할 일.	summary,install,done
+pdf-guides	23-full-setup	pdf-guides	pdf-안내서	#pdf #download	#pdf #내려받기	The PDF guides: an optional download that arrives while the install runs, checked by fingerprint.	PDF 안내서: 설치하는 동안 오는 선택 사항 내려받기이고, 지문으로 확인해요.	pdfs
+backup-schedule	13-backups-and-folders	the-automatic-backup-schedule-ubuntu-set-up-by-the-install	자동-백업-일정ubuntu-설치가-설정해요	#backup-schedule #automatic	#백업일정 #자동	Backups run more often when the garden is busy, and less when it is quiet.	정원이 바쁘면 백업을 더 자주, 조용하면 덜 해요.	summary

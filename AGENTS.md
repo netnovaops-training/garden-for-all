@@ -50,6 +50,7 @@ rust/                     Cargo workspace (build from here)
     rowjson.rs            database row -> JSON, the way PHP's json_encode did
     normalise.rs          the plant-field clean-up rules
     brain.rs              optional local AI (Ollama); fails quietly if absent
+    guides.rs             the START-HERE guides as HTML for /help (pages/help.rs)
     pages/*.rs            one file per page or endpoint (catalog.rs = catalog.php)
     orchestrator/         /streamlit/, the plant admin (was a Streamlit app); 14 tabs,
                           HTML built in Rust (no templates); start with its mod.rs
@@ -111,6 +112,7 @@ folder. Settings are environment variables only (never put them in code):
 | `JUNSGARDEN_UPLOADERS` | names who may upload photos; fallback `Jun` |
 | `OLLAMA_URL`, `OLLAMA_MODEL` | optional local AI |
 | `JUNSGARDEN_AI_CACHE_DIR` | AI cache, default `<www>/cashe/AI` (sic, the PHP spelling) |
+| `JUNSGARDEN_GUIDES_DIR` | the guides (`START-HERE`) for the `/help` pages, default `/guides` (mounted read-only by `docker-compose.yml`) |
 | `TZ` | `America/New_York`; dates on pages depend on it |
 
 Keep the real values in an `.env` file next to the deploy scripts, never in

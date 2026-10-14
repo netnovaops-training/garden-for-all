@@ -61,6 +61,8 @@ longer need them).
   `before-restore` backup of what is there now, stops the website, puts
   everything back, and starts it again.
 
+<a id="help-backup-schedule"></a>
+
 ## The automatic backup schedule (Ubuntu, set up by the install)
 The install adds one line to your **cron** (Ubuntu's alarm clock). Every hour it
 runs `bash garden.sh backup auto`, which counts what changed since the last
@@ -209,7 +211,6 @@ ls /mnt/garden-nas
 ```
 (Use your NAS address and folder. `uid=1000` is your user number: `id -u` shows it.)
 Official reference: <https://manpages.ubuntu.com/manpages/noble/man8/mount.cifs.8.html>
-and Ubuntu's guide: <https://manpages.ubuntu.com/manpages/noble/man8/mount.cifs.8.html>
 
 ### More than one network place (menu `6`, then `13`)
 One NAS is good. Two places are better: if one box breaks, the other still has
@@ -220,7 +221,7 @@ Windows PC shares.
 
 - You can have **up to 3 places** in all. Place 1 is the NAS from choice `4`
   (it does not change). Choice `13` adds place 2, then place 3.
-- After every nightly backup, a copy goes to **each** place, and the newest 14
+- After every backup, a copy goes to **each** place, and the newest 14
   are kept in each.
 - The questions are the same as for the first NAS (search the network or type
   the address, user name, password, pick the shared folder). The new place
@@ -238,7 +239,8 @@ PC at `192.168.1.30` that shares a folder named `GardenCopies`:
 is under **Show more options**), then **Specific people**, pick the user, and
 give it **Read/Write**. In the garden menu, type
 that PC's address, and the user name and password of that Windows account. The
-PC must be switched on at 2:30 am, or that night's copy to it is missed (the
+PC must be switched on when a backup is made (at any hour on the automatic
+schedule; at 2:30 am if you chose every night), or that copy to it is missed (the
 menu then writes `NAS2 FAILED (not reachable)` in `logs/offsite.log`, and the
 other places still get theirs). Microsoft's guide:
 <https://support.microsoft.com/windows/file-sharing-over-a-network-in-windows-b58704b2-f53a-4b82-7bc1-80f9994725bf>
@@ -258,7 +260,7 @@ Stopping a place takes its line out of `/etc/fstab` and removes its login file.
 The uninstall (More, `12`) disconnects every network place the same way.
 
 ### The WHOLE garden folder on the NAS (menu `6`, then `10`)
-Besides the nightly backups, the menu can keep a copy of the **entire garden
+Besides the regular backups, the menu can keep a copy of the **entire garden
 folder** on the NAS (network place 1) (code, settings, photos, backups) in `whole-garden-folder/`,
 weekly, newest 2 kept. The database's own working files are left out (they
 change while the garden runs); the newest backup inside the copy holds the
@@ -360,7 +362,7 @@ database), with a backup first. The guides keep showing the first names;
 
 **Moving the whole garden folder** (for example to a bigger disk): menu `M`, then
 `18`, then `3`. It stops the garden, moves it, counts the files, and fixes the
-desktop icon, the nightly backup line and Docker's programs, which remember the
+desktop icon, the backup schedule line and Docker's programs, which remember the
 folder's full path. Guide 26.
 
 ## Read more

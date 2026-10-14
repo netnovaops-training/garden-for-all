@@ -64,7 +64,7 @@ A Raspberry Pi also has a different kind of processor chip (called ARM).
 A pretend computer made for an ordinary PC does not run well on that chip.
 The main programs the garden uses are made in versions for both kinds of chips.
 Docker picks the right version by itself.
-So the same garden is made to run on the laptop and on the Pi. (It was tested on ordinary PCs and laptops; a Pi has not been tried yet.)
+So the same garden is made to run on the laptop and on the Pi. (It was tested on ordinary PCs and laptops, and on a Raspberry Pi 5: guide 01.)
 
 An old Windows 7 laptop cannot run Docker itself.
 It can get Ubuntu instead (guide 01). Then it can run the garden in boxes.

@@ -26,12 +26,20 @@ local/
 # package on Google Drive carries the starter backup; git keeps the program.
 backups/
 
+# The PDF guides: an optional download the installer fetches (tools/get-pdfs.*), never kept in git.
+PDF guides/
+.garden-pdfs
+
 # Made by garden.sh while it runs.
 .garden-remote
 .garden-mode
 .garden-lang
 .garden-built
 .garden-target-windows.txt
+# The setup wizard: its answers (no passwords), and its private file of passwords
+# and keys while an install runs (wiped when the install ends). Never in git.
+garden-setup.json
+.garden-wizard-secrets
 CHECKLIST.txt
 CHECKLIST-*.txt
 checklist-history.log

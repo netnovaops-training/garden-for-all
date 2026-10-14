@@ -35,3 +35,12 @@ reqwest.workspace = true
 argon2.workspace = true
 sha2.workspace = true
 lettre.workspace = true
+# The /help pages: the guides' Markdown as HTML (pulldown-cmark), and the
+# accent folding Python-Markdown does for English anchors (unicode-normalization),
+# so a heading's anchor on the site is the same as in the handbook.
+pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
+unicode-normalization = "0.1"
+
+[dev-dependencies]
+# The /help tests send requests straight to the router (`oneshot`), no network.
+tower = { workspace = true, features = ["util"] }

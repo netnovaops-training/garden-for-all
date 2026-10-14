@@ -21,8 +21,10 @@ A laptop that used to run Windows 7 and now runs **Ubuntu Desktop 24.04 LTS**
 job, with no old laptop to change. A Pi 5 with 8 GB of memory, its official power
 supply and a 128 GB or bigger storage card or SSD (guide 06, shopping list). Its
 own Imager program puts Raspberry Pi OS (64-bit) on it in about 30 minutes:
-<https://www.raspberrypi.com/software/>. Next: [00-READ-ME-FIRST.html](../00-READ-ME-FIRST.html),
-step 1 (download the garden).
+<https://www.raspberrypi.com/software/>.
+Next: download `junsgarden-for-jun.zip` from the Google Drive folder, unzip it, open
+`00-WELCOME.html` in it, then right-click `Start-Here-Ubuntu.sh` and choose **Run as a Program**
+(the first start; `00-READ-ME-FIRST.html` arrives with the program then).
 
 > **Good to know about a Pi (measured on a real Raspberry Pi 5, 4 GB, on 2026-10-13).**
 > - **It works.** The garden's build-and-start part of the install finished in
@@ -38,7 +40,7 @@ step 1 (download the garden).
 > - **A memory card wears out.** The garden writes to its database and logs every
 >   day, and SD cards are not made for that. An **SSD** (with Raspberry Pi's M.2
 >   HAT+, or on a USB 3 port) is faster and lasts much longer. Either way, keep the
->   nightly backups going to a second place (guide 13).
+>   automatic backups going to a second place (guide 13).
 
 Why this is a good idea: Windows 7 stopped getting safety updates in 2020, so it
 is not safe to put on the internet. Ubuntu LTS gets free safety updates for
@@ -83,7 +85,7 @@ optional.
    | 2 GB or less | Too small to build the website. Add memory first (laptop memory is cheap), then continue. |
 
    You need about 60 GB of free disk space on the Ubuntu laptop for Docker,
-   the garden and its nightly backups. Erasing Windows frees the whole disk,
+   the garden and its backups. Erasing Windows frees the whole disk,
    so look at the C: drive's total size: Ubuntu itself needs about 25 GB, so a
    disk of about 90 GB or more is enough.
 3. **Save anything you want to keep.** Copy your pictures, documents and
@@ -237,7 +239,8 @@ hostname -I
 ### Part G. Make an old laptop work well as a server
 23. **Add swap** (extra "memory" on the disk). The garden website's first build
     needs more memory than a small laptop has, and swap stops it from stopping
-    part-way. This adds 4 GB:
+    part-way. This adds 4 GB. **Skip this step if you will use the garden
+    install (menu 1):** it adds swap by itself when the computer needs it.
 
 ```
 sudo fallocate -l 4G /swapfile2
@@ -294,5 +297,7 @@ sudo nano /etc/systemd/logind.conf
 - Learn three commands today: `ls` (list files), `cd` (go to a folder),
   `pwd` (where am I?).
 
-**Next:** [00-READ-ME-FIRST.html](../00-READ-ME-FIRST.html), step 1 (download the garden).
+**Next:** download `junsgarden-for-jun.zip` from the Google Drive folder, unzip it, open
+`00-WELCOME.html` in it, then right-click `Start-Here-Ubuntu.sh` and choose **Run as a Program**
+(the first start; `00-READ-ME-FIRST.html` arrives with the program then).
 (The install, menu 1, installs Docker for you; [02 Docker](02-docker.md) only explains it.)

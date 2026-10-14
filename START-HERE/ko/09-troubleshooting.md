@@ -89,7 +89,7 @@
 ## 인터넷 쪽(Caddy, Apache, No-IP, 공유기)
 | 문제 | 확인 | 해결 |
 |---|---|---|
-| 이름이 주소로 바뀌지 않아요 | `getent hosts YOUR-NAME.ddns.net` | `sudo systemctl status noip-duc`. 키를 확인하세요. noip.com에서 무료 이름을 확인하세요(No-IP가 30일마다 링크를 이메일로 보내요: **Confirm**(확인)을 누르세요) |
+| 이름이 주소로 바뀌지 않아요 | `getent hosts junsgarden.zapto.org`(또는 내 웹 이름) | `sudo systemctl status noip-duc`. 키를 확인하세요. noip.com에서 무료 이름을 확인하세요(No-IP가 30일마다 링크를 이메일로 보내요: **Confirm**(확인)을 누르세요) |
 | 이름이 엉뚱한 주소를 보여 줘요 | `curl -s https://api.ipify.org`와 비교하세요 | 5~10분 기다리세요. 그 이름의 업데이트 프로그램이 딱 하나만 돌고 있는지 확인하세요 |
 | 집에서는 되는데 휴대폰에서는 안 돼요 | Wi-Fi를 끄고 테스트하세요 | 공유기에서 80과 443 포트 전달(안내서 04, D 부분). 어떤 공유기는 안에서 자기 이름에 닿지 못해요. 정상이에요 |
 | 자물쇠나 인증서 오류 | `sudo journalctl -u caddy -n 50` | 포트 80과 443이 밖에서 노트북까지 닿아야 해요. 이름이 먼저 주소로 바뀌어야 해요 |

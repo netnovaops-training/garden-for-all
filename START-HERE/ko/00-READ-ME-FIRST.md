@@ -5,7 +5,7 @@
 ## 짧은 버전
 *다 읽을 시간이 없나요? 짧은 버전이에요. 전체 안내서는 아래에 있어요.*
 
-- 이 안내서들은 메뉴가 무엇을 설치했는지, 정원을 어떻게 돌보는지, 다음에 무엇을 만들지 설명해요. 설치 자체는 메뉴가 해요(한 폴더 위의 `00-READ-ME-FIRST-KO.html`).
+- 이 안내서들은 메뉴가 무엇을 설치했는지, 정원을 어떻게 돌보는지, 다음에 무엇을 만들지 설명해요. 설치 자체는 `Start-Here-Ubuntu.sh`(메뉴)가, Windows에서는 설치 마법사(`Start-Here-Windows.cmd`)가 해요. 한 폴더 위의 `00-READ-ME-FIRST-KO.html`이 차례로 안내해요.
 - 규칙 1: 메뉴로 바꾸세요. 설정(메뉴 `8`), 사용자(메뉴 `U`), 구성 요소(메뉴 `9`), 정문(메뉴 `M`, `1`). 큰 변경 전에는 백업하세요(메뉴 `6`).
 - 규칙 2: 비밀번호와 키는 `.env`에만 있어요. 채팅, 스크린샷, 이메일, AI 채팅에 절대 넣지 마세요.
 - 규칙 3: 물 주기 프로젝트에는 저전압 부품(5 V 또는 12 V)만 쓰세요. 벽 콘센트에 꽂는 것은 절대 자르거나 연결하지 마세요.
@@ -15,7 +15,7 @@
 
 ---
 
-이 폴더에는 안내서 몇 개의 한국어 번역이 있어요. 설치 자체는 메뉴가 해요
+이 폴더에는 안내서의 한국어 번역이 있어요. 설치 자체는 `Start-Here-Ubuntu.sh`(메뉴)나 Windows의 설치 마법사(`Start-Here-Windows.cmd`)가 해요
 (정원 폴더의 [00-READ-ME-FIRST-KO.html](../../00-READ-ME-FIRST-KO.html)을 보세요).
 메뉴도 한국어로 볼 수 있어요: 메뉴에서 `L`을 입력하고 `2`(한국어) 또는 `3`(둘 다)을 고르세요.
 입력하는 것(숫자, 글자, y/n, 명령)은 그대로예요.
@@ -50,6 +50,9 @@
 | 위키(Wiki) | 나만의 정원 백과사전(선택 구성 요소) |
 | `garden.sh` | 모든 것을 설치하고 돌봐 주는 메뉴 |
 | `START-HERE/` | 이 안내서들 |
+| `Start-Here-Ubuntu.sh`, `Start-Here-Windows.cmd` | 첫 시작: GitHub에서 정해진 버전 하나(`CODE-SOURCE.txt`)의 프로그램을 받아, 모든 파일을 `FILES-FROM-AUTHOR.txt`와 비교해요 |
+| `windows/` | Windows 설치 마법사와 Windows 메뉴 |
+| `PDF guides/` | 모든 안내서의 PDF, 영어와 한국어. 설치하는 동안 설치 프로그램이 받아 오는 선택 사항이에요(Windows 설치에서는 PC에 들어와요). `PDF guides/STATUS.txt`가 각 묶음의 상태를 알려 주고, 메뉴 `P`로 받거나 새로 고쳐요 |
 | `lab/` | 한 가지 일만 하는 연습용 스크립트. 배우기 위한 거예요(`lab/README.md`) |
 | `docker/` | 프로그램마다 어떻게 만들어지는지, 그리고 Uptime Kuma, Home Assistant, ESPHome, Apache용으로 미리 만들어 둔 파일 |
 | `AGENTS.md`, `GEMINI.md` | AI 도우미가 읽는 규칙이에요. 그래서 AI가 안전하게 도와줘요 |
@@ -57,7 +60,7 @@
 
 ## 안내서 찾기
 안내서가 많아서, 안내서 웹 페이지(handbook)에는 페이지마다 맨 위에 찾기 칸이 있어요.
-`00-WELCOME.html`을 여세요(정원 폴더 안. Windows에서는 설치가 끝나면 열려요).
+정원 폴더의 `00-WELCOME.html`을 여세요(압축을 푼 순간부터 있어요).
 
 1. 맨 위의 찾기 칸을 클릭하세요(또는 `/`를 누르세요). 아무것도 입력하지 않으면 자주
    찾는 주제가 보여요: 하나를 클릭하세요. 예: **공유기**, **백업**, **이름 바꾸기**.
@@ -69,6 +72,10 @@
 
 여기 있는 모든 안내서를 두 언어로 찾고, 다른 안내서(n8n과 프로젝트 안내서, 설치되는 것,
 요약, 일지)도 찾아요. 이 컴퓨터에서 인터넷 없이 돌아가고, 입력한 것은 어디로도 보내지 않아요.
+
+같은 안내서가 내 웹사이트의 `/help`에도 있어요(예: <http://localhost:8030/help>). 로그인한 뒤
+맨 위의 **Help**를 누르세요. English나 한국어를 고르고, 찾기 칸에 입력하면 제목이나 #태그로
+안내서를 찾아요. PDF와 같은 파일에서 만들어서 내용이 언제나 같아요.
 
 ## 정원 돌보기
 
@@ -97,7 +104,7 @@
 | [17 Android 앱, 그리고 AI로 코딩하기](17-android-app-and-ai-coding.md) | Android Studio, 휴대폰의 앱, Android Studio 안의 Gemini, 로컬 AI, 코드를 안전하게 바꾸는 방법 |
 | [00b 시작하기 전에](00b-before-you-start.md) | 필요한 모든 것(꼭 필요한 것과 선택)과 부분마다 걸리는 시간. 이것부터 읽으세요 |
 | [20 SSH와 원격 데스크톱](20-ssh-and-remote-desktop.md) | Windows PC에서 정원 컴퓨터로 일하기, 키, 파일 복사, 그 컴퓨터 화면 보기 |
-| [22 Bash, 한 단계씩](../22-bash-walkthrough.md)(영어) | 터미널로 하는 방법이에요. 더 어렵지만 힘들지 않아요: 터미널, 프롬프트, 첫 명령, 정원 프로그램 실행을 처음으로 함께 따라가 봐요 |
+| [22 Bash, 한 단계씩](22-bash-walkthrough.md)(짧은 버전은 한국어, 전체는 영어) | 터미널로 하는 방법이에요. 더 어렵지만 힘들지 않아요: 터미널, 프롬프트, 첫 명령, 정원 프로그램 실행을 처음으로 함께 따라가 봐요 |
 | [21 모든 프로그램과 출처](21-software-and-sources.md) | 프로그램마다(꼭 필요한 것과 선택) 버전, 이유, 만든 곳의 공식 문서. Let's Encrypt가 자물쇠를 주는 방법 |
 | [19 모든 메뉴 선택, 설명](19-every-menu-option.md) | 모든 메뉴의 선택마다: 무엇을 하는지, 언제 쓰는지, 무엇을 바꾸는지, 되돌리는 방법 |
 | [18 코드를 직접 검토하기](18-review-the-code.md) | 파일 지도, 바뀐 것이 없는지 확인, git 기록, 비밀 정보 검사기, Gemini나 친구에게 검토 부탁하기 |
@@ -169,6 +176,16 @@ AI는 가끔 자신 있는 목소리로 틀려요. **명령을 실행하기 전�
 | [13 백업과 폴더 이름](13-backups-and-folders.md) | 백업 이름, 복원, NAS와 Google Drive, 폴더 옮기기와 이름 바꾸기 |
 | [14 IP 예약하고 포트 두 개 열기](14-reserve-your-ip.md) | 공유기(router)에서 할 일 |
 | [16 Google AI Studio와 Gemini](16-ai-studio.md) | 출처가 있는 웹 검색, 코딩 도움, 내 컴퓨터 알기, 무료 키, LiteLLM |
+| [00b 시작하기 전에](00b-before-you-start.md) | 필요한 모든 것(꼭 필요한 것과 선택)과 걸리는 시간. 먼저 읽으세요 |
+| [01 노트북을 Ubuntu 컴퓨터로](01-ubuntu-laptop.md) | 노트북에 Ubuntu 설치하기 |
+| [02a Docker는 무엇인가요?](02a-what-is-docker.md) | 그림 두 장과 쉬운 말로: 왜 작은 상자를 쓰는지(참고로만) |
+| [09 문제 해결](09-troubleshooting.md) | 증상별 해결 방법 |
+| [18 코드를 직접 검토하기](18-review-the-code.md) | 파일 지도, 바뀐 것이 없는지 확인, git 기록, 비밀 정보 검사기, Gemini나 친구에게 검토 부탁하기 |
+| [19 모든 메뉴 선택, 설명](19-every-menu-option.md) | 모든 메뉴의 선택마다: 무엇을 하는지, 언제 쓰는지, 무엇을 바꾸는지, 되돌리는 방법 |
+| [20 SSH와 원격 데스크톱](20-ssh-and-remote-desktop.md) | Windows PC에서 정원 컴퓨터로 일하기, 키, 파일 복사, 화면 보기 |
+| [21 모든 프로그램과 출처](21-software-and-sources.md) | 프로그램마다 버전, 이유, 만든 곳의 공식 문서. Let's Encrypt가 자물쇠를 주는 방법 |
+| [25 자주 묻는 질문](25-common-questions.md) | 메뉴 키와 함께 짧은 답: 다시 시작, 비밀번호, 친구, 되돌리기, 사진, 업데이트, 옮기기 |
+| [26 이름 바꾸기, 옮기기, 끄기, 정리하기](26-rename-move-and-switch.md) | 폴더와 페이지에 내 이름, 더 큰 디스크로 옮기기, 켜기 / 끄기 스위치, Windows의 Docker |
 | [WHAT-GETS-INSTALLED.ko.md](../../WHAT-GETS-INSTALLED.ko.md) | 설치되는 모든 프로그램, 출처, 이유 |
 | [WHY-THESE-PROGRAMS.ko.md](../../WHY-THESE-PROGRAMS.ko.md) | 왜 이 프로그램들인지(질문과 답) |
 
@@ -176,29 +193,21 @@ AI는 가끔 자신 있는 목소리로 틀려요. **명령을 실행하기 전�
 
 | 안내서(짧은 버전은 한국어) | 내용 |
 |---|---|
-| [01 Ubuntu on the laptop](01-ubuntu-laptop.md) | 노트북에 Ubuntu 설치하기 |
 | [02 Docker](02-docker.md) | 설치의 첫 단계가 하는 일 |
-| [02a Docker는 무엇인가요?](02a-what-is-docker.md) | 그림 두 장과 쉬운 말로: 왜 작은 상자를 쓰는지(참고로만) |
 | [04b Moving junsgarden.zapto.org](04b-take-over-junsgarden-zapto.md) | 예전 서버에서 이름 옮기기 |
 | [05 Gemini prompts](05-gemini-prompts.md) | 복사해서 쓰는 Gemini 질문 |
 | [06 Shopping list](06-shopping-list.md) | 살 것 목록 |
 | [07 Your sign-in page](07-sso-gate.md) | 로그인 페이지와 관문, 게스트, 2단계 인증 |
 | [08 Gemini setup](08-gemini-setup.md) | 노트북의 Gemini CLI |
-| [09 Troubleshooting](09-troubleshooting.md) | 증상별 해결 방법 |
 | [10 The plan](10-the-plan.md) | 주별 순서와 확인 지점 |
 | [11 How your website works](11-maintain-your-site.md) | 파일 위치, 안전하게 바꾸는 방법 |
 | [12 Your database](12-your-database.md) | 표, 안을 보는 방법, 안전한 습관 |
 | [15 Local AI](15-local-ai.md) | 집의 성능 좋은 컴퓨터에서 돌리는 AI(선택, 고급) |
 | [17 Android app and AI coding](17-android-app-and-ai-coding.md) | Android Studio, 휴대폰 앱, AI로 코딩하기 |
-| [00b 시작하기 전에](00b-before-you-start.md) | 필요한 모든 것(꼭 필요한 것과 선택)과 걸리는 시간. 먼저 읽으세요 |
-| [20 SSH와 원격 데스크톱](20-ssh-and-remote-desktop.md) | Windows PC에서 정원 컴퓨터로 일하기, 키, 파일 복사, 화면 보기 |
-| [22 Bash, 한 단계씩](../22-bash-walkthrough.md)(영어) | 터미널로 하는 방법, 조금 더 어렵지만 힘들지 않아요: 처음 쓰는 사람을 위한 bash 입문서(영어로만 있어요) |
-| [21 모든 프로그램과 출처](21-software-and-sources.md) | 프로그램마다 버전, 이유, 만든 곳의 공식 문서. Let's Encrypt가 자물쇠를 주는 방법 |
-| [19 모든 메뉴 선택, 설명](19-every-menu-option.md) | 모든 메뉴의 선택마다: 무엇을 하는지, 언제 쓰는지, 무엇을 바꾸는지, 되돌리는 방법 |
-| [18 코드를 직접 검토하기](18-review-the-code.md) | 파일 지도, 바뀐 것이 없는지 확인, git 기록, 비밀 정보 검사기, Gemini나 친구에게 검토 부탁하기 |
-| [Projects](../projects/P01-uptime-kuma.md) | 프로젝트 1~9(Uptime Kuma, 백업, Home Assistant, Govee 조명, 날씨, 흙 센서, 물 주기 ...) |
-| [n8n guides](../n8n/N1-install-and-first-email.md) | n8n으로 이메일과 자동화 |
-| [MY-WINS.md](../MY-WINS.md) | 내가 해낸 것 체크리스트 |
+| [22 Bash, 한 단계씩](22-bash-walkthrough.md) | 터미널로 하는 방법, 조금 더 어렵지만 힘들지 않아요: 처음 쓰는 사람을 위한 bash 입문서 |
+| [Projects](../projects/P01-uptime-kuma.md)(영어로만 있어요) | 프로젝트 1~9(Uptime Kuma, 백업, Home Assistant, Govee 조명, 날씨, 흙 센서, 물 주기 ...) |
+| [n8n guides](../n8n/N1-install-and-first-email.md)(영어로만 있어요) | n8n으로 이메일과 자동화 |
+| [MY-WINS.md](../MY-WINS.md)(영어로만 있어요) | 내가 해낸 것 체크리스트 |
 
 ## 막히면
 

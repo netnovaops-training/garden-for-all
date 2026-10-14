@@ -28,18 +28,25 @@ next layer. Never add a new thing on top of something that is not working.
 - [ ] Charger plugged in. Laptop on a table, not a bed or a couch.
 
 ## Session 1. A clean base
-Guides: [01 Ubuntu](01-ubuntu-laptop.md), then `bash lab/01-prepare-ubuntu.sh`.
+Guides: [01 Ubuntu](01-ubuntu-laptop.md), then the first start: unzip the
+download, right-click `Start-Here-Ubuntu.sh` and choose **Run as a Program** (or
+type `bash Start-Here-Ubuntu.sh` in that folder). The first time, it gets the
+program from GitHub and checks every file; that brings `garden.sh`, `lab/` and
+the guides. When the menu opens, type `0` to leave it for today: the install is
+Session 2. (`lab/` did not exist before this first start, so the commands below
+work only after it.)
 **Checkpoint:** `bash lab/09-health-check.sh` shows no red FAIL for the laptop
 section. The laptop restarts and comes back.
 **Why careful:** a good base saves hours later.
 
 ## Session 2. Docker and your garden
-Guides: [02 Docker](02-docker.md) (or `bash lab/02-install-docker.sh`), then
-[03 Run your garden](03-run-your-garden.md) (or `bash lab/03-start-garden.sh`).
+Read [02 Docker](02-docker.md) to know what Docker is (the install sets it up
+for you). Then the install: open the menu again (`Start-Here-Ubuntu.sh`, as in
+Session 1) and type `1`. Then [03 Run your garden](03-run-your-garden.md).
 **Checkpoint:**
 - `curl http://127.0.0.1:8030/healthz` says ok.
 - You logged in and added one plant.
-- You took a backup (menu `6`) and the file exists.
+- You took a backup (menu `6`, then `1`) and the file exists.
 **Stop here for a day.** Look at the site. Read `rust/junsgarden/src/main.rs`.
 
 ## Session 3. Watch it and protect it
@@ -84,7 +91,7 @@ Guide: [Project 8](projects/P08-readings-on-your-website.md).
 
 ## Sessions 14 to 15. The internet: practise first
 Guides: [23 The full setup, Part 9](23-full-setup.md) and
-[04 Internet with Caddy, Apache and No-IP](04-go-public-no-ip-caddy.md), Parts A
+[04 Put your garden on the internet](04-go-public-no-ip-caddy.md), Parts A
 to C: your own No-IP account and web name, the CGNAT check, then a **test name**
 (menu `M`, `1`, choice `2`, for example `garden.test`). The scripts `lab/04`,
 `lab/05` and `lab/06` do the same jobs one at a time, if you want to learn each piece.
@@ -102,8 +109,8 @@ Guides: [23 The full setup, Parts 10 and 11](23-full-setup.md),
 Menu `M`, `1`, choice `3`, then forward only ports 80 and 443 in the router (guide 14).
 **Checkpoint:** from a phone on mobile data, the real name opens your site with a
 padlock, with the real plants, and you can log in. Run
-`bash lab/09-health-check.sh`: no FAIL. You know the way back: menu `M`, then
-`14` takes the garden off the internet again (guide 04).
+`bash lab/09-health-check.sh`: no FAIL. You know the way back: menu `M`, `14`,
+then `3` takes the garden off the internet again (guide 04).
 
 ## After that. Keep it healthy (15 minutes a week)
 - [ ] `bash lab/09-health-check.sh` and fix any FAIL.
@@ -112,7 +119,8 @@ padlock, with the real plants, and you can log in. Run
 - [ ] Look at Uptime Kuma. Is everything green?
 
 ## Later and optional
-- [07 An SSO sign-in gate](07-sso-gate.md) for your tools.
+- [07 Your sign-in page](07-sso-gate.md): two-step sign-in and more users (the
+  front door step in Session 16 already set it up).
 - [Project 9 More ideas](projects/P09-more-ideas.md).
 
 ## Pace and rest

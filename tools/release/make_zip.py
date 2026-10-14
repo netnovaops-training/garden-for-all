@@ -8,7 +8,7 @@
   junsgarden-photos-addon.zip   the photos (images.tar), big, can be fetched again
   junsgarden-wiki-addon.zip     the wiki's pages (only if Jun wants the wiki)
 
-The program (garden.sh, the website, the guides, the PDFs) is public code on
+The program (garden.sh, the website, the guides) is public code on
 GitHub. The first start (Start-Here-Ubuntu.sh / Start-Here-Windows.cmd) fetches
 it from there at ONE fixed version, GARDEN_CODE_COMMIT (written into
 CODE-SOURCE.txt), and checks every file against FILES-FROM-AUTHOR.txt.
@@ -41,9 +41,9 @@ TAG = "-TEST-small" if "TEST" in os.path.basename(OUT) else ""
 PHOTOS = os.path.join(os.path.dirname(OUT), f"junsgarden-photos-addon{TAG}.zip")
 WIKI = os.path.join(os.path.dirname(OUT), f"junsgarden-wiki-addon{TAG}.zip")
 TOP = "junsgarden-for-jun/"
-SKIP_DIRS = {"target", ".git", "local", "logs", "help", "__pycache__", "node_modules", "from-garden-computer", "PDF-src"}
+SKIP_DIRS = {"target", ".git", "local", "logs", "help", "__pycache__", "node_modules", "from-garden-computer", "PDF-src", "PDF guides"}
 SKIP_FILES = {".env", ".garden-remote", ".garden-target-windows.txt", ".garden-remote-windows.txt", ".garden-mode",
-              ".garden-lang", ".garden-built", "MY-ADDRESSES.txt", "CHECKLIST.txt", "CHECKLIST-laptop.txt",
+              ".garden-lang", ".garden-pdfs", ".garden-built", "MY-ADDRESSES.txt", "CHECKLIST.txt", "CHECKLIST-laptop.txt",
               "CHECKLIST-windows.txt", "checklist-history.log", "FILES-FROM-AUTHOR.txt",
               "junsgarden-wiki-addon.zip", "junsgarden-photos-addon.zip"}
 TEXT_EXT = {".sh", ".md", ".yml", ".yaml", ".py", ".rs", ".html", ".css", ".js", ".json", ".toml",

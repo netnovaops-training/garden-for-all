@@ -1,0 +1,19 @@
+<div class="page-content no-hero page-garden-bg help-page" lang="{{ lang }}">
+    <div class="help-top">
+        <a class="help-back" href="/help{{ q_lang }}">&larr; {% if ko %}모든 안내서{% else %}All guides{% endif %}</a>
+        <nav class="help-lang" aria-label="Language">
+            <a href="/help/{{ id }}" {% if !ko %}aria-current="page"{% endif %}>English</a>
+            <a href="/help/{{ id }}?lang=ko" lang="ko" {% if ko %}aria-current="page"{% endif %}>한국어</a>
+        </nav>
+    </div>
+    <p class="help-where">{{ guide_title }}</p>
+    <div class="help-brief">
+        <h1>{{ brief }}</h1>
+        <p class="help-tags">{% for t in tags %}<a href="/help/{{ id }}{{ q_lang }}">{{ t }}</a>{% endfor %}</p>
+        <p><a class="btn help-btn" href="{{ full_href }}">{% if ko %}전체 안내서 읽기{% else %}Read the full guide{% endif %}</a></p>
+    </div>
+    {% if !section.is_empty() %}
+    <article class="help-guide help-section">{{ section|safe }}</article>
+    <p><a class="btn help-btn" href="{{ full_href }}">{% if ko %}전체 안내서 읽기{% else %}Read the full guide{% endif %}</a></p>
+    {% endif %}
+</div>

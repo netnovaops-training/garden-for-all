@@ -4,10 +4,10 @@
 *No time to read it all? This is the short version. The full guide is below.*
 
 - A look-up list of every choice in every menu: what it does, when to use it, what it changes, and how to undo it.
-- Open the menu: the "Jun's Garden" desktop icon, or `bash garden.sh` in the garden folder. On Windows: `Garden-Menu-Windows.cmd`.
+- Open the menu: the "Jun's Garden" desktop icon, or `bash garden.sh` in the garden folder. On Windows: `Garden-Menu-Windows.cmd`. The very first time: `Start-Here-Ubuntu.sh` (on Windows, `Start-Here-Windows.cmd`, the setup wizard), which also gets the program.
 - Every option explains itself on screen before anything changes, and shows each command before it runs.
 - Everyday choices: `1` install (or carry on, or repair), `2` start, `3` stop, `4` open the website, `5` checklist, `6` backups, `7` restore.
-- More choices: `8` Settings, `9` Parts, `U` users, `K` API keys, `A` my addresses, `H` help file, `M` More (advanced), `L` language.
+- More choices: `8` Settings, `9` Parts, `U` users, `K` API keys, `A` my addresses, `H` help file, `P` PDF guides, `M` More (advanced), `L` language.
 - Most options are also a command: `bash garden.sh WORD`, for example `bash garden.sh backup`.
 - Uninstall is More, `12`. Its choice `2` removes everything, but makes a final backup first and asks you to type `DELETE`.
 
@@ -19,6 +19,11 @@ Use it to look something up, or later, to decide whether to add something new.
 
 **How to open the menu**
 
+- **The very first time:** right after unzipping there is no icon and no
+  `garden.sh` yet. On Ubuntu, right-click `Start-Here-Ubuntu.sh` and choose
+  **Run as a Program** (or type `bash Start-Here-Ubuntu.sh`): it gets the
+  program from GitHub, checks every file, and opens this menu. On Windows,
+  double-click `Start-Here-Windows.cmd` (the setup wizard).
 - **Ubuntu:** double-click the "Jun's Garden" icon on the desktop, or open a
   terminal in the garden folder and type `bash garden.sh`
 - **Windows:** double-click `Garden-Menu-Windows.cmd` in the garden folder.
@@ -60,7 +65,7 @@ A few words used below:
 
 - **What it does:** Sets up the whole garden in 14 steps. If it stopped before, it carries on from that step. Steps that are already done and working are skipped. The first time it asks: this computer or another one, EASY or CUSTOM, and keep the web name or choose a new one.
 - **When to use it:** The first time. After the install stopped. Or to repair something the checklist says is broken.
-- **What it installs or changes:** Ubuntu updates and git, curl, openssl, rsync, unzip. The SSH server. The firewall (ufw): blocks everything coming in except SSH from your home network. Docker. A 4 GB swap file on small computers. The `.env` settings file, the folders in `local/`, a git history. It builds and starts the garden (website on 127.0.0.1:8030 only), loads your plants from `backups/` and your photos from the photos download (`junsgarden-photos-addon.zip`, if it is there), adds the nightly backup at 2:30 am (cron) and the desktop icon. EASY also turns on the garden tools, then asks for your password and your AI keys.
+- **What it installs or changes:** Ubuntu updates and git, curl, openssl, rsync, unzip. The SSH server. The firewall (ufw): blocks everything coming in except SSH from your home network. Docker. A 4 GB swap file on small computers. The `.env` settings file, the folders in `local/`, a git history. It builds and starts the garden (website on 127.0.0.1:8030 only), loads your plants from `backups/` and your photos from the photos download (`junsgarden-photos-addon.zip`, if it is there), adds the automatic backup schedule (cron looks every hour; Backups 7 changes it to every night at 2:30 am) and the desktop icon. EASY also turns on the garden tools, then asks for your password, offers email (Gmail) and asks for your AI keys.
 - **To undo it:** More, 12 (Uninstall).
 - **Command:** `bash garden.sh install`. Guides: `01-ubuntu-laptop.md`, `03-run-your-garden.md`, and `WHAT-GETS-INSTALLED.md` (one folder up).
 
@@ -104,6 +109,7 @@ A few words used below:
 - **When to use it:** After a mistake, or to go back to an older day.
 - **What it installs or changes:** Replaces the database, photos, comments and the other saved pieces with the ones in the backup.
 - **To undo it:** Restore again and pick the `before-restore` backup.
+- **Good to know:** If the backup is from before a rename, it offers to do the renames again (guide 26).
 - **Command:** `bash garden.sh restore` (or `bash garden.sh restore FILE-NAME`). Guide: `13-backups-and-folders.md`.
 
 ### 8) Settings: names, emails, passwords, keys, folders
@@ -139,6 +145,13 @@ A few words used below:
 - **To undo it:** Delete the file if you do not need it.
 - **Command:** `bash garden.sh helpme`. Guide: `09-troubleshooting.md`.
 
+### P) PDF guides: get or refresh them
+- **What it does:** Shows `PDF guides/STATUS.txt`, asks English, Korean, both or not now, and downloads that set from GitHub. Each download is checked against its fingerprint in `PDF-GUIDES-SHA256.txt`; if it does not match, nothing is written.
+- **When to use it:** If the PDF guides did not arrive during the install, or you want the other language, or a fresh copy.
+- **What it installs or changes:** Writes the PDFs into `PDF guides/English` and/or `PDF guides/Korean` and updates `PDF guides/STATUS.txt`. On Windows they land on the PC. Nothing else.
+- **To undo it:** Delete the folder `PDF guides/Korean` (or English) if you do not want it.
+- **Command:** `bash garden.sh pdfs` (Windows: `Garden-Menu.ps1 -Action pdfs`).
+
 ### M) More (advanced)
 - **What it does:** Opens the More menu (its own section below).
 
@@ -169,6 +182,7 @@ after 4; see "Windows-only items" at the end. `0) Back` returns to the main menu
 - **What it does:** Shows this computer's network card, IP address, MAC address (the card's fixed ID) and the router's address, with the steps to reserve the IP in the router. If you say you reserved it, it remembers the IP, and the checklist warns you if it ever changes.
 - **When to use it:** Before going online. Port forwarding needs an address that never changes.
 - **What it installs or changes:** Only saves `LAPTOP_IP` in `.env` when you say yes. The reservation itself you make in the router.
+- **On Windows' own Ubuntu (WSL):** it says the numbers are WSL's private inside address: do not reserve or forward it. To show the garden to other devices or put it online, use a separate garden computer (guide 00b).
 - **To undo it:** Nothing to undo.
 - **Command:** `bash garden.sh network`. Guide: `14-reserve-your-ip.md`.
 
@@ -229,8 +243,8 @@ after 4; see "Windows-only items" at the end. `0) Back` returns to the main menu
 - **Command:** `bash garden.sh icon`
 
 ### 11) Look at the files that came from the author (and check them)
-- **What it does:** Shows what each folder from the zip is, with file counts and sizes. Offers to check every file's fingerprint against `FILES-FROM-AUTHOR.txt` and list the ones that changed. Offers to open the folder in the Files app.
-- **When to use it:** To see exactly what came in the zip, or to find what was changed since.
+- **What it does:** Shows what each folder that came from the author is (the zip plus the first-start download from GitHub), with file counts and sizes. Offers to check every file's fingerprint against `FILES-FROM-AUTHOR.txt` and list the ones that changed. Offers to open the folder in the Files app.
+- **When to use it:** To see exactly what came from the author, or to find what was changed since.
 - **What it installs or changes:** Nothing.
 - **To undo it:** Nothing to undo.
 - **Command:** `bash garden.sh files`. Guide: `18-review-the-code.md`.
@@ -247,7 +261,7 @@ after 4; see "Windows-only items" at the end. `0) Back` returns to the main menu
 - **What it does:** One screen with six choices. `1` switches everything off (`docker compose down`, without `-v`: nothing is deleted) and stops the front door. `2` switches it all on again, even months later, and checks the website. `4` starts again a program that is stuck. `5` removes Docker's leftovers (old versions of the garden's programs older than 7 days, old build notes), after asking; Enter means no. `6` runs the check-up every 6 hours.
 - **`3`, off the internet only:** Stops Caddy, closes doors 80 and 443 in the firewall (and the home-only door), stops the No-IP updater and the DuckDNS updater, and switches the sign-in page off. The garden keeps running at home.
 - **When to use it:** `1` when you do not want to host the site for a while, or the traffic is too much; `3` to take it off the internet but keep it at home, or before moving it; `5` when the disk fills up.
-- **What it installs or changes:** `1` writes `.garden-off` (the nightly backup rests while it is there). `3`: Caddy and the No-IP updater are switched off (not removed), the DuckDNS cron line is removed, and in `.env` the web name is cleared and the address goes back to localhost. `6` is one cron line.
+- **What it installs or changes:** `1` writes `.garden-off` (scheduled backups rest while it is there). `3`: Caddy and the No-IP updater are switched off (not removed), the DuckDNS cron line is removed, and in `.env` the web name is cleared and the address goes back to localhost. `6` is one cron line.
 - **To undo it:** `1`: choose `2`. `3`: More, 1 again (it switches the No-IP updater back on); with subdomains, also Subdomains, 1; in the router, also remove the 80 and 443 forwarding yourself if you want it fully closed. `6`: choose it again.
 - **Command:** `bash garden.sh power`, or straight away `bash garden.sh off`, `bash garden.sh on`, `bash garden.sh offline` (`3`), `bash garden.sh checkup`, `bash garden.sh cleanup`. Guide: `26-rename-move-and-switch.md`.
 
@@ -390,8 +404,8 @@ Guide for all of these: `13-backups-and-folders.md`.
 
 ![Choice 13: adding place 2, a PC's shared folder at 192.168.1.30 named GardenCopies](images/screen-21-nas-add.png)
 
-- **What it does:** Lists the places you already have, says which number the new one becomes, then asks the same questions as choice 4 (search or address, user name, password, shared folder). Up to 3 network places in all; place 1 is the one from choice 4 and does not change. After that, every nightly backup goes to each place, and the newest 14 are kept in each. If all 3 are in use, it says so and changes nothing.
-- **When to use it:** For a second copy at home on another box: a second NAS, or a folder a Windows PC shares (that PC must be on at 2:30 am).
+- **What it does:** Lists the places you already have, says which number the new one becomes, then asks the same questions as choice 4 (search or address, user name, password, shared folder). Up to 3 network places in all; place 1 is the one from choice 4 and does not change. After that, every backup goes to each place, and the newest 14 are kept in each. If all 3 are in use, it says so and changes nothing.
+- **When to use it:** For a second copy at home on another box: a second NAS, or a folder a Windows PC shares (that PC must be on when backups run; a missed copy shows in `logs/offsite.log`).
 - **What it installs or changes:** The same as choice 4, with the place's number: login file `/etc/garden-nas-2.credentials` (or `-3`), one line in `/etc/fstab`, the folder at `/mnt/garden-nas-2` (or `-3`), and `BACKUP_NAS_DIR_2` / `BACKUP_NAS_HOST_2` (or `_3`) in `.env`. The weekly copy of the WHOLE garden folder stays on place 1 only.
 - **To undo it:** Backups, 8, and type the place's number.
 
@@ -438,7 +452,7 @@ never shown. `0) Back` returns to the main menu.
 ### 8) Rename or move a file or folder
 - **What it does:** The same as More 18 (four choices). Choice `2` lists the 8 garden folders (website files, photos, data, cache, database, n8n, sign-in page, backups). You pick one and type its new place, inside the garden folder or on another Linux disk. It stops the garden, moves the folder, updates `.env` and starts again.
 - **When to use it:** If you want a folder somewhere else, or a file or folder of the website under your own name (choice `1`).
-- **What it installs or changes:** The folder's place and its line in `.env`. Moving the backups folder also rewrites the nightly backup's cron line.
+- **What it installs or changes:** The folder's place and its line in `.env`. Moving the backups folder also rewrites the backup schedule's cron line.
 - **To undo it:** Choose 8 again and move it back.
 - Guides: `13-backups-and-folders.md`, `26-rename-move-and-switch.md`.
 
@@ -607,6 +621,7 @@ You get these from More, 1 (or Settings, 7, or `bash garden.sh public`).
 - **What it does:** Phones and computers on your home Wi-Fi open the garden at `http://THIS-COMPUTER.local` or its IP address. Nobody outside your house can reach it. The garden tools (/beds) stay closed here.
 - **When to use it:** To use the garden at home before your No-IP name is ready.
 - **What it installs or changes:** Installs Caddy (from its official source) as a system service; writes `/etc/caddy/Caddyfile` (old one kept as `Caddyfile.bak`); firewall: port 80 from your home network only. The router is not touched.
+- **On Windows' own Ubuntu (WSL):** other devices cannot reach it this way; it warns and asks "Carry on anyway?" (Enter = no). Only choice 2 works there; use a separate garden computer to go online (guide 00b).
 - **To undo it:** More, 14.
 
 ### 2) PRACTICE
@@ -620,6 +635,7 @@ You get these from More, 1 (or Settings, 7, or `bash garden.sh public`).
 - **When to use it:** When you are ready to be on the internet (guide 04, Part A first).
 - **What it installs or changes:** Caddy, the sign-in page, `/etc/caddy/Caddyfile`, firewall doors 80 and 443, the No-IP updater with your DDNS key (`/etc/default/noip-duc`). `.env`: your web name and address. The router step you do yourself.
 - **To undo it:** More, 14, then remove the 80 and 443 forwarding in the router.
+- **On Windows' own Ubuntu (WSL):** the internet cannot reach it; as with choice 1, it warns first. Use a separate garden computer (guide 00b).
 - Guides: `04b-take-over-junsgarden-zapto.md`, `07-sso-gate.md`.
 
 ---
@@ -706,7 +722,7 @@ Every change rewrites `local/litellm/config.yaml` and restarts LiteLLM.
 
 ### 1) Remove the PROGRAMS, keep my garden
 - **What it does:** Asks first (default No). Removes what the setup added to Ubuntu, but not your garden.
-- **What it installs or changes:** Stops and removes the garden's containers and the images built here; removes the nightly backup line, the desktop icon, every network place connection (the files on them stay), Caddy, the No-IP updater and its key, the DuckDNS updater; closes firewall doors 80 and 443; removes the `garden.test` line from `/etc/hosts`. Keeps: this folder, `local/` (photos and database), your backups. Not removed (you decide): Docker, the SSH server, git, the 4 GB swap file (the screen shows how).
+- **What it installs or changes:** Stops and removes the garden's containers and the images built here; removes the backup schedule and the automatic check-up (cron), the desktop icon, every network place connection (the files on them stay), Caddy, the No-IP updater and its key, the DuckDNS updater; closes firewall doors 80 and 443; removes the `garden.test` line from `/etc/hosts`. Keeps: this folder, `local/` (photos and database), your backups. Not removed (you decide): Docker, the SSH server, git, the 4 GB swap file (the screen shows how).
 - **To undo it:** Main menu 1 (INSTALL) again.
 
 ### 2) Remove EVERYTHING (start completely fresh)
@@ -724,8 +740,9 @@ or inside Windows' own Ubuntu, WSL) and show it in this window. These ones
 work differently on Windows:
 
 ### 1) INSTALL  (first time, or carry on, or repair)
+- **The first time:** `Start-Here-Windows.cmd` opens the setup wizard (guides 00b and 23), which runs this same install with your answers, so the install does not ask them again. Menu 1 is then for carrying on or repairing.
 - **Before it starts:** If the garden folder is inside OneDrive, `Start-Here-Windows.cmd` first offers to move it out (to `C:\Users\<you>\junsgarden-for-jun`, or a place you pick), checks every file arrived, and opens the installer from the new place. The old folder is never deleted for you. The Windows menu's INSTALL shows a note about it too. Guide: `00b-before-you-start.md`, "If your Desktop is in OneDrive".
-- **What it does:** Asks where the garden runs if you have not chosen yet (see T). Another computer: checks the SSH port, makes this PC's SSH key and adds it there (you type its password once). This PC: switches on WSL (then restart Windows once), installs Ubuntu 24.04 named `JunsGarden`, and makes your Ubuntu user; with Docker Desktop, it installs Docker Desktop (winget) if needed and waits for its WSL integration switch (guide 26). Then asks: keep the web name or a new one. Copies the garden folder and newest backup, sends the photos and wiki zips straight there from the garden folder, the Desktop (also a OneDrive Desktop) or Downloads (no extra copy on the PC), and runs `garden.sh install` there.
+- **What it does:** Asks where the garden runs if you have not chosen yet (see T). Another computer: checks the SSH port, makes this PC's SSH key and adds it there (you type its password once). This PC: switches on WSL (then restart Windows once), installs Ubuntu 24.04 named `JunsGarden`, and makes your Ubuntu user; with Docker Desktop, it installs Docker Desktop (winget) if needed and waits for its WSL integration switch (guide 26). Then asks: keep the web name or a new one. Copies the garden folder (the `PDF guides` folder stays on this PC) and newest backup, sends the photos and wiki zips straight there from the garden folder, the Desktop (also a OneDrive Desktop) or Downloads (no extra copy on the PC), and runs `garden.sh install` there.
 - **What it installs or changes:** On this PC: `.ssh\id_ed25519` (if new), `.garden-target-windows.txt`; with WSL, Windows' Ubuntu, and (if you say yes) a Task Scheduler task "Jun's Garden keep running" so Ubuntu stays on while you are signed in. On the garden computer: everything menu 1 installs.
 - **To undo it:** More 12 (Uninstall) on the garden computer. Windows' Ubuntu and the Task Scheduler task are not removed by the menu; remove them in Windows yourself.
 
@@ -850,6 +867,7 @@ Commands with no menu number:
 - `bash garden.sh redo-renames`: after restoring an old backup by hand, does its renames again.
 - `bash garden.sh db`: a database command line (type SQL; leave with `exit`). Guide: `12-your-database.md`.
 - `bash garden.sh test`: runs the website's Rust tests (slow the first time).
+- `bash garden.sh backup auto`: what the automatic schedule runs every hour (it decides whether a backup is due); one line in `backups/backup.log`.
 
 ---
 

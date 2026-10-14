@@ -47,6 +47,10 @@
 - I have an old Windows 7 PC. Can I use it?
 - Can someone else start their own garden with this?
 
+The menu keys below are the Ubuntu menu's. In the Windows menu, the main menu
+and More 1, 3, 6, 11 and 12 are the same, but on / off is More `15` (not 14)
+and rename is More `20` (not 18) (guide 19).
+
 ---
 
 ## Every day
@@ -91,8 +95,10 @@ It also saves them in `MY-ADDRESSES.txt` in the garden folder.
 **More:** [guide 23](23-full-setup.md) (Part 15)
 
 ### On Windows: does the PC have to stay on?
-Yes. On Windows the garden runs inside Windows' own Ubuntu (WSL), so it stops
-when the PC is off or asleep. Set **Settings, System, Power, Sleep** to
+Only if the garden runs on this PC. If you chose **another computer at home**
+in the setup wizard (the recommended choice), that computer must stay on; the
+PC can be off. If you chose **This Windows PC**, the garden runs inside
+Windows' own Ubuntu (WSL), so it stops when the PC is off or asleep. Set **Settings, System, Power, Sleep** to
 **Never**. After a restart, sign in to Windows: if you said yes to the
 "Jun's Garden keep running" task during the install, it starts the garden
 again; if not, use the Windows menu `2`.
@@ -175,7 +181,10 @@ sends what: guide 00b, "Plan your website's name and email".
 **More:** [guide 00b](00b-before-you-start.md)
 
 ### Where are my passwords and keys kept?
-In one private file, `.env`, in the garden folder. Only you can read it. The
+Mostly in one private file, `.env`, in the garden folder. Only you can read
+it. The No-IP key is in `/etc/default/noip-duc` (only the administrator can read
+it), and the sign-in page's accounts (with scrambled passwords) are in
+`local/authelia/users.yml`. The
 menu never shows a password or key; it only says "set" or "not set". Never
 paste them into a chat, an email or an AI chat.
 
@@ -204,8 +213,10 @@ again, and pick the `before-restore` one.
 
 ### My photos are missing.
 The photos are a separate download: `junsgarden-photos-addon.zip`. Leave it
-zipped in your Home, Downloads or Desktop folder, then choose menu `6`, then
-`11`. Photos you already have are kept. Photos you added yourself and then
+zipped in your Home, Downloads or Desktop folder on the garden computer, then
+choose menu `6`, then `11`. (With the Windows menu and another garden computer:
+put the zip in the garden folder on the PC and run menu `1` again, which carries
+it over, or copy it to the garden computer yourself.) Photos you already have are kept. Photos you added yourself and then
 lost come back with a backup (menu `7`).
 
 **Keys:** menu `6`, then `11`
@@ -241,8 +252,8 @@ versions of the garden's programs, older than 7 days) and asks first.
 ### Where are the logs?
 The garden programs' recent messages: menu `M`, then `6`. The install and the
 front door save everything they show in the `logs/` folder
-(`logs/install-progress.txt` shows where an install stopped). The nightly
-backup writes to `backups/backup.log`.
+(`logs/install-progress.txt` shows where an install stopped). The automatic
+backups write to `backups/backup.log` (one line for each hourly look).
 
 **Keys:** menu `M`, then `6`
 **More:** [guide 09](09-troubleshooting.md) (Look at the logs)
@@ -296,7 +307,7 @@ yourself.
 ### Why does the first start download from GitHub?
 The zip from Google Drive holds only what is not on GitHub: your plants (the
 starter backup), the music, the handbook, and the small start files. The
-program itself (the menu, the website, the guides and their PDFs) is public
+program itself (the menu, the website, the guides) is public
 code on GitHub, so the first start gets it from there, at one fixed version
 (written in `CODE-SOURCE.txt`), never "whatever is newest". Every file is
 checked against `FILES-FROM-AUTHOR.txt`, the list of fingerprints that came in
@@ -311,7 +322,9 @@ text files you can read
 ## Moving or removing
 
 ### How do I move the garden to a new computer?
-Install the garden on the new computer (menu `1`). Copy your newest backup into
+Unzip the download on the new computer and start `Start-Here-Ubuntu.sh` (on
+Windows, the setup wizard, `Start-Here-Windows.cmd`); that gets the program and
+installs it (menu `1`). Copy your newest backup into
 its `backups/` folder, then menu `7` and pick it. Your keys and email password
 are not in the backup: add them again with menu `K` and menu `8`, then `3`.
 To go online from there: menu `M`, then `1`, and point the router at the new

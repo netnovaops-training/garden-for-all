@@ -4,7 +4,7 @@
 *No time to read it all? This is the short version. The full guide is below.*
 
 - This guide moves `junsgarden.zapto.org` to your computer. The author released the name, so you claim it in your own No-IP account.
-- Your data (plants, photos, comments, wiki pages) was already loaded by the install.
+- Your plants, comments and AI cache were already loaded by the install; the photos come from the photos zip (menu `6`, `11`), the wiki pages from the wiki zip (only if you turn the wiki on).
 - Not carried over: the weather collector (Project 5 builds one) and passwords (set yours with menu `U`, `5`).
 - The steps: practise with a `.test` name (guide 04, Part C), claim the name and make a DDNS key (Part A), run the front door step with the real name (Part D), then forward ports 80 and 443 (guide 14).
 - Check from a phone with Wi-Fi off: the padlock, plants and photos, logging in, `/beds` asking you to sign in, and the phone app.
@@ -18,8 +18,11 @@ account (guide 04, Part A). From then on the name, the website, the data and
 every login are yours.
 
 ## What is already done for you
-- **Your data:** the install loaded the whole garden (485 plants, 7,723 photo
-  files, comments, the AI cache, wiki pages) from the backup in the zip.
+- **Your data:** the install loaded your plants (485), comments and the AI
+  cache from the backup in the zip. The photos come from the photos zip
+  (`junsgarden-photos-addon.zip`: the install loads it when it finds it,
+  otherwise menu `6`, then `11`), and the wiki pages from the wiki zip (only
+  if you turn the wiki on; it is off at first).
 - **The garden tools** (`/beds`) and the phone app's camera tools run on your
   computer (they need a free AI key for the AI parts: Settings, `4`).
 - **Logins:** only the people in your settings can sign in. The author has no
@@ -63,7 +66,7 @@ home.
 |---|---|
 | The name shows a different address | Wait 10 minutes. `sudo systemctl status noip-duc`. Check the hostname is in YOUR No-IP account. |
 | Padlock error | Ports 80 and 443 must reach your computer from outside (guide 14). `sudo journalctl -u caddy -n 50` explains. |
-| Plants appear but no photos | Run the checklist (menu `5`), section 4: the images folder must have files. Guide 13 explains folder names. |
+| Plants appear but no photos | Load the photos: menu `6`, then `11` (or `bash garden.sh photos`), with `junsgarden-photos-addon.zip` in Home or Downloads. |
 | Password email never arrives | Settings, `3` (email), and send the test email. |
 
 Back to [the ladder](00-READ-ME-FIRST.md).

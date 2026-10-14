@@ -72,6 +72,8 @@ SETTINGS=.garden-remote                # remembers the last computer you set up
 # "English<TAB>Korean". A sentence that is not in that file shows in English.
 # Your choice is saved in .garden-lang (en, ko or both). Menu: L.
 LANG_MODE=$(cat .garden-lang 2>/dev/null || echo en)
+# Chosen in the Windows setup wizard (GARDEN_LANG_IN): remembered the same way.
+case "${GARDEN_LANG_IN:-}" in en|ko|both) LANG_MODE=$GARDEN_LANG_IN; echo "$LANG_MODE" > .garden-lang ;; esac
 case "$LANG_MODE" in en|ko|both) ;; *) LANG_MODE=en ;; esac
 declare -A KO=()
 # Reads lang/ko.tsv into memory when Korean (or both) is chosen.
@@ -281,6 +283,8 @@ confirm_location() {
     say "Where your garden lives"
     note "Folder: $HERE"
     note "Everything (settings, photos, database, backups) stays inside this folder."
+    # The setup wizard already showed and asked for this folder.
+    [ "${GARDEN_WIZARD:-}" = 1 ] && { note "Chosen in the setup wizard."; return 0; }
     if ! confirm "Is this the right place for it?" y; then
         note "OK. Move the whole folder where you want it (for example your home folder),"
         note "open a terminal there and run:  bash garden.sh install"
@@ -293,7 +297,7 @@ install_packages() {
     explain "Ubuntu updates and standard tools" \
         "apt is Ubuntu's own app store for programs. It installs: git (keeps a history of your changes), curl (fetches web pages), openssl (makes random passwords), rsync (copies folders), ca-certificates (trusted HTTPS list)." \
         "Safety updates first; the other tools are used by the steps below." \
-        "https://ubuntu.com/server/docs/package-management"
+        "https://ubuntu.com/server/docs/how-to/software/package-management/"
     run sudo apt-get -o DPkg::Lock::Timeout=900 update -qq || warn "apt update had problems (check the internet connection)"
     run sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=900 install -y -qq git curl openssl rsync unzip ca-certificates >/dev/null ||
         { fail "could not install the basic programs. Right after a fresh Ubuntu install, Ubuntu updates itself for 10-30 minutes: wait 15 minutes, then choose 1 again"; return 1; }
@@ -306,9 +310,29 @@ install_ssh() {
         "Lets you open this laptop's terminal from another computer at home (ssh you@laptop). It needs YOUR password or a key you made." \
         "So the laptop can sit in a corner with the lid shut and you still manage it. The firewall step allows it only from your home network." \
         "https://ubuntu.com/server/docs/openssh-server"
-    run sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=900 install -y -qq openssh-server >/dev/null || { fail "SSH server did not install"; return 1; }
-    run sudo systemctl enable --now ssh >/dev/null 2>&1 || true
+    # Port 22 already answered by something else (on a Windows PC: often another
+    # Ubuntu in WSL, which shares this one's network): Ubuntu's package would try to
+    # start the server, fail, and stop the install. So it is installed without
+    # starting it (policy-rc.d says "do not start services now"), and stays off.
+    local busy="" ours="" rc=0
+    if [ "$(systemctl is-active ssh 2>/dev/null)" != active ] && ssh_port_busy; then
+        busy=1
+        note "Port 22 (SSH) is already in use on this computer, by another program or another"
+        note "Ubuntu in WSL. The SSH server is installed but not started, so the two do not clash."
+        grep -qi microsoft /proc/version 2>/dev/null && note "On this PC the garden does not need it: the Windows menu reaches the garden directly."
+        if [ ! -e /usr/sbin/policy-rc.d ]; then
+            printf '#!/bin/sh\n# garden.sh: do not start services while the SSH server installs\nexit 101\n' |
+                sudo tee /usr/sbin/policy-rc.d >/dev/null && sudo chmod 755 /usr/sbin/policy-rc.d && ours=1
+        fi
+    fi
+    run sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=900 install -y -qq openssh-server >/dev/null || rc=1
+    [ -n "$busy" ] && { sudo DEBIAN_FRONTEND=noninteractive dpkg --configure -a >/dev/null 2>&1 || rc=1; }
+    [ -n "$ours" ] && sudo rm -f /usr/sbin/policy-rc.d
+    [ "$rc" = 0 ] || { fail "SSH server did not install"; return 1; }
+    [ -n "$busy" ] || run sudo systemctl enable --now ssh >/dev/null 2>&1 || true
 }
+# Is something (not this computer's own SSH server) already listening on port 22?
+ssh_port_busy() { ss -ltnH 2>/dev/null | awk '{print $4}' | grep -qE '[:.]22$'; }
 
 # Docker Desktop (a Windows program) can share its own Docker with an Ubuntu in
 # WSL ("WSL integration"): it then puts links to itself in /usr/bin. The garden
@@ -488,7 +512,16 @@ make_env() {
         # The database's password (the website and Adminer use it; you never
         # need it to log in to your garden). Enter = a strong one made for you.
         local dbpw=""
-        if [ "${ASSUME_YES:-0}" != 1 ] && [ -t 0 ]; then
+        if [ -n "$(wizard_secret DB_PASSWORD)" ]; then
+            dbpw=$(wizard_secret DB_PASSWORD)
+            note "The database password: the one you typed in the setup wizard."
+            if ! [[ "$dbpw" =~ ^[A-Za-z0-9]{16,}$ ]]; then
+                fail "16 or more letters and numbers only. Run the install again (menu 1)."; unset dbpw; return 1
+            fi
+        elif [ "${GARDEN_WIZARD:-}" = 1 ]; then
+            # The setup wizard already said so on its summary: nothing to ask here.
+            note "The database password: a strong one is made for you, as the setup wizard said."
+        elif [ "${ASSUME_YES:-0}" != 1 ] && [ -t 0 ]; then
             note "Your database (MariaDB, the same language as MySQL) needs a password that the"
             note "website uses to talk to it. Press Enter and a strong one is made for you"
             note "(recommended: you never type it; it is kept in .env, menu 8 can renew it)."
@@ -678,7 +711,7 @@ git_start() {
     # backup, 800 MB, and the phone app, 45 MB): they are safe in the zip already,
     # and copying them into the history would use the disk twice.
     { run git init -q -b main . &&
-        printf 'backups/*.tar\nsite/apps/*.apk\n' >> .git/info/exclude &&
+        printf 'backups/*.tar\nsite/apps/*.apk\n.garden-wizard-secrets\ngarden-setup.json\n' >> .git/info/exclude &&
         git config user.name "$(env_get GARDEN_USERS | cut -d= -f1)" &&
         git config user.email "$(env_get GARDEN_USERS | cut -d= -f2 | cut -d, -f1)" &&
         git add -A && git commit -q -m "My garden as it came from the zip" && note "first save made"; } ||
@@ -923,6 +956,9 @@ wiki_setup() {
     if [ -n "${GARDEN_TEST_WIKI_PASSWORD:-}" ]; then
         # Only for automatic tests (nobody types): the password comes from this variable.
         printf '%s\n' "$GARDEN_TEST_WIKI_PASSWORD" | dc $(profile_args) --profile wiki-setup run --rm -T wiki-setup
+    elif [ -n "$(wizard_secret WIKI_ADMIN_PASSWORD)" ]; then
+        # Typed in the setup wizard: handed over without showing it anywhere.
+        { wizard_secret WIKI_ADMIN_PASSWORD; echo; } | dc $(profile_args) --profile wiki-setup run --rm -T wiki-setup
     elif [ -t 0 ] && [ "${ASSUME_YES:-0}" != 1 ]; then
         dc $(profile_args) --profile wiki-setup run --rm wiki-setup
     else
@@ -977,6 +1013,71 @@ EOF
         note "If it shows a red X, right-click it and choose 'Allow Launching'."
     fi
     note "Also in the app list: press the Super (Windows) key and type: garden"
+}
+
+# ---------- the PDF guides: an optional download that arrives while the install runs ----------
+# Not part of the program: two small downloads (English, Korean) from GitHub, each
+# checked against PDF-GUIDES-SHA256.txt (tools/get-pdfs.py). They start when the
+# install starts, in the background, and never delay or stop the install; if the
+# download fails, nothing is written and menu P tries again. The choice
+# (en, ko, both, none) is kept in .garden-pdfs; by default it follows the language.
+PDF_PID=
+pdf_choice() {
+    local c; c=$(cat .garden-pdfs 2>/dev/null)
+    case "$c" in en|ko|both|none) printf '%s' "$c" ;; *) printf '%s' "$LANG_MODE" ;; esac
+}
+# Menu P and CUSTOM's question: English, Korean, both or not now.
+pdf_ask() {
+    local cur def c
+    cur=$(pdf_choice)
+    case "$cur" in en) def=1 ;; ko) def=2 ;; both) def=3 ;; *) def=0 ;; esac
+    L "   PDF guides: every guide as a PDF to read or print (about 15 MB each language)."
+    L "   1) English   2) Korean   3) both   0) not now"
+    c=$(ask "Type 1, 2, 3 or 0" "$def")
+    case "$c" in 1) echo en ;; 2) echo ko ;; 3) echo both ;; 0) echo none ;; *) echo "$cur" ;; esac > .garden-pdfs
+}
+# The overview is the first thing shown when the install starts (a Windows PC opens
+# the same page from its own side).
+open_overview() {
+    [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] && [ "${ASSUME_YES:-0}" != 1 ] || return 0
+    local frag=; [ "$LANG_MODE" = ko ] && frag='#ko'
+    [ -f handbook/00-OVERVIEW.html ] || return 0
+    xdg-open "file://$HERE/handbook/00-OVERVIEW.html$frag" >/dev/null 2>&1 &
+    note "The overview is open in your browser: what the install does, in order."
+}
+pdf_start() {
+    [ -n "${GARDEN_REMOTE_INSTALL:-}" ] && return 0     # started from a Windows PC: the PC fetches them
+    open_overview
+    [ -f tools/get-pdfs.py ] || return 0
+    local c; c=$(pdf_choice)
+    mkdir -p logs
+    python3 tools/get-pdfs.py "$c" > logs/pdf-guides.log 2>&1 &
+    PDF_PID=$!
+    if [ "$c" = none ]; then note "PDF guides: not now. Menu P gets them any time."
+    else note "PDF guides are arriving in the background (about a minute). The install does not wait for them."; fi
+}
+pdf_finish() {
+    [ -n "$PDF_PID" ] || return 0
+    local i=0
+    while kill -0 "$PDF_PID" 2>/dev/null && [ "$i" -lt 60 ]; do sleep 1; i=$((i + 1)); done
+    if kill -0 "$PDF_PID" 2>/dev/null; then
+        note "The PDF guides are still arriving. See PDF guides/STATUS.txt; the install is not affected."
+    elif wait "$PDF_PID"; then
+        [ "$(pdf_choice)" = none ] || note "PDF guides: ready. See PDF guides/STATUS.txt."
+    else
+        note "The PDF guides could not be fetched (nothing was written). The garden works without them."
+        note "Menu P tries again; the reason is in logs/pdf-guides.log."
+    fi
+    PDF_PID=
+}
+# Menu P: get or refresh the PDF guides, now.
+do_pdfs() {
+    say "PDF guides"
+    [ -f "PDF guides/STATUS.txt" ] && sed 's/^/      /' "PDF guides/STATUS.txt"
+    pdf_ask
+    local c; c=$(pdf_choice)
+    [ "$c" = none ] && { note "Nothing to fetch."; return 0; }
+    python3 tools/get-pdfs.py "$c" || note "Nothing was written for the set that failed. Try again later."
 }
 
 # The install steps, in order: "function|what it does". Every step is safe to
@@ -1054,6 +1155,10 @@ EOF
 # choose every part and can start at any step. Remembered in .garden-mode.
 GARDEN_MODE=$(cat .garden-mode 2>/dev/null || echo easy)
 choose_mode() {
+    # Chosen in the Windows setup wizard (GARDEN_MODE_IN): no need to ask again.
+    case "${GARDEN_MODE_IN:-}" in
+        easy|custom) GARDEN_MODE=$GARDEN_MODE_IN; echo "$GARDEN_MODE" > .garden-mode; return 0 ;;
+    esac
     if [ "${ASSUME_YES:-0}" = 1 ] || [ -n "${GARDEN_MODE_SET:-}" ]; then return 0; fi
     Lblock <<'EOF'
 
@@ -1104,7 +1209,7 @@ wiki_done() {
 step_already_ok() {
     case "$1" in
         install_packages) for c in git curl openssl rsync; do command -v "$c" >/dev/null 2>&1 || return 1; done ;;
-        install_ssh)      systemctl is-active --quiet ssh 2>/dev/null ;;
+        install_ssh)      systemctl is-active --quiet ssh 2>/dev/null || { [ -x /usr/sbin/sshd ] && dpkg-query -W -f='${Status}' openssh-server 2>/dev/null | grep -q 'ok installed' && ssh_port_busy; } ;;
         firewall)         sudo -n ufw status 2>/dev/null | has 'Status: active' && sudo -n ufw status | has -E '^22' ;;
         install_docker)   dk compose version >/dev/null 2>&1 && { if [ "$(docker_mode)" = desktop ]; then dk info 2>/dev/null | has 'Docker Desktop'; else systemctl is-active --quiet docker 2>/dev/null; fi; } ;;
         choose_parts)     [ "$GARDEN_MODE" = easy ] && [ "$(env_get PARTS_CHOSEN)" = yes ] ;;
@@ -1126,8 +1231,12 @@ do_install() {
         choose_destination; case $? in 0) ;; *) return 0 ;; esac
     fi
     start_log install
+    # The setup wizard's private file is wiped when this run ends, finished or not.
+    [ -n "${GARDEN_SECRETS_FILE:-}" ] && trap wizard_forget EXIT
     say "Jun's Garden: install"
     choose_mode || return 0
+    if [ "$GARDEN_MODE" = custom ] && [ "${ASSUME_YES:-0}" != 1 ] && [ "${GARDEN_WIZARD:-}" != 1 ] && [ -z "${GARDEN_REMOTE_INSTALL:-}" ]; then pdf_ask; fi
+    pdf_start      # the overview opens, and the PDF guides start arriving in the background
     show_plan
     local from=1 last n=0 entry fn what pick t0 took
     last=$(last_done_step)
@@ -1142,7 +1251,7 @@ do_install() {
     [ -f "$PROGRESS" ] && { note "Last lines of the progress file ($PROGRESS):"; tail -2 "$PROGRESS" | sed 's/^/      /'; }
     if [ "$last" -ge "${#INSTALL_STEPS[@]}" ]; then from=1
     else from=$((last + 1)); fi
-    if [ "${ASSUME_YES:-0}" != 1 ] && [ "$GARDEN_MODE" = custom ]; then
+    if [ "${ASSUME_YES:-0}" != 1 ] && [ "$GARDEN_MODE" = custom ] && [ "${GARDEN_WIZARD:-}" != 1 ]; then
         pick=$(ask "Start at which step? Type a number, or press Enter for step $from (0 = cancel)" "$from")
         case "$pick" in 0) return 0 ;; *[!0-9]*|"") fail "please type a step number"; return 1 ;; esac
         [ "$pick" -ge 1 ] && [ "$pick" -le "${#INSTALL_STEPS[@]}" ] || { fail "there is no step $pick"; return 1; }
@@ -1177,12 +1286,19 @@ do_install() {
         fi
     done
     do_check >/dev/null 2>&1 || true
+    pdf_finish
     say "ALL DONE"
     note "Your garden:   $(site_url)"
     has_part wiki && note "Your wiki:     http://localhost:3000"
     note "The checklist was saved to CHECKLIST.txt; this whole install is in $LOG"
     [ -f 00-WELCOME.html ] && note "Every guide, one click away: open 00-WELCOME.html in the garden folder (double-click it)."
     [ "${ASSUME_YES:-0}" = 1 ] && return 0
+    if [ "${GARDEN_WIZARD:-}" = 1 ] && [ "$GARDEN_MODE" = custom ]; then
+        wizard_finish
+        wizard_forget
+        say "CUSTOM install finished"
+        return 0
+    fi
     if [ "$GARDEN_MODE" = easy ]; then
         say "Last thing: your password"
         note "One password for the website login and your sign-in page. At least 10 characters."
@@ -2840,6 +2956,65 @@ ask_secret() {   # ask_secret "what to type" -> prints the answer, nothing shows
     local a; read -r -s -p "$(Lt "$1") $(Lt "(hidden while you type)"): " a; echo >&2; printf '%s' "$a"
 }
 
+# ---------- answers from the Windows setup wizard ----------------------------------
+# The wizard (windows/Garden-Setup.ps1) can collect the passwords and keys the
+# install asks for. They arrive in one private file (GARDEN_SECRETS_FILE: made with
+# permission 600, never inside the copied folder's history), are read from there
+# with wizard_secret, and the file is wiped when the install ends, finished or not.
+# Nothing in it is ever printed, logged or saved anywhere else than .env.
+wizard_secret() {   # wizard_secret NAME -> its value from the wizard's file, or nothing
+    local f=${GARDEN_SECRETS_FILE:-}
+    [ -n "$f" ] && [ -f "$f" ] || return 0
+    grep -m1 "^$1=" "$f" | cut -d= -f2- | tr -d '\r\n'
+    return 0
+}
+wizard_forget() {   # wipe the wizard's file (overwrite, then delete)
+    local f=${GARDEN_SECRETS_FILE:-}
+    [ -n "$f" ] && [ -f "$f" ] || return 0
+    local n; n=$(wc -c < "$f")
+    head -c "$n" /dev/zero > "$f" 2>/dev/null
+    rm -f "$f"
+}
+# The end of an install started by the setup wizard: what was chosen there is
+# done here, without asking again. What was not chosen is left for later.
+wizard_finish() {
+    local name entry key label users url svc k
+    name=$(env_get GARDEN_USERS | cut -d= -f1)
+    say "Your answers from the setup wizard"
+    if [ -n "$(wizard_secret GARDEN_PASSWORD)" ]; then
+        note "Your password (website + sign-in page): the one you typed in the wizard."
+        if wizard_secret GARDEN_PASSWORD | { cat; echo; } | tools tools set-password "$name"; then reload_signin
+        else warn "the password was not set. Menu U, then 5, sets it."; fi
+    else
+        say "Last thing: your password"
+        note "One password for the website login and your sign-in page. At least 10 characters."
+        do_password "$name"
+    fi
+    for entry in "${KEYS_LIST[@]}"; do
+        IFS='|' read -r key label users url svc <<<"$entry"
+        case "$key" in GEMINI_API_KEY|OPENROUTER_API_KEY|PERENUAL_KEY) ;; *) continue ;; esac
+        k=$(wizard_secret "$key"); k=${k//[[:space:]]/}
+        [ -n "$k" ] || continue
+        env_set "$key" "$k"; unset k
+        mkdir -p logs; echo "$(date +%Y-%m-%d) $key set in the setup wizard" >> "$KEYS_LOG"
+        note "$label: saved."; key_where "$key"
+        restart_for "$svc" "$key"
+    done
+    k=$(wizard_secret SMTP_PASSWORD); k=${k// /}
+    if [ -n "${GARDEN_SMTP_USER:-}" ] && [ -n "$k" ]; then
+        env_set SMTP_HOST smtp.gmail.com; env_set SMTP_PORT 587; env_set SMTP_USER "$GARDEN_SMTP_USER"; env_set SMTP_PASSWORD "$k"
+        unset k
+        mkdir -p logs; echo "$(date +%Y-%m-%d) SMTP_PASSWORD set in the setup wizard" >> "$KEYS_LOG"
+        note "Email (Gmail): saved. Menu K, then 4, sends a test email."
+        if [ -n "$(env_get PUBLIC_NAME)" ]; then write_authelia "$(env_get PUBLIC_NAME)"; fi
+        run dc up -d >/dev/null
+    else
+        note "Email: not set up now. Menu 8, then 3 adds it any time."
+    fi
+    [ "${GARDEN_RESERVE_IP:-}" = 1 ] && do_network
+    note "Later, from the menu, the parts you ticked for later: see the setup wizard's last page."
+}
+
 # Menu 8: change any setting by number, without opening a file.
 do_settings() {
     [ -f .env ] || { fail "install first (menu 1)"; return 1; }
@@ -3964,6 +4139,7 @@ menu() {
    A) My addresses: every web address, and which need signing in
 
    H) Help file for someone helping you (no passwords in it)
+   P) PDF guides: get or refresh them (English / Korean)
    M) More (advanced)        L) Language: English / 한국어 / both
    0) Quit
 EOF
@@ -3981,6 +4157,7 @@ EOF
             a|A) do_addresses ;;
             l|L) choose_language; continue ;;
             h|H) do_helpme ;;
+            p|P) do_pdfs ;;
             m|M) menu_more; continue ;;
             0|q|Q) exit 0 ;;
             *) note "Please type one of the numbers or letters shown." ;;
@@ -4406,6 +4583,7 @@ case "${1:-menu}" in
     icon)       make_icon ;;
     uninstall)  do_uninstall ;;
     helpme)     do_helpme ;;
+    pdfs)       do_pdfs ;;
     files)      do_whats_from_author ;;
     settings)   do_settings ;;
     keys)       do_keys ;;

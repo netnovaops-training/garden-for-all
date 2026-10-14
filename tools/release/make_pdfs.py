@@ -21,7 +21,7 @@ OUT = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else PKG.parent / "Setup do
 
 # The step folders, and which guides go in each (file names without .md).
 STEPS = [
-    ("0 - Start here", "0 - 여기서 시작", ["00-READ-ME-FIRST", "00b-before-you-start", "23-full-setup", "02a-what-is-docker"]),
+    ("0 - Start here", "0 - 여기서 시작", ["00-OVERVIEW", "00-READ-ME-FIRST", "00b-before-you-start", "23-full-setup", "02a-what-is-docker"]),
     ("1 - Ubuntu on the computer", "1 - 컴퓨터에 Ubuntu 설치", ["01-ubuntu-laptop"]),
     ("2 - Docker and the install", "2 - Docker와 설치", ["02-docker", "03-run-your-garden"]),
     ("3 - Going online", "3 - 인터넷에 올리기", ["04-go-public-no-ip-caddy", "04b-take-over-junsgarden-zapto", "07-sso-gate", "14-reserve-your-ip", "20-ssh-and-remote-desktop"]),

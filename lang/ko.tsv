@@ -972,3 +972,29 @@ Put back a previous backup (you choose which)?	이전 백업을 되돌려 놓을
 1) Automatic: back up more often when the garden is busy, less when quiet (recommended)	1) 자동: 정원이 바쁠 때는 더 자주, 조용할 때는 덜 백업 (추천)
 2) Every night at 2:30 am, whatever happens (the old way)	2) 무슨 일이 있어도 매일 밤 새벽 2시 30분 (예전 방식)
 7) Backup schedule: automatic (busy, medium, quiet) or every night	7) 백업 일정: 자동 (바쁨, 보통, 조용함) 또는 매일 밤
+Chosen in the setup wizard.	설치 마법사에서 골랐어요.
+The database password: the one you typed in the setup wizard.	데이터베이스 비밀번호: 설치 마법사에서 입력한 것이에요.
+CUSTOM install finished	CUSTOM 설치 끝
+Your answers from the setup wizard	설치 마법사에서 한 답
+Your password (website + sign-in page): the one you typed in the wizard.	내 비밀번호(웹사이트 + 로그인 페이지): 마법사에서 입력한 것이에요.
+the password was not set. Menu U, then 5, sets it.	비밀번호가 설정되지 않았어요. 메뉴 U, 그다음 5에서 설정해요.
+Email (Gmail): saved. Menu K, then 4, sends a test email.	이메일(Gmail): 저장했어요. 메뉴 K, 그다음 4가 시험 이메일을 보내요.
+Email: not set up now. Menu 8, then 3 adds it any time.	이메일: 지금은 설정하지 않았어요. 메뉴 8, 그다음 3에서 언제든 더할 수 있어요.
+Later, from the menu, the parts you ticked for later: see the setup wizard's last page.	나중에 하려고 체크한 부분은 메뉴에서 해요: 설치 마법사의 마지막 쪽을 보세요.
+Port 22 (SSH) is already in use on this computer, by another program or another	이 컴퓨터의 22번 포트(SSH)를 다른 프로그램이나 WSL의 다른 Ubuntu가 이미 쓰고 있어요.
+Ubuntu in WSL. The SSH server is installed but not started, so the two do not clash.	그래서 SSH 서버를 설치만 하고 켜지는 않아요. 둘이 부딪치지 않게요.
+On this PC the garden does not need it: the Windows menu reaches the garden directly.	이 PC에서는 정원에 필요 없어요: Windows 메뉴가 정원에 바로 닿아요.
+The database password: a strong one is made for you, as the setup wizard said.	데이터베이스 비밀번호: 설정 마법사가 말한 대로 강한 비밀번호를 대신 만들어요.
+PDF guides: every guide as a PDF to read or print (about 15 MB each language).	PDF 안내서: 모든 안내서를 읽거나 인쇄할 수 있는 PDF로 (언어마다 약 15 MB).
+1) English   2) Korean   3) both   0) not now	1) 영어   2) 한국어   3) 둘 다   0) 지금은 안 함
+The overview is open in your browser: what the install does, in order.	한눈에 보기가 브라우저에 열렸어요: 설치가 하는 일을 순서대로 보여 줘요.
+PDF guides: not now. Menu P gets them any time.	PDF 안내서: 지금은 안 받아요. 메뉴 P로 언제든 받을 수 있어요.
+PDF guides are arriving in the background (about a minute). The install does not wait for them.	PDF 안내서가 뒤에서 오고 있어요(약 1분). 설치는 기다리지 않아요.
+The PDF guides are still arriving. See PDF guides/STATUS.txt; the install is not affected.	PDF 안내서가 아직 오는 중이에요. PDF guides/STATUS.txt를 보세요. 설치에는 영향이 없어요.
+PDF guides: ready. See PDF guides/STATUS.txt.	PDF 안내서: 준비됐어요. PDF guides/STATUS.txt를 보세요.
+The PDF guides could not be fetched (nothing was written). The garden works without them.	PDF 안내서를 가져오지 못했어요(아무것도 쓰지 않았어요). 안내서 없이도 정원은 잘 돌아가요.
+Menu P tries again; the reason is in logs/pdf-guides.log.	메뉴 P로 다시 해 볼 수 있어요. 이유는 logs/pdf-guides.log에 있어요.
+PDF guides	PDF 안내서
+Nothing to fetch.	가져올 것이 없어요.
+Nothing was written for the set that failed. Try again later.	실패한 묶음은 아무것도 쓰지 않았어요. 나중에 다시 해 보세요.
+P) PDF guides: get or refresh them (English / Korean)	P) PDF 안내서: 받기 또는 새로 고치기 (영어 / 한국어)

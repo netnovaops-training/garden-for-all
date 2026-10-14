@@ -23,7 +23,9 @@
 바꿀 필요가 없어요. 메모리 8 GB인 Pi 5, 공식 전원 어댑터, 그리고 128 GB 이상의 저장 카드나
 SSD가 있으면 돼요(안내서 06, 쇼핑 목록). Pi 자체의 Imager 프로그램이 약 30분 만에
 Raspberry Pi OS(64-bit)를 넣어 줘요: <https://www.raspberrypi.com/software/>.
-다음: [00-READ-ME-FIRST-KO.html](../../00-READ-ME-FIRST-KO.html), 1단계(정원 다운로드하기).
+다음: Google Drive 폴더에서 `junsgarden-for-jun.zip`을 받아 압축을 풀고, 그 안의
+`00-WELCOME.html`을 연 다음, `Start-Here-Ubuntu.sh`를 오른쪽 클릭하고 **Run as a Program**을 고르세요
+(첫 시작이에요. `00-READ-ME-FIRST-KO.html`은 그때 프로그램과 함께 와요).
 
 > **Pi에 대해 알아 두면 좋은 것(실제 Raspberry Pi 5, 4 GB에서 2026-10-13에 재었어요).**
 > - **돼요.** 설치 중 정원을 만들고 시작하는 부분이 **8분** 만에 끝났고, 점검표는
@@ -37,7 +39,7 @@ Raspberry Pi OS(64-bit)를 넣어 줘요: <https://www.raspberrypi.com/software/
 >   ("Cooling"과 "Frequency management and thermal control" 부분).
 > - **메모리 카드는 닳아요.** 정원은 매일 데이터베이스와 기록을 써요. SD 카드는 그런
 >   용도로 만들어지지 않았어요. **SSD**(Raspberry Pi의 M.2 HAT+로, 또는 USB 3 포트에)가
->   더 빠르고 훨씬 오래가요. 어느 쪽이든 매일 밤 백업을 두 번째 장소로 보내 두세요(안내서 13).
+>   더 빠르고 훨씬 오래가요. 어느 쪽이든 자동 백업을 두 번째 장소로 보내 두세요(안내서 13).
 
 왜 좋은 생각일까요: Windows 7은 2020년에 보안 업데이트가 끝났어요. 그래서 인터넷에
 올리기에 안전하지 않아요. Ubuntu LTS는 여러 해 동안 무료 보안 업데이트를 받아요.
@@ -80,7 +82,7 @@ Raspberry Pi OS(64-bit)를 넣어 줘요: <https://www.raspberrypi.com/software/
    | 4 GB | 작동해요. 하지만 대신 **Xubuntu 24.04**를 설치하세요(더 가벼운 화면이고, 나머지는 모두 같아요. xubuntu.org에서 받아요). 아래 단계는 똑같아요. |
    | 2 GB 이하 | 웹사이트를 만들기에는 너무 작아요. 먼저 메모리를 추가하고(노트북 메모리는 싸요), 그다음 계속하세요. |
 
-   Ubuntu 노트북에 Docker, 정원, 매일 밤 백업을 위한 빈 디스크 공간이 약 60 GB
+   Ubuntu 노트북에 Docker, 정원, 백업을 위한 빈 디스크 공간이 약 60 GB
    필요해요. Windows를 지우면 디스크 전체가 비어요. 그러니 C: 드라이브의 전체 크기를
    보세요: Ubuntu 자체가 약 25 GB를 쓰니까, 디스크가 약 90 GB 이상이면 충분해요.
 3. **간직하고 싶은 것을 저장하세요.** 사진, 문서, 브라우저 즐겨찾기를 다른 USB
@@ -231,7 +233,8 @@ hostname -I
 ### G 부분. 예전 노트북을 서버로 잘 쓰기
 23. **스왑 추가하기**(디스크 위의 추가 "메모리"). 정원 웹사이트를 처음 만들 때(빌드) 작은
     노트북에 있는 것보다 메모리가 더 필요해요. 스왑이 있으면 중간에 멈추지 않아요.
-    이것은 4 GB를 추가해요:
+    이것은 4 GB를 추가해요. **정원 설치(메뉴 1)를 쓸 거라면 이 단계는 건너뛰세요:**
+    설치가 컴퓨터에 필요할 때 스왑을 스스로 추가해요.
 
 ```
 sudo fallocate -l 4G /swapfile2
@@ -286,5 +289,7 @@ sudo nano /etc/systemd/logind.conf
 - 오늘 명령 세 개를 배워 보세요: `ls`(파일 목록 보기), `cd`(폴더로 가기),
   `pwd`(나는 어디에 있나요?).
 
-**다음:** [00-READ-ME-FIRST-KO.html](../../00-READ-ME-FIRST-KO.html), 1단계(정원 다운로드하기).
+**다음:** Google Drive 폴더에서 `junsgarden-for-jun.zip`을 받아 압축을 풀고, 그 안의
+`00-WELCOME.html`을 연 다음, `Start-Here-Ubuntu.sh`를 오른쪽 클릭하고 **Run as a Program**을 고르세요
+(첫 시작이에요. `00-READ-ME-FIRST-KO.html`은 그때 프로그램과 함께 와요).
 (설치, 메뉴 1이 Docker를 대신 설치해 줘요. [02 Docker](02-docker.md)는 설명만 해요.)
