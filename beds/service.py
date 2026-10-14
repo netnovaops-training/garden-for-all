@@ -402,8 +402,15 @@ class Handler(BaseHTTPRequestHandler):
                 parts = [x for x in want.split("/") if x not in ("", ".", "..")]
                 if len(parts) != 2:
                     return self._send(404, {"error": "no such photograph"})
-                target = tagphotos.ROOT / parts[0] / parts[1]
-                if not target.is_file():
+                # Second check, on the real location: follow any symbolic
+                # link, then make sure the file is still inside the tags
+                # folder and is a picture (these are only ever written as
+                # images). Anything else is "no such photograph".
+                root = tagphotos.ROOT.resolve()
+                target = (tagphotos.ROOT / parts[0] / parts[1]).resolve()
+                if (not target.is_relative_to(root)
+                        or target.suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp")
+                        or not target.is_file()):
                     return self._send(404, {"error": "no such photograph"})
                 data = target.read_bytes()
                 self.send_response(200)

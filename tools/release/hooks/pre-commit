@@ -1,0 +1,20 @@
+#!/bin/sh
+# pre-commit hook (install it with: sh tools/release/install-hooks.sh)
+#
+# Makes CODE-FINGERPRINTS.txt again from the files being committed and adds it to the
+# commit, so the public list can never be one commit behind the program. The first start
+# (tools/get-code.py, get-code.ps1) refuses a program that does not match that list.
+root=$(git rev-parse --show-toplevel) || exit 1
+cd "$root" || exit 1
+[ -f tools/release/make_fingerprints.py ] || exit 0      # a branch from before the list existed
+PY=""
+for c in python3 python py; do
+    if "$c" -c "import sys; sys.exit(0 if sys.version_info[0] >= 3 else 1)" >/dev/null 2>&1; then PY=$c; break; fi
+done
+if [ -z "$PY" ]; then
+    echo "pre-commit: Python 3 was not found, so CODE-FINGERPRINTS.txt could not be updated. Commit stopped." >&2
+    exit 1
+fi
+PYTHONIOENCODING=utf-8 "$PY" tools/release/make_fingerprints.py >/dev/null || { echo "pre-commit: make_fingerprints.py failed. Commit stopped." >&2; exit 1; }
+git add CODE-FINGERPRINTS.txt
+exit 0

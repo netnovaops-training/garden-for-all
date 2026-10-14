@@ -312,10 +312,14 @@ yourself.
 The zip from Google Drive holds only what is not on GitHub: your plants (the
 starter backup), the music, the handbook, and the small start files. The
 program itself (the menu, the website, the guides) is public
-code on GitHub, so the first start gets it from there, at one fixed version
-(written in `CODE-SOURCE.txt`), never "whatever is newest". Every file is
-checked against `FILES-FROM-AUTHOR.txt`, the list of fingerprints that came in
-the zip; if one does not match, nothing is changed. It needs the internet once
+code on GitHub, so the first start gets it from there: the page's current main
+version (`CODE-SOURCE.txt` says `ref=main`), so a fix published there reaches a
+new install without a new zip. Every file is checked against
+`CODE-FINGERPRINTS.txt`, the public list of fingerprints that comes with the
+program; if a file differs, is missing or is extra, nothing is changed and the
+screen says to try again in a few minutes. If you would rather stay on one
+version, put `commit=` and the 40-character commit in `CODE-SOURCE.txt` in place
+of `ref=main` before the first start (guide 18). It needs the internet once
 (about 75 MB). The same check works later: menu `M`, then `11`.
 
 **More:** `tools/get-code.py` (Ubuntu) and `tools/get-code.ps1` (Windows), plain

@@ -41,6 +41,14 @@
 
     let lastData = null;
 
+    // Makes any text safe to put inside a block of HTML that is built as a string
+    // (innerHTML): & < > " ' become harmless codes, so a label can only ever show
+    // as text. It looks the same on screen for every normal value.
+    function escHtml(t) {
+        return String(t == null ? '' : t).replace(/[&<>"']/g,
+            c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
     // WHICH REQUEST IS STILL THE CURRENT ONE.
     //
     // Every selection change fires an async fetch, and nothing used to cancel
@@ -195,14 +203,14 @@
                 const res = await fetch(sUrl);
                 const data = await res.json();
                 if (myReq !== reqSeq) return;   // a newer selection is already in flight
-                if (data.error) { output.innerHTML = `<p style="color:#c00;text-align:center;">${data.error}</p>`; return; }
+                if (data.error) { output.innerHTML = `<p style="color:#c00;text-align:center;">${escHtml(data.error)}</p>`; return; }
                 renderSingleDimChart(output, data, singleDim);
                 lastData = data;
                 // Still trigger weather overlay
                 onWeatherOverlayChange();
             } catch (e) {
                 if (myReq !== reqSeq) return;
-                output.innerHTML = `<p style="color:#c00;">${e.message}</p>`;
+                output.innerHTML = `<p style="color:#c00;">${escHtml(e.message)}</p>`;
             }
             return;
         }
@@ -231,7 +239,7 @@
             const res = await fetch(url);
             const data = await res.json();
             if (myReq !== reqSeq) return;   // a newer selection is already in flight
-            if (data.error) { output.innerHTML = `<p style="color:#c00;text-align:center;">${data.error}</p>`; return; }
+            if (data.error) { output.innerHTML = `<p style="color:#c00;text-align:center;">${escHtml(data.error)}</p>`; return; }
             const filterParts = [];
             if (filterDim && filterVal) {
                 filterParts.push((DIMENSIONS.find(d => d.key === filterDim)?.label || filterDim) + ': ' + filterVal);
@@ -246,7 +254,7 @@
             if (document.getElementById('compare-weather-metric')?.value) onWeatherOverlayChange();
         } catch (e) {
             if (myReq !== reqSeq) return;
-            output.innerHTML = `<p style="color:#c00;text-align:center;">Failed: ${e.message}</p>`;
+            output.innerHTML = `<p style="color:#c00;text-align:center;">Failed: ${escHtml(e.message)}</p>`;
         }
     }
 
@@ -509,7 +517,7 @@
         let aiHtml = '';
         if (data.ai) {
             if (data.ai.error) {
-                aiHtml = `<div class="cmp-ai cmp-ai-off">🧠 ${data.ai.error}</div>`;
+                aiHtml = `<div class="cmp-ai cmp-ai-off">🧠 ${escHtml(data.ai.error)}</div>`;
             } else {
                 const esc = t => String(t).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
                 const bits = [];
@@ -537,15 +545,15 @@
                 if (v > maxVal) { maxVal = v; maxRow = data.rowLabels[ri]; maxCol = data.colLabels[ci]; }
             });
         });
-        if (maxVal > 0) insights.push(`<strong>Strongest link:</strong> <em>${maxRow}</em> × <em>${maxCol}</em> → <strong>${maxVal}</strong> plants.`);
+        if (maxVal > 0) insights.push(`<strong>Strongest link:</strong> <em>${escHtml(maxRow)}</em> × <em>${escHtml(maxCol)}</em> → <strong>${maxVal}</strong> plants.`);
 
         if (data.rowTotals.length > 0) {
             const i = data.rowTotals.indexOf(Math.max(...data.rowTotals));
-            insights.push(`<strong>Largest ${data.dim_a_label}:</strong> <em>${data.rowLabels[i]}</em> (${data.rowTotals[i]} plants).`);
+            insights.push(`<strong>Largest ${escHtml(data.dim_a_label)}:</strong> <em>${escHtml(data.rowLabels[i])}</em> (${data.rowTotals[i]} plants).`);
         }
         if (data.colTotals.length > 0) {
             const i = data.colTotals.indexOf(Math.max(...data.colTotals));
-            insights.push(`<strong>Largest ${data.dim_b_label}:</strong> <em>${data.colLabels[i]}</em> (${data.colTotals[i]} plants).`);
+            insights.push(`<strong>Largest ${escHtml(data.dim_b_label)}:</strong> <em>${escHtml(data.colLabels[i])}</em> (${data.colTotals[i]} plants).`);
         }
 
         // YoY-specific: biggest growth / biggest decline
@@ -567,10 +575,10 @@
                     }
                 });
                 if (bigGrowth.pct > 0) {
-                    insights.push(`<strong>Fastest growing</strong> (${sorted[sorted.length - 2]}→${sorted[sorted.length - 1]}): <em>${bigGrowth.col}</em> (+${bigGrowth.pct}%).`);
+                    insights.push(`<strong>Fastest growing</strong> (${escHtml(sorted[sorted.length - 2])}→${escHtml(sorted[sorted.length - 1])}): <em>${escHtml(bigGrowth.col)}</em> (+${bigGrowth.pct}%).`);
                 }
                 if (bigDecline.pct < 0) {
-                    insights.push(`<strong>Biggest decline</strong> (${sorted[sorted.length - 2]}→${sorted[sorted.length - 1]}): <em>${bigDecline.col}</em> (${bigDecline.pct}%).`);
+                    insights.push(`<strong>Biggest decline</strong> (${escHtml(sorted[sorted.length - 2])}→${escHtml(sorted[sorted.length - 1])}): <em>${escHtml(bigDecline.col)}</em> (${bigDecline.pct}%).`);
                 }
             }
         }
@@ -582,12 +590,12 @@
             data.colLabels.forEach((colLabel, ci) => {
                 const pct = data.matrix[ri][ci] / rt * 100;
                 if (pct >= 70 && data.matrix[ri][ci] >= 3) {
-                    insights.push(`<em>${rowLabel}</em> is ${Math.round(pct)}% concentrated in <em>${colLabel}</em>.`);
+                    insights.push(`<em>${escHtml(rowLabel)}</em> is ${Math.round(pct)}% concentrated in <em>${escHtml(colLabel)}</em>.`);
                 }
             });
         });
 
-        if (data.filterLabel) insights.unshift(`<strong>Filter active:</strong> ${data.filterLabel}`);
+        if (data.filterLabel) insights.unshift(`<strong>Filter active:</strong> ${escHtml(data.filterLabel)}`);
         // aiHtml alone is enough to render: if the model answered but the
         // matrix was too sparse for a computed insight, the reading should
         // still show rather than the panel going blank.
@@ -722,7 +730,7 @@
             const wData = await res.json();
 
             if (wData.error) {
-                container.innerHTML = `<p style="color:#c00;text-align:center;padding:20px;">${wData.error}</p>`;
+                container.innerHTML = `<p style="color:#c00;text-align:center;padding:20px;">${escHtml(wData.error)}</p>`;
                 return;
             }
             if (!wData.labels || wData.labels.length === 0) {
@@ -744,7 +752,7 @@
                 renderStandaloneWeather(container, wData, metric);
             }
         } catch (e) {
-            container.innerHTML = `<p style="color:#c00;text-align:center;">${e.message}</p>`;
+            container.innerHTML = `<p style="color:#c00;text-align:center;">${escHtml(e.message)}</p>`;
         }
     }
 
@@ -862,28 +870,28 @@
                     else if (v >= 55 && v <= 80) idealMonths.push(wData.labels[i]);
                 }
             });
-            if (frostMonths.length) annotations.push('❄️ Frost risk: <strong>' + frostMonths.join(', ') + '</strong>');
-            if (heatMonths.length) annotations.push('🔥 Heat stress: <strong>' + heatMonths.join(', ') + '</strong>');
-            if (idealMonths.length) annotations.push('🌱 Ideal growing: <strong>' + idealMonths.join(', ') + '</strong>');
+            if (frostMonths.length) annotations.push('❄️ Frost risk: <strong>' + escHtml(frostMonths.join(', ')) + '</strong>');
+            if (heatMonths.length) annotations.push('🔥 Heat stress: <strong>' + escHtml(heatMonths.join(', ')) + '</strong>');
+            if (idealMonths.length) annotations.push('🌱 Ideal growing: <strong>' + escHtml(idealMonths.join(', ')) + '</strong>');
         } else if (metric === 'precipitation') {
             const totalRain = vals.reduce((a,b) => a+b, 0).toFixed(1);
-            annotations.push('🌧️ Total precipitation: <strong>' + totalRain + '"</strong> (Clifton Park avg: ~35"/year)');
+            annotations.push('🌧️ Total precipitation: <strong>' + escHtml(totalRain) + '"</strong> (Clifton Park avg: ~35"/year)');
             const dryMonths = [];
             wData.data.forEach((v, i) => { if (v !== null && v < 1) dryMonths.push(wData.labels[i]); });
-            if (dryMonths.length) annotations.push('🏜️ Dry months (< 1"): <strong>' + dryMonths.join(', ') + '</strong>');
+            if (dryMonths.length) annotations.push('🏜️ Dry months (< 1"): <strong>' + escHtml(dryMonths.join(', ')) + '</strong>');
         }
 
         container.innerHTML = `
         <div style="background:#fff;border:2px solid #222;border-radius:12px;box-shadow:3px 3px 0px rgba(0,0,0,0.4);padding:16px;margin:0 16px 16px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
                 <span style="font-size:1.1rem;">📅</span>
-                <strong style="font-size:0.95rem;color:#333;">${year} Weather: ${cfg.label}</strong>
+                <strong style="font-size:0.95rem;color:#333;">${escHtml(year)} Weather: ${escHtml(cfg.label)}</strong>
                 <span style="font-size:0.78rem;color:#888;">monthly · ${(wData.coverage && wData.coverage.noaa_fill_months) ? 'NOAA station' : 'live Open-Meteo'}</span>
             </div>
             ${wData.stats ? `<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.76rem;margin-bottom:8px;">
-                <span style="background:#f5f5f5;border-radius:6px;padding:3px 10px;">avg <strong>${wData.stats.mean ?? '–'}${cfg.unit}</strong></span>
-                <span style="background:#e3f2fd;border-radius:6px;padding:3px 10px;color:#1565c0;">low <strong>${wData.stats.min ?? '–'}${cfg.unit}</strong></span>
-                <span style="background:#fff3e0;border-radius:6px;padding:3px 10px;color:#e65100;">high <strong>${wData.stats.max ?? '–'}${cfg.unit}</strong></span>
+                <span style="background:#f5f5f5;border-radius:6px;padding:3px 10px;">avg <strong>${escHtml(wData.stats.mean ?? '–')}${escHtml(cfg.unit)}</strong></span>
+                <span style="background:#e3f2fd;border-radius:6px;padding:3px 10px;color:#1565c0;">low <strong>${escHtml(wData.stats.min ?? '–')}${escHtml(cfg.unit)}</strong></span>
+                <span style="background:#fff3e0;border-radius:6px;padding:3px 10px;color:#e65100;">high <strong>${escHtml(wData.stats.max ?? '–')}${escHtml(cfg.unit)}</strong></span>
             </div>` : ''}
             ${annotations.length ? `<div style="font-size:0.82rem;color:#333;line-height:1.7;margin-bottom:10px;padding:8px 12px;background:#f9fbe7;border-radius:8px;border-left:4px solid #4CAF50;">
                 ${annotations.join('<br>')}
@@ -1013,15 +1021,15 @@
         <div style="background:#fff;border:2px solid #222;border-radius:12px;box-shadow:3px 3px 0px rgba(0,0,0,0.4);padding:16px;margin:0 16px 16px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
                 <span style="font-size:1.1rem;">🌦️</span>
-                <strong style="font-size:0.95rem;color:#333;">${cfg.label}</strong>
-                <span style="font-size:0.78rem;color:#888;">${span}</span>
+                <strong style="font-size:0.95rem;color:#333;">${escHtml(cfg.label)}</strong>
+                <span style="font-size:0.78rem;color:#888;">${escHtml(span)}</span>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.76rem;margin-bottom:10px;">
-                <span style="background:#f5f5f5;border-radius:6px;padding:3px 10px;">avg <strong>${st.mean ?? '–'}${cfg.unit}</strong></span>
-                <span style="background:#e3f2fd;border-radius:6px;padding:3px 10px;color:#1565c0;">low <strong>${st.min ?? '–'}${cfg.unit}</strong></span>
-                <span style="background:#fff3e0;border-radius:6px;padding:3px 10px;color:#e65100;">high <strong>${st.max ?? '–'}${cfg.unit}</strong></span>
-                ${perYear !== null ? `<span style="background:#ede7f6;border-radius:6px;padding:3px 10px;color:#5e35b1;">trend <strong>${perYear >= 0 ? '▲' : '▼'} ${Math.abs(perYear)}${cfg.unit}/yr</strong></span>` : ''}
-                <span style="background:#e8f5e9;border-radius:6px;padding:3px 10px;color:#2e7d32;">🗄️ ${covTxt}</span>
+                <span style="background:#f5f5f5;border-radius:6px;padding:3px 10px;">avg <strong>${escHtml(st.mean ?? '–')}${escHtml(cfg.unit)}</strong></span>
+                <span style="background:#e3f2fd;border-radius:6px;padding:3px 10px;color:#1565c0;">low <strong>${escHtml(st.min ?? '–')}${escHtml(cfg.unit)}</strong></span>
+                <span style="background:#fff3e0;border-radius:6px;padding:3px 10px;color:#e65100;">high <strong>${escHtml(st.max ?? '–')}${escHtml(cfg.unit)}</strong></span>
+                ${perYear !== null ? `<span style="background:#ede7f6;border-radius:6px;padding:3px 10px;color:#5e35b1;">trend <strong>${perYear >= 0 ? '▲' : '▼'} ${escHtml(Math.abs(perYear))}${escHtml(cfg.unit)}/yr</strong></span>` : ''}
+                <span style="background:#e8f5e9;border-radius:6px;padding:3px 10px;color:#2e7d32;">🗄️ ${escHtml(covTxt)}</span>
             </div>
             <canvas id="standalone-weather-chart" style="max-height:300px;"></canvas>
         </div>`;
@@ -1090,7 +1098,7 @@
         <div style="background:#fff;border:2px solid #222;border-radius:12px;box-shadow:3px 3px 0px rgba(0,0,0,0.4);padding:16px;margin:0 16px 16px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
                 <span style="font-size:1rem;">📊</span>
-                <strong style="font-size:0.9rem;color:#333;">Side-by-Side: ${pData.dim_a_label} vs ${cfg.label}</strong>
+                <strong style="font-size:0.9rem;color:#333;">Side-by-Side: ${escHtml(pData.dim_a_label)} vs ${escHtml(cfg.label)}</strong>
                 <span style="font-size:0.75rem;color:#888;">scroll both charts on the same time axis</span>
             </div>
             <div style="font-size:0.75rem;color:#2E7D32;margin-bottom:12px;font-weight:600;">
@@ -1098,11 +1106,11 @@
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div style="border:1px solid #e0e0e0;border-radius:8px;padding:10px;background:#fafafa;">
-                    <div style="font-size:0.8rem;font-weight:700;color:#2E7D32;margin-bottom:6px;text-align:center;">🌿 ${pData.dim_a_label} × ${pData.dim_b_label}</div>
+                    <div style="font-size:0.8rem;font-weight:700;color:#2E7D32;margin-bottom:6px;text-align:center;">🌿 ${escHtml(pData.dim_a_label)} × ${escHtml(pData.dim_b_label)}</div>
                     <canvas id="split-plant-chart"></canvas>
                 </div>
                 <div style="border:1px solid #e0e0e0;border-radius:8px;padding:10px;background:#fafafa;">
-                    <div style="font-size:0.8rem;font-weight:700;color:${cfg.color};margin-bottom:6px;text-align:center;">🌦️ ${cfg.label}</div>
+                    <div style="font-size:0.8rem;font-weight:700;color:${escHtml(cfg.color)};margin-bottom:6px;text-align:center;">🌦️ ${escHtml(cfg.label)}</div>
                     <canvas id="split-weather-chart"></canvas>
                 </div>
             </div>
@@ -1180,7 +1188,7 @@
         <div style="background:#fff;border:2px solid #222;border-radius:12px;box-shadow:3px 3px 0px rgba(0,0,0,0.4);padding:16px;margin:0 16px 16px;">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
                 <span style="font-size:1.1rem;">🌦️</span>
-                <strong style="font-size:0.95rem;color:#333;">Fused View: Plants + ${cfg.label}</strong>
+                <strong style="font-size:0.95rem;color:#333;">Fused View: Plants + ${escHtml(cfg.label)}</strong>
                 <span style="font-size:0.78rem;color:#888;">from InfluxDB</span>
                 <div style="margin-left:auto;display:flex;gap:10px;">
                     <label style="font-size:0.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;">
@@ -1410,13 +1418,13 @@
             <canvas id="fused-chart" style="min-height:400px;"></canvas>
             <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;font-size:0.8rem;">
                 <span style="background:#f1f8e9;border:1px solid #c5e1a5;border-radius:8px;padding:6px 12px;">
-                    📈 Plantings vs ${cfg.short}: <strong style="color:${rDesc.color};">${rDesc.txt}</strong>
+                    📈 Plantings vs ${escHtml(cfg.short)}: <strong style="color:${escHtml(rDesc.color)};">${escHtml(rDesc.txt)}</strong>
                 </span>
-                ${trendTxt ? `<span style="background:#fff3e0;border:1px solid #ffe0b2;border-radius:8px;padding:6px 12px;">🌡️ ${trendTxt}</span>` : ''}
-                <span style="background:#e3f2fd;border:1px solid #bbdefb;border-radius:8px;padding:6px 12px;color:#1565c0;">🗄️ ${covTxt}</span>
+                ${trendTxt ? `<span style="background:#fff3e0;border:1px solid #ffe0b2;border-radius:8px;padding:6px 12px;">🌡️ ${escHtml(trendTxt)}</span>` : ''}
+                <span style="background:#e3f2fd;border:1px solid #bbdefb;border-radius:8px;padding:6px 12px;color:#1565c0;">🗄️ ${escHtml(covTxt)}</span>
             </div>
             <div style="margin-top:6px;font-size:0.74rem;color:#888;">
-                Bars = plants added that year (stacked by ${pData.dim_b_label}). Lines = each year's quarterly ${cfg.label.toLowerCase()} — summer (red) vs winter (blue) shows the seasonal swing.
+                Bars = plants added that year (stacked by ${escHtml(pData.dim_b_label)}). Lines = each year's quarterly ${escHtml(cfg.label.toLowerCase())} — summer (red) vs winter (blue) shows the seasonal swing.
             </div>`;
         const canvas = document.getElementById('fused-chart');
 
@@ -1515,7 +1523,7 @@
             const data = await res.json();
             renderDiscoveries(out, status, data);
         } catch (e) {
-            out.innerHTML = `<p style="padding:14px;color:#c00;font-size:0.85rem;">Could not run the scan: ${e.message}</p>`;
+            out.innerHTML = `<p style="padding:14px;color:#c00;font-size:0.85rem;">Could not run the scan: ${escHtml(e.message)}</p>`;
         }
     }
 
@@ -1586,13 +1594,13 @@
             const data = await res.json();
 
             if (data.error) {
-                container.innerHTML = `<p style="color:#c00;text-align:center;">${data.error}</p>`;
+                container.innerHTML = `<p style="color:#c00;text-align:center;">${escHtml(data.error)}</p>`;
                 return;
             }
 
             renderIotChart(container, data);
         } catch (e) {
-            container.innerHTML = `<p style="color:#c00;text-align:center;">${e.message}</p>`;
+            container.innerHTML = `<p style="color:#c00;text-align:center;">${escHtml(e.message)}</p>`;
         }
     }
 

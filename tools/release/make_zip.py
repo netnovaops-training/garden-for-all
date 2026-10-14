@@ -10,18 +10,24 @@
 
 The program (garden.sh, the website, the guides) is public code on
 GitHub. The first start (Start-Here-Ubuntu.sh / Start-Here-Windows.cmd) fetches
-it from there at ONE fixed version, GARDEN_CODE_COMMIT (written into
-CODE-SOURCE.txt), and checks every file against FILES-FROM-AUTHOR.txt.
+it from there, in one of two ways (written into CODE-SOURCE.txt):
 
-    GARDEN_CODE_COMMIT=<40-hex public commit> GARDEN_SRC=<release copy> python make_zip.py OUT.zip
+    GARDEN_CODE_REF=main        follow the public page's main branch (what new zips use). Every
+                                file is checked against CODE-FINGERPRINTS.txt, the public list
+                                main carries. FILES-FROM-AUTHOR.txt then lists only what the zip
+                                carries (what is not on GitHub).
+    GARDEN_CODE_COMMIT=<40 hex> ONE fixed version; FILES-FROM-AUTHOR.txt lists every file and
+                                get-code checks every file against it (the old way).
+
+    GARDEN_CODE_REF=main GARDEN_SRC=<release copy> python make_zip.py OUT.zip
 
 - Text files get the right line endings (LF for Linux files, CRLF for .cmd/.ps1);
   .sh files are marked executable. tools/get-code.* do the same to what they
   fetch, so the fingerprints match.
-- Writes FILES-FROM-AUTHOR.txt: sha256 of EVERY file of the finished folder (the
-  program from GitHub plus the zip), exactly as it will be on disk, so Jun can
-  check nothing was changed (garden.sh menu M, 11) and get-code refuses anything
-  that does not match.
+- Writes FILES-FROM-AUTHOR.txt: sha256 of every file of the finished folder (with a
+  fixed commit: the program from GitHub plus the zip; following main: only what the
+  zip carries), exactly as it will be on disk, so Jun can check nothing was changed
+  (garden.sh menu M, 11) and get-code refuses anything that does not match.
 - The main zip carries the add-ons' fingerprints (docker/tools/photos.sha256,
   docker/wiki/seed/wiki-pages.sha256), so garden.sh refuses a wrong add-on.
 - GARDEN_PHOTOS_KEY=<path to photos.key> puts the key to the encrypted public photos
@@ -67,8 +73,12 @@ BACKUP_DIR = SMALL if SMALL else os.path.join(SRC, "backups")
 STAMP = (2026, 10, 13, 0, 0, 0)
 CODE_REPO = os.environ.get("GARDEN_CODE_REPO", "netnovaops-training/garden-for-all")
 CODE_COMMIT = os.environ.get("GARDEN_CODE_COMMIT", "")
-assert len(CODE_COMMIT) == 40 and all(c in "0123456789abcdef" for c in CODE_COMMIT), \
-    "set GARDEN_CODE_COMMIT to the full public commit (40 hex characters) the download fetches"
+CODE_REF = os.environ.get("GARDEN_CODE_REF", "")
+if CODE_REF:
+    assert CODE_REF == "main" and not CODE_COMMIT, "GARDEN_CODE_REF is main, and then GARDEN_CODE_COMMIT stays empty"
+else:
+    assert len(CODE_COMMIT) == 40 and all(c in "0123456789abcdef" for c in CODE_COMMIT), \
+        "set GARDEN_CODE_REF=main, or GARDEN_CODE_COMMIT to the full public commit (40 hex characters) the download fetches"
 # What goes in the main zip: what is NOT on GitHub, and the starters that fetch the rest.
 # PHOTO-PARTS.json (the list of the photo parts, with each host's file ids) is made at release time and rides in
 # this zip, so adding a host's ids never changes the public code (see tools/release/README.md).
@@ -177,13 +187,25 @@ with zipfile.ZipFile(WIKI, "w", zipfile.ZIP_STORED) as z:
         "메뉴가 쓰기 전에 지문(fingerprint)을 확인해요.\n").encode("utf-8"))
 
 # ---- 3. The main zip ---------------------------------------------------------
-generated = {
-    "CODE-SOURCE.txt": (
+if CODE_REF:
+    code_source = (
+        "# Where the program comes from: the public code, following its main branch.\n"
+        "# tools/get-code.py (Ubuntu) and tools/get-code.ps1 (Windows) fetch it and check\n"
+        "# every file against CODE-FINGERPRINTS.txt, the public list that comes with it;\n"
+        "# if anything differs, nothing is written. To read the same code:\n"
+        f"# https://github.com/{CODE_REPO}\n"
+        "# To stay on ONE version instead of following main: replace the line ref=main\n"
+        "# below with commit=<a 40-character commit from the page's history>. See guide 18.\n"
+        f"repo={CODE_REPO}\nref={CODE_REF}\n").encode()
+else:
+    code_source = (
         "# Where the program comes from: the public code, at this one version.\n"
         "# tools/get-code.py (Ubuntu) and tools/get-code.ps1 (Windows) fetch it and\n"
         "# check every file against FILES-FROM-AUTHOR.txt. To read the same code:\n"
         f"# https://github.com/{CODE_REPO}/tree/{CODE_COMMIT}\n"
-        f"repo={CODE_REPO}\ncommit={CODE_COMMIT}\n").encode(),
+        f"repo={CODE_REPO}\ncommit={CODE_COMMIT}\n").encode()
+generated = {
+    "CODE-SOURCE.txt": code_source,
     SEED_SHA_REL: f"{seed_sha}  wiki-pages.json.gz\n".encode(),
     PHOTOS_SHA_REL: f"{photos_sha}  images.tar\n".encode(),
     f"backups/{out_name}": slim_bytes,
@@ -207,6 +229,8 @@ lines = []
 with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
     for rel, full, name in entries:
         data = content(full, name)
+        if CODE_REF and not in_main_zip(rel):
+            continue          # following main: GitHub's CODE-FINGERPRINTS.txt covers the program, not this list
         lines.append(f"{hashlib.sha256(data).hexdigest()}  ./{rel}\n")   # listed: every file of the finished folder
         if not in_main_zip(rel):
             continue                                                     # ...but fetched from GitHub, not zipped
@@ -214,7 +238,8 @@ with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
         info.compress_type = zipfile.ZIP_STORED if os.path.splitext(name)[1].lower() in STORE_EXT else zipfile.ZIP_DEFLATED
         z.writestr(info, data)
     for rel, data in generated.items():
-        lines.append(f"{hashlib.sha256(data).hexdigest()}  ./{rel}\n")
+        if not (CODE_REF and rel == "CODE-SOURCE.txt"):      # following main: CODE-SOURCE.txt is the person's setting (guide 18), not fingerprinted
+            lines.append(f"{hashlib.sha256(data).hexdigest()}  ./{rel}\n")
         z.writestr(info_for(TOP + rel), data)
     if PHOTOS_KEY:
         z.writestr(info_for(TOP + "photos.key", mode=0o600), open(PHOTOS_KEY, "rb").read())
