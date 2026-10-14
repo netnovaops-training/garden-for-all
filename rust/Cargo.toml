@@ -41,7 +41,7 @@ time = { version = "0.3", features = ["formatting", "macros", "local-offset"] }
 # holds only the hash, never the password.
 argon2 = "0.5"
 # Reset links are stored as a SHA-256 of the code, never the code itself.
-sha2 = "0.10"
+sha2 = "0.11"
 # Session tokens (the visitor cookie id). OsRng is the operating system's own CSPRNG --
 # a predictable token would let someone forge a session without ever seeing the
 # password, which would make the password pointless.
