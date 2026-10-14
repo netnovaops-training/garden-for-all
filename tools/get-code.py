@@ -179,17 +179,23 @@ def verify(files, odd, want, present, fixed):
     return odd + problems, True
 
 
+def check_archive(path):
+    """Problems (empty = ALL MATCH) of a downloaded archive, checked the way the first start checks it.
+    Used by `--check` and by the release build."""
+    _, _, fixed = read_source()
+    want = read_list(5)
+    odd = []
+    files, _tops = code_files(open(path, "rb").read(), odd)
+    return verify(files, odd, want, zip_files_present(want), fixed)[0]
+
+
 def main():
     try:
         sys.stdout.reconfigure(errors="replace")   # a window that cannot show Korean shows ? instead of stopping
     except AttributeError:
         pass
     if len(sys.argv) == 3 and sys.argv[1] == "--check":
-        _, _, fixed = read_source()
-        want = read_list(5)
-        odd = []
-        files, _tops = code_files(open(sys.argv[2], "rb").read(), odd)
-        problems, listed = verify(files, odd, want, zip_files_present(want), fixed)
+        problems = check_archive(sys.argv[2])
         print(chr(10).join(problems[:40]) if problems else "ALL MATCH")
         sys.exit(1 if problems else 0)
 

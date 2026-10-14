@@ -183,11 +183,15 @@ if check.exists():
     shutil.rmtree(check)
 with zipfile.ZipFile(OUT / "junsgarden-for-jun.zip") as z:
     z.extractall(check)
-r = subprocess.run([sys.executable, check / "junsgarden-for-jun" / "tools" / "get-code.py", "--check",
-                    OUT / "build" / "code.tar.gz"], capture_output=True, text=True)
-print("   " + r.stdout.strip().replace("\n", "\n   "))
+import importlib.util      # the zip's own get-code.py, loaded from the extracted zip (its folder is then the garden folder)
+spec = importlib.util.spec_from_file_location("zip_get_code", check / "junsgarden-for-jun" / "tools" / "get-code.py")
+zip_get_code = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(zip_get_code)
+problems = zip_get_code.check_archive(str(OUT / "build" / "code.tar.gz"))
+print("   " + ("\n   ".join(problems[:40]) if problems else "ALL MATCH"))
+del zip_get_code
 shutil.rmtree(check)
-if r.returncode != 0 and not A.allow_differences:
+if problems and not A.allow_differences:
     sys.exit("STOP: the download would not install (see above).")
 if A.ref:
     now = resolve(A.ref)
