@@ -83,7 +83,7 @@ building the app yourself (about 3 hours, guide 17).
 
 **What you get:** the website with all your plants and photos and the garden
 tools (`/beds`), running at home; on the Full level also the wiki with all its
-pages. The nightly backup at 2:30 am and the desktop icon come with it.
+pages. The automatic backup schedule and the desktop icon come with it.
 
 **Easy or Recommended level?** Choose `1` (EASY) at "How do you want to
 install?". EASY skips the questions about the parts, the photos and the wiki,

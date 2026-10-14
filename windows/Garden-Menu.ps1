@@ -749,7 +749,8 @@ function Copy-Backup-Here {
 }
 
 # ---------- an automatic copy of the backups, in a folder YOU pick ----------------------
-# The garden computer backs itself up every night at 2:30 am (on its own disk).
+# The garden computer backs itself up on its own disk: automatically (more often
+# when the garden is busy, at least weekly), or every night at 2:30 am (its menu 6, 7).
 # A second copy somewhere else protects you if that disk dies. This copies the
 # newest backup into the folder you chose (More 13): on this PC, on a NAS
 # (\\NAS\share), in Google Drive for desktop (G:), on a USB drive... Without a

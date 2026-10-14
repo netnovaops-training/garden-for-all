@@ -5,7 +5,7 @@
 
 - Every program the garden setup can install, why it is there, and its official page. Nothing else is installed.
 - Three groups: **Necessary** (the install does them), **Optional** (the install asks yes or no) and **Advanced optional** (later, from menu `M`).
-- Necessary includes Ubuntu updates, the SSH server, the ufw firewall, Docker, the MariaDB database, your website and the nightly backup.
+- Necessary includes Ubuntu updates, the SSH server, the ufw firewall, Docker, the MariaDB database, your website and the automatic backups.
 - Nothing gives anybody else access to your computer. The setup only downloads programs from the official places listed.
 - Only ports 80 and 443 (Caddy, after the front door step) can be reached from the internet. SSH (22) is for your home network only. The rest are for this computer only.
 - The checklist (menu `5`) checks all of this every time you run it.
@@ -41,7 +41,7 @@ downloads programs from the official places listed below.
 | MariaDB 11 | The database. It speaks the same language as MySQL. | Holds plants, comments, logins and the wiki's pages | Docker, inside only (no port) | <https://mariadb.com/kb/en/documentation/> |
 | Jun's Garden website | Your site, written in Rust, built on your computer from `rust/` | It is your garden: catalogue, gallery, blog, data, guestbook, plant admin, the phone app's server | Docker, `127.0.0.1:8030` | <https://www.rust-lang.org/learn>, `docs/rust-port/CODE-TOUR.md` |
 | Toolbox | A tiny Alpine Linux container with database and archive tools | Backup, restore and set-password work the same on Ubuntu and Windows | Docker, only while a job runs | <https://alpinelinux.org/about/> |
-| Nightly backup | One line in your cron (Ubuntu's alarm clock) | A full backup every night at 2:30 am, kept 7 days (with the photos, about 6 GB for all 7) | Ubuntu | <https://manpages.ubuntu.com/manpages/noble/man5/crontab.5.html> |
+| Backup schedule | One line in your cron (Ubuntu's alarm clock) | Every hour it counts what changed: a full backup hourly while busy, within 6 hours after a few edits, at least weekly when quiet; thinned to about 8 GB (or one every night at 2:30 am, if you choose) | Ubuntu | <https://manpages.ubuntu.com/manpages/noble/man5/crontab.5.html> |
 | Swap file (small laptops only) | Disk space used as extra memory | Building the website needs about 3 GB of memory | Ubuntu | <https://manpages.ubuntu.com/manpages/noble/man8/swapon.8.html> |
 
 ## Optional (the install asks)

@@ -129,8 +129,6 @@ the wiki setup did not finish; run it again later: bash garden.sh wiki	위키 �
 Your wiki: first-time setup and the garden pages	위키: 처음 설정과 정원 페이지
 So the encyclopedia is yours. The first time takes about 30 minutes (the pages go in one by one). If it stops, run it again: it only adds what is missing.	그래서 백과사전이 본인의 것이 돼요. 처음에는 약 30분 걸려요(페이지가 하나씩 들어가요). 멈추면 다시 실행하세요. 빠진 것만 추가해요.
 the wiki helper did not build	위키 도우미 프로그램이 만들어지지 않았어요
-Nightly backup	매일 밤 백업
-Backups you never have to remember. See the line: crontab -l	기억하지 않아도 되는 백업이에요. 그 줄 보기: crontab -l
 Desktop icon	바탕화면 아이콘
 A 'Jun's Garden' icon that opens this menu.	이 메뉴를 여는 'Jun's Garden' 아이콘이에요.
 One double-click instead of typing.	입력하는 대신 더블클릭 한 번이면 돼요.
@@ -277,7 +275,6 @@ Copy the newest backup to Google Drive now? (about 800 MB)	지금 최신 백업�
 In Google Drive you will see a folder named JunsGarden-backups.	Google Drive에 JunsGarden-backups라는 폴더가 보일 거예요.
 install first (menu 1)	먼저 설치하세요(메뉴 1)
 Backups (3-2-1: this computer, your NAS, Google Drive)	백업(3-2-1: 이 컴퓨터, NAS, Google Drive)
-No schedule. Menu 1 (install) adds it.	예약된 일정이 없어요. 메뉴 1(설치)이 추가해요.
 Stop copying to Google Drive?	Google Drive로 복사하는 것을 멈출까요?
 Stopped (the Drive files stay; rclone config: rclone config delete garden-gdrive).	멈췄어요(Drive의 파일은 남아요. rclone 설정 지우기: rclone config delete garden-gdrive).
 Which backup? (newest first)	어느 백업인가요? (최신 순)
@@ -473,7 +470,6 @@ and paste back what it prints.)	거기서 나온 내용을 여기에 다시 붙�
 4) Connect your NAS (network drive)	4) NAS 연결하기(네트워크 드라이브)
 5) Connect Google Drive	5) Google Drive 연결하기
 6) Copy the newest backup to the NAS / Drive now	6) 지금 최신 백업을 NAS / Drive로 복사하기
-7) Show the backup schedule (cron)	7) 백업 일정 보기(cron)
 8) Stop copying to the NAS or Google Drive	8) NAS나 Google Drive로 복사 멈추기
 How to get a Gemini key (free; about 2 minutes):	Gemini 키를 받는 방법(무료, 약 2분):
 1. On any computer, open  https://aistudio.google.com/apikey  and sign in with YOUR Google account.	1. 아무 컴퓨터에서  https://aistudio.google.com/apikey  를 열고, 본인의 Google 계정으로 로그인하세요.
@@ -781,7 +777,6 @@ under a minute	1분 미만
 could not install the basic programs. Right after a fresh Ubuntu install, Ubuntu updates itself for 10-30 minutes: wait 15 minutes, then choose 1 again	기본 프로그램을 설치하지 못했어요. Ubuntu를 막 설치하면 10~30분 동안 스스로 업데이트해요: 15분 기다린 다음 1을 다시 고르세요
 The garden works without them. Later: put the zip next to Start-Here-Windows.cmd	사진이 없어도 정원은 작동해요. 나중에: 그 zip을 Start-Here-Windows.cmd 옆에 두고
 (in the garden folder on your PC) and choose INSTALL again in the Windows menu.	(PC의 정원 폴더 안), Windows 메뉴에서 INSTALL을 다시 고르세요.
-cron is Ubuntu's alarm clock. One line in YOUR cron runs 'garden.sh backup nightly' at 2:30 am. Nightly backups older than 7 days are deleted; ones you make yourself are kept.	cron은 Ubuntu의 알람 시계예요. 내 cron의 한 줄이 새벽 2시 30분에 'garden.sh backup nightly'를 실행해요. 7일보다 오래된 밤 백업은 지워지고, 내가 직접 만든 백업은 그대로 둬요.
 this is Windows' own Ubuntu (WSL): other devices and the internet cannot reach it this way.	여기는 Windows 안의 Ubuntu(WSL)예요: 이 방법으로는 다른 기기나 인터넷이 여기에 닿을 수 없어요.
 For this choice, use a separate garden computer (an Ubuntu laptop or a Pi), guide 00b.	이 선택에는 따로 있는 정원 컴퓨터(Ubuntu 노트북이나 Pi)를 쓰세요. 안내서 00b.
 On this PC, choice 2 (practice) works. More: https://learn.microsoft.com/windows/wsl/networking	이 PC에서는 선택 2(연습)가 돼요. 더 보기: https://learn.microsoft.com/windows/wsl/networking
@@ -790,7 +785,6 @@ this is Windows' own Ubuntu (WSL). The numbers above are WSL's private inside ad
 The router and phones cannot reach it, so do not reserve or forward it. On this PC the garden	공유기와 휴대폰은 여기에 닿을 수 없으니 예약하거나 전달하지 마세요. 이 PC에서 정원은
 is for using on this PC. To show it to other devices or put it online, use a separate garden	이 PC에서 쓰는 거예요. 다른 기기에 보여 주거나 인터넷에 올리려면, 따로 있는 정원
 computer (an Ubuntu laptop or a Pi): guide 00b. More: https://learn.microsoft.com/windows/wsl/networking	컴퓨터(Ubuntu 노트북이나 Pi)를 쓰세요: 안내서 00b. 더 보기: https://learn.microsoft.com/windows/wsl/networking
-- Toolbox + nightly backup at 2:30 am (kept 7 days)	- 도구 상자 + 새벽 2시 30분 밤 백업(7일 보관)
 Undo: menu 6, then 8. Change to another NAS: menu 6, then 9. Add another place: menu 6, then 13.	되돌리기: 메뉴 6, 그다음 8. 다른 NAS로 바꾸기: 메뉴 6, 그다음 9. 다른 곳 더하기: 메뉴 6, 그다음 13.
 Another network place for the backups	백업을 둘 또 다른 네트워크 장소
 All 3 places are in use. Menu 6, then 8 stops one first.	세 곳을 모두 쓰고 있어요. 먼저 메뉴 6, 그다음 8로 하나를 멈추세요.
@@ -967,3 +961,14 @@ you a link). Keep clicking it, or the name is lost.	이메일로 보내요). 계
 18) Rename or move a file or folder (every place that uses it follows)	18) 파일이나 폴더 이름 바꾸기 또는 옮기기(그것을 쓰는 모든 곳이 따라와요)
 Tip: a Gmail just for your website keeps your personal inbox apart	팁: 웹사이트만을 위한 Gmail을 쓰면 개인 메일함이 따로 지켜져요
 (free: https://accounts.google.com/signup ; guide 00b).	(무료: https://accounts.google.com/signup ; 안내서 00b).
+Backup schedule	백업 일정
+cron is Ubuntu's alarm clock. One line in YOUR cron runs 'garden.sh backup auto' every hour: it counts what changed since the last backup and backs up hourly while the garden is busy (4 or more edits), within 6 hours or that evening after 1 to 3 edits, and at least once a week when it is quiet. Automatic backups are thinned (today's newest 3, then one a day for a week); ones you make yourself are kept. Prefer one every night at 2:30 am? Menu 6, then 7.	cron은 Ubuntu의 알람 시계예요. 내 cron의 한 줄이 한 시간마다 'garden.sh backup auto'를 실행해요. 지난 백업 뒤로 바뀐 것을 세어서, 정원이 바쁠 때(수정 4개 이상)는 한 시간마다, 수정이 1~3개면 6시간 안에 또는 그날 저녁에, 조용할 때는 적어도 일주일에 한 번 백업해요. 자동 백업은 솎아 내요(오늘 것은 최신 3개, 그다음 일주일은 하루에 하나). 내가 직접 만든 백업은 그대로 둬요. 매일 밤 새벽 2시 30분이 더 좋다면? 메뉴 6, 그다음 7.
+Backups you never have to remember, more often when it matters. See the line: crontab -l	기억할 필요 없는 백업, 중요할 때는 더 자주. 그 줄 보기: crontab -l
+The backup schedule	백업 일정
+No schedule yet: menu 1 (install) adds it.	아직 일정이 없어요. 메뉴 1(설치)이 추가해요.
+The last looks (backups/backup.log):	최근에 살펴본 기록 (backups/backup.log):
+Put back a previous backup (you choose which)?	이전 백업을 되돌려 놓을까요 (어느 것인지 골라요)?
+- Toolbox + automatic backups (more often when busy, at least weekly)	- 도구 상자 + 자동 백업 (바쁠 때는 더 자주, 적어도 일주일에 한 번)
+1) Automatic: back up more often when the garden is busy, less when quiet (recommended)	1) 자동: 정원이 바쁠 때는 더 자주, 조용할 때는 덜 백업 (추천)
+2) Every night at 2:30 am, whatever happens (the old way)	2) 무슨 일이 있어도 매일 밤 새벽 2시 30분 (예전 방식)
+7) Backup schedule: automatic (busy, medium, quiet) or every night	7) 백업 일정: 자동 (바쁨, 보통, 조용함) 또는 매일 밤

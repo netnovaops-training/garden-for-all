@@ -30,7 +30,7 @@
 | **OpenSSH server**(원격 접속 서버) | Ubuntu 스토어에서 | Windows PC에서 정원 컴퓨터로 일할 수 있게 해 줘요. 암호화돼요(안내서 20) | <https://www.openssh.com/manual.html> |
 | **ufw**(방화벽) | Ubuntu 스토어에서 | 들어오는 것을 모두 막아요. 정원이 허락한 것만 빼고요 | <https://ubuntu.com/server/docs/how-to/security/firewalls/> |
 | **Docker Engine**(상자 실행기) | Docker의 자체 Ubuntu 패키지 | 각 프로그램을 자기만의 작은 상자에서 돌려요(안내서 02a) | <https://docs.docker.com/engine/install/ubuntu/> |
-| **cron**(예약 실행, Ubuntu에 이미 있어요) | | 밤마다 새벽 2시 30분에 백업을 돌려요 | <https://manpages.ubuntu.com/manpages/noble/man5/crontab.5.html> |
+| **cron**(예약 실행, Ubuntu에 이미 있어요) | | 자동 백업 일정을 돌려요(한 시간마다 살펴봐요: 바쁨, 보통, 조용함) | <https://manpages.ubuntu.com/manpages/noble/man5/crontab.5.html> |
 
 ## 꼭 필요한 것: 정원 자체의 상자들(Docker 이미지)
 

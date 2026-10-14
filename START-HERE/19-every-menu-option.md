@@ -310,8 +310,8 @@ Guide for all of these: `13-backups-and-folders.md`.
 
 ### 1) Back up now (and copy to the NAS / Drive)
 - **What it does:** Saves the database, photos, data and AI cache (plus the wiki, n8n and sign-in page when they are on) into one `.tar` file in `backups/`. Then copies it to the NAS, and to Google Drive if the last Drive copy is 6 or more days old.
-- **When to use it:** Before any big change. (A backup is also made every night at 2:30 am.)
-- **What it installs or changes:** One new file in `backups/`. Your own backups are never deleted for you; nightly ones are deleted after 7 days. Each backup includes all the photos (about 800 MB), so 7 nightly backups need about 6 GB.
+- **When to use it:** Before any big change. (Backups are also made by themselves: more often when the garden is busy, at least once a week; choice 7.)
+- **What it installs or changes:** One new file in `backups/`. Your own backups are never deleted for you; automatic ones are thinned (today's newest 3, then one a day for a week). Each backup includes all the photos (about 800 MB), so the automatic ones need about 8 GB at most.
 - **To undo it:** Nothing to undo. Delete the file if you do not want it.
 - **Command:** `bash garden.sh backup` (or `bash garden.sh backup LABEL`).
 
@@ -346,10 +346,10 @@ Guide for all of these: `13-backups-and-folders.md`.
 - **What it installs or changes:** Copies one file. Old copies over the limit (14 on the NAS, 4 on Drive) are deleted there.
 - **To undo it:** Nothing to undo.
 
-### 7) Show the backup schedule (cron)
-- **What it does:** Shows the garden's cron lines (the nightly backup at 2:30 am).
-- **When to use it:** To check the nightly backup is still scheduled.
-- **What it installs or changes:** Nothing.
+### 7) Backup schedule: automatic (busy, medium, quiet) or every night
+- **What it does:** Shows the backup line in cron, and (automatic) the level right now: busy (4 or more edits since the last backup: a backup now), medium (1 to 3: within 6 hours or from 9 pm) or quiet (none: at least weekly), when the next backup comes, and the last 5 looks from `backups/backup.log`. Then `1` keeps or turns on the automatic schedule, `2` changes to one backup every night at 2:30 am.
+- **When to use it:** To see that backups are scheduled and what the schedule decided, or to choose between the two ways. Guide 13 explains how edits are counted.
+- **What it installs or changes:** With `1` or `2`: `BACKUP_SCHEDULE` in `.env` and the backup line in your cron (`crontab -l`). Otherwise nothing.
 - **To undo it:** Nothing to undo.
 
 ### 8) Stop copying to the NAS or Google Drive

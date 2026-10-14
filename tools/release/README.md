@@ -45,6 +45,8 @@ the top.
 | `check-after-install.sh` | What an install left behind: all 14 steps, the plants, the photos, the wiki off, the web name; then switches the wiki on from its add-on |
 | `test-all-options.sh` | Every menu option in turn: password and login, checklist, re-install skipping working steps, backup/verify/restore, keys, moving folders, parts on/off, LiteLLM, the front door (home only, practice, sign-in, guests, editors), subdomains, NAS (a Samba stand-in) and changing NAS, help file, Korean menu, uninstall level 1 and 2 |
 | `test-webname.sh` | The Website name swap on a throwaway copy |
+| `test-smart-backups.sh` | The automatic backup schedule (menu 6, 7): quiet, medium and busy with test blog posts, the thinning of old automatic backups, the weekly backup, nothing while switched off; removes its test posts again |
+| `check-site-links.sh` | Every file the website's pages link to (a PDF, a page, the app) is in `site/` (no "not found" for visitors) |
 | `test-rename-and-switch.sh` | The rename / move tool and the on / off switch (menu M, 18 and 14): a photo folder, a plant photo named in the database, a page, the redo after a restore, refusals, a big folder, the whole garden folder and back, the clean-up, the check-up, off and on |
 | `test-windows-functions.ps1` | The new parts of the Windows menu on their own: the WSL path, Docker Desktop's checks, line endings, the copy that follows a rename, and finding the garden computer again after its address changed |
 

@@ -61,11 +61,11 @@ start it again.
 **More:** [guide 19](19-every-menu-option.md) (menu 2 and 3)
 
 ### Can I switch the computer off?
-Yes, nothing is lost. While it is off, nobody can open your garden, and the
-2:30 am nightly backup does not happen. Switch it off the normal way: Ubuntu's
+Yes, nothing is lost. While it is off, nobody can open your garden, and no
+automatic backup happens (the first look after it is back on catches up). Switch it off the normal way: Ubuntu's
 top-right menu, then **Power Off**.
 
-**More:** [guide 13](13-backups-and-folders.md) (the nightly backup)
+**More:** [guide 13](13-backups-and-folders.md) (the automatic backup schedule)
 
 ### What happens when I close the laptop lid?
 Normally Ubuntu goes to sleep, and the garden stops. Guide 01, steps 24 and 25,
@@ -228,7 +228,7 @@ your home. If the updater is not running: menu `K`, then `N`.
 
 ### Is the disk filling up?
 The checklist's last check says "Disk is ...% full": PASS under 85%, FAIL from
-85%. Nightly backups are deleted by themselves after 7 days. Backups you make
+85%. Automatic backups are thinned by themselves (today's newest 3, then one a day for a week). Backups you make
 yourself are never deleted for you, and each one is about 800 MB. To free
 space, copy your old ones to a USB stick, delete them from `backups/`, then use
 the clean-up: menu `M`, `14`, then `5`. It removes only Docker's leftovers (old

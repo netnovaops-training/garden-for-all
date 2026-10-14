@@ -28,7 +28,7 @@ stays within that version, so the documents linked here keep matching.
 | **OpenSSH server** | from Ubuntu's store | Lets your Windows PC work on the garden computer, encrypted (guide 20) | <https://www.openssh.com/manual.html> |
 | **ufw** (firewall) | from Ubuntu's store | Blocks everything coming in, except what the garden allows | <https://ubuntu.com/server/docs/how-to/security/firewalls/> |
 | **Docker Engine** | Docker's own Ubuntu package | Runs each program in its own small box (guide 02a) | <https://docs.docker.com/engine/install/ubuntu/> |
-| **cron** (already in Ubuntu) | | Runs the nightly backup at 2:30 am | <https://manpages.ubuntu.com/manpages/noble/man5/crontab.5.html> |
+| **cron** (already in Ubuntu) | | Runs the automatic backup schedule (every hour it looks; busy, medium or quiet) | <https://manpages.ubuntu.com/manpages/noble/man5/crontab.5.html> |
 
 ## Necessary: the garden's own boxes (Docker images)
 

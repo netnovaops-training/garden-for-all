@@ -236,7 +236,7 @@ show_plan() {
     - MariaDB database (in Docker): your plants, comments and logins
     - Your garden website (in Docker), built here from the Rust code in rust/
     - Your plants and photos, loaded from the backup in backups/
-    - Toolbox + nightly backup at 2:30 am (kept 7 days)
+    - Toolbox + automatic backups (more often when busy, at least weekly)
 
   OPTIONAL (recommended; you choose yes or no next)
     - Garden tools (/beds): bed planner, checkup, diagnose, tag scan, spend
@@ -568,6 +568,8 @@ DB_DIR=./local/db
 N8N_DIR=./local/n8n
 AUTH_DIR=./local/authelia
 BACKUP_DIR=./backups
+# When backups run (menu 6, then 7): auto = more often when the garden is busy, nightly = 2:30 am.
+BACKUP_SCHEDULE=auto
 
 # Email (garden.sh email fills these in). Gmail needs an APP password.
 SMTP_HOST=
@@ -591,7 +593,7 @@ EOF
         local pair key
         for pair in "SITE_PORT=8030" "SITE_DIR=./site" "IMAGES_DIR=./local/images" "DATA_DIR=./local/data" \
                     "CACHE_DIR=./local/cashe" "DB_DIR=./local/db" "N8N_DIR=./local/n8n" "AUTH_DIR=./local/authelia" \
-                    "BACKUP_DIR=./backups" "COMPOSE_PROFILES=" "PUBLIC_NAME=" "WIKI_NAME=" "LAPTOP_IP=" \
+                    "BACKUP_DIR=./backups" "BACKUP_SCHEDULE=auto" "COMPOSE_PROFILES=" "PUBLIC_NAME=" "WIKI_NAME=" "LAPTOP_IP=" \
                     "OPENROUTER_API_KEY=" "PERENUAL_KEY=" "OLLAMA_URL=" "OLLAMA_MODEL=" \
                     "BEDS_ALLOWED_EMAILS=$(env_get GARDEN_USERS | cut -d= -f2 | cut -d, -f1)" \
                     "HOST_UID=$(id -u)" "HOST_GID=$(id -g)" "WIKIJS_API_URL=" "WIKIJS_API_KEY=" \
@@ -930,13 +932,21 @@ wiki_setup() {
     fi
 }
 
-# Install step 13: one cron line that backs up every night at 2:30 am.
-nightly_backup() {
-    explain "Nightly backup" \
-        "cron is Ubuntu's alarm clock. One line in YOUR cron runs 'garden.sh backup nightly' at 2:30 am. Nightly backups older than 7 days are deleted; ones you make yourself are kept." \
-        "Backups you never have to remember. See the line: crontab -l" \
+# The cron line for the backup schedule chosen in .env (BACKUP_SCHEDULE: auto or nightly).
+backup_cron_line() {
+    if [ "$(env_get BACKUP_SCHEDULE)" = nightly ]; then
+        printf '30 2 * * * cd "%s" && bash garden.sh backup nightly >> backups/backup.log 2>&1' "$HERE"
+    else
+        printf '7 * * * * cd "%s" && bash garden.sh backup auto >> backups/backup.log 2>&1' "$HERE"
+    fi
+}
+# Install step 13: one cron line for the backups (automatic, or every night).
+backup_schedule() {
+    explain "Backup schedule" \
+        "cron is Ubuntu's alarm clock. One line in YOUR cron runs 'garden.sh backup auto' every hour: it counts what changed since the last backup and backs up hourly while the garden is busy (4 or more edits), within 6 hours or that evening after 1 to 3 edits, and at least once a week when it is quiet. Automatic backups are thinned (today's newest 3, then one a day for a week); ones you make yourself are kept. Prefer one every night at 2:30 am? Menu 6, then 7." \
+        "Backups you never have to remember, more often when it matters. See the line: crontab -l" \
         "https://manpages.ubuntu.com/manpages/noble/man5/crontab.5.html"
-    local line="30 2 * * * cd \"$HERE\" && bash garden.sh backup nightly >> backups/backup.log 2>&1"
+    local line; line=$(backup_cron_line)
     ( crontab -l 2>/dev/null | grep -v -e 'garden.sh backup' -e 'docker/backup.sh'; echo "$line" ) | crontab -
     note "Scheduled: $line"
 }
@@ -983,7 +993,7 @@ INSTALL_STEPS=(
     "make_folders|Folders"
     "git_start|Change history (git)"
     "build_and_start|Build, load your garden, start"
-    "nightly_backup|Nightly backup"
+    "backup_schedule|Backup schedule"
     "make_icon|Desktop icon"
 )
 # How long each step usually takes (a normal laptop with ordinary home internet;
@@ -998,7 +1008,7 @@ declare -A STEP_TIME=(
     [choose_parts]="under a minute"          [make_folders]="under a minute"
     [git_start]="under a minute"
     [build_and_start]="15 to 45 minutes"
-    [nightly_backup]="under a minute"        [make_icon]="under a minute"
+    [backup_schedule]="under a minute"       [make_icon]="under a minute"
 )
 # Never run: it only lists the time words above for the Korean translation
 # (lang/extract_strings.py finds sentences written next to Lt).
@@ -1103,7 +1113,7 @@ step_already_ok() {
                               curl -fsS --max-time 10 "$(site_url)/healthz" >/dev/null 2>&1 &&
                               { ! has_part beds || curl -fsS --max-time 5 http://127.0.0.1:8025/healthz >/dev/null 2>&1; } &&
                               { ! has_part wiki || wiki_done; } ;;
-        nightly_backup)   crontab -l 2>/dev/null | has -F "cd \"$HERE\" && bash garden.sh backup nightly" ;;
+        backup_schedule)  crontab -l 2>/dev/null | has -F "$(backup_cron_line)" ;;
         make_icon)        grep -qF "$HERE/garden.sh" "$HOME/.local/share/applications/junsgarden.desktop" 2>/dev/null ;;
         *) return 1 ;;
     esac
@@ -1927,10 +1937,183 @@ do_backup() {
     # Switched off (More 14): nothing changes, so the nightly backup rests too.
     if [ "${1:-}" = nightly ] && garden_is_off; then note "The garden is switched off: no nightly backup needed."; return 0; fi
     say "Backing up the database, photos, data, cache$(has_part wiki && echo ', wiki')$(has_part n8n && echo ', n8n')$(has_part gate && echo ', sign-in page')"
+    # What the garden looks like now, so the automatic schedule counts edits from here.
+    local looked=0
+    backup_look_begin && looked=1
     tools tools backup "${1:-}" || return 1
+    [ "$looked" = 1 ] && backup_look_commit
     mkdir -p logs
+    [ "${1:-}" = auto ] && thin_auto_backups
     offsite_copy
     [ -z "$(env_get BACKUP_NAS_DIR)$(env_get BACKUP_CLOUD)" ] && note "Tip: a backup on the same computer is only half a backup. Menu 6 connects your NAS or Google Drive."
+    return 0
+}
+
+# ---------- backups that follow how busy the garden is (garden.sh backup auto) --------
+# Instead of one backup every night whatever happens, cron looks every hour, and
+# what it does depends on how much changed since the last backup:
+#   busy   4 or more edits: back up now (while edits keep coming, about once an hour)
+#   medium 1 to 3 edits:    back up when the last backup is 6 hours old, or from 9 pm
+#   quiet  no edits:        no backup, but never more than 7 days without one
+# An edit is one row of the garden's database that was added, changed or removed
+# (a plant, a photo's record, a note, a blog post...), or one photo file added or
+# changed. Rows that change by themselves (the weather, sign-in attempts and
+# sign-ins) are not counted. Every look writes one line in backups/backup.log.
+# BACKUP_SCHEDULE in .env: auto (this) or nightly (the old 2:30 am backup).
+BACKUP_LOOK=logs/backup-look              # what the garden looked like at the last backup
+# The rules above, as numbers (GARDEN_AUTO_EVENING=24 switches the evening rule off, for tests).
+AUTO_BUSY=4 AUTO_MEDIUM_HOURS=6 AUTO_EVENING=${GARDEN_AUTO_EVENING:-21} AUTO_WEEK_HOURS=168
+# Tables left out of the count: they change by themselves, or are old copies.
+AUTO_SKIP_TABLES="'login_attempts','weather','weather_forecast','garden_sessions'"
+
+# One line per database row: "table<TAB>fingerprint of the row". Sorted, so two
+# lists can be compared. Only reads. Fails if the database does not answer.
+backup_rows() {
+    local cols
+    # shellcheck disable=SC2016  # the backticks are SQL quotes, read by the database
+    cols=$(printf '%s\n' "SET SESSION group_concat_max_len = 1048576;
+SELECT TABLE_NAME, GROUP_CONCAT(CONCAT('\`', COLUMN_NAME, '\`') ORDER BY ORDINAL_POSITION SEPARATOR ',')
+FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = 'juns_garden_db'
+  AND TABLE_NAME NOT IN ($AUTO_SKIP_TABLES) AND TABLE_NAME NOT LIKE '%backup%' AND TABLE_NAME NOT LIKE '%srcbak%'
+GROUP BY TABLE_NAME;" | db_root 2>/dev/null) || return 1
+    [ -n "$cols" ] || return 1
+    printf '%s\n' "$cols" | while IFS=$'\t' read -r t c; do
+        printf "SELECT '%s', MD5(CONCAT_WS(0x1f, %s)) FROM \`juns_garden_db\`.\`%s\`;\n" "$t" "$c" "$t"
+    done | db_root 2>/dev/null | LC_ALL=C sort
+}
+# How many rows differ between two lists from backup_rows: per table, the larger of
+# rows only in the old list and rows only in the new one (a changed row counts once).
+rows_changed() {   # rows_changed OLD NEW
+    LC_ALL=C comm -3 "$1" "$2" | awk -F'\t' '
+        /^\t/ { sub(/^\t/, ""); split($0, f, "\t"); add[f[1]]++; next }
+        { del[$1]++ }
+        END { n = 0; for (t in add) { m = add[t]; if (del[t] > m) m = del[t]; n += m; seen[t] = 1 }
+              for (t in del) if (!(t in seen)) n += del[t]; print n + 0 }'
+}
+# Before a backup: note what the garden looks like (rows, and the time for photos).
+backup_look_begin() {
+    mkdir -p "$BACKUP_LOOK" || return 1
+    backup_rows > "$BACKUP_LOOK/rows.pending" 2>/dev/null && [ -s "$BACKUP_LOOK/rows.pending" ] || { rm -f "$BACKUP_LOOK/rows.pending"; return 1; }
+    touch "$BACKUP_LOOK/photos.pending"
+}
+# After a backup that worked: that look becomes "the last backup".
+backup_look_commit() {
+    mv -f "$BACKUP_LOOK/rows.pending" "$BACKUP_LOOK/rows.at-backup" &&
+        mv -f "$BACKUP_LOOK/photos.pending" "$BACKUP_LOOK/photos.at-backup" &&
+        date +%s > "$BACKUP_LOOK/time.at-backup"
+}
+# The time of the last backup (seconds since 1970): noted, or the newest backup file's.
+last_backup_time() {
+    local t f
+    t=$(cat "$BACKUP_LOOK/time.at-backup" 2>/dev/null)
+    if [ -z "$t" ]; then f=$(newest_backup_path); [ -f "$f" ] && t=$(stat -c %Y "$f"); fi
+    printf '%s' "${t:-0}"
+}
+
+# Look at the garden and decide (nothing is backed up here). Sets AUTO_LEVEL
+# (first, busy, medium, quiet or unknown), AUTO_EDITS, AUTO_ROWS, AUTO_PHOTOS,
+# AUTO_HOURS (since the last backup), AUTO_DUE (1 = back up now) and AUTO_NEXT (words).
+backup_auto_look() {
+    local now hour photos_dir
+    now=$(date +%s); hour=$((10#$(date +%H)))
+    AUTO_HOURS=$(( (now - $(last_backup_time)) / 3600 )); AUTO_ROWS=0; AUTO_PHOTOS=0; AUTO_DUE=0
+    mkdir -p "$BACKUP_LOOK"
+    if ! backup_rows > "$BACKUP_LOOK/rows.now" 2>/dev/null || [ ! -s "$BACKUP_LOOK/rows.now" ]; then
+        AUTO_LEVEL=unknown; AUTO_EDITS=0; AUTO_NEXT="the database does not answer, so nothing can be counted"; return 0
+    fi
+    if [ ! -s "$BACKUP_LOOK/rows.at-backup" ]; then
+        AUTO_LEVEL=first; AUTO_EDITS=0; AUTO_DUE=1; AUTO_NEXT="now (the first automatic backup: there is nothing to compare with yet)"; return 0
+    fi
+    AUTO_ROWS=$(rows_changed "$BACKUP_LOOK/rows.at-backup" "$BACKUP_LOOK/rows.now")
+    photos_dir=$(env_get IMAGES_DIR); photos_dir=${photos_dir:-./local/images}
+    [ -f "$BACKUP_LOOK/photos.at-backup" ] && AUTO_PHOTOS=$(find "$photos_dir" -type f -newer "$BACKUP_LOOK/photos.at-backup" 2>/dev/null | wc -l)
+    AUTO_EDITS=$((AUTO_ROWS + AUTO_PHOTOS))
+    if [ "$AUTO_EDITS" -ge "$AUTO_BUSY" ]; then
+        AUTO_LEVEL=busy; AUTO_DUE=1; AUTO_NEXT="now"
+    elif [ "$AUTO_EDITS" -ge 1 ]; then
+        AUTO_LEVEL=medium
+        if [ "$AUTO_HOURS" -ge "$AUTO_MEDIUM_HOURS" ] || [ "$hour" -ge "$AUTO_EVENING" ]; then AUTO_DUE=1; AUTO_NEXT="now"
+        else AUTO_NEXT="in $((AUTO_MEDIUM_HOURS - AUTO_HOURS)) hour(s), or from ${AUTO_EVENING}:00, or sooner if more edits come"; fi
+    else
+        AUTO_LEVEL=quiet
+        if [ "$AUTO_HOURS" -ge "$AUTO_WEEK_HOURS" ]; then AUTO_DUE=1; AUTO_NEXT="now (the weekly backup)"
+        else AUTO_NEXT="when something changes, or in $(( (AUTO_WEEK_HOURS - AUTO_HOURS + 23) / 24 )) day(s) (at least weekly)"; fi
+    fi
+}
+
+# cron, every hour: garden.sh backup auto. One line in the log, and a backup if it is due.
+do_backup_auto() {
+    [ -f .env ] || return 0
+    local stamp; stamp=$(date '+%Y-%m-%d %H:%M')
+    if garden_is_off; then echo "$stamp auto: switched off, nothing changes, no backup"; return 0; fi
+    backup_auto_look
+    echo "$stamp auto: $AUTO_LEVEL ($AUTO_EDITS edit(s): $AUTO_ROWS row(s), $AUTO_PHOTOS photo(s); last backup $AUTO_HOURS h ago) -> $([ "$AUTO_DUE" = 1 ] && echo "backing up now" || echo "next: $AUTO_NEXT")"
+    [ "$AUTO_DUE" = 1 ] || return 0
+    # Enough room? A backup needs about as much space as the last one, twice over to be safe.
+    local dir need free
+    dir=$(env_get BACKUP_DIR); dir=${dir:-./backups}; mkdir -p "$dir"
+    need=$(( $(stat -c %s "$(newest_backup_path)" 2>/dev/null || echo 0) * 2 / 1024 ))
+    free=$(df -Pk "$dir" | awk 'NR == 2 {print $4}')
+    if [ "${free:-0}" -lt "$need" ]; then
+        echo "$stamp auto: SKIPPED, not enough free disk ($((free / 1024)) MB free, about $((need / 1024)) MB needed). Menu 6: older backups, or a NAS."
+        return 1
+    fi
+    do_backup auto
+}
+
+# After an automatic backup: keep today's newest 3 automatic ones, and the newest
+# one of each of the 6 days before; older automatic ones go. Backups you made
+# yourself, the nightly ones and the "before-..." safety ones are never touched here.
+thin_auto_backups() {
+    local dir today f day n=0 seen=" "
+    dir=$(env_get BACKUP_DIR); dir=${dir:-./backups}; today=$(date +%Y-%m-%d)
+    while IFS= read -r f; do
+        [ -n "$f" ] || continue
+        day=$(date -r "$f" +%Y-%m-%d)
+        if [ "$day" = "$today" ]; then
+            n=$((n + 1)); [ "$n" -le 3 ] && continue
+        elif [[ "$seen" != *" $day "* ]] && [ $(( ($(date +%s) - $(stat -c %Y "$f")) / 86400 )) -lt 7 ]; then
+            seen="$seen$day "; continue
+        fi
+        rm -f -- "$f" && note "Removed an older automatic backup: $(basename "$f")"
+    done < <(find "$dir" -maxdepth 1 -name 'junsgarden-backup_*_auto.tar' -printf '%T@ %p\n' | sort -rn | cut -d' ' -f2-)
+}
+
+# Backups menu 7: the schedule, what the last looks decided, and the choice.
+do_backup_schedule() {
+    local mode; mode=$(env_get BACKUP_SCHEDULE); mode=${mode:-auto}
+    say "The backup schedule"
+    note "Now: $( [ "$mode" = auto ] && echo "automatic (cron looks every hour; busy, medium or quiet)" || echo "every night at 2:30 am")"
+    crontab -l 2>/dev/null | grep 'garden.sh backup' | sed 's/^/      /' || note "No schedule yet: menu 1 (install) adds it."
+    if [ "$mode" = auto ]; then
+        backup_auto_look
+        note "Right now: $AUTO_LEVEL, $AUTO_EDITS edit(s) since the last backup ($AUTO_HOURS h ago). Next backup: $AUTO_NEXT."
+        note "The last looks (backups/backup.log):"
+        grep ' auto: ' "$(env_get BACKUP_DIR || echo ./backups)/backup.log" 2>/dev/null | tail -5 | sed 's/^/      /'
+    fi
+    Lblock <<'EOF'
+
+   1) Automatic: back up more often when the garden is busy, less when quiet (recommended)
+   2) Every night at 2:30 am, whatever happens (the old way)
+   0) Back
+EOF
+    case "$(ask "Number" 0)" in
+        1) env_set BACKUP_SCHEDULE auto; backup_schedule ;;
+        2) env_set BACKUP_SCHEDULE nightly; backup_schedule ;;
+    esac
+}
+
+# After a change that went wrong: offer the backup made just before it (LABEL), or
+# one of the newest. Nothing is restored without a yes.
+offer_restore_previous() {   # offer_restore_previous [LABEL]
+    [ -f .env ] && [ "${ASSUME_YES:-0}" != 1 ] && [ -t 0 ] || return 0
+    local dir f; dir=$(env_get BACKUP_DIR); dir=${dir:-./backups}
+    [ -n "${1:-}" ] && f=$(find "$dir" -maxdepth 1 -name "junsgarden-backup_*_$1.tar" -printf '%T@ %f\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+    if [ -n "${f:-}" ]; then
+        confirm "Put back $f, the backup made just before this change?" n && do_restore "$f"
+    elif [ -n "$(newest_backup)" ]; then
+        confirm "Put back a previous backup (you choose which)?" n && do_restore
+    fi
     return 0
 }
 
@@ -2249,6 +2432,8 @@ do_backups_menu() {
         note "NAS copies:    $(for n in $NAS_SLOTS; do nas_dir_of "$n"; done | paste -sd' ' -)"
         note "Google Drive:  $(env_get BACKUP_CLOUD || true)"
         note "Last copies:   $(tail -2 logs/offsite.log 2>/dev/null | tr '\n' ' ')"
+        note "Schedule:      $(if [ "$(env_get BACKUP_SCHEDULE)" = nightly ]; then echo "every night, 2:30 am"; else
+            echo "automatic. Last look: $(grep ' auto: ' "$(env_get BACKUP_DIR || echo ./backups)/backup.log" 2>/dev/null | tail -1 | cut -c1-110)"; fi)"
         Lblock <<'EOF'
 
    1) Back up now (and copy to the NAS / Drive)
@@ -2257,7 +2442,7 @@ do_backups_menu() {
    4) Connect your NAS (network drive)
    5) Connect Google Drive
    6) Copy the newest backup to the NAS / Drive now
-   7) Show the backup schedule (cron)
+   7) Backup schedule: automatic (busy, medium, quiet) or every night
    8) Stop copying to the NAS or Google Drive
    9) Change to a different NAS (moved, new model or maker)
   10) Copy the WHOLE garden folder to the NAS now
@@ -2275,7 +2460,7 @@ EOF
             4) do_nas ;;
             5) do_cloud ;;
             6) FORCE_CLOUD=1 offsite_copy ;;
-            7) crontab -l 2>/dev/null | grep garden || note "No schedule. Menu 1 (install) adds it." ;;
+            7) do_backup_schedule ;;
             8) do_offsite_stop ;;
             9) do_nas_change ;;
             10) nas_full_copy ;;
@@ -3076,7 +3261,7 @@ EOF
     fi
     printf '%s\n' "${db_hits[@]}" | has '^junsgarden_wiki\.' && has_part wiki && dc up -d --force-recreate wiki >/dev/null 2>&1
     dc up -d >/dev/null
-    wait_site || return 1
+    wait_site || { offer_restore_previous before-rename; return 1; }
     # 6. Check: the website hands out the file (or a file inside the folder) under the new name.
     if [ "$key" != DATA_DIR ]; then
         if [ -d "$new" ]; then
@@ -3086,7 +3271,8 @@ EOF
         if [ -n "$check" ]; then
             check=${check#"$new"}; check=$nweb$check
             if curl -fsS -o /dev/null --max-time 10 "$(site_url)/$check"; then note "Checked: $(site_url)/$check answers."
-            else warn "$(site_url)/$check does not answer. Look at it in the browser; to undo, rename it back."; fi
+            else warn "$(site_url)/$check does not answer. Look at it in the browser; to undo, rename it back."
+                 offer_restore_previous before-rename; fi
         fi
     fi
     if [ -d .git ] && [ "${#code_hits[@]}" -gt 0 ]; then
@@ -3153,7 +3339,7 @@ do_move_folder() {
     env_set "$key" "$new"
     rename_log moved "$old" "$new"
     run dc up -d >/dev/null
-    [ "$key" = BACKUP_DIR ] && nightly_backup
+    [ "$key" = BACKUP_DIR ] && backup_schedule
     wait_site && note "Moved. The checklist (menu 5) confirms every folder is found."
 }
 
@@ -3717,7 +3903,7 @@ do_check() {
         age=$(( ( $(date +%s) - $(stat -c %Y "$(env_get BACKUP_DIR)/$nb") ) / 86400 ))
         if [ "$age" -le 2 ]; then ok "Newest backup: $nb ($age days old)"; else wn "Newest backup is $age days old: $nb" "bash garden.sh backup"; fi
     else wn "No backups yet" "bash garden.sh backup"; fi
-    if crontab -l 2>/dev/null | has 'garden.sh backup'; then ok "Nightly backup is scheduled (2:30 am)"; else wn "No nightly backup" "bash garden.sh install"; fi
+    if crontab -l 2>/dev/null | has 'garden.sh backup'; then ok "Backups are scheduled ($( [ "$(env_get BACKUP_SCHEDULE)" = nightly ] && echo "every night, 2:30 am" || echo "automatic: cron looks every hour"))"; else wn "No backup schedule" "bash garden.sh install"; fi
 
     echo; echo "== 6. Network and web name"
     local dev ip gw mac saved
@@ -4199,7 +4385,7 @@ case "${1:-menu}" in
     stop)       dc stop ;;
     open)       xdg-open "$(site_url)" >/dev/null 2>&1 & ;;
     logs)       dc logs --tail 50 ;;
-    backup)     do_backup "${2:-}" ;;
+    backup)     if [ "${2:-}" = auto ]; then do_backup_auto; else do_backup "${2:-}"; fi ;;
     backups)    do_backups_menu ;;
     nas)        do_nas ;;
     cloud)      do_cloud ;;

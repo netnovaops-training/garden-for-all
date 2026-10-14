@@ -4,8 +4,8 @@
 *No time to read it all? This is the short version. The full guide is below.*
 
 - Every backup is one `.tar` file in the `backups/` folder. Its name tells you the date, the time and the label.
-- A backup runs by itself every night at 2:30 am and is kept 7 days. Backups you make yourself are never deleted for you.
-- Each backup includes all your photos (about 800 MB), so the 7 nightly backups need about 6 GB of disk space.
+- Backups run by themselves: every hour the garden looks at what changed, and backs up more often when it is busy, less when it is quiet, at least once a week. Backups you make yourself are never deleted for you.
+- Each backup includes all your photos (about 800 MB). Automatic ones are thinned (today's newest 3, then one a day for a week), so they need about 8 GB at most.
 - Make one: menu `6`, then `1`. Check one: `bash garden.sh verify`. Restore one: menu `7` (it first saves a `before-restore` backup).
 - Keep 3 copies: on the garden computer, on your NAS (menu `6`, then `4`) and on Google Drive (menu `6`, then `5`). A second NAS or a PC's shared folder can get every backup too (menu `6`, then `13`; up to 3 network places).
 - A Windows PC can collect a copy every week, into a folder you pick: Windows menu, `M`, then `13`.
@@ -27,7 +27,8 @@ junsgarden-backup_2026-10-13_0230_nightly.tar
 
 | Label | Made by |
 |---|---|
-| `nightly` | the automatic 2:30 am backup. Kept 7 days, then deleted for you. |
+| `auto` | the automatic schedule. Thinned for you: today's newest 3, then one a day for a week. |
+| `nightly` | the 2:30 am backup, if you chose "every night" (menu `6`, then `7`). Kept 7 days. |
 | (none) | you, with menu `6`, then `1`. Never deleted for you. |
 | `before-restore` | a restore, just before it puts an older backup back. Your safety net. |
 | `from-the-author` | the one that came in the zip: your whole garden as it was |
@@ -45,8 +46,8 @@ Inside each backup:
 | `MANIFEST.txt` | what is inside, with file counts |
 | `SHA256SUMS` | a fingerprint of every piece. A restore checks them before it changes anything. |
 
-**How big?** Each backup includes all your photos (about 800 MB). The 7 nightly
-backups together need about 6 GB of disk space, plus any backups you make
+**How big?** Each backup includes all your photos (about 800 MB). The automatic
+backups kept (at most 3 from today and one a day for 6 days) need about 8 GB, plus any backups you make
 yourself (delete old ones of your own from the `backups/` folder when you no
 longer need them).
 
@@ -60,17 +61,43 @@ longer need them).
   `before-restore` backup of what is there now, stops the website, puts
   everything back, and starts it again.
 
-## The automatic nightly backup (Ubuntu, set up by the install)
-The install adds one line to your **cron** (Ubuntu's alarm clock). You don't
-need to do anything, but here is how to see and change it:
+## The automatic backup schedule (Ubuntu, set up by the install)
+The install adds one line to your **cron** (Ubuntu's alarm clock). Every hour it
+runs `bash garden.sh backup auto`, which counts what changed since the last
+backup and decides:
 
-1. See it: `crontab -l`. You should see one line ending in
-   `garden.sh backup nightly >> backups/backup.log 2>&1`.
-   `30 2 * * *` at the start means "at 2:30 every day".
-2. See what it did: `tail -20 backups/backup.log`.
-3. Change the time (for example to 1:15 am): `crontab -e`, choose `nano` if
-   asked, change `30 2` to `15 1`, save (`Ctrl+O`, `Enter`, `Ctrl+X`).
-4. It disappeared? Menu `1` (install) puts it back. So does `bash lab/08-install-nightly-backup.sh`.
+| Level | What changed since the last backup | What happens |
+|---|---|---|
+| busy | 4 or more edits | a backup now; while edits keep coming, about once an hour |
+| medium | 1 to 3 edits | a backup when the last one is 6 hours old, or from 9 pm |
+| quiet | nothing | no backup, but never more than 7 days without one |
+
+An **edit** is one row of the garden's database that was added, changed or
+removed (a plant, a photo's record, a note, a blog post), or one photo file
+added or changed. Rows that change by themselves (the weather, sign-in
+attempts) are not counted. Switched off (menu `M`, then `14`)? Then nothing
+changes and no backup is made.
+
+Automatic backups have the label `auto`. They are thinned so they do not fill
+the disk: today's newest 3, then the newest one of each of the 6 days before;
+older automatic ones are deleted. Backups you make yourself, and the
+`before-...` safety backups, are never deleted for you. If the disk is too full
+for a backup, it is skipped and the log says so.
+
+You don't need to do anything, but here is how to see and change it:
+
+1. See it: menu `6`, then `7` shows the level right now, when the next backup
+   comes, and the last 5 looks. Or `crontab -l`: one line ending in
+   `garden.sh backup auto >> backups/backup.log 2>&1`.
+   `7 * * * *` at the start means "at 7 minutes past every hour".
+2. See what it did: `tail -20 backups/backup.log` (one line per look).
+3. Prefer one backup every night at 2:30 am, whatever happens (the old way)?
+   Menu `6`, then `7`, then `2`. Back to automatic: `1`. (`BACKUP_SCHEDULE` in
+   `.env` remembers the choice.)
+4. It disappeared? Menu `1` (install) puts it back.
+
+If a rename goes wrong after its backup, the program offers to put that
+`before-rename` backup back (nothing is restored without your yes).
 
 Cron's official guide: <https://manpages.ubuntu.com/manpages/noble/man5/crontab.5.html>
 
@@ -136,7 +163,7 @@ The safe rule is **3 copies, on 2 kinds of storage, 1 away from home**:
 
 | Copy | Where | How often | Kept |
 |---|---|---|---|
-| 1 | `backups/` on the garden computer | every night, 2:30 am | 7 days of nightly ones (about 6 GB) |
+| 1 | `backups/` on the garden computer | automatic: hourly when busy, at least weekly | today's newest 3, then one a day for a week (about 8 GB) |
 | 2 | your **NAS** (a network drive at home), and up to 2 more network places if you add them | after every backup | newest 14 in each place |
 | 3 | **Google Drive** (away from home) | once a week | newest 4 (about 3.2 GB; free Drive has 15 GB) |
 
