@@ -1,0 +1,124 @@
+# Dependabot version updates.
+#
+# All update pull requests go to the `fixes` branch, never straight to main: they are looked at
+# there and reach main with the rest of the fixes. (Dependabot's separate SECURITY updates ignore
+# target-branch and still go to the default branch; the code-fingerprints workflow keeps the public
+# list right when one of those is merged.)
+# Once a week, Monday 05:00 Pacific time. Minor and patch updates of one folder arrive together
+# in a single pull request; a major update is its own pull request.
+# beds/ has no requirements file (its libraries are named in beds/Dockerfile), so there is no pip
+# entry: the audit job in deep-scans.yml checks those libraries instead.
+version: 2
+
+updates:
+  - package-ecosystem: cargo
+    directory: /rust
+    target-branch: fixes
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    labels: [dependencies, rust]
+    groups:
+      cargo-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: gradle
+    directory: /android-app
+    target-branch: fixes
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    labels: [dependencies, android]
+    groups:
+      gradle-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /rust
+    target-branch: fixes
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    labels: [dependencies, docker]
+    groups:
+      docker-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /beds
+    target-branch: fixes
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    labels: [dependencies, docker]
+    groups:
+      docker-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /docker/tools
+    target-branch: fixes
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    labels: [dependencies, docker]
+    groups:
+      docker-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /docker/wiki
+    target-branch: fixes
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    labels: [dependencies, docker]
+    groups:
+      docker-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker-compose
+    directory: /
+    target-branch: fixes
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    labels: [dependencies, docker]
+    groups:
+      compose-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: fixes
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    labels: [dependencies, github-actions]
+    groups:
+      actions-minor-and-patch:
+        update-types: [minor, patch]
