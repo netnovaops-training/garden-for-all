@@ -27,7 +27,7 @@ transparent, free, public, and with no way in for anyone but him.
 **Out of scope, on purpose:**
 
 - The old PHP site, the old household server and its services, and every login,
-  key and account of the previous owner.
+  key and account of the author.
 - The garden's own data (plants database, photos, wiki pages): a separate,
   private download for Jun, not in this repository.
 - Ideas for a later version (not in this one): a starter garden for new people
@@ -80,7 +80,7 @@ transparent, free, public, and with no way in for anyone but him.
 ## Fixes
 
 Testing every option on Ubuntu, on Windows (the Garden Bridge, downloading from
-Google Drive as Jun will) and on a Raspberry Pi 5 found **50 problems**, all fixed
+Google Drive as Jun will) and on a Raspberry Pi 5 found **52 problems**, all fixed
 and each tested again (`CHANGES.md`, Parts 2, 5 and 6). A few examples:
 
 - The firewall step could have locked out SSH on a computer whose SSH uses
@@ -126,7 +126,7 @@ the internet. Ten improvements came from the review (`CHANGES.md`, Part 4).
   파일과 폴더에 내 이름 붙이기(쓰는 곳이 모두 따라와요), 켜기 / 끄기 스위치와 점검,
   Windows에서는 Docker Desktop(쉬운 방법)이나 Ubuntu 안의 Docker 중에서 고르기(안내서 26).
   메뉴와 앱에는 AI가 없어요: 하나에 한 가지 일만 하는 평범한 스크립트예요.
-- **고친 것:** 테스트에서 찾은 문제 50개를 모두 고치고 다시 확인했어요(`CHANGES.md`).
+- **고친 것:** 테스트에서 찾은 문제 52개를 모두 고치고 다시 확인했어요(`CHANGES.md`).
 - **나중 버전을 위한 생각:** 새로 시작하는 사람을 위한 시작 정원(자유롭게 쓸 수 있는 식물,
   자기 사진, 원래 Jun's Garden 코드에 대한 감사 표시), 현관문 주소와 포트 바꾸기.
 - **보안:** 이 코드를 읽어도, 준의 이름과 이메일을 알아도, 준으로 로그인할 수 없어요.

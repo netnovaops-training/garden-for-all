@@ -13,9 +13,9 @@
 //!   tabs.rs   one function per tab, named after its Streamlit file
 //!   st.css / st.js   Streamlit's look, and the chip boxes and calendar switch
 //!
-//! WHO MAY USE IT: Jun and Jason, logged in with the garden login
+//! WHO MAY USE IT: the people in GARDEN_USERS (Jun), logged in with the garden login
 //! (`visitor.is_admin()`); anybody else is sent to /login.php. The Streamlit
-//! version sat behind a password page plus Jason's household sign-in.
+//! version sat behind a password page plus the author's household sign-in.
 //!
 //! DIFFERENCES FROM THE STREAMLIT APP are listed in
 //! docs/streamlit-port/DEVIATIONS.md (S-1, S-2, ...).
@@ -296,7 +296,7 @@ pub async fn page(
     RawQuery(raw): RawQuery,
     headers: HeaderMap,
 ) -> Response {
-    // Only Jun and Jason may use this tool. Anyone else is sent to the login page and then back
+    // Only the garden's accounts (GARDEN_USERS) may use this tool. Anyone else is sent to the login page and then back
     // here.
     if !visitor.is_admin() {
         return redirect("/login.php?back=%2Fstreamlit%2F");

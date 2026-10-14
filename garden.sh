@@ -253,10 +253,10 @@ show_plan() {
   else, no paid services, nothing sent anywhere except the downloads from the
   official sources listed in WHAT-GETS-INSTALLED.md.
 
-  WHAT COMES FROM JASON: only the website and its code (site/, rust/, beds/),
+  WHAT COMES FROM THE AUTHOR: only the website and its code (site/, rust/, beds/),
   this setup program and the guides, and YOUR garden (plants, photos, wiki
   pages, in backups/). Every file is listed with its fingerprint in
-  FILES-FROM-JASON.txt. Menu M has a screen to look through them.
+  FILES-FROM-AUTHOR.txt. Menu M has a screen to look through them.
 EOF
 }
 
@@ -742,7 +742,7 @@ explain_images() {
     note "   the toolbox       docker/tools/Dockerfile + garden-tools.sh"
     has_part beds && note "   the garden tools  beds/Dockerfile + beds/*.py"
     has_part wiki && note "   the wiki setup    docker/wiki/"
-    note "The list of every file that came in the zip, with fingerprints: FILES-FROM-JASON.txt"
+    note "The list of every file that came in the zip, with fingerprints: FILES-FROM-AUTHOR.txt"
 }
 
 # Install step 12: download, build, start the database, load your garden, start all.
@@ -3490,10 +3490,10 @@ EOF
     say "Locked down. Only $mine can sign in, with the new password."
 }
 
-# A look at exactly what came in the zip from Jason, folder by folder, and a
+# A look at exactly what came in the zip from the author, folder by folder, and a
 # check that no file has been changed since (fingerprints).
-do_whats_from_jason() {
-    say "What came in the zip from Jason"
+do_whats_from_author() {
+    say "What came in the zip from the author"
     Lblock <<'EOF'
    Folder / file            What it is
    site/                    the website's style, scripts, page cards, the phone app download
@@ -3513,9 +3513,9 @@ EOF
     for d in site rust beds docker START-HERE lab docs windows backups; do
         [ -d "$d" ] && printf '   %-11s %6s files  %s\n' "$d/" "$(find "$d" -type f | wc -l)" "$(du -sh "$d" | cut -f1)"
     done
-    if [ -f FILES-FROM-JASON.txt ] && confirm "Check every file's fingerprint against the list made when the zip was built?" y; then
+    if [ -f FILES-FROM-AUTHOR.txt ] && confirm "Check every file's fingerprint against the list made when the zip was built?" y; then
         local changed
-        changed=$(sha256sum -c --quiet FILES-FROM-JASON.txt 2>/dev/null | grep -v ': OK$' || true)
+        changed=$(sha256sum -c --quiet FILES-FROM-AUTHOR.txt 2>/dev/null | grep -v ': OK$' || true)
         if [ -z "$changed" ]; then note "Every file is exactly as it was in the zip."
         else note "These files are different from the zip (changed by you, or by the setup):"; while IFS= read -r d; do note "   $d"; done <<<"$changed"; fi
     fi
@@ -4161,7 +4161,7 @@ menu_more() {
    8) Look inside the database (Adminer web page)
    9) Connect a local AI computer
   10) Desktop icon
-  11) Look at the files that came from Jason (and check them)
+  11) Look at the files that came from the author (and check them)
   12) Uninstall (programs only, or everything)
   13) Subdomains with DuckDNS (wiki., n8n., ...): add, remove
   14) On / off: the whole garden, or only off the internet; check-up, clean-up
@@ -4179,7 +4179,7 @@ EOF
             5) do_remote ;;              6) dc logs --tail 50 ;;
             7) do_rebuild ;;             8) do_dbweb ;;
             9) do_ai ;;                  10) make_icon ;;
-            11) do_whats_from_jason ;;  12) do_uninstall ;;
+            11) do_whats_from_author ;;  12) do_uninstall ;;
             13) do_subdomains ;;        14) do_power ;;
             15) do_llm ;;               16) do_webname ;;
             17) do_tailscale ;;         18) do_rename ;;
@@ -4219,7 +4219,7 @@ case "${1:-menu}" in
     icon)       make_icon ;;
     uninstall)  do_uninstall ;;
     helpme)     do_helpme ;;
-    files)      do_whats_from_jason ;;
+    files)      do_whats_from_author ;;
     settings)   do_settings ;;
     keys)       do_keys ;;
     addresses)  do_addresses ;;

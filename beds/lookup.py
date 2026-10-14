@@ -213,7 +213,7 @@ def _read_one(describe_image, image_data_url: str) -> dict:
 def read_tag(describe_image, images) -> dict:
     """A nursery tag -> the fields printed on it. One photo or several.
 
-    BOTH SIDES, BECAUSE THE BACK IS WHERE THE FACTS ARE. Jason, 2026-09-26:
+    BOTH SIDES, BECAUSE THE BACK IS WHERE THE FACTS ARE. The author, 2026-09-26:
     Jun photographed a tag and "it didn't allow him to take the back of the
     tag and it did not add enough information". A nursery tag prints the
     name and a picture on the front and nearly everything worth recording

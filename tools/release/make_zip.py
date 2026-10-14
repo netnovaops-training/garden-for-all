@@ -8,7 +8,7 @@
 
 - Text files get the right line endings (LF for Linux files, CRLF for .cmd/.ps1).
 - .sh files are marked executable (Ubuntu's "Run as a Program").
-- Writes FILES-FROM-JASON.txt: sha256 of every file exactly as it will be
+- Writes FILES-FROM-AUTHOR.txt: sha256 of every file exactly as it will be
   extracted, so Jun can check nothing was changed (garden.sh menu M, 11).
 - The main zip carries the add-ons' fingerprints (docker/tools/photos.sha256,
   docker/wiki/seed/wiki-pages.sha256), so garden.sh refuses a wrong add-on.
@@ -32,7 +32,7 @@ TOP = "junsgarden-for-jun/"
 SKIP_DIRS = {"target", ".git", "local", "logs", "help", "__pycache__", "node_modules", "from-garden-computer", "PDF-src"}
 SKIP_FILES = {".env", ".garden-remote", ".garden-target-windows.txt", ".garden-remote-windows.txt", ".garden-mode",
               ".garden-lang", ".garden-built", "MY-ADDRESSES.txt", "CHECKLIST.txt", "CHECKLIST-laptop.txt",
-              "CHECKLIST-windows.txt", "checklist-history.log", "FILES-FROM-JASON.txt",
+              "CHECKLIST-windows.txt", "checklist-history.log", "FILES-FROM-AUTHOR.txt",
               "junsgarden-wiki-addon.zip", "junsgarden-photos-addon.zip"}
 TEXT_EXT = {".sh", ".md", ".yml", ".yaml", ".py", ".rs", ".html", ".css", ".js", ".json", ".toml",
             ".conf", ".example", ".txt", ".sql", ".lock", ".template", ".ini", ".cfg", ".csv", ".gitignore",
@@ -72,6 +72,9 @@ assert len(backup_tars) == 1, f"expected one starter backup in {BACKUP_DIR}, fou
 backup_name = backup_tars[0]
 stem = backup_name[:-4]
 src_tar = tarfile.open(os.path.join(BACKUP_DIR, backup_name))
+# The starter backup in the download says where it came from without naming anyone.
+out_stem = stem.replace("_from-jasons-server", "_from-the-author")
+out_name = out_stem + ".tar"
 pieces = {}
 for m in src_tar.getmembers():
     if m.isfile() and not m.name.endswith("/images.tar"):
@@ -103,7 +106,7 @@ with zipfile.ZipFile(PHOTOS, "w", zipfile.ZIP_STORED, allowZip64=True) as z:
 photos_sha = h.hexdigest()
 
 # The starter backup without photos: same pieces, new MANIFEST and SHA256SUMS.
-manifest = pieces["MANIFEST.txt"].decode()
+manifest = pieces["MANIFEST.txt"].decode().replace(stem, out_stem).replace("Jason's server", "the author's server")
 manifest = "\n".join(
     ("  images.tar        the photos: a separate download, junsgarden-photos-addon.zip"
      if line.strip().startswith("images.tar") else line) for line in manifest.split("\n"))
@@ -114,9 +117,9 @@ sums += f"{hashlib.sha256(pieces['MANIFEST.txt']).hexdigest()}  MANIFEST.txt\n"
 pieces["SHA256SUMS"] = sums.encode()
 slim = io.BytesIO()
 with tarfile.open(fileobj=slim, mode="w") as out:
-    d = tarfile.TarInfo(stem); d.type = tarfile.DIRTYPE; d.mode = 0o755; out.addfile(d)
+    d = tarfile.TarInfo(out_stem); d.type = tarfile.DIRTYPE; d.mode = 0o755; out.addfile(d)
     for p in ["MANIFEST.txt", "SHA256SUMS"] + order:
-        ti = tarfile.TarInfo(f"{stem}/{p}"); ti.size = len(pieces[p]); ti.mode = 0o644
+        ti = tarfile.TarInfo(f"{out_stem}/{p}"); ti.size = len(pieces[p]); ti.mode = 0o644
         out.addfile(ti, io.BytesIO(pieces[p]))
 slim_bytes = slim.getvalue()
 
@@ -143,7 +146,7 @@ with zipfile.ZipFile(WIKI, "w", zipfile.ZIP_STORED) as z:
 generated = {
     SEED_SHA_REL: f"{seed_sha}  wiki-pages.json.gz\n".encode(),
     PHOTOS_SHA_REL: f"{photos_sha}  images.tar\n".encode(),
-    f"backups/{backup_name}": slim_bytes,
+    f"backups/{out_name}": slim_bytes,
 }
 entries = []
 for root, dirs, files in os.walk(SRC):
@@ -172,11 +175,11 @@ with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
         lines.append(f"{hashlib.sha256(data).hexdigest()}  ./{rel}\n")
         z.writestr(info_for(TOP + rel), data)
     listing = "".join(sorted(lines, key=lambda l: l.split("  ", 1)[1])).encode()
-    z.writestr(info_for(TOP + "FILES-FROM-JASON.txt"), listing)
+    z.writestr(info_for(TOP + "FILES-FROM-AUTHOR.txt"), listing)
 
 if not SMALL:
     # Keep the fingerprints next to the source too (git tracks them).
-    open(os.path.join(SRC, "FILES-FROM-JASON.txt"), "wb").write(listing)
+    open(os.path.join(SRC, "FILES-FROM-AUTHOR.txt"), "wb").write(listing)
     open(os.path.join(SRC, PHOTOS_SHA_REL.replace("/", os.sep)), "wb").write(generated[PHOTOS_SHA_REL])
     open(os.path.join(SRC, SEED_SHA_REL.replace("/", os.sep)), "wb").write(generated[SEED_SHA_REL])
 for f in (OUT, PHOTOS, WIKI):

@@ -48,7 +48,7 @@ import org.jasonagibson.junsgarden.R
 private const val SPLASH_CEILING_MILLIS = 12_000L
 
 /**
- * The backdrop of Jason's drawing, sampled from its top edge.
+ * The backdrop of the author's drawing, sampled from its top edge.
  *
  * The video is 16:9 and a phone is not, so there is ground either side of
  * it. Painting that ground the drawing's own sky green means it reads as
@@ -70,7 +70,7 @@ private val DRAWING_GROUND = Color(0xFFD7E9B9)
  * video simply starts moving over the top of it. It is also what is left if
  * the video cannot be played at all.
  *
- * SKIPPABLE, AND SKIPPABLE ANYWHERE. Jason asked for a skip, so there is a
+ * SKIPPABLE, AND SKIPPABLE ANYWHERE. The author asked for a skip, so there is a
  * button -- but the whole screen is a target too, because the only thing
  * worse than a splash is one you have to aim at to dismiss.
  *

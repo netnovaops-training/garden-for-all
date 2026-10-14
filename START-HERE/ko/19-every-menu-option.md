@@ -230,8 +230,8 @@
 - **되돌리려면:** 아이콘을 지우세요. Uninstall(More 12, 선택 1)도 둘 다 지워요.
 - **명령:** `bash garden.sh icon`
 
-### 11) Look at the files that came from Jason (and check them) — Jason이 보낸 파일 보기(그리고 확인하기)
-- **무엇을 하나요:** zip에서 온 각 폴더가 무엇인지, 파일 개수와 크기와 함께 보여 줘요. 모든 파일의 지문을 `FILES-FROM-JASON.txt`와 비교해서 바뀐 파일의 목록을 보여 줄지 물어봐요. Files(파일) 앱에서 폴더를 열지도 물어봐요.
+### 11) Look at the files that came from the author (and check them) — 제작자가 보낸 파일 보기(그리고 확인하기)
+- **무엇을 하나요:** zip에서 온 각 폴더가 무엇인지, 파일 개수와 크기와 함께 보여 줘요. 모든 파일의 지문을 `FILES-FROM-AUTHOR.txt`와 비교해서 바뀐 파일의 목록을 보여 줄지 물어봐요. Files(파일) 앱에서 폴더를 열지도 물어봐요.
 - **언제 쓰나요:** zip에 정확히 무엇이 들어 있었는지 보거나, 그 뒤로 무엇이 바뀌었는지 찾을 때.
 - **무엇을 설치하거나 바꾸나요:** 없어요.
 - **되돌리려면:** 되돌릴 것이 없어요.

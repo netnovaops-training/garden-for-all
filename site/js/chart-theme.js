@@ -29,7 +29,7 @@
    COLOUR IS DELIBERATELY NOT TOUCHED
    There are 51 hardcoded colour arrays across the widgets. A version of this
    file did reclassify them (semantic / sequential / categorical) and it worked,
-   but Jason's call on 2026-08-28 was to leave the colours exactly as they are.
+   but the author's call on 2026-08-28 was to leave the colours exactly as they are.
    Every widget keeps the colours it was written with. If that is ever revisited,
    the thing to know is that the groups are NOT equivalent: red in the
    edible-vs-toxic and toxicity charts is a safety signal, and red/green in the

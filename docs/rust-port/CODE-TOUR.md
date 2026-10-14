@@ -13,7 +13,7 @@ A visitor's browser asks for a page, say `/catalog.php`. The program
 1. **`main.rs`** receives the request and decides which page function
    handles that address.
 2. **`session.rs`** works out who is asking: a visitor (identified by a
-   cookie) or Jun/Jason (logged in with their garden password, or the app
+   cookie) or Jun/the author (logged in with their garden password, or the app
    with its key).
 3. The **page function** (in `src/pages/`) asks the database what it needs
    and fills in a **template** (in `templates/`), which is the page's HTML

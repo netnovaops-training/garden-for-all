@@ -35,11 +35,11 @@
 | `android-app/` | 휴대폰 앱의 코드 |
 | `site/` | 웹사이트가 보여 주는 사진, 스타일, 스크립트 |
 | `CHANGES.md` | 내 사본을 위해 바꾼 모든 것과 그 이유 |
-| `FILES-FROM-JASON.txt` | 받은 그대로의 모든 파일의 지문(SHA-256) |
+| `FILES-FROM-AUTHOR.txt` | 받은 그대로의 모든 파일의 지문(SHA-256) |
 | `WHAT-GETS-INSTALLED.md` | 설치될 수 있는 모든 프로그램과 그 출처 |
 
 ## 2. 오는 길에 바뀐 것이 없는지 확인하기
-메뉴 `M`, 그다음 `11`(Windows에서는: More, `11`). 모든 파일을 `FILES-FROM-JASON.txt`의 지문과
+메뉴 `M`, 그다음 `11`(Windows에서는: More, `11`). 모든 파일을 `FILES-FROM-AUTHOR.txt`의 지문과
 비교해서 다른 것을 보여 줘요. (웹사이트 이름 바꾸기를 했다면 그 파일들은 달라요: 예상한 일이에요.)
 
 ## 3. 모든 변경을 한 줄씩 보기

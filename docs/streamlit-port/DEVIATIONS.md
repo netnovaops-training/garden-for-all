@@ -31,7 +31,7 @@ where the difference lives, so you can search for it.
 
 | # | Where | Streamlit | Rust |
 |---|---|---|---|
-| S-4 | Every AI tab, sidebar | Ollama `phi4` on Jason's PC, or Anthropic with a paid key; a "Claude Model Name" box in the sidebar. | Free cloud models only: Google Gemini's free tier, then OpenRouter's free models (the same chain garden-ingest uses). Never the PC's graphics card, never a paid key. The sidebar box is shown greyed out with a note. Same prompt, same rules, same "never overwrite a person's value" safety net. |
+| S-4 | Every AI tab, sidebar | Ollama `phi4` on the author's PC, or Anthropic with a paid key; a "Claude Model Name" box in the sidebar. | Free cloud models only: Google Gemini's free tier, then OpenRouter's free models (the same chain garden-ingest uses). Never the PC's graphics card, never a paid key. The sidebar box is shown greyed out with a note. Same prompt, same rules, same "never overwrite a person's value" safety net. |
 | S-8 | 🔒 AI — Missing Only, companions | Asked Anthropic. | Asks the free models; answers are still checked against your own plant list. |
 | S-10 | AI editors, 🌐 Fetch & Stage Image | Staged the photo, saved with Save Changes. | Attaches the photo to the plant at once (Save Changes still saves the AI's other values). |
 | S-12 | 🌱 Add Plant, AI Enrich | When the AI failed it just said "no suggestions". | Also says why (for example, the free tier is busy for today). |
@@ -40,14 +40,14 @@ where the difference lives, so you can search for it.
 The AI tabs run in the background and the page reloads itself while it works,
 like Streamlit's "⏳ 3 plants in queue…". Their results (and the pipeline's
 "remembered for the session" lists) are kept in `data/orchestrator-ai/` on the
-server, so Jun and Jason see the same results; Streamlit kept them per browser
+server, so Jun and the author see the same results; Streamlit kept them per browser
 tab.
 
 ## Sign-in
 
 | # | Where | Streamlit | Rust |
 |---|---|---|---|
-| S-11 | 🌱 Add Plant | Asked for an "Account email" (Jun's or Jason's). | The garden login already says who you are, so the box is gone. The whole admin needs the garden login (Jun or Jason); Streamlit sat behind a password page plus Jason's household sign-in. |
+| S-11 | 🌱 Add Plant | Asked for an "Account email" (Jun's or the author's). | The garden login already says who you are, so the box is gone. The whole admin needs the garden login (Jun or the author); Streamlit sat behind a password page plus the author's household sign-in. |
 
 ## Small things you might notice
 

@@ -3,7 +3,7 @@
 ## Quick version
 *No time to read it all? This is the short version. The full guide is below.*
 
-- This guide moves `junsgarden.zapto.org` to your computer. Jason released the name, so you claim it in your own No-IP account.
+- This guide moves `junsgarden.zapto.org` to your computer. The author released the name, so you claim it in your own No-IP account.
 - Your data (plants, photos, comments, wiki pages) was already loaded by the install.
 - Not carried over: the weather collector (Project 5 builds one) and passwords (set yours with menu `U`, `5`).
 - The steps: practise with a `.test` name (guide 04, Part C), claim the name and make a DDNS key (Part A), run the front door step with the real name (Part D), then forward ports 80 and 443 (guide 14).
@@ -12,7 +12,7 @@
 
 ---
 
-`junsgarden.zapto.org` used to be served from Jason's server. Jason has released
+`junsgarden.zapto.org` used to be served from the author's server. The author has released
 the name from his No-IP account, so you can claim it in **your own** No-IP
 account (guide 04, Part A). From then on the name, the website, the data and
 every login are yours.
@@ -22,7 +22,7 @@ every login are yours.
   files, comments, the AI cache, wiki pages) from the backup in the zip.
 - **The garden tools** (`/beds`) and the phone app's camera tools run on your
   computer (they need a free AI key for the AI parts: Settings, `4`).
-- **Logins:** only the people in your settings can sign in. Jason has no
+- **Logins:** only the people in your settings can sign in. The author has no
   account on your copy. Menu `U` shows exactly who can sign in.
 
 ## What is NOT carried over

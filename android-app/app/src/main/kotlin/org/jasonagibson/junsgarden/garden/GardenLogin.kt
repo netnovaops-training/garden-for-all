@@ -18,12 +18,12 @@ import java.net.URL
 import java.net.URLEncoder
 
 /**
- * Logging in to the garden itself: Jun or Jason, with a password.
+ * Logging in to the garden itself: Jun or the author, with a password.
  *
  * HOW IT WORKS. The password is sent ONCE, to app_api.php?action=login, in
  * the body of a POST over HTTPS (never in the address, where it would end up
  * in logs). The site checks it and answers with a KEY: 64 random characters
- * that stand for "this is Jason" for 90 days. The app keeps only the key,
+ * that stand for "this is the author" for 90 days. The app keeps only the key,
  * never the password, in encrypted storage, and sends it with every request
  * as `Authorization: Bearer <key>`. Log out tells the site to throw the key
  * away, so a lost phone can also be cut off by changing the password (which
@@ -61,7 +61,7 @@ class GardenLogin(context: Context) {
 
     /**
      * Check a password with the site. On success the key is saved and the
-     * proper name ("Jason") is returned; on failure, the site's own sentence
+     * proper name ("Jun") is returned; on failure, the site's own sentence
      * ("Invalid username or password", "Too many login attempts...").
      */
     suspend fun login(username: String, password: String): Result<String> = withContext(Dispatchers.IO) {

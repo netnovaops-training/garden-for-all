@@ -33,7 +33,7 @@ It runs on **Wiki.js version 2**, a free wiki program.
 | `wiki-db-init` | A tiny job that runs on every start. It makes the database and the `wikijs` login if they are missing. Safe to run any number of times. In `docker compose ps -a` it shows as "Exited (0)": that is normal. File: `wiki-db-init.sh`. |
 | `wiki-setup` | The one-time setup helper (below). Files: `Dockerfile`, `wiki_setup.py`. |
 | `seed/wiki-pages.json.gz` | The pages copied from the old wiki. It is a zipped JSON text file. |
-| `export/export_wiki.py` | The script Jason used to make that file. You do not need it. |
+| `export/export_wiki.py` | The script the author used to make that file. You do not need it. |
 
 ## The first-time setup job
 
@@ -111,16 +111,16 @@ docker exec garden-db sh -c 'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" mariadb-dump -ur
 
 ## What was deliberately NOT copied, and why
 
-The old wiki ran on Jason's server. Only the **content** came across:
+The old wiki ran on the author's server. Only the **content** came across:
 pages, tags, the menu, and the "guests may read" rule.
 
 These were left behind on purpose:
 
-- **Jason's logins** (users and their password hashes). Your wiki has only
+- **the author's logins** (users and their password hashes). Your wiki has only
   your login. A hash is still a secret: it can be attacked to guess the
   password.
 - **API keys** and **sign-in settings** (`apiKeys`, `authentication`). They
-  are keys to Jason's server.
+  are keys to the author's server.
 - **The session secret and certificates** (`settings`). Your wiki makes its
   own new ones during setup. Sharing them would let someone fake a
   sign-in.

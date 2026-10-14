@@ -39,6 +39,6 @@ Claude Model Name
 
 🌱 Add a New Plant
 
-Enter your account email to add plants (Jun or Jason only).
+Enter your account email to add plants (Jun or the author only).
 
 Account email

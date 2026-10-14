@@ -38,7 +38,7 @@ SRC=docker/extras/Caddyfile.example
 
 if [ "$NAME" = "junsgarden.zapto.org" ]; then
     echo "WARNING: this is the real site's name. Only continue if you have done"
-    echo "guide 04b and Jason has told you the switch time is now."
+    echo "guide 04b and the author has told you the switch time is now."
     printf 'Type YES to continue: '
     read -r ANSWER
     [ "$ANSWER" = "YES" ] || { echo "Stopped."; exit 1; }

@@ -273,7 +273,7 @@ Limit 200MB per file • JPG, JPEG, PNG, WEBP
 Browse files
 ✅ Section 14: Validation Signing Authority
 
-Jason Gibson Signature Sign-Off
+Author Signature Sign-Off
 
 Jun Rae Signature Sign-Off
 

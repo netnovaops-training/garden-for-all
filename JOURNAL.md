@@ -1,4 +1,4 @@
-# Journal: what Jason did for this copy, and why
+# Journal: what the author did for this copy, and why
 
 A plain diary, newest day last, so you can follow the thinking behind the
 package, not only the result. The exact lines of every change are in git
@@ -10,12 +10,12 @@ package, not only the result. The exact lines of every change are in git
   came into this copy; the old PHP pages did not.
 - Everything that belonged to the old household server was taken out: its
   sign-in service, household links in the garden tools, old logins, and all of
-  Jason's own keys and accounts. Nothing in this package gives Jason (or
+  The author's own keys and accounts. Nothing in this package gives the author (or
   anyone else) a way into your computer or your garden.
 - Your own sign-in page (Authelia) replaced the household one.
 - The install was written to explain every step before doing it (what, why,
   the official page) and to save a log of everything.
-- `junsgarden.zapto.org` was released from Jason's No-IP account so you can
+- `junsgarden.zapto.org` was released from the author's No-IP account so you can
   register it in yours.
 
 ## 2026-10-13: the final test, and what it changed
@@ -63,7 +63,7 @@ The review's suggestions were then made (CHANGES.md, Part 4). The biggest: a
 stranger's link can no longer make your site do anything while you are logged
 in, the wiki only goes online once you are its admin, and nobody has a built-in
 account. One fix was for you directly: setting a plant's main photo had been
-allowed for "Jason" only; now any logged-in gardener can.
+allowed for the author's account only; now any logged-in gardener can.
 
 **Reviewing it yourself.** Guide 18 shows how you, a friend or an AI helper
 can check every file, see every change, and run the same secret scanners.
@@ -112,7 +112,7 @@ program, with sample names and addresses instead of anyone's real ones.
 
 ## 2026-10-14: your own names, an off switch, and Docker Desktop
 
-**Your own names.** The folders and pages came with Jason's names (Gallery,
+**Your own names.** The folders and pages came with the author's names (Gallery,
 HeroBanner, privacy.html...). Menu M, 18 now renames a file or folder of the
 website and changes every place that uses the name with it: the code, the
 pages, the photo lists and the database. It shows every place first, offers a

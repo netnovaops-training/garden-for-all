@@ -57,7 +57,7 @@ name now: no PHP runs anywhere.
 
 ## The sign-in (the garden's own login, since 2026-10-06)
 
-Until 2026-10-06 the site used the household sign-in (SSO). Jason asked for
+Until 2026-10-06 the site used the household sign-in (SSO). The author asked for
 the garden to have its own login instead, so now it does. No SSO.
 
 1. Visitors see everything. Nothing asks them to log in. Logging in is only
@@ -101,7 +101,7 @@ the Rust router, only so that old bookmarks land on the home page. Keeping
 required: the site does not trust that header any more.
 
 Who may upload plant photos is a second list (`JUNSGARDEN_UPLOADERS`).
-Its default is now `Jason,Joshua,Jun`, so Jun can upload photos.
+Its default is now `the author,Joshua,Jun`, so Jun can upload photos.
 
 ## Settings
 
@@ -120,10 +120,10 @@ All by environment variable; the full list with defaults is at the top of
 So nothing done on the test site touches the live site.
 
 **The test site has only fake accounts.** Before the garden had its own
-login, nobody could sign in there at all (Jason, 2026-10-05: "I don't want
+login, nobody could sign in there at all (the author, 2026-10-05: "I don't want
 anybody trying to sign in with my SSO"). Now it runs with
-`JUNSGARDEN_USERS=Jason=jason@example.test,Tester=tester@example.test`, so
-the real Jun and Jason accounts do not exist on it. It has no outbox (no
+`JUNSGARDEN_USERS=Author=author@example.test,Tester=tester@example.test`, so
+the real Jun and the author accounts do not exist on it. It has no outbox (no
 mail settings), so it never emails anyone. The test passwords live only in
 `~/rust-port-work/test-login.env` on the server (owner-only, mode 600),
 never in the repository.
@@ -196,7 +196,7 @@ Owner-only permissions, never committed to git.
 - `Caddyfile.nuc`, `build-junsgarden-rs.tgz` (the earlier test build)
 
 Restore the database: `zcat database-all.sql.gz | docker exec -i <database container> sh -c 'mariadb -uroot -p"$MARIADB_ROOT_PASSWORD"'`.
-A copy of the git history is a bundle on Jason's PC under `AndroidStudioProjects/_backups`.
+A copy of the git history is a bundle on the author's PC under `AndroidStudioProjects/_backups`.
 
 ## Things decided on purpose
 
@@ -213,5 +213,5 @@ page does not copy it, and each such case is written down.
 - **The database schema.** A structure-only dump of the current database is
   in `db/schema.sql` for setting up a new machine.
 - **The AI and the forecast** depend on things outside this site (the model
-  on the desktop PC, files under `/home/jason`). When they are absent the
+  on the desktop PC, files under the author's home folder). When they are absent the
   boxes say so; the rest of the page is unaffected.

@@ -12,7 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 /**
  * What another app shared into this one.
  *
- * JASON, 2026-09-24: "if I wanted to send a URL video from YouTube straight
+ * THE AUTHOR, 2026-09-24: "if I wanted to send a URL video from YouTube straight
  * to the app ... so that I don't have to copy and paste."
  *
  * HELD HERE RATHER THAN PASSED DOWN, and the reason is `launchMode`. The

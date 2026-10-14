@@ -11,7 +11,7 @@
 //! WHY THE PHONE CANNOT CALL garden-ingest DIRECTLY. garden-ingest decides
 //! who you are from an `X-Auth-Email` header and trusts it completely. Only
 //! this route may set it, after checking the login. Until 2026-10-07 this
-//! job was done by Jason's household sign-in service; Jason asked for the
+//! job was done by the author's household sign-in service; the author asked for the
 //! garden's own login instead.
 //!
 //! WHY A FIXED LIST OF ACTIONS. garden-ingest also has routes that delete
@@ -113,7 +113,7 @@ pub async fn garden_camera(
             }
         }
         // The call itself failed (garden-ingest is down or timed out). Log the real
-        // error for Jason, and give the phone a plain message without details.
+        // error for the author, and give the phone a plain message without details.
         Err(e) => {
             tracing::error!("/app/garden/{action}: {e}");
             reply(StatusCode::BAD_GATEWAY, json!({ "error": "The garden's reader did not answer. Try again in a minute." }))

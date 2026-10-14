@@ -102,7 +102,7 @@ one of many AI models (from Google, Meta, Mistral and others) with a single
 key. The garden uses it only as a **backup** when Gemini's free tier is busy,
 and only its **free** models.
 
-- It is **your own account**, made with your own login. Nobody else, Jason
+- It is **your own account**, made with your own login. Nobody else, the author
   included, can see it, its keys or its history.
 - It never sees your computer. It only receives what the garden sends it to
   read: a plant tag photo, a plant name, a question about a plant.

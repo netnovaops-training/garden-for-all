@@ -3,7 +3,7 @@
 # check later what the tag really said. Table plant_tag_photo lists them.
 """Keep the photographs a tag was read from, filed under the plant.
 
-JASON, 2026-09-26: "For the tagging, can we add a folder album to be added
+THE AUTHOR, 2026-09-26: "For the tagging, can we add a folder album to be added
 to it" -- after asking for "the picture from the tag to compare against
 online information so that an informed decision can be made".
 

@@ -1,4 +1,4 @@
-//! The garden's own logins: Jun and Jason, a password each, and "forgot my
+//! The garden's own logins: the people in GARDEN_USERS (Jun), a password each, and "forgot my
 //! password" by email.
 //!
 //! HOW TO READ THIS FILE (for Jun). There are only two accounts, listed in
@@ -10,7 +10,7 @@
 //!
 //! The pieces, top to bottom:
 //! * `ensure_tables` makes the tables and adds the accounts at startup.
-//! * `check_password` is the login: it answers "is this Jun or Jason?",
+//! * `check_password` is the login: it answers "is this one of the garden's accounts?",
 //!   and counts failures so guessing is slow (5 wrong tries from one
 //!   address, or 10 against one name, and it waits 15 minutes).
 //! * `start_reset` / `finish_reset` are "forgot my password": a link with a
@@ -21,7 +21,7 @@
 //!
 //! History: until 2026-09-19 the PHP site had a password login much like
 //! this (bcrypt hashes in a file). It was replaced by the household sign-in,
-//! and on 2026-10-06 Jason asked for passwords back, for Jun and himself
+//! and on 2026-10-06 the author asked for passwords back, for Jun and himself
 //! only, with resets going to their own addresses.
 // `use` brings names into scope so they can be written short. `OnceLock` holds a value
 // that is created once, the first time it is needed, and then reused.
@@ -81,7 +81,7 @@ pub fn parse_users(spec: &str) -> Vec<Account> {
         .collect()
 }
 
-/// Find an account by its name, ignoring capitals ("jason" is Jason).
+/// Find an account by its name, ignoring capitals ("jun" is Jun).
 ///
 /// `'a` is a lifetime: it says the returned account is borrowed from `state`, so it can
 /// only be used while `state` exists. `Option` is "an account, or nothing".
@@ -231,7 +231,7 @@ pub enum LoginError {
     TooMany,
 }
 
-/// The login. Returns the account's proper name ("Jason") when the password
+/// The login. Returns the account's proper name ("Jun") when the password
 /// is right.
 // What it takes in: the shared app state, the typed name, the typed password and the
 // visitor's address. Gives back `Ok(proper name)` or `Err(LoginError)`.
@@ -506,7 +506,7 @@ mod tests {
 
     #[test]
     fn users_parse() {
-        let u = parse_users("Jun=A@B.com, Jason=c@d.com ,bad,=x@y.z");
+        let u = parse_users("Jun=A@B.com, Mina=c@d.com ,bad,=x@y.z");
         assert_eq!(u.len(), 2);
         assert_eq!(u[0].name, "Jun");
         assert_eq!(u[0].email, "a@b.com");
@@ -518,7 +518,7 @@ mod tests {
     fn password_rules() {
         assert!(password_problem("Jun", "short").is_some());
         assert!(password_problem("Jun", "password1").is_some());
-        assert!(password_problem("Jasonjason", "JASONJASON").is_some());
+        assert!(password_problem("Minamina", "MINAMINA").is_some());
         assert!(password_problem("Jun", "Password1").is_some());
         assert!(password_problem("Jun", "the hostas by the porch").is_none());
     }

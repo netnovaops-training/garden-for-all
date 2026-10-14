@@ -106,7 +106,7 @@ the website       rust/Dockerfile + rust/	웹사이트          rust/Dockerfile 
 the toolbox       docker/tools/Dockerfile + garden-tools.sh	도구 상자         docker/tools/Dockerfile + garden-tools.sh
 the garden tools  beds/Dockerfile + beds/*.py	정원 도구         beds/Dockerfile + beds/*.py
 the wiki setup    docker/wiki/	위키 설정         docker/wiki/
-The list of every file that came in the zip, with fingerprints: FILES-FROM-JASON.txt	zip에 들어 있던 모든 파일과 지문(fingerprint) 목록: FILES-FROM-JASON.txt
+The list of every file that came in the zip, with fingerprints: FILES-FROM-AUTHOR.txt	zip에 들어 있던 모든 파일과 지문(fingerprint) 목록: FILES-FROM-AUTHOR.txt
 Downloading fresh copies of those images	그 이미지의 새 사본 다운로드하기
 docker compose pull gets the newest copy of each image above, straight from its official place, and checks its fingerprint (digest).	docker compose pull은 위의 각 이미지의 최신 사본을 공식 장소에서 바로 가져오고, 지문(digest)을 확인해요.
 Fresh copies have the latest safety fixes.	새 사본에는 최신 보안 수정이 들어 있어요.
@@ -375,7 +375,7 @@ None. Only a password can open SSH here.	없어요. 여기서는 비밀번호로
 Number to remove (0 = keep them all)	지울 번호(0 = 모두 그대로 두기)
 LOCK DOWN: you, and only you	잠그기(LOCK DOWN): 본인, 오직 본인만
 Lock down now?	지금 잠글까요?
-What came in the zip from Jason	Jason이 보낸 zip에 들어 있던 것
+What came in the zip from the author	제작자가 보낸 zip에 들어 있던 것
 Check every file's fingerprint against the list made when the zip was built?	zip을 만들 때 만든 목록과 모든 파일의 지문을 비교할까요?
 Every file is exactly as it was in the zip.	모든 파일이 zip에 있던 그대로예요.
 These files are different from the zip (changed by you, or by the setup):	이 파일들은 zip과 달라요(본인이 바꿨거나, 설치 과정에서 바뀌었어요):
@@ -421,10 +421,10 @@ No-IP updater, and the router: only ports 80 and 443 open	No-IP 업데이트 프
 NOT DONE, EVER: no accounts for anybody else, no remote access for anybody	절대 하지 않는 것: 다른 사람을 위한 계정이나 원격 접속은 만들지 않아요.
 else, no paid services, nothing sent anywhere except the downloads from the	유료 서비스도 쓰지 않아요. 다운로드 말고는 아무 데도 아무것도 보내지 않아요.
 official sources listed in WHAT-GETS-INSTALLED.md.	다운로드는 WHAT-GETS-INSTALLED.md에 적힌 공식 출처에서만 받아요.
-WHAT COMES FROM JASON: only the website and its code (site/, rust/, beds/),	JASON이 보낸 것: 웹사이트와 그 코드(site/, rust/, beds/),
+WHAT COMES FROM THE AUTHOR: only the website and its code (site/, rust/, beds/),	제작자가 보낸 것: 웹사이트와 그 코드(site/, rust/, beds/),
 this setup program and the guides, and YOUR garden (plants, photos, wiki	이 설치 프로그램과 안내서, 그리고 본인의 정원(식물, 사진, 위키
 pages, in backups/). Every file is listed with its fingerprint in	페이지, backups/ 안)뿐이에요. 모든 파일은 지문과 함께
-FILES-FROM-JASON.txt. Menu M has a screen to look through them.	FILES-FROM-JASON.txt에 적혀 있어요. 메뉴 M에 그것을 살펴보는 화면이 있어요.
+FILES-FROM-AUTHOR.txt. Menu M has a screen to look through them.	FILES-FROM-AUTHOR.txt에 적혀 있어요. 메뉴 M에 그것을 살펴보는 화면이 있어요.
 The garden is a small server: it should run on a computer that stays on.	정원은 작은 서버예요: 항상 켜져 있는 컴퓨터에서 실행해야 해요.
 Everything is installed here. Later, the router sends internet	모든 것을 여기에 설치해요. 나중에 공유기가 인터넷
 visitors (ports 80 and 443 only) to THIS computer's address.	방문자(포트 80과 443만)를 '이' 컴퓨터의 주소로 보내요.
@@ -584,7 +584,7 @@ M) More (advanced)        L) Language: English / 한국어 / both	M) 더 보기(
 8) Look inside the database (Adminer web page)	8) 데이터베이스 안 보기(Adminer 웹 페이지)
 9) Connect a local AI computer	9) 로컬 AI 컴퓨터 연결하기
 10) Desktop icon	10) 바탕화면 아이콘
-11) Look at the files that came from Jason (and check them)	11) Jason이 보낸 파일 보기(그리고 확인하기)
+11) Look at the files that came from the author (and check them)	11) 제작자가 보낸 파일 보기(그리고 확인하기)
 12) Uninstall (programs only, or everything)	12) 제거하기(프로그램만, 또는 모두)
 13) Subdomains with DuckDNS (wiki., n8n., ...): add, remove	13) DuckDNS 하위 도메인(wiki., n8n., ...): 추가, 지우기
 14) On / off: the whole garden, or only off the internet; check-up, clean-up	14) 켜기 / 끄기: 정원 전체, 또는 인터넷에서만 내리기; 점검, 정리

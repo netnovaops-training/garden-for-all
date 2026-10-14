@@ -228,8 +228,8 @@ after 4; see "Windows-only items" at the end. `0) Back` returns to the main menu
 - **To undo it:** Delete the icon. Uninstall (More 12, choice 1) also removes both.
 - **Command:** `bash garden.sh icon`
 
-### 11) Look at the files that came from Jason (and check them)
-- **What it does:** Shows what each folder from the zip is, with file counts and sizes. Offers to check every file's fingerprint against `FILES-FROM-JASON.txt` and list the ones that changed. Offers to open the folder in the Files app.
+### 11) Look at the files that came from the author (and check them)
+- **What it does:** Shows what each folder from the zip is, with file counts and sizes. Offers to check every file's fingerprint against `FILES-FROM-AUTHOR.txt` and list the ones that changed. Offers to open the folder in the Files app.
 - **When to use it:** To see exactly what came in the zip, or to find what was changed since.
 - **What it installs or changes:** Nothing.
 - **To undo it:** Nothing to undo.

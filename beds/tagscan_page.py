@@ -3,7 +3,7 @@
 # plant tag; the plant is added and its details wait for approval in /review.
 """Photograph a nursery tag instead of typing it in field by field.
 
-JASON, 2026-09-24: "I do want him to be able to in his app to be able to
+THE AUTHOR, 2026-09-24: "I do want him to be able to in his app to be able to
 quickly add information from tags without having to manually add everything
 one by one."
 

@@ -13,7 +13,7 @@
 //! here (the app's tag queue is in garden-ingest).
 //!
 //! Settings: JUNSGARDEN_GEMINI_API_KEY (the FREE key), JUNSGARDEN_OPENROUTER_API_KEY,
-//! JUNSGARDEN_PERENUAL_KEY. Never the PC's GPU, never a paid key (Jason,
+//! JUNSGARDEN_PERENUAL_KEY. Never the PC's GPU, never a paid key (the author,
 //! 2026-10-07). The Streamlit app used Ollama on the PC, or Anthropic.
 //!
 //! RUST WORDS USED HERE. `async fn` can pause while it waits for the network; callers write

@@ -1,6 +1,6 @@
 🔍 Awaiting Approval
 
-These plants have 100% of their data complete, but are waiting on a sign-off from Jason and/or Jun.
+These plants have 100% of their data complete, but are waiting on a sign-off from the author and/or Jun.
 
 🌷 Perennials
 
@@ -281,7 +281,7 @@ Limit 200MB per file • JPG, JPEG, PNG, WEBP
 Browse files
 ✅ Section 14: Validation Signing Authority
 
-Jason Gibson Signature Sign-Off
+Author Signature Sign-Off
 
 Jun Rae Signature Sign-Off
 

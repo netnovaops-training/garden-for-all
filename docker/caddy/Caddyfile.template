@@ -11,7 +11,7 @@
 #                             --> /beds ...    garden tools   (127.0.0.1:8025)
 #                                              only after signing in at /auth
 #
-#  This is the same layout as the live junsgarden.zapto.org on Jason's server.
+#  This is the same layout as the live junsgarden.zapto.org on the author's server.
 #
 #  Edit carefully: after a change run
 #      sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy

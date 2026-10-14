@@ -23,7 +23,7 @@
 //! password (`accounts::finish_reset`) deletes all of that person's rows.
 //!
 //! Until 2026-10-06 this file trusted the household sign-in's `X-Auth-Email`
-//! header instead; Jason asked for the garden's own logins back.
+//! header instead; the author asked for the garden's own logins back.
 // `use` brings names into scope so they can be written short. `Arc` is a shared pointer:
 // many parts of the program can hold the same value, which is freed after the last one
 // lets go.
@@ -52,7 +52,7 @@ use crate::AppState;
 pub struct Visitor {
     /// The session id: the value of the `PHPSESSID` cookie, or the app key.
     pub sid: String,
-    /// The logged-in person's name ("Jun", "Jason"), or empty for a visitor.
+    /// The logged-in person's name ("Jun"), or empty for a visitor.
     pub username: String,
     /// That person's address on file, or empty.
     pub email: String,

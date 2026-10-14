@@ -202,7 +202,7 @@ async fn flagged(state: &AppState, req: &Req) -> String {
 
 // ---- 🔍 Awaiting Approval / 🏆 Fully Approved (two files, one shape) -------
 
-/// True only when both Jason and Jun have approved the plant. A value of 1, true or True counts as
+/// True only when both the author and Jun have approved the plant. A value of 1, true or True counts as
 /// approved.
 fn approved_both(p: &Map<String, Value>) -> bool {
     // A closure that tests one approval column.
@@ -216,9 +216,9 @@ fn approved_both(p: &Map<String, Value>) -> bool {
 async fn approval(state: &AppState, req: &Req, done: bool) -> String {
     // Heading and description for the chosen tab.
     let mut h = if done {
-        ui::header("🏆 Fully Approved & Verified") + &ui::text("Browse the 100% completed, print-ready catalog. Both Jason and Jun have verified this data.")
+        ui::header("🏆 Fully Approved & Verified") + &ui::text("Browse the 100% completed, print-ready catalog. Both the author and Jun have verified this data.")
     } else {
-        ui::header("🔍 Awaiting Approval") + &ui::text("These plants have 100% of their data complete, but are waiting on a sign-off from Jason and/or Jun.")
+        ui::header("🔍 Awaiting Approval") + &ui::text("These plants have 100% of their data complete, but are waiting on a sign-off from the author and/or Jun.")
     };
     // Inner tab 1 (perennials) or 2 (annuals).
     let sub = if req.get("sub") == "2" { 2 } else { 1 };

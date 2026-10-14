@@ -4,7 +4,7 @@
 # and also looks in the wishlist table future_plants.
 """Has this plant already been added?
 
-JASON, 2026-09-24: "I don't want to add duplicates so if there are some
+THE AUTHOR, 2026-09-24: "I don't want to add duplicates so if there are some
 don't add them. Just keep adding new ones ... there's about 200 new plants
 to add."
 
@@ -19,7 +19,7 @@ same plant as "Hosta 'Blue Angel'", "Blue Angel Hosta" and "HOSTA BLUE
 ANGEL". Comparing raw strings finds none of those; comparing sorted
 significant words finds all three.
 
-IT CHECKS THE FUTURE LIST TOO. `future_plants` holds 6,534 plants Jason has
+IT CHECKS THE FUTURE LIST TOO. `future_plants` holds 6,534 plants the author has
 already catalogued but Jun does not own yet. A tag that matches one of those
 is not a duplicate -- it is that row finally arriving, and saying so lets it
 be promoted with the details it already has instead of being retyped.

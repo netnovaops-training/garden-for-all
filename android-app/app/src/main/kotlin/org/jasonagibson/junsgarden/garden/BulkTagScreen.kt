@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 /**
  * A pile of tag photographs, turned into a queue, in one go.
  *
- * JASON, 2026-09-27: "there needs to be a bulk tag adder so that front and
+ * THE AUTHOR, 2026-09-27: "there needs to be a bulk tag adder so that front and
  * back can be added to the picture so that if someone wants to add 20 or 30
  * tags they can at once front and back without taking one picture at a
  * time."

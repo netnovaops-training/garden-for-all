@@ -5,7 +5,7 @@ package org.jasonagibson.junsgarden.garden
 /**
  * The little symbols beside a plant: how much sun, how much water.
  *
- * THE ORIGINAL APP HAD THESE and Jason noticed the moment they were gone:
+ * THE ORIGINAL APP HAD THESE and the author noticed the moment they were gone:
  * "I also lost a little emojis. I had like water in the sun and stuff." Its
  * APK still carries the classes -- `ui/common/PlantIcons`, `SunLevel`,
  * `WaterLevel` -- so they were a real part of the screen, not decoration

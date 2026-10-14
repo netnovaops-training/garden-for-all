@@ -517,7 +517,7 @@ export function openModal(p) {
     let parallaxHTML = '<div class="parallax-container" id="modal-parallax">';
     const favs = p.favorited_by || [];
     if (favs.includes('Joshua')) parallaxHTML += `<div class="parallax-layer parallax-user" style="--speed: 1.5; top: 12%; left: 5%;">Jun's Pick 👍</div>`;
-    if (favs.includes('Jason')) parallaxHTML += `<div class="parallax-layer parallax-user" style="--speed: -1.2; top: 25%; right: 5%;">Jason's Pick 👍</div>`;
+    if (favs.includes('Jason')) parallaxHTML += `<div class="parallax-layer parallax-user" style="--speed: -1.2; top: 25%; right: 5%;">Author's pick 👍</div>`;
     if (favs.includes('Kona')) parallaxHTML += `<div class="parallax-layer parallax-user" style="--speed: 0.8; top: 18%; right: 15%; background: rgba(255, 150, 50, 0.4);">Kona's Pick 👍</div>`;
     
     for (let i = 0; i < 15; i++) {

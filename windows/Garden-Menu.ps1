@@ -941,7 +941,7 @@ function Show-More {
    8) Look inside the database (Adminer, on the garden computer: http://localhost:8082 there)
    9) Connect a local AI computer
   10) Copy the newest backup to THIS PC
-  11) Look at the files that came from Jason (and check them)
+  11) Look at the files that came from the author (and check them)
   12) Uninstall
   13) Weekly automatic copy of the backup to THIS PC (on / off)
   14) Subdomains with DuckDNS (wiki., n8n., ...): add, remove

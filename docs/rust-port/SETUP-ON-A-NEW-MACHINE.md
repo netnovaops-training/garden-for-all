@@ -8,9 +8,9 @@ server in front. Plain words, no secrets in this file.
 
 - A Linux machine with Docker installed (`curl -fsSL https://get.docker.com | sh`).
 - The site's files: the `www` folder (pages, style, scripts, PDFs) and the
-  `images` folder (781 MB of photos). Jason has both; copy them to
+  `images` folder (781 MB of photos). The author has both; copy them to
   `/srv/garden/www` and `/srv/garden/images`.
-- A database backup (`database-all.sql.gz`, Jason has it) **or** start empty
+- A database backup (`database-all.sql.gz`, the author has it) **or** start empty
   with `db/schema.sql` from this repository.
 - This repository (branch `rust-faithful`).
 
@@ -65,10 +65,10 @@ docker run -d --name garden-site --restart unless-stopped \
 | `JUNSGARDEN_DATABASE_URL` | how to reach the database |
 | `JUNSGARDEN_WWW_DIR` | the site folder inside the container (default `/www`) |
 | `JUNSGARDEN_DATA_DIR` | where the guestbook and comments are written (default `/www/data`) |
-| `JUNSGARDEN_USERS` | `Name=email,Name=email`: the only accounts that can log in and edit, and the address each one's password links go to. Default: Jun's and Jason's. Nobody can make an account from the website |
+| `JUNSGARDEN_USERS` | `Name=email,Name=email`: the only accounts that can log in and edit, and the address each one's password links go to. Default: Jun's and the author's. Nobody can make an account from the website |
 | `JUNSGARDEN_PUBLIC_URL` | the site's own address, put into the password links (default `https://junsgarden.zapto.org`, so change it on your machine) |
 | `JUNSGARDEN_SMTP_HOST`, `JUNSGARDEN_SMTP_PORT`, `JUNSGARDEN_SMTP_USER`, `JUNSGARDEN_SMTP_PASSWORD`, `JUNSGARDEN_MAIL_FROM` | how the site sends the password emails (section 4); put them in `garden.env`, not on the command line |
-| `JUNSGARDEN_UPLOADERS` | names (from the list above) who may upload plant photos (default `Jason,Joshua,Jun`) |
+| `JUNSGARDEN_UPLOADERS` | names (from the list above) who may upload plant photos (default `the author,Joshua,Jun`) |
 | `JUNSGARDEN_AI_CACHE_DIR` | where the AI readings are cached (default `/www/cashe/AI`) |
 | `OLLAMA_URL`, `OLLAMA_MODEL` | the local AI model, if you run one; leave unset otherwise and the AI boxes simply say they are offline |
 | `JUNSGARDEN_FORECAST_FILE`, `JUNSGARDEN_WEATHER_LATEST` | the forecast and latest-reading files the Data page reads, if you have them |
@@ -156,7 +156,7 @@ later. Setting a new password logs that person out everywhere.
 ## 6. What is not on your machine
 
 - The weather collector (writes the `weather` table every 30 minutes) is a
-  separate small Python container on Jason's NUC (`iot/weather_collector.py`).
+  separate small Python container on the author's NUC (`iot/weather_collector.py`).
   Without it the Data page's weather widgets show the history they have and
   the Air & Temperature box shows its sample numbers.
 - The Garden Orchestrator, wiki, bed planner and tag scanner are separate

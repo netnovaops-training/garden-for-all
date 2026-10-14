@@ -14,7 +14,7 @@
 ---
 
 ## Why rename?
-The garden came with the names Jason gave it: `local/images/Gallery`, `HeroBanner`,
+The garden came with the names the author gave it: `local/images/Gallery`, `HeroBanner`,
 `privacy.html` and so on. You may want your own. Renaming only the folder would
 break the website, because the code and the database still use the old name. This
 tool changes the name **everywhere it is used**, in one go, so nothing gets

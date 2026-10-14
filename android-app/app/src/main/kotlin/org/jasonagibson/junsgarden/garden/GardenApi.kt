@@ -18,7 +18,7 @@ import java.net.URLEncoder
  * The catalogue, read straight from the garden's own API.
  *
  * WHY THIS EXISTS AT ALL. The app used to be a window onto the website, and
- * Jason's answer to that was plain: "I want the app I had before ... I don't
+ * The author's answer to that was plain: "I want the app I had before ... I don't
  * want to go into the website." The app he had was native, and its plants
  * came from here.
  *
@@ -28,7 +28,7 @@ import java.net.URLEncoder
  * Verified 2026-09-25: 437 plants across 19 beds, twenty to a page.
  *
  * NO AUTHENTICATION ON THE READ PATHS, deliberately. The catalogue is public
- * on the website and Jason has said the site stays that way. Browsing plants
+ * on the website and the author has said the site stays that way. Browsing plants
  * needs no account; only writing does, and nothing here writes.
  *
  * HAND-PARSED WITH org.json RATHER THAN A SERIALISER. The detail record has
@@ -254,7 +254,7 @@ data class PlantDetail(
         )
 
         fun from(o: JSONObject): PlantDetail {
-            // EVERY PHOTOGRAPH. Jason: "Some of these had more than one
+            // EVERY PHOTOGRAPH. The author: "Some of these had more than one
             // photo" -- and they do, up to seven. The record hands them
             // back in `images`; showing only the first threw the rest away.
             val shots = ArrayList<String>()

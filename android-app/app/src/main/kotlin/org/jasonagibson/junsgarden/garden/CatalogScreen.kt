@@ -305,7 +305,7 @@ private fun PlantRow(p: PlantSummary, onClick: () -> Unit) {
             }
             // SYMBOLS INSTEAD OF WORDS ON THE LIST. "Full Sun - Partial
             // Shade" is four words to read on a row meant to be scanned, and
-            // the words are still there on the detail screen. Jason: "I also
+            // the words are still there on the detail screen. The author: "I also
             // lost a little emojis. I had like water in the sun and stuff."
             val line = listOfNotNull(
                 p.bed.takeIf { it.isNotBlank() },
@@ -320,7 +320,7 @@ private fun PlantRow(p: PlantSummary, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            // SAFETY SITS WITH THE PLANT, not three screens in. Jason asked
+            // SAFETY SITS WITH THE PLANT, not three screens in. The author asked
             // for toxic and edible at the top on the wiki; the same reason
             // applies harder on a phone held in the garden, where the
             // question is usually being asked about something already in

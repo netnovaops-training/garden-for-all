@@ -52,7 +52,7 @@ import kotlinx.coroutines.launch
 /**
  * One plant, laid out the way catalog.php lays it out.
  *
- * JASON, 2026-09-27: "Can you make Jun's app display the plants they do in
+ * THE AUTHOR, 2026-09-27: "Can you make Jun's app display the plants they do in
  * junsgarden.zapto.org/catalog.php that match with the theme app."
  *
  * TWO REQUIREMENTS IN ONE SENTENCE, PULLING OPPOSITE WAYS. The STRUCTURE
@@ -373,7 +373,7 @@ private fun Banner(icon: String, label: String, value: String) {
 /**
  * The chip row, packed as tightly as the width allows.
  *
- * JASON, 2026-09-27: "The icons can be more densly packed."
+ * THE AUTHOR, 2026-09-27: "The icons can be more densly packed."
  *
  * TWO PER LINE WAS THE BUG. Chipping them in fixed pairs meant "Tree" and
  * "Moderate" -- eleven characters between them -- took a whole line and left

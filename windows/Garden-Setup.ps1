@@ -182,7 +182,7 @@ Add-Text $p1 "Read these first if you like (they open in your browser or editor)
 Add-Link $p1 "How it all works: a map of the install and every feature (start here if you are unsure)" "00-HOW-IT-WORKS.html" 40 250 | Out-Null
 Add-Link $p1 "Read me first (step by step)" "00-READ-ME-FIRST.html" 40 278 | Out-Null
 Add-Link $p1 "What gets installed, and where each program comes from" "WHAT-GETS-INSTALLED.md" 40 306 | Out-Null
-Add-Link $p1 "The files that come from Jason (with fingerprints)" "FILES-FROM-JASON.txt" 40 334 | Out-Null
+Add-Link $p1 "The files that come from the author (with fingerprints)" "FILES-FROM-AUTHOR.txt" 40 334 | Out-Null
 Add-Text $p1 "Time: about 1 to 2 hours, mostly waiting while the website is built." 380 24 | Out-Null
 Add-Text $p1 ("In the black window, choose 1 EASY when it asks (recommended). Advanced parts (going online, " +
     "email, NAS and Google Drive backups, subdomains) come later from the menu.") 410 44 | Out-Null

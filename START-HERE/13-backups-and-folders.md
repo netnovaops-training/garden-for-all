@@ -30,7 +30,7 @@ junsgarden-backup_2026-10-13_0230_nightly.tar
 | `nightly` | the automatic 2:30 am backup. Kept 7 days, then deleted for you. |
 | (none) | you, with menu `6`, then `1`. Never deleted for you. |
 | `before-restore` | a restore, just before it puts an older backup back. Your safety net. |
-| `from-jasons-server` | the one that came in the zip: your whole garden as it was |
+| `from-the-author` | the one that came in the zip: your whole garden as it was |
 
 Inside each backup:
 

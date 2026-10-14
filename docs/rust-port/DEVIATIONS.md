@@ -57,7 +57,7 @@ has exactly the format PHP wrote.
 only `connect-src 'self'` plus cdnjs, which blocks both. The Rust site sends
 the same policy, so the behavior is identical. If the weather box never fills
 in on the live site, this is the likely cause. Fixing it means adding those
-two hosts to `connect-src`; that is a decision for Jason and Jun.
+two hosts to `connect-src`; that is a decision for the author and Jun.
 
 ## DEV-6: the plant-by-id lookup works (it is empty on the live site)
 
@@ -106,7 +106,7 @@ stores them under `Guest_<that id>`.
 
 The PHP container has no time zone set, so it runs on UTC: the guestbook's
 "Oct 5", the app's `ping` and `export` timestamps, the "Updated:" line on the
-Air box. The Rust container runs with `TZ=America/New_York` (Jason's rule for
+Air box. The Rust container runs with `TZ=America/New_York` (the author's rule for
 the Rust apps), so those read in local time. Dates stored in the database are
 printed as stored on both.
 
@@ -141,7 +141,7 @@ simply starts with an empty cache.
 ## DEV-14: the garden has its own password login again (2026-10-06)
 
 The PHP site had a password login until 2026-09-19, then used the household
-sign-in (SSO). On 2026-10-06 Jason asked for passwords back, for Jun and
+sign-in (SSO). On 2026-10-06 the author asked for passwords back, for Jun and
 himself only, with password resets by email: that is `login.php` and
 `accounts.rs` (see "The sign-in" in README.md). The old `app_api.php` login
 (a plain username, with no proof needed on writes) is **not** restored:
@@ -150,17 +150,17 @@ writes from the app need the key the app gets when it logs in.
 ## Observations about the live site, kept as they are
 
 - **Jun could not upload plant photos on the PHP site.** The uploader list
-  in `catalog.php` was `Jason, Joshua`; the household sign-in named Jun's
+  in `catalog.php` was `the author, Joshua`; the household sign-in named Jun's
   account "Jun", so the upload box told him only authorised admins may
   upload. On the Rust site the default `JUNSGARDEN_UPLOADERS` is now
-  `Jason,Joshua,Jun`, so Jun can upload photos.
-- "Set as default photo" is Jason-only (`plant_actions.php`). Kept.
+  `the author,Joshua,Jun`, so Jun can upload photos.
+- "Set as default photo" is the author-only (`plant_actions.php`). Kept.
 - The "Views" filters, the Beds & Planner links and the quantity logger show
   only when signed in. Kept.
 - `app_api.php?action=like` trusts the `username` the app sends. Kept; the
   app's contract depends on it.
-- The forecast widget reads `/home/jason/AIWebsite/.../latest_prediction.json`
-  and the Air box reads `/home/jason/iot/weather_latest.json`. Neither exists
+- The forecast widget reads `/home/<author>/AIWebsite/.../latest_prediction.json`
+  and the Air box reads `/home/<author>/iot/weather_latest.json`. Neither exists
   on the NUC, so the forecast box shows "file not found" and the Air box shows
   its sample numbers, on both sites. The paths are settings now
   (`JUNSGARDEN_FORECAST_FILE`, `JUNSGARDEN_WEATHER_LATEST`).

@@ -11,7 +11,7 @@
    photos, the wiki, side by side in OUT_FOLDER.
 5. Builds the Korean PDFs and packs them as one zip for the email to Jun
    (OUT_FOLDER/Jun's Garden guides (Korean).zip). They do not go in the download.
-The fingerprints (FILES-FROM-JASON.txt and the add-on fingerprints) are written
+The fingerprints (FILES-FROM-AUTHOR.txt and the add-on fingerprints) are written
 in the copy; compare them with the original before the final commit.
 """
 import os, pathlib, shutil, subprocess, sys, zipfile

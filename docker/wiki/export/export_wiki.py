@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # =============================================================================
-#  export_wiki.py: copy the garden wiki's PAGES out of Jason's server.
+#  export_wiki.py: copy the garden wiki's PAGES out of the author's server.
 #
-#  Jun, you do NOT need to run this. Jason ran it once on his server (the
+#  Jun, you do NOT need to run this. The author ran it once on his server (the
 #  NUC) to make the file seed/wiki-pages.json.gz that your own wiki is
 #  filled from. It is kept here so you can see exactly what was copied.
 #
@@ -15,13 +15,13 @@
 #    - the wiki's short description and company name
 #
 #  What it does NOT copy, on purpose:
-#    - users and their password hashes (Jason's logins)
+#    - users and their password hashes (the author's logins)
 #    - API keys, sign-in settings, the session secret, certificates
 #    - page history (old versions), comments, analytics
 #
 #  It only READS. It never changes the wiki or its database.
 #
-#  How Jason ran it (on the NUC):
+#  How the author ran it (on the NUC):
 #      python3 export_wiki.py /tmp/wiki-pages.json.gz
 # =============================================================================
 import datetime

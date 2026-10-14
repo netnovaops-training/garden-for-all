@@ -422,7 +422,7 @@ pub fn render(p: &Map<String, Value>, data: &Map<String, Value>, ctx: &FormCtx) 
     // Small helper: is this yes/no field switched on?
     let on = |k: &str| matches!(s(p, k).trim(), "1" | "true" | "True");
     h.push_str(&ui::columns(&[1, 1], vec![
-        ui::toggle("approved_jason", "Jason Gibson Signature Sign-Off", on("approved_jason"), None),
+        ui::toggle("approved_jason", "Author Signature Sign-Off", on("approved_jason"), None),
         ui::toggle("approved_jun", "Jun Rae Signature Sign-Off", on("approved_jun"), None),
     ]));
     h.push_str(&ui::button("save", "1", "Save Changes", true, true));

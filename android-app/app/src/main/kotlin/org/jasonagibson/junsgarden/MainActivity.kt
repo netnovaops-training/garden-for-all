@@ -48,11 +48,11 @@ import org.jasonagibson.junsgarden.ui.JunsGardenTheme
  * The app: a splash, then the sign-in screen, then the garden.
  *
  * WHO CAN DO WHAT (3.0, 2026-10-06). Exactly the website's rule: anybody
- * can browse as a guest; Jun and Jason log in with their garden passwords
+ * can browse as a guest; Jun and the author log in with their garden passwords
  * (see GardenLogin) to change things. Until 2.9 this app signed in through
- * Jason's household sign-in service instead; that, the trial codes and the
+ * The author's household sign-in service instead; that, the trial codes and the
  * household-AI tools (Ask, Identify, Tag, Receipt) are not used any more,
- * because the garden is Jun's now and must not depend on Jason's servers.
+ * because the garden is Jun's now and must not depend on the author's servers.
  * Their code (the old auth/ and chat/ folders) was removed in October 2026.
  * Identify, Tag and Receipt came back in 3.1, now through the garden site.
  */

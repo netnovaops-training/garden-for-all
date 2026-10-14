@@ -118,7 +118,7 @@ async function _showNoteOverlay(plantData, startInEdit) {
     const viewer    = document.getElementById('jun-notes-viewer');
     const nameEl    = overlay.querySelector('.jun-notes-plant-name');
 
-    // Dynamic title: "Jason's Notes", "Jun's Notes", "Kona's Notes", etc.
+    // Dynamic title: "The author's Notes", "Jun's Notes", "Kona's Notes", etc.
     const currentUser = window.GARDEN_CONFIG?.currentUser || 'Your';
     const titleEl = overlay.querySelector('.jun-notes-title');
     if (titleEl) titleEl.textContent = `${currentUser}'s Notes`;

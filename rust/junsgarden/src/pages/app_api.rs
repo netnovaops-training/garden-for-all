@@ -87,7 +87,7 @@ fn require_actor(visitor: &Visitor) -> Result<String, Response> {
             StatusCode::UNAUTHORIZED,
             json!({
                 "ok": false,
-                "error": "Log in as Jun or Jason to change the catalogue.",
+                "error": "Log in with a garden account to change the catalogue.",
                 "needs_sign_in": true,
             }),
         ));

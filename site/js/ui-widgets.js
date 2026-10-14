@@ -108,7 +108,7 @@ export function getBannerState(p) {
     } else if (favs.includes('Jason') && favs.includes('Joshua')) {
         text = "Staff Pick!"; show = true; isHolo = true;
     } else if (favs.includes('Jason')) {
-        text = "Jason's Pick!"; show = true; isHolo = true;
+        text = "Author's pick!"; show = true; isHolo = true;
     } else if (favs.includes('Joshua')) {
         text = "Jun's Pick!"; show = true; isHolo = true;
     } else if (favs.includes('Kona')) {

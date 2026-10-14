@@ -129,7 +129,7 @@ pub async fn login_get(
         "invalid" => t.error = "Invalid username or password.".into(),
         "toomany" => t.error = "Too many login attempts. Please wait 15 minutes.".into(),
         "sent" => {
-            t.notice = "If that is Jun's or Jason's account, an email with a link is on its way. \
+            t.notice = "If that is a garden account, an email with a link is on its way. \
                         It works for 30 minutes. Check the spam folder if it does not arrive."
                 .into()
         }

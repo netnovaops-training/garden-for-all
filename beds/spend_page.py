@@ -4,7 +4,7 @@
 # lines that did not match a plant.
 """What the garden has cost, and the receipt that says so.
 
-JASON, 2026-09-24: somewhere for Jun to keep track of all the plants he has
+THE AUTHOR, 2026-09-24: somewhere for Jun to keep track of all the plants he has
 bought over the years, so he has an accurate price for each one.
 
 THE RECEIPT IS PHOTOGRAPHED IN THE CAR PARK, NOT FILED AT HOME. That is the

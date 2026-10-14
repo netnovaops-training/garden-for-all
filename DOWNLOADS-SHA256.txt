@@ -4,7 +4,7 @@ These are the SHA-256 fingerprints of the three files in the Google Drive
 folder "Jun's Garden". If a file you downloaded gives the same fingerprint, it
 is exactly the file published here: nothing added, removed or changed on the way.
 
-e02742d4521d7a031ed865ec1ef5c534aff41ca9c7074dba5e647cdca13bca4b  junsgarden-for-jun.zip   (112,820,211 bytes)
+d1126c39b2f251a2c57bdd00f7dc1c5be7eea9457ecd9bf6086a3049adf3763e  junsgarden-for-jun.zip   (142,378,358 bytes)
 331ed058b1d56f184b5023af2e94d0a8a7918d2793843eaee60c8668383dd1ff  junsgarden-photos-addon.zip   (807,558,073 bytes)
 8d293d6370d5f830ed8431debc4b37605938d0c6b474fe1c4808cc7a307a1813  junsgarden-wiki-addon.zip   (794,602 bytes)
 
@@ -14,7 +14,7 @@ How to check (in the folder where the file is):
 - Ubuntu or a Raspberry Pi:      sha256sum junsgarden-for-jun.zip
 
 More checks:
-- Inside the main zip, FILES-FROM-JASON.txt lists the fingerprint of every
+- Inside the main zip, FILES-FROM-AUTHOR.txt lists the fingerprint of every
   file, and the garden menu checks them for you: menu M, then 11.
 - The install checks the photos and wiki zips against fingerprints in this
   code before it uses them (docker/tools/photos.sha256 and

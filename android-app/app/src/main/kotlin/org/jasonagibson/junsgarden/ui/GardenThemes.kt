@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 /**
  * The themes the original app had, put back.
  *
- * JASON, 2026-09-25: "I like how the PHP page displayed the results and had
+ * THE AUTHOR, 2026-09-25: "I like how the PHP page displayed the results and had
  * themes ... On the original app."
  *
  * THE NAMES ARE RECOVERED, NOT INVENTED. The old APK still carries its

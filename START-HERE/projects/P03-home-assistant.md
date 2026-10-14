@@ -18,7 +18,7 @@
 ## What you will build
 Home Assistant (HA) is a free program that puts all your smart devices in one
 place, lets you make rules ("automations"), and keeps the data in your house
-instead of a company's cloud. Jason uses the same idea for his house.
+instead of a company's cloud. The author uses the same idea for his house.
 
 ## What you need first
 - Guide 02 (Docker) done.

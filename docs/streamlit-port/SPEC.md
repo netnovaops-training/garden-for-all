@@ -206,7 +206,7 @@ The Rust version should do steps 2–4 once, as a migration or startup job.
   - File uploader "Upload custom photo(s) to gallery collection" (jpg, jpeg, png, webp; multiple; `_upl`).
   - If uploads exist and the gallery is non-empty: radio "Upload Processing Engine Action" with options ["Append to existing photos", "Replace all existing photos"] (horizontal, `_up_act`).
 - **Section 14** — `---` then `### ✅ Section 14: Validation Signing Authority`
-  - Toggle "Jason Gibson Signature Sign-Off" (`_jas_app`).
+  - Toggle "Author Signature Sign-Off" (`_jas_app`).
   - Toggle "Jun Rae Signature Sign-Off" (`_jun_app`).
 - **Primary full-width button** "Save Data & Process Uploads" if there are uploads, otherwise "Save Changes" (`_save_btn`). Spinner "Processing & Saving...". It then:
   1. Writes each upload to `{SafeName}_{id}_manual_{epoch+i}.webp`. WebP files are written as-is; other formats are converted to WebP quality 87.
@@ -280,9 +280,9 @@ The Rust version should do steps 2–4 once, as a migration or startup job.
 **Access gate**
 - Identity comes from session keys `email`, `user_email`, `user`, `username`.
 - Allowed people: the two accounts of the old app (in your copy: GARDEN_USERS in .env).
-- Since no identity is ever set, the tab always shows info "Enter your account email to add plants (Jun or Jason only)." and text "Account email" (placeholder "you@gmail.com", key `apt_gate_email`).
+- Since no identity is ever set, the tab always shows info "Enter your account email to add plants (Jun or the author only)." and text "Account email" (placeholder "you@gmail.com", key `apt_gate_email`).
 - Typing an allowed email unlocks the tab. **There is no password**, so this is only a speed bump.
-- Blocked: error "🔒 Adding plants is restricted to **Jun** or **Jason**." or "That email isn't authorized to add plants."
+- Blocked: error "🔒 Adding plants is restricted to **Jun** or **the author**." or "That email isn't authorized to add plants."
 
 **Widgets in order**
 - Header "🌱 Add a New Plant".
@@ -402,8 +402,8 @@ The Rust version should do steps 2–4 once, as a migration or startup job.
 - Bug: the static form prefix means widget state can carry over when switching plants. Tabs 4 and 10 avoid this by putting the id in the prefix, and their comments describe this exact problem.
 
 ### 2.7 Tab 7 — `🔍 Awaiting Approval` (`tab_awaiting_approval.py`, 74 lines)
-- **Purpose:** complete plants not yet approved by both Jason and Jun.
-- Header "🔍 Awaiting Approval", text "These plants have 100% of their data complete, but are waiting on a sign-off from Jason and/or Jun."
+- **Purpose:** complete plants not yet approved by both the author and Jun.
+- Header "🔍 Awaiting Approval", text "These plants have 100% of their data complete, but are waiting on a sign-off from the author and/or Jun."
 - Sub-tabs "🌷 Perennials" (`SELECT * FROM Perennials`) and "🌻 Annuals" (`SELECT * FROM Annuals`). Filter: no missing fields and not (`approved_jason` AND `approved_jun`).
 - Dataframe columns: `Thumbnail, plant_name, botanical_name, approved_jason, approved_jun`.
 - Select "Review & approve perennial:" (`await_peren_sel`) / "Review & approve annual:" (`await_annual_sel`).
@@ -412,7 +412,7 @@ The Rust version should do steps 2–4 once, as a migration or startup job.
 - Shrubs, Trees, Vines and other types never appear here, or in Tab 8.
 
 ### 2.8 Tab 8 — `🏆 Fully Approved & Verified` (`tab_fully_approved.py`, 74 lines)
-- Header "🏆 Fully Approved & Verified", text "Browse the 100% completed, print-ready catalog. Both Jason and Jun have verified this data."
+- Header "🏆 Fully Approved & Verified", text "Browse the 100% completed, print-ready catalog. Both the author and Jun have verified this data."
 - Same Perennials/Annuals sub-tabs, filtered to complete and approved by both.
 - Columns: `Thumbnail, plant_name, botanical_name, genus, species, plant_length, spacing`.
 - Selects "Edit fully approved perennial:" (`comp_peren_sel`) / "Edit fully approved annual:" (`comp_annual_sel`). Form `comp_p` / `comp_a` plus logger.

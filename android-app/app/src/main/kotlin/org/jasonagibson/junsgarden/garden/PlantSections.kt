@@ -6,11 +6,11 @@ package org.jasonagibson.junsgarden.garden
 /**
  * The same grouping catalog.php uses, so the app and the website agree.
  *
- * JASON, 2026-09-27: "Can you make Jun's app display the plants they do in
+ * THE AUTHOR, 2026-09-27: "Can you make Jun's app display the plants they do in
  * junsgarden.zapto.org/catalog.php that match with the theme app."
  *
  * WHY GROUPING IS THE WHOLE POINT. The detail call returns 101 columns. Shown
- * as one flat table that is a wall of text, and Jason said so about an earlier
+ * as one flat table that is a wall of text, and the author said so about an earlier
  * version: "it just looks like a bunch of data". The website already solved
  * this -- Planting Guide, Root System, Growing Conditions, Appearance,
  * Wildlife & Safety -- and the answer is not a new design, it is the design

@@ -130,7 +130,7 @@ fn ids_for_user(map: &[(i64, String)], name: &str) -> Vec<i64> {
     map.iter().filter(|(_, u)| u == name).map(|(p, _)| *p).collect()
 }
 
-/// Plant ids favorited by anyone who is not Joshua, Jason or Kona, each
+/// Plant ids favorited by anyone who is not Joshua, the author or Kona, each
 /// once, in order of first appearance (`array_unique`).
 fn community_ids(map: &[(i64, String)]) -> Vec<i64> {
     let mut out: Vec<i64> = Vec::new();
@@ -300,7 +300,7 @@ async fn ajax_load(state: &AppState, q: &HashMap<String, String>, me: &str) -> R
     // The Favs buttons are matched by their exact label text, emoji included.
     } else if search_raw == "⭐ Jun's Favs" {
         fav_branch(ids_for_user(&favs, "Joshua"))
-    } else if search_raw == "⭐ Jason's Favs" {
+    } else if search_raw == "⭐ Author's favs" {
         fav_branch(ids_for_user(&favs, "Jason"))
     } else if search_raw == "🐾 Kona's Favs" {
         fav_branch(ids_for_user(&favs, "Kona"))

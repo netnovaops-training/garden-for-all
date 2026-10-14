@@ -29,7 +29,7 @@ set -euo pipefail
 SRC=${GARDEN_DATA:?set GARDEN_DATA to the live garden data folder}
 DB=${GARDEN_DB:?set GARDEN_DB to the database container name}
 stamp=$(date +%Y-%m-%d_%H%M)
-name="junsgarden-backup_${stamp}_from-jasons-server"
+name="junsgarden-backup_${stamp}_from-the-author"
 out=$HOME/jun-export
 work=$out/$name
 rm -rf "$out"; mkdir -p "$work"
@@ -54,7 +54,7 @@ plants=$(docker exec "$DB" sh -c 'MYSQL_PWD="${MARIADB_ROOT_PASSWORD:-$MYSQL_ROO
     echo "Jun's Garden backup"
     echo "Name:        $name"
     echo "Made:        $(date '+%Y-%m-%d %H:%M %Z')"
-    echo "From:        Jason's server (the live junsgarden.zapto.org), for Jun's own copy"
+    echo "From:        The author's server (the live junsgarden.zapto.org), for Jun's own copy"
     echo "Plants:      $plants"
     echo "Left out on purpose: login passwords and sessions (set your own with"
     echo "garden.sh password) and four old safety-copy tables."

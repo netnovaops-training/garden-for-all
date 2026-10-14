@@ -159,7 +159,7 @@ certificate, you must assign a different package name to the app—in this
 case, the user installs the new version as a completely new app."
 
 That is why the application id and the package name in this folder still
-say `jasonagibson`. They are only names. They do not connect to Jason's
+say `jasonagibson`. They are only names. They do not connect to the author's
 servers. Changing them would make Android treat it as a different app.
 
 **The signing key is NOT included in this folder**, on purpose. A key in a
@@ -167,7 +167,7 @@ project folder can be copied by anyone who gets the folder.
 
 **What is on the phones today.** We checked the APK the website serves now
 (`site/apps/junsgarden.apk`, version 3.2, built from this folder on 2026-10-13). It is
-signed with the **Android Debug** key from Jason's computer, the same key as 3.1, so the
+signed with the **Android Debug** key from the author's computer, the same key as 3.1, so the
 phones take it as a normal update. That is the key Android Studio makes by
 itself on every computer (`.android\debug.keystore` in your user folder). It
 is not a separate "release" key. Your own Android Studio will make a
@@ -292,11 +292,11 @@ These all build and work. None of them talks to anything except your site.
 
 ## What was removed (October 2026)
 
-An older household version of this app talked to Jason's household server.
+An older household version of this app talked to the author's household server.
 That code was dead (no screen used it) and was deleted: the `auth/` and
 `chat/` folders, `app/AppApi.kt`, `app/RecipeScreen.kt`,
 `app/ToolsScreen.kt`, the AppAuth sign-in library and the Ktor library, the
 sign-in redirect entry in the manifest, and an iOS build file for a
 different app. The app was built before and after the removal; both builds
-succeeded. Nothing in this folder points at Jason's household server any
+succeeded. Nothing in this folder points at the author's household server any
 more; the only web address the app uses is your own site.

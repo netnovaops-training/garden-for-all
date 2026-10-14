@@ -27,7 +27,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * The camera, doing the four things Jason asked it to do.
+ * The camera, doing the four things the author asked it to do.
  *
  * HIS WORDS, 2026-09-25: "The camera supposed to be used on live pictures of
  * plants. There's not supposed to be a webview ... It's supposed to take a
@@ -42,7 +42,7 @@ import java.net.URL
  * phone to reach any of it: those endpoints decide who you are from an
  * `X-Auth-Email` header they trust completely, which is only safe because
  * nothing off this machine can set one. So the app talks to /app/garden/…
- * on the GARDEN SITE (since 3.1, 2026-10-07; before that it was Jason's
+ * on the GARDEN SITE (since 3.1, 2026-10-07; before that it was the author's
  * household sign-in service), which checks the garden login key and
  * attaches the person's address upstream. The reading itself is done by
  * free cloud AI (garden-ingest's freeai.py), never a home GPU; when every
@@ -59,7 +59,7 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
     data class Reading(
         val headline: String,
         val body: String,
-        /** Set when the server queued something for Jason to approve. */
+        /** Set when the server queued something for the author to approve. */
         val queued: Int = 0,
     )
 
@@ -101,7 +101,7 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
      * A nursery tag, photographed, read, and queued for the database.
      *
      * QUEUED, NOT WRITTEN. The server files these as proposals for approval
-     * rather than inserting them, which is Jason's own arrangement: he
+     * rather than inserting them, which is the author's own arrangement: he
      * reviews everything before it reaches the catalogue. So the honest
      * thing to tell somebody holding the tag is that it is waiting, not
      * that it is in.
@@ -128,7 +128,7 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
     /**
      * Many tags at once: photographs in, a receipt back, reading afterwards.
      *
-     * JASON, 2026-09-27: "there needs to be a bulk tag adder so that front
+     * THE AUTHOR, 2026-09-27: "there needs to be a bulk tag adder so that front
      * and back can be added to the picture so that if someone wants to add
      * 20 or 30 tags they can at once front and back without taking one
      * picture at a time."

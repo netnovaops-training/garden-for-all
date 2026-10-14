@@ -34,12 +34,12 @@ compiled ahead of time: the website is built on your computer from the code in
 | `android-app/` | The phone app's code |
 | `site/` | The pictures, styles and scripts the website serves |
 | `CHANGES.md` | Every change made for your copy, and why |
-| `FILES-FROM-JASON.txt` | A fingerprint (SHA-256) of every file exactly as it came |
+| `FILES-FROM-AUTHOR.txt` | A fingerprint (SHA-256) of every file exactly as it came |
 | `WHAT-GETS-INSTALLED.md` | Every program that can be installed, and where it comes from |
 
 ## 2. Check that nothing was changed on the way
 Menu `M`, then `11` (on Windows: More, `11`). It compares every file with its
-fingerprint in `FILES-FROM-JASON.txt` and lists any that differ. (After a
+fingerprint in `FILES-FROM-AUTHOR.txt` and lists any that differ. (After a
 Website name swap, those files differ: that is expected.)
 
 ## 3. See every change, line by line

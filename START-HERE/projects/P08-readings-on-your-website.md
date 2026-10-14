@@ -86,7 +86,7 @@ docker exec -e MYSQL_PWD="$ROOTPW" garden-db mariadb -uroot -e \
 ### Part E. Find it on the website
 9. Open `http://localhost:8030/data.php` (the Data page). Look for a chart that
    uses soil moisture. *This part is exploring.* The Data page was built for
-   Jason's weather data and different widgets read different columns.
+   The author's weather data and different widgets read different columns.
 10. If your numbers do not appear where you expect, that is a real
     programming puzzle. Work it out like this:
     1. Open `rust/junsgarden/src/pages/data.rs` and search for

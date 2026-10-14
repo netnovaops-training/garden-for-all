@@ -5,7 +5,7 @@
 # the free AI is busy or not set up yet.
 """A pile of tags in, plants out, without anybody waiting.
 
-JASON, 2026-09-26: "I would like to make a tag queue and a photo with
+THE AUTHOR, 2026-09-26: "I would like to make a tag queue and a photo with
 Google photos that will catch duplicates ... This will need front and back."
 
 WHY A QUEUE AND NOT A LOOP. One tag takes about twenty-two seconds: two
@@ -40,7 +40,7 @@ TWO KINDS OF DUPLICATE, AND THEY ARE NOT THE SAME QUESTION.
   of the same tag in different light are not.
 
 NOTHING IS EVER SILENTLY DROPPED. A duplicate is recorded with a status and
-a reason and stays in the queue to be looked at. Jason's own note in
+a reason and stays in the queue to be looked at. The author's own note in
 dedupe.py is the rule: "A wrongly skipped plant is invisible -- it simply
 never appears - which is the worst failure available here."
 """

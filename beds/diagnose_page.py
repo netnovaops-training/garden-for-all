@@ -3,7 +3,7 @@
 # the AI says what plant it is and whether anything looks wrong.
 """Point the camera at a plant: what is it, and is anything wrong with it.
 
-JASON, 2026-09-24: "I want him to be able to identify a plant as well as
+THE AUTHOR, 2026-09-24: "I want him to be able to identify a plant as well as
 identify if it's unwell or dying or has rust or something like that."
 
 ONE PHOTOGRAPH, BOTH ANSWERS, because standing in front of the plant they

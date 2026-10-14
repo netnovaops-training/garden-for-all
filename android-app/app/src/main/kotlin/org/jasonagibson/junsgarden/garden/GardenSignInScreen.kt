@@ -41,7 +41,7 @@ import kotlinx.coroutines.launch
 import org.jasonagibson.junsgarden.BuildConfig
 
 /**
- * The first screen: log in as Jun or Jason, or carry on as a guest.
+ * The first screen: log in as Jun or the author, or carry on as a guest.
  *
  * MODELLED ON THE ORIGINAL "Jun & Kona's Garden" APP (1.0, June 2026), whose
  * sign-in screen this is: a seedling, the name, Username, Password with a

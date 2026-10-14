@@ -46,7 +46,7 @@ junsgarden-wiki-addon.zip
 # PDF copies of the guides are made from the .md files (they go in the download).
 PDF/
 # The handbook (00-WELCOME.html, handbook/) and the English PDFs are built into each
-# download by tools/release/build_release.py (with Jason's emblem, which stays out of git).
+# download by tools/release/build_release.py (with the author's emblem, which stays out of git).
 /00-WELCOME.html
 /handbook/
 /Setup documentation/

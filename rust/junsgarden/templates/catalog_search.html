@@ -44,7 +44,7 @@
             <select onchange="if(this.value) window.runSearch(this.value); this.selectedIndex=0;" style="padding: 10px 15px; border-radius: 20px; border: 2px solid #81d4fa; background: #e1f5fe; color: #0277bd; font-weight: bold; cursor: pointer; outline: none; font-size:0.95rem;">
                 <option value="" disabled selected>⭐ Favorites</option>
                 <option value="⭐ Jun's Favs">⭐ Jun's Favs</option>
-                <option value="⭐ Jason's Favs">⭐ Jason's Favs</option>
+                <option value="⭐ Author's favs">⭐ Author's favs</option>
                 <option value="🐾 Kona's Favs">🐾 Kona's Favs</option>
             </select>
 
@@ -61,7 +61,7 @@
             <button class="bed-opt-btn view-btn" data-bed="view:image_approved" onclick="window.bedSearch(this, this.dataset.bed)" style="font-size:0.92rem;">📸 Image Approved</button>
             <button class="bed-opt-btn view-btn" data-bed="view:image_not_approved" onclick="window.bedSearch(this, this.dataset.bed)" style="font-size:0.92rem;">🚫 Image Not Approved</button>
             <button class="bed-opt-btn view-btn" data-bed="view:jun_done" onclick="window.bedSearch(this, this.dataset.bed)" style="font-size:0.92rem;">✅ Jun Done</button>
-            <button class="bed-opt-btn view-btn" data-bed="view:jason_done" onclick="window.bedSearch(this, this.dataset.bed)" style="font-size:0.92rem;">✅ Jason Done</button>
+            <button class="bed-opt-btn view-btn" data-bed="view:jason_done" onclick="window.bedSearch(this, this.dataset.bed)" style="font-size:0.92rem;">✅ Author done</button>
             <button class="bed-opt-btn view-btn" data-bed="view:not_done" onclick="window.bedSearch(this, this.dataset.bed)" style="font-size:0.92rem;">❌ Not Done</button>
         </div>
         {% endif %}

@@ -314,7 +314,7 @@ const SVD_THEMES = {
     lavender_d: { label:'Kona',      sub:'',       header:'#7B1FA2', body:'#faf0f5', photoBg:'#e1bee7', accent:'#8E24AA', headerText:'#ffffff', chipBg:'rgba(142,36,170,0.08)',tint:'rgba(142,36,170,0.05)',rowBorder:'#d0a8c8', rowLabel:'#8a5080', bodyText:'#4A148C', modalBg:'#7B1FA2' },
     lavender_l: { label:'Lavender',  sub:'Light',  header:'#e4d4ec', body:'#faf0f5', photoBg:'#f3e5f5', accent:'#8E24AA', headerText:'#5a2070', chipBg:'rgba(142,36,170,0.08)',tint:'rgba(142,36,170,0.05)',rowBorder:'#d0a8c8', rowLabel:'#8a5080', bodyText:'#4A148C', modalBg:'#9b70b0' },
     // ── Neutral ─────────────────────────────────────────────────────
-    jason:      { label:'Jason',     sub:'',       header:'#010203', body:'#f5f6f8', photoBg:'#e4e6ea', accent:'#2a2d32', headerText:'#ffffff', chipBg:'rgba(1,2,3,0.08)',    tint:'rgba(1,2,3,0.04)',    rowBorder:'#c0c4ca', rowLabel:'#606468', bodyText:'#1a1c20', modalBg:'#3a3e44' },
+    jason:      { label:'Author',     sub:'',       header:'#010203', body:'#f5f6f8', photoBg:'#e4e6ea', accent:'#2a2d32', headerText:'#ffffff', chipBg:'rgba(1,2,3,0.08)',    tint:'rgba(1,2,3,0.04)',    rowBorder:'#c0c4ca', rowLabel:'#606468', bodyText:'#1a1c20', modalBg:'#3a3e44' },
 };
 const SVD_THEME_KEY = 'garden_tag_theme';
 
@@ -1096,7 +1096,7 @@ window.openTagGuide = function (p) {
     // Thumbnail gallery: admin can set default, guests can browse & open lightbox
     let thumbsHTML = '';
     if (imgs.length > 1) {
-        const isAdmin = config.currentUser === 'Jason';
+        const isAdmin = !!config.currentUser;   // any signed-in garden account, as the server checks
         const label = isAdmin ? '⭐ Default photo — click to set:' : '📷 Photos:';
         thumbsHTML = `<div class="tg-setdef"><span class="tg-setdef-lbl">${label}</span>
              <div class="tg-thumbs">${imgs.map(f => {
@@ -1361,7 +1361,7 @@ window._startReposition = function(plantId, photoDiv) {
     };
 };
 
-// Jason-only: set a plant's default (primary) photo
+// Signed-in garden accounts: set a plant's default (primary) photo
 window.setDefaultPhoto = function (plantId, imgEl) {
     const file = imgEl && imgEl.dataset ? imgEl.dataset.file : null;
     if (!file) return;

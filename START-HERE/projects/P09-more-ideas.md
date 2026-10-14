@@ -36,7 +36,7 @@ shape: build it, check it works, then make it safer.
 - **Grafana.** A drawing program for sensor data. Home Assistant can send data to
   InfluxDB, and Grafana draws it. Its makers' documentation: <https://grafana.com/docs/>.
 - **Telegram bot.** Send a photo of the bed on a schedule. The website's own
-  camera tools do something like this on Jason's server.
+  camera tools do something like this on the author's server.
 
 ## Harder
 - **Time-lapse camera.** An old phone or a Pi camera taking a picture every hour,

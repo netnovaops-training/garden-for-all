@@ -64,7 +64,7 @@ import java.io.File
  * The garden: his plants, his camera, and the assistant one tap away.
  *
  * THERE IS NO WEB VIEW HERE ANY MORE. This screen used to be the website in
- * a frame, and Jason's instructions ended that: "I want the app I had before
+ * a frame, and the author's instructions ended that: "I want the app I had before
  * just adding the features I wanted. I don't want to go into the website",
  * "I want the plants to be able to be pulled up like it was before as a
  * catalog", and then, plainly, "There's not supposed to be a webview".

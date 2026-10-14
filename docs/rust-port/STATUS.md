@@ -8,7 +8,7 @@
 Updated 2026-10-06. Every page and endpoint of the PHP site has a Rust
 equivalent, and **junsgarden.zapto.org runs on it** (since 2026-10-06 01:37
 UTC). The test site runs the same code on copies of the data. The garden's
-own password login (Jun and Jason) replaced the household sign-in the same
+own password login (Jun and the author) replaced the household sign-in the same
 day.
 
 ## How it was verified

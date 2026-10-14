@@ -168,7 +168,7 @@
         },
         // ── Neutral ─────────────────────────────────────────────────
         jason: {
-            label: 'Jason', sub: '',
+            label: 'Author', sub: '',
             header: '#010203', headerText: '#ffffff',
             body: '#f5f6f8', bodyText: '#1a1c20',
             footer: '#3a3e44', footerText: '#fff',

@@ -23,7 +23,7 @@ site, drawn to look the same.
 
 ## Who can use it
 
-Jun and Jason, signed in with the garden login. Anybody else is sent to
+Jun and the author, signed in with the garden login. Anybody else is sent to
 `/login.php`.
 
 ## Settings it needs

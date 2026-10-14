@@ -13,7 +13,7 @@ COPY of the package; the default is this package). It writes:
 
 Everything works from the disk (file://): no server, no internet. The PDF
 buttons open "Setup documentation/English/...", which the release build puts
-in the download. The logo is Jason's emblem: it is passed in at release time
+in the download. The logo is the author's emblem: it is passed in at release time
 (GARDEN_LOGO=path) and is not kept in git.
 """
 import html, json, os, pathlib, re, shutil, sys, urllib.parse
@@ -258,6 +258,13 @@ def fix_links(body, here_dir, base=None):
         if target.suffix == ".md" and target.parent in (SRC, SRC / "ko") and target.stem in STEP_NAMES:
             new = f"{target.stem}.html" + (f"#{frag}" if frag else "")
         else:
+            # The guides are read from this package, but the handbook may be built
+            # into a copy (a release): point at the same file inside that copy, so
+            # the links never lead out of it.
+            try:
+                target = ROOT.resolve() / target.relative_to(PKG.resolve())
+            except ValueError:
+                pass
             new = urllib.parse.quote(os.path.relpath(target, here_dir).replace(os.sep, "/")) + (f"#{frag}" if frag else "")
         return f'{attr}="{new}"'
     return re.sub(r'(href|src)="([^"]+)"', one, body)
@@ -506,7 +513,7 @@ for l in heredoc_after("show_plan() {").split("\n"):
     if not t:
         _cur = None
         continue
-    for key in ("NECESSARY", "OPTIONAL", "ADVANCED OPTIONAL", "NOT DONE, EVER:", "WHAT COMES FROM JASON:"):
+    for key in ("NECESSARY", "OPTIONAL", "ADVANCED OPTIONAL", "NOT DONE, EVER:", "WHAT COMES FROM THE AUTHOR:"):
         if t.startswith(key) and (key.endswith(":") or t.startswith(key + " (")):
             _cur = key
             PLAN[key] = [t[len(key):].strip()] if key.endswith(":") else []
