@@ -33,7 +33,7 @@ jobs:
   fingerprints-in-sync:
     # Check only: nothing is written or pushed.
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: fingerprints-check-${{ github.ref }}
@@ -66,7 +66,7 @@ jobs:
 
   refresh:
     if: github.event_name != 'pull_request' && github.ref_type == 'branch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write # pushes the refreshed list; nothing else
