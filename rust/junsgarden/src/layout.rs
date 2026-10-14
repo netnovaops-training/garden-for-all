@@ -85,6 +85,9 @@ struct LayoutTemplate {
     body: String,
 }
 
+/// Join `rel` under `base` and return the real (symlink-free) path, but only when it
+/// exists and is still inside `base`. `None` otherwise (missing, or `..` / a link that
+/// leads out of `base`).
 fn safe_join_under(base: &Path, rel: &str) -> Option<PathBuf> {
     let base_canon = base.canonicalize().ok()?;
     let joined = base_canon.join(rel);
@@ -102,10 +105,9 @@ fn hero_images(www: &Path) -> Vec<String> {
     // The file types the PHP looked for. Capital versions are listed because file
     // names are case-sensitive on Linux.
     const EXTS: [&str; 8] = ["webp", "WEBP", "jpg", "jpeg", "png", "JPG", "JPEG", "PNG"];
-    let hero_dir = match safe_join_under(www, "images/HeroBanner") {
-        Some(p) => p,
-        None => PathBuf::new(),
-    };
+    // A missing folder, or one whose real location is outside `www`, gives an empty
+    // path, which `read_dir` refuses, so the fallback photo below is used.
+    let hero_dir = safe_join_under(www, "images/HeroBanner").unwrap_or_default();
     // Read the folder. `.flatten()` skips entries that could not be read.
     let mut found: Vec<String> = std::fs::read_dir(hero_dir)
         .map(|rd| {
@@ -208,4 +210,76 @@ pub fn render(state: &AppState, page: Page, visitor: &Visitor) -> String {
         tracing::error!("layout render failed: {e}");
         "<h1>Something went wrong</h1>".to_string()
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A fresh, empty folder under the system temp folder, removed by the caller.
+    fn scratch(tag: &str) -> PathBuf {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        let dir = std::env::temp_dir().join(format!("jg-layout-{tag}-{}-{nanos}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn safe_join_accepts_a_real_folder_under_the_base() {
+        let www = scratch("ok");
+        std::fs::create_dir_all(www.join("images/HeroBanner")).unwrap();
+        let got = safe_join_under(&www, "images/HeroBanner").expect("inside the base");
+        assert!(got.starts_with(www.canonicalize().unwrap()));
+        std::fs::remove_dir_all(&www).ok();
+    }
+
+    #[test]
+    fn safe_join_refuses_a_missing_folder_and_a_way_out() {
+        let outer = scratch("out");
+        let www = outer.join("www");
+        std::fs::create_dir_all(&www).unwrap();
+        std::fs::create_dir_all(outer.join("elsewhere")).unwrap();
+        assert!(safe_join_under(&www, "images/HeroBanner").is_none(), "missing folder");
+        assert!(safe_join_under(&www, "../elsewhere").is_none(), "..  leads out of the base");
+        assert!(safe_join_under(&www.join("nope"), "x").is_none(), "missing base");
+        std::fs::remove_dir_all(&outer).ok();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn safe_join_refuses_a_link_that_leads_out() {
+        let outer = scratch("link");
+        let www = outer.join("www");
+        std::fs::create_dir_all(www.join("images")).unwrap();
+        std::fs::create_dir_all(outer.join("elsewhere")).unwrap();
+        std::os::unix::fs::symlink(outer.join("elsewhere"), www.join("images/HeroBanner")).unwrap();
+        assert!(safe_join_under(&www, "images/HeroBanner").is_none());
+        std::fs::remove_dir_all(&outer).ok();
+    }
+
+    #[test]
+    fn hero_images_lists_only_pictures_as_site_paths() {
+        let www = scratch("hero");
+        let dir = www.join("images/HeroBanner");
+        std::fs::create_dir_all(&dir).unwrap();
+        for name in ["a.jpg", "b.PNG", "c.webp", "notes.txt", "noext"] {
+            std::fs::write(dir.join(name), b"x").unwrap();
+        }
+        let mut got = hero_images(&www);
+        got.sort();
+        assert_eq!(got, ["images/HeroBanner/a.jpg", "images/HeroBanner/b.PNG", "images/HeroBanner/c.webp"]);
+        std::fs::remove_dir_all(&www).ok();
+    }
+
+    #[test]
+    fn hero_images_falls_back_to_the_web_photo_when_the_folder_is_missing() {
+        let www = scratch("nohero");
+        let got = hero_images(&www);
+        assert_eq!(got.len(), 1);
+        assert!(got[0].starts_with("https://"));
+        std::fs::remove_dir_all(&www).ok();
+    }
 }
