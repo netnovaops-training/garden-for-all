@@ -1,0 +1,98 @@
+# rust-clippy runs a set of lints that catch common mistakes and style problems in the Rust code in rust/
+# (https://github.com/rust-lang/rust-clippy).
+#
+# Clippy's findings are mostly style hints, so they are NOT sent to the Security tab (Code scanning).
+# Instead each run writes a short summary on the run page (total, per level, the ten most common lints)
+# and keeps the full result as a downloadable artifact for 14 days.
+# The run is green when clippy only has warnings. It is red when clippy itself breaks: cargo exits with an
+# error (the code does not compile, a deny-level lint) or no result comes out at all.
+name: rust-clippy analyze
+
+on:
+  push:
+    branches: [main, fixes, enhancements]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [main]
+  schedule:
+    - cron: '39 23 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-clippy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust-clippy-analyze:
+    name: Run rust-clippy analyzing
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust toolchain (rustup is already on the runner)
+        run: |
+          rustup toolchain install stable --profile minimal --component clippy
+          rustup default stable
+          rustc --version
+          cargo clippy --version
+
+      - name: Run rust-clippy
+        working-directory: rust
+        run: |
+          rc=0
+          cargo clippy --all-features --message-format=json > clippy-results.json || rc=$?
+          echo "cargo clippy exit code: $rc"
+          echo "$rc" > clippy-exit-code.txt
+
+      - name: Summarise (warnings are fine; a broken or empty run is not)
+        working-directory: rust
+        run: |
+          python3 - <<'PY'
+          import collections, json, os, sys
+          rc = int(open("clippy-exit-code.txt").read().strip())
+          levels, lints, finished = collections.Counter(), collections.Counter(), []
+          with open("clippy-results.json", encoding="utf-8") as f:
+              for line in f:
+                  try:
+                      m = json.loads(line)
+                  except ValueError:
+                      continue
+                  if m.get("reason") == "build-finished":
+                      finished.append(bool(m.get("success")))
+                  elif m.get("reason") == "compiler-message":
+                      msg = m["message"]
+                      if msg["level"] in ("warning", "error"):
+                          levels[msg["level"]] += 1
+                          lints[(msg.get("code") or {}).get("code") or "(no lint name)"] += 1
+          total = sum(levels.values())
+          out = ["### Clippy", "",
+                 f"- total: {total} (warnings: {levels['warning']}, errors: {levels['error']})",
+                 f"- cargo exit code: {rc}", "", "Ten most common lints:", ""]
+          out += [f"- `{name}`: {n}" for name, n in lints.most_common(10)] or ["- none"]
+          text = "\n".join(out) + "\n"
+          open("clippy-summary.md", "w", encoding="utf-8").write(text)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+              f.write(text)
+          print(f"::notice title=clippy::{total} findings ({levels['warning']} warnings, {levels['error']} errors)")
+          if rc != 0 or not finished or not all(finished):
+              print("::error title=clippy::clippy itself failed (exit code %d, build finished: %s)" % (rc, finished))
+              sys.exit(1)
+          PY
+
+      - name: Keep the full result for 14 days
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: clippy-results
+          path: |
+            rust/clippy-results.json
+            rust/clippy-summary.md
+          retention-days: 14
+          if-no-files-found: warn
