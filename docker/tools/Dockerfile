@@ -10,7 +10,7 @@
 #      docker compose run --rm tools backup
 #  "--rm" means the container is thrown away as soon as the job is done.
 # =============================================================================
-FROM alpine:3.20
+FROM alpine:3.24
 
 # mariadb-client : talks to the database (dump = save, mariadb = load)
 # argon2         : makes password hashes for set-password
