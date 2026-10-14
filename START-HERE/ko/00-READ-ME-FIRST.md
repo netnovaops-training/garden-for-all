@@ -50,7 +50,7 @@
 | 위키(Wiki) | 나만의 정원 백과사전(선택 구성 요소) |
 | `garden.sh` | 모든 것을 설치하고 돌봐 주는 메뉴 |
 | `START-HERE/` | 이 안내서들 |
-| `Start-Here-Ubuntu.sh`, `Start-Here-Windows.cmd` | 첫 시작: GitHub에서 정해진 버전 하나(`CODE-SOURCE.txt`)의 프로그램을 받아, 모든 파일을 `FILES-FROM-AUTHOR.txt`와 비교해요 |
+| `Start-Here-Ubuntu.sh`, `Start-Here-Windows.cmd` | 첫 시작: GitHub에서 프로그램을 받아(페이지의 main 버전, 또는 `CODE-SOURCE.txt`에 내가 고른 커밋 하나), 모든 파일을 공개 목록 `CODE-FINGERPRINTS.txt`와 비교해요 |
 | `windows/` | Windows 설치 마법사와 Windows 메뉴 |
 | `PDF guides/` | 모든 안내서의 PDF, 영어와 한국어. 설치하는 동안 설치 프로그램이 받아 오는 선택 사항이에요(Windows 설치에서는 PC에 들어와요). `PDF guides/STATUS.txt`가 각 묶음의 상태를 알려 주고, 메뉴 `P`로 받거나 새로 고쳐요 |
 | `lab/` | 한 가지 일만 하는 연습용 스크립트. 배우기 위한 거예요(`lab/README.md`) |

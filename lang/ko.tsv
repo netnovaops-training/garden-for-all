@@ -376,6 +376,8 @@ What came in the zip from the author	제작자가 보낸 zip에 들어 있던 �
 Check every file's fingerprint against the list made when the zip was built?	zip을 만들 때 만든 목록과 모든 파일의 지문을 비교할까요?
 Every file is exactly as it was in the zip.	모든 파일이 zip에 있던 그대로예요.
 These files are different from the zip (changed by you, or by the setup):	이 파일들은 zip과 달라요(본인이 바꿨거나, 설치 과정에서 바뀌었어요):
+Every program file is exactly as the public list (CODE-FINGERPRINTS.txt) says.	모든 프로그램 파일이 공개 목록(CODE-FINGERPRINTS.txt)에 적힌 그대로예요.
+These program files are different from the public list (changed by you, or by the setup):	이 프로그램 파일들은 공개 목록과 달라요(본인이 바꿨거나, 설치 과정에서 바뀌었어요):
 Open this folder in the Files app to look around?	Files 앱에서 이 폴더를 열어 둘러볼까요?
 Uninstall	제거하기
 Remove the garden's programs (your garden's data stays)?	정원 프로그램을 지울까요(정원 데이터는 남아요)?
@@ -421,7 +423,8 @@ official sources listed in WHAT-GETS-INSTALLED.md.	다운로드는 WHAT-GETS-INS
 WHAT COMES FROM THE AUTHOR: only the website and its code (site/, rust/, beds/),	제작자가 보낸 것: 웹사이트와 그 코드(site/, rust/, beds/),
 this setup program and the guides, and YOUR garden (plants, photos, wiki	이 설치 프로그램과 안내서, 그리고 본인의 정원(식물, 사진, 위키
 pages, in backups/). Every file is listed with its fingerprint in	페이지, backups/ 안)뿐이에요. 모든 파일은 지문과 함께
-FILES-FROM-AUTHOR.txt. Menu M has a screen to look through them.	FILES-FROM-AUTHOR.txt에 적혀 있어요. 메뉴 M에 그것을 살펴보는 화면이 있어요.
+FILES-FROM-AUTHOR.txt (what came in the zip) and CODE-FINGERPRINTS.txt (the program).	FILES-FROM-AUTHOR.txt(zip에 들어 있던 것)와 CODE-FINGERPRINTS.txt(프로그램)에 적혀 있어요.
+Menu M has a screen to look through them.	메뉴 M에 그것을 살펴보는 화면이 있어요.
 The garden is a small server: it should run on a computer that stays on.	정원은 작은 서버예요: 항상 켜져 있는 컴퓨터에서 실행해야 해요.
 Everything is installed here. Later, the router sends internet	모든 것을 여기에 설치해요. 나중에 공유기가 인터넷
 visitors (ports 80 and 443 only) to THIS computer's address.	방문자(포트 80과 443만)를 '이' 컴퓨터의 주소로 보내요.
