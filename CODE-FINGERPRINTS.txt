@@ -163,6 +163,7 @@ dc71ba5cf9005cccf5159db2098f0c8856ed6589f3e9acd087f3308adcec9eae  WHY-THESE-PROG
 83f1f70525fa204bf85aeeaf2c4a6f19ededb199306b36ad6ef1791fceeb0ff5  android-app/README.md
 e387898a5e2a7202f8bd719ed50e824ae1672c6a0e9f65ffe9d944fa0dd20579  android-app/app/build.gradle.kts
 497b7674a1f8df0bfbef0e6f1a6d2dfdb5395e07a4482393e74f732709c7132b  android-app/app/src/main/AndroidManifest.xml
+4db9641844f160f90031fedb0e0d736d219dd6c979dc6e76194de2d74eb32ba8  android-app/app/src/main/kotlin/org/jasonagibson/junsgarden/DetektProbe.kt
 2a30726ed6f9c65a6ff4c71a67a6ef46499d7e930ad080fdc42aba94080ee48e  android-app/app/src/main/kotlin/org/jasonagibson/junsgarden/MainActivity.kt
 9fe475a47c5d7e1afd28191925a15a27dfc7a9cf959e612ee8ebb483dd19fb8f  android-app/app/src/main/kotlin/org/jasonagibson/junsgarden/Shared.kt
 9261d4bba8ac79405227dcd5829e806987f2996b98cc8296e6f22f242278ca33  android-app/app/src/main/kotlin/org/jasonagibson/junsgarden/app/Updater.kt
