@@ -9,7 +9,7 @@
 //! images, facts, the user) into `LayoutTemplate` and fills the `layout.html` template.
 
 // `use` brings names into scope. `Path` is a borrowed file-system path.
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 // askama turns an HTML template file into Rust code at build time.
 use askama::Template;
@@ -85,14 +85,29 @@ struct LayoutTemplate {
     body: String,
 }
 
+fn safe_join_under(base: &Path, rel: &str) -> Option<PathBuf> {
+    let base_canon = base.canonicalize().ok()?;
+    let joined = base_canon.join(rel);
+    let joined_canon = joined.canonicalize().ok()?;
+    if joined_canon.starts_with(&base_canon) {
+        Some(joined_canon)
+    } else {
+        None
+    }
+}
+
 /// Hero banner images: everything in `images/HeroBanner/` with one of the
 /// extensions the PHP globbed for, in random order, as site-relative paths.
 fn hero_images(www: &Path) -> Vec<String> {
     // The file types the PHP looked for. Capital versions are listed because file
     // names are case-sensitive on Linux.
     const EXTS: [&str; 8] = ["webp", "WEBP", "jpg", "jpeg", "png", "JPG", "JPEG", "PNG"];
+    let hero_dir = match safe_join_under(www, "images/HeroBanner") {
+        Some(p) => p,
+        None => PathBuf::new(),
+    };
     // Read the folder. `.flatten()` skips entries that could not be read.
-    let mut found: Vec<String> = std::fs::read_dir(www.join("images/HeroBanner"))
+    let mut found: Vec<String> = std::fs::read_dir(hero_dir)
         .map(|rd| {
             // Keep names whose extension is on the list.
             rd.flatten()
