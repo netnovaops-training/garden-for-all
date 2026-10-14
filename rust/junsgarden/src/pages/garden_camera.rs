@@ -83,9 +83,19 @@ pub async fn garden_camera(
         return reply(StatusCode::FORBIDDEN, json!({ "error": "Not a garden account." }));
     };
 
-    // 4. Build the address of the matching garden-ingest route. `trim_end_matches`
+    // 4. Resolve the requested action to a fixed server-side route segment, then
+    // build the address of the matching garden-ingest route. `trim_end_matches`
     // removes a trailing slash so we never produce `//api/...`.
-    let url = format!("{}/api/{}", state.ingest_url.trim_end_matches('/'), action);
+    let api_action = match action.as_str() {
+        "identify" => "identify",
+        "diagnose" => "diagnose",
+        "tag" => "tag",
+        "receipt" => "receipt",
+        "lookup" => "lookup",
+        "tag-queue" => "tag-queue",
+        _ => unreachable!("action already validated against ACTIONS"),
+    };
+    let url = format!("{}/api/{}", state.ingest_url.trim_end_matches('/'), api_action);
     // 5. Forward the request. The `X-Auth-Email` header is the identity badge.
     // A photograph read by a free cloud model, then looked up: a minute is
     // normal and five is possible when a free tier is slow. Shorter makes a
