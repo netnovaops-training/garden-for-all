@@ -201,6 +201,8 @@ them again (Back) before you start it again.
 
 ### PDF guides
 
+![PDF guides: English, Korean, both or not now](images/wizard-4d-pdf-guides.png)
+
 Every guide as a PDF, to read or print. They are an optional download, not part of
 the program: **English** (about 13 MB) and **Korean** (about 15 MB) are two separate
 files on GitHub, and each one is checked against a fingerprint (SHA-256) kept in the

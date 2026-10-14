@@ -159,6 +159,32 @@
                                         "right"
                                     ]
                                 ],
+    "wizard-4d-pdf-guides.png":  [
+                                     [
+                                         285,
+                                         224,
+                                         357,
+                                         254,
+                                         "English, Korean or both",
+                                         "right"
+                                     ],
+                                     [
+                                         285,
+                                         344,
+                                         367,
+                                         374,
+                                         "or not now",
+                                         "right"
+                                     ],
+                                     [
+                                         864,
+                                         650,
+                                         1014,
+                                         698,
+                                         "then Next",
+                                         "above"
+                                     ]
+                                 ],
     "wizard-4e-summary.png":  [
                                   [
                                       864,

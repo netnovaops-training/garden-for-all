@@ -48,6 +48,7 @@ $form.add_Shown({
     Show-Page "passwords"
     foreach ($b in @(All-Controls $pPw | Where-Object { $_ -is [Windows.Forms.Button] })) { $b.PerformClick() }   # open "More options"
     Shoot "wizard-4c-passwords" @(@($tbPw.Parent, "10 or more characters", "right"), @($tbDbPw.Parent, "empty = made for you", "right"))
+    Show-Page "pdfs"; Shoot "wizard-4d-pdf-guides" @(@($rbPdfEn, "English, Korean or both", "right"), @($rbPdfNone, "or not now", "right"), @($btnNext, "then Next", "above"))
     Show-Page "summary"; Shoot "wizard-4e-summary" @(@($btnNext, "Looks right", "above"))
     Show-Page "install"; Shoot "wizard-5-install" @(@($btnGo, "click to start", "right"))
     Show-Page "done"; Shoot "wizard-6-done" @(@($btnOpen.Parent, "your garden, or the menu", "right"))
