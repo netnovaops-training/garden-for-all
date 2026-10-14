@@ -20,6 +20,8 @@ concurrency:
 jobs:
   analysis:
     name: Scorecard analysis
+    # Scorecard refuses to run anywhere but on the default branch, so a manual run on another branch is skipped, not failed.
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
