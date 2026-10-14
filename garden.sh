@@ -21,6 +21,10 @@
 #            bash garden.sh icon       put "Jun's Garden" on the desktop
 #            bash garden.sh webname    change junsgarden.zapto.org to another name in the files
 #            bash garden.sh photos     load the photos download (now, or again)
+#            bash garden.sh rename     rename or move a file or folder (every place that uses it follows)
+#            bash garden.sh off | on   switch everything off (nothing is deleted) or on again
+#            bash garden.sh checkup    start again any program that is stuck
+#            bash garden.sh cleanup    remove Docker's leftovers (never your files)
 #            bash garden.sh test       run the Rust tests (slow the first time)
 #            bash garden.sh uninstall  remove what this program installed
 #
@@ -306,12 +310,60 @@ install_ssh() {
     run sudo systemctl enable --now ssh >/dev/null 2>&1 || true
 }
 
+# Docker Desktop (a Windows program) can share its own Docker with an Ubuntu in
+# WSL ("WSL integration"): it then puts links to itself in /usr/bin. The garden
+# uses its own Docker inside Ubuntu instead, so it works the same as on any Ubuntu
+# computer and keeps running when Docker Desktop is closed.
+docker_desktop_shared() {
+    grep -qi microsoft /proc/version 2>/dev/null || return 1
+    local f
+    for f in /usr/bin/docker /usr/local/bin/docker; do
+        [ -L "$f" ] && case "$(readlink "$f")" in *docker-desktop*) return 0 ;; esac
+    done
+    return 1
+}
+# Which Docker runs the garden. "desktop": Docker Desktop on Windows, the easy way
+# with buttons (chosen in the Windows installer, saved in .garden-docker).
+# Otherwise "engine": Docker Engine inside Ubuntu, the same on every computer.
+docker_mode() { if [ "$(cat .garden-docker 2>/dev/null)" = desktop ]; then echo desktop; else echo engine; fi; }
+# The Windows installer passes its choice as GARDEN_DOCKER=desktop or engine.
+case "${GARDEN_DOCKER:-}" in desktop|engine) printf '%s\n' "$GARDEN_DOCKER" > .garden-docker ;; esac
+# Docker Desktop's way: its Docker must reach this Ubuntu ("WSL integration" on).
+docker_desktop_ready() {
+    local os
+    os=$(dk info --format '{{.OperatingSystem}}' 2>/dev/null)
+    case "$os" in *"Docker Desktop"*) note "Docker Desktop is connected to this Ubuntu: $(dk --version)"; return 0 ;; esac
+    warn "Docker Desktop is not connected to this Ubuntu yet."
+    Lblock <<'EOF'
+   1. Start Docker Desktop on Windows (its whale icon appears near the clock).
+   2. Docker Desktop > Settings (the gear) > Resources > WSL integration:
+      switch ON this Ubuntu (JunsGarden), then click Apply & restart.
+   3. Run the install again: it carries on from here.
+EOF
+    [ -x /usr/bin/dockerd ] && note "This Ubuntu also has its own Docker Engine (from an earlier install). Docker Desktop's way needs it gone first: sudo apt remove docker-ce docker-ce-cli (guide 25)."
+    return 1
+}
+docker_desktop_note() {
+    warn "Docker Desktop (on Windows) is sharing its own Docker with this Ubuntu."
+    Lblock <<'EOF'
+   The garden uses its own Docker inside this Ubuntu, so it runs the same way for
+   everyone and keeps running when Docker Desktop is closed. Docker Desktop stays
+   as it is for your other projects. One switch keeps the two apart:
+     Docker Desktop > Settings > Resources > WSL integration:
+     switch OFF this Ubuntu (JunsGarden), then click Apply & restart.
+   Then run the install again: it carries on from here. (Guide 25 explains more.)
+EOF
+}
+
 # Install step 6: Docker Engine and Compose, from Docker's official Ubuntu source.
 install_docker() {
     explain "Docker Engine and Docker Compose" \
         "Docker runs each program in its own sealed box (a container) with everything it needs. Compose starts all the boxes from one list: docker-compose.yml in this folder." \
         "Programs cannot mess up Ubuntu or each other, and the same setup works on any computer." \
         "https://docs.docker.com/engine/install/ubuntu/  (the official steps this follows)"
+    # The easy way on Windows: Docker Desktop is the Docker; nothing to install here.
+    if [ "$(docker_mode)" = desktop ]; then docker_desktop_ready; return; fi
+    if docker_desktop_shared; then docker_desktop_note; return 1; fi
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
         note "Docker is already installed: $(docker --version)"
     else
@@ -603,8 +655,10 @@ make_folders() {
              "$(env_get DB_DIR)" "$(env_get BACKUP_DIR)" "$(env_get N8N_DIR)" "$(env_get AUTH_DIR)"; do
         mkdir -p "$d" && note "$d"
     done
-    # The picture folders the website expects. These inside names never change.
-    for d in Database Gallery post blog plan HeroBanner; do mkdir -p "$(env_get IMAGES_DIR)/$d"; done
+    # The picture folders the website expects (with their new names, if any
+    # were renamed with Settings 8: IMAGE_FOLDERS in .env).
+    local folders; folders=$(env_get IMAGE_FOLDERS); folders=${folders:-$IMAGE_FOLDERS_FIRST}
+    for d in $folders; do mkdir -p "$(env_get IMAGES_DIR)/$d"; done
     mkdir -p "$(env_get CACHE_DIR)/AI"
     chmod -R a+rwX "$(env_get IMAGES_DIR)" "$(env_get DATA_DIR)" "$(env_get CACHE_DIR)" "$(env_get N8N_DIR)" 2>/dev/null || true
     chmod 700 "$(env_get AUTH_DIR)" 2>/dev/null || true
@@ -805,7 +859,7 @@ do_photos() {
         "The photos are a separate download from the same Google Drive folder: $PHOTOS_ZIP (about 800 MB). This unpacks it into your photos folder. Photos you already have, and photos you added yourself, are kept." \
         "So the first download stays small, and you can fetch the photos when your internet is quiet, or again later." \
         "START-HERE/13-backups-and-folders.md"
-    if photos_addon_load; then return 0; fi
+    if photos_addon_load; then redo_renames; return 0; fi
     note "Not found. Download $PHOTOS_ZIP from the Google Drive folder and leave it zipped in your"
     note "Home folder (or Downloads, or Desktop), then choose this again (menu 6, then 11)."
     return 1
@@ -1041,7 +1095,7 @@ step_already_ok() {
         install_packages) for c in git curl openssl rsync; do command -v "$c" >/dev/null 2>&1 || return 1; done ;;
         install_ssh)      systemctl is-active --quiet ssh 2>/dev/null ;;
         firewall)         sudo -n ufw status 2>/dev/null | has 'Status: active' && sudo -n ufw status | has -E '^22' ;;
-        install_docker)   dk compose version >/dev/null 2>&1 && systemctl is-active --quiet docker 2>/dev/null ;;
+        install_docker)   dk compose version >/dev/null 2>&1 && { if [ "$(docker_mode)" = desktop ]; then dk info 2>/dev/null | has 'Docker Desktop'; else systemctl is-active --quiet docker 2>/dev/null; fi; } ;;
         choose_parts)     [ "$GARDEN_MODE" = easy ] && [ "$(env_get PARTS_CHOSEN)" = yes ] ;;
         git_start)        [ -d .git ] ;;
         build_and_start)  [ "$(cat .garden-built 2>/dev/null)" = "$(source_fingerprint)" ] &&
@@ -1140,17 +1194,20 @@ do_install() {
 
 # ---------- the front door: Caddy, the sign-in page, the web name ---------------
 write_authelia() {   # write_authelia NAME
-    local name=$1 dir user pw notifier duck duck_rule='' duck_cookie=''
+    local name=$1 dir user pw notifier duck duck_rule='' duck_cookie='' factor=one_factor
+    dir=$(env_get AUTH_DIR); dir=${dir:-./local/authelia}
+    # Switched to a phone code by hand (guide 07)? Then it stays that way when
+    # this file is written again (front door, email, subdomains).
+    grep -qs "policy: 'two_factor'" "$dir/configuration.yml" && factor=two_factor
     # With DuckDNS subdomains: one more rule and one more cookie for that name.
     duck=$(duck_root || true)
     if [ -n "$duck" ] && env_get SUBDOMAINS | has ':gate'; then
         duck_rule="    - domain: '*.$duck'
       subject: 'group:gardeners'
-      policy: 'one_factor'"
+      policy: '$factor'"
         duck_cookie="    - domain: '$duck'
       authelia_url: 'https://auth.$duck/auth'"
     fi
-    dir=$(env_get AUTH_DIR); dir=${dir:-./local/authelia}
     mkdir -p "$dir"
     # A restore (or the garden tools, which run as the administrator) can leave
     # this folder owned by root; then the new settings could not be written.
@@ -1190,13 +1247,14 @@ access_control:
   default_policy: 'deny'
   rules:
     # The garden tools need a signed-in person. one_factor = password.
-    # Change to two_factor to also ask for a phone code (guide 07).
+    # Change to two_factor to also ask for a phone code (guide 07); it is kept
+    # when the menu writes this file again.
     # Only the group "gardeners" may (guests can sign in, but not here).
     - domain: '$name'
       resources:
         - '^/beds([/?].*)?$'
       subject: 'group:gardeners'
-      policy: 'one_factor'
+      policy: '$factor'
 $duck_rule
 session:
   cookies:
@@ -1668,7 +1726,7 @@ install_noip() {
     if systemctl list-unit-files 2>/dev/null | has '^noip-duc.service'; then
         note "The No-IP updater is already installed."
         if ! confirm "Enter a new DDNS key anyway?" n; then
-            # Keep the key, but make sure the updater runs (menu M, 14 switches it off).
+            # Keep the key, but make sure the updater runs (menu M, 14, then 3 switches it off).
             run sudo systemctl enable --now noip-duc >/dev/null 2>&1 || warn "the No-IP updater did not start: sudo systemctl status noip-duc"
             return 0
         fi
@@ -1866,6 +1924,8 @@ do_remote() {
 
 # ---------- everyday jobs ----------------------------------------------------------
 do_backup() {
+    # Switched off (More 14): nothing changes, so the nightly backup rests too.
+    if [ "${1:-}" = nightly ] && garden_is_off; then note "The garden is switched off: no nightly backup needed."; return 0; fi
     say "Backing up the database, photos, data, cache$(has_part wiki && echo ', wiki')$(has_part n8n && echo ', n8n')$(has_part gate && echo ', sign-in page')"
     tools tools backup "${1:-}" || return 1
     mkdir -p logs
@@ -2254,6 +2314,8 @@ do_restore() {
     has_part wiki && dc restart wiki >/dev/null 2>&1
     reload_signin
     wait_site
+    # A backup from before a rename has the old names: offer to rename them again.
+    redo_renames
 }
 
 # Set a password for the website AND the sign-in page (typed hidden, stored as a hash).
@@ -2283,6 +2345,8 @@ do_email() {
         "https://support.google.com/accounts/answer/185833  (Google: sign in with app passwords)"
     Lblock <<'EOF'
    Nothing is installed for this: Gmail's own mail server sends the emails.
+   Tip: a Gmail just for your website keeps your personal inbox apart
+   (free: https://accounts.google.com/signup ; guide 00b).
    Get the app password first (5 minutes, free, in your web browser):
    1. Turn on 2-Step Verification (Google asks for it before app passwords):
         https://myaccount.google.com/signinoptions/twosv
@@ -2603,7 +2667,7 @@ do_settings() {
         L "   5) Your password (website + sign-in page)"
         printf '   6) %s ...... %s\n' "$(Lt "Who may use the garden tools")" "$(show_value BEDS_ALLOWED_EMAILS)"
         printf '   7) %s ............. %s\n' "$(Lt "Web name (front door)")" "$(show_value PUBLIC_NAME)"
-        L "   8) Move or rename a folder"
+        L "   8) Rename or move a file or folder"
         L "   9) Renew the internal database passwords"
         printf '  10) %s ................. %s\n' "$(Lt "Local AI computer")" "$(show_value OLLAMA_URL)"
         L "   (Every setting is saved in $HERE/.env; this screen changes it for you.)"
@@ -2626,7 +2690,7 @@ do_settings() {
             6)  v=$(ask "Emails allowed in the garden tools, comma between" "$(env_get BEDS_ALLOWED_EMAILS)")
                 env_set BEDS_ALLOWED_EMAILS "${v// /}" ;;
             7)  do_public; continue ;;
-            8)  do_move_folder; continue ;;
+            8)  do_rename; continue ;;
             9)  do_renew_db_passwords; continue ;;
             10) do_ai; continue ;;
             *)  note "Type one of the numbers."; continue ;;
@@ -2636,26 +2700,526 @@ do_settings() {
     done
 }
 
-# Settings 8: move or rename one of the garden's folders safely.
+# ---------- rename or move a file or folder (Settings 8, More 18, garden.sh rename) -----
+# A name the garden uses is written in several places: the code, the pages, the
+# photo lists, the database. Renaming only the folder would leave those pointing
+# at nothing. This finds every place by the EXACT old name (as the Website name
+# swap does), shows each one, keeps copies, stops the programs, changes it all,
+# starts them again and checks the website. Plain search and replace: no AI,
+# nothing guessed. Every rename and move is written in logs/renames.tsv.
+RENAME_LOG=logs/renames.tsv
+# The picture folders the website came with (IMAGE_FOLDERS in .env after a rename).
+IMAGE_FOLDERS_FIRST="Database Gallery post blog plan HeroBanner"
+
+do_rename() {
+    [ -f .env ] || { fail "install first (menu 1)"; return 1; }
+    say "Rename or move a file or folder"
+    Lblock <<'EOF'
+   Before you start:
+   - The guides and the walkthrough show the names the garden came with (for
+     example local/images/Gallery). After a rename or a move they show the OLD
+     names. Every change is listed in logs/renames.tsv: what it was, what it is now.
+   - This is a plain script, no AI. It looks for the exact old name, shows you
+     every place it found, and changes nothing until you say yes.
+   - It offers a full backup first, and stops the programs while it works (that
+     also frees the files), then starts them again and checks the website.
+
+   1) A file or folder of the website (a photo folder, a page, a data file):
+      renamed, and every place that uses it is changed with it
+   2) One of the garden's big folders (photos, database, backups...) to
+      another place or another disk
+   3) The WHOLE garden folder to another place
+   4) Show what was renamed or moved so far
+   0) Back
+EOF
+    case "$(ask "Number" 0)" in
+        1) rename_item ;;
+        2) do_move_folder ;;
+        3) move_garden ;;
+        4) show_renames ;;
+        *) return 0 ;;
+    esac
+}
+
+# Choice 4: the list of renames and moves (logs/renames.tsv).
+show_renames() {
+    if [ -s "$RENAME_LOG" ]; then
+        column -t -s $'\t' "$RENAME_LOG" 2>/dev/null || tr '\t' ' ' < "$RENAME_LOG"
+    else
+        note "Nothing renamed or moved yet: everything has the names the guides show."
+    fi
+}
+# Write one line in logs/renames.tsv:  when, what (renamed / moved), old, new.
+rename_log() {
+    mkdir -p logs
+    [ -s "$RENAME_LOG" ] || printf 'when\twhat\told name or place\tnew name or place\n' > "$RENAME_LOG"
+    printf '%s\t%s\t%s\t%s\n' "$(date '+%Y-%m-%d %H:%M')" "$1" "$2" "$3" >> "$RENAME_LOG"
+}
+
+# Ask for a path, with Tab completing folder and file names as you type.
+ask_path() { local a; read -r -e -p "$(Lt "$1"): " a; printf '%s' "$a"; }
+# Tidy a typed path: ~ means your home folder; no ./ at the front; no / at the end.
+tidy_path() {
+    local p=$1
+    # shellcheck disable=SC2088  # the ~ is matched as typed, then swapped for $HOME
+    case "$p" in "~") p=$HOME ;; "~/"*) p=$HOME/${p#"~/"} ;; esac
+    while [ "${p#./}" != "$p" ]; do p=${p#./}; done
+    while [ "${p%/}" != "$p" ] && [ "$p" != / ]; do p=${p%/}; done
+    printf '%s' "$p"
+}
+# The kind of disk a place is on (ext2/ext3 means ext4 too), and whether it is a
+# Linux disk. The database and the programs need one: Windows and USB disks
+# (NTFS, exFAT, FAT) and network drives cannot keep Linux owners and permissions.
+disk_type() { local d=$1; while [ ! -d "$d" ]; do d=$(dirname "$d"); done; stat -f -c %T "$d" 2>/dev/null; }
+linux_disk() { case "$(disk_type "$1")" in ext2/ext3|ext4|btrfs|xfs|zfs|f2fs) return 0 ;; *) return 1 ;; esac; }
+
+# Stop the garden's programs, so nothing is using the files ("unlocks" them),
+# then list anything else that still has a file open in PATH.
+free_files() {   # free_files PATH [keep-db]
+    note "Stopping the garden's programs, so nothing is using the files:"
+    if [ "${2:-}" = keep-db ]; then
+        # Everything except the database, which stays on for the changes in its rows.
+        local -a others
+        mapfile -t others < <(dc ps --services --status running 2>/dev/null | grep -vx db)
+        [ "${#others[@]}" -gt 0 ] && run dc stop "${others[@]}" >/dev/null 2>&1
+        wait_db || { fail "the database does not answer"; return 1; }
+    else
+        run dc stop >/dev/null 2>&1
+    fi
+    command -v lsof >/dev/null 2>&1 || return 0
+    local busy
+    # This menu itself (and the terminal that started it) are left out of the list.
+    busy=$(cd / && sudo lsof -w +D "$1" 2>/dev/null | awk -v me=$$ -v up=$PPID 'NR > 1 && $2 != me && $2 != up {print "      " $1 " (process " $2 ")"}' | sort -u)
+    [ -z "$busy" ] && return 0
+    warn "these programs still have files open in there:"
+    printf '%s\n' "$busy"
+    note "Close them first: a file window, an editor, or another terminal that is inside that folder (type cd ~ there)."
+    confirm "Carry on anyway?" n
+}
+
+# Which website area holds a path? Prints "setting<TAB>its folder<TAB>the path inside it".
+# Only the website's own files can be renamed: site/, the photos and the data.
+rename_area() {
+    local p k root
+    p=$(realpath -m -- "$1")
+    for k in IMAGES_DIR SITE_DIR DATA_DIR; do
+        root=$(realpath -m -- "$(env_get "$k")")
+        case "$p" in "$root"/*) printf '%s\t%s\t%s\n' "$k" "$root" "${p#"$root"/}"; return 0 ;; esac
+    done
+    return 1
+}
+
+# The exact-name search and change (perl, like the Website name swap). The pairs
+# come in REN_OLD1 / REN_NEW1 / REN_STRICT1, REN_OLD2 ... Modes: "show" prints each
+# line with an old name, "count" only counts, "apply" changes the files. Each file
+# with a match ends with:  COUNT<TAB>number<TAB>file.
+# A name counts only when it is not part of a longer name (Gallery is not Gallery2,
+# app.js is not app.js.map). STRICT names (the short names of site and data files)
+# must also come right after / " ' ( = or `, so a word in a sentence is never changed.
+read -r -d '' RENAME_PERL <<'PERL'
+use strict; use warnings;
+my ($mode, @files) = @ARGV;
+my @pairs;
+for (my $i = 1; defined $ENV{"REN_OLD$i"}; $i++) {
+    my $t = quotemeta $ENV{"REN_OLD$i"};
+    my $re = $ENV{"REN_STRICT$i"}
+        ? qr{(?<=[/"'(=`])$t(?=[/"'?#)`>,;\s]|$)}m
+        : qr{(?<![A-Za-z0-9_.-])$t(?![A-Za-z0-9_-]|\.[A-Za-z0-9])};
+    push @pairs, [$re, $ENV{"REN_NEW$i"}];
+}
+for my $f (@files) {
+    open(my $in, '<:raw', $f) or next;
+    my $s = do { local $/; <$in> };
+    close $in;
+    my $n = 0;
+    if ($mode eq 'apply') {
+        for my $p (@pairs) { my $new = $p->[1]; my $c = ($s =~ s/$p->[0]/$new/g) || 0; $n += $c; }
+        if ($n) {
+            open(my $out, '>:raw', $f) or die "cannot write $f: $!\n";
+            print $out $s;
+            close $out or die "cannot write $f: $!\n";
+        }
+    } else {
+        my $ln = 0;
+        for my $line (split /\n/, $s) {
+            $ln++;
+            my $hit = 0;
+            for my $p (@pairs) { $hit++ while $line =~ /$p->[0]/g; }
+            next unless $hit;
+            $n += $hit;
+            (my $t = $line) =~ s/^\s+//;
+            print "      $f:$ln: ", substr($t, 0, 100), "\n" if $mode eq 'show';
+        }
+    }
+    print "COUNT\t$n\t$f\n" if $n;
+}
+PERL
+
+# The same exact-name rule for the database (MariaDB's REGEXP), written to go
+# inside '...' in SQL. (?-i) makes it match capitals exactly, like Linux does.
+db_regex() {
+    local t; t=$(printf '%s' "$1" | sed 's/[.}]/\\\\&/g')
+    case "$1" in
+        /*) printf '(?-i)%s(?![A-Za-z0-9_-]|\\\\.[A-Za-z0-9])' "$t" ;;
+        *)  printf '(?-i)(?<![A-Za-z0-9_.-])%s(?![A-Za-z0-9_-]|\\\\.[A-Za-z0-9])' "$t" ;;
+    esac
+}
+# SQL as the database's administrator (the SQL comes on standard input). The
+# password is read INSIDE the database container, so it never appears here.
+# shellcheck disable=SC2016
+db_root() { dk exec -i garden-db sh -c 'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" exec mariadb -uroot -N -B'; }
+# Start the database if it is not running, and wait (up to 2 minutes) until it answers.
+wait_db() {
+    local i
+    dc up -d db >/dev/null 2>&1
+    for i in $(seq 1 40); do
+        echo "SELECT 1;" | db_root >/dev/null 2>&1 && return 0
+        [ "$i" = 1 ] && note "waiting for the database to start..."
+        sleep 3
+    done
+    return 1
+}
+# The text columns of the garden's and the wiki's tables: "database<TAB>table<TAB>column".
+db_text_columns() {
+    echo "SELECT c.table_schema, c.table_name, c.column_name FROM information_schema.columns c
+          JOIN information_schema.tables t ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+          WHERE t.table_type = 'BASE TABLE' AND c.table_schema IN ('juns_garden_db', 'junsgarden_wiki')
+          AND c.data_type IN ('char', 'varchar', 'tinytext', 'text', 'mediumtext', 'longtext');" | db_root
+}
+
+# Choice 1: rename (or move inside its own area) one file or folder the website
+# uses, and change every place that names it: code and pages (rust/, site/, beds/,
+# docker/), the photo and data lists (like the gallery's tags_cache.csv), and the
+# rows of the garden's and the wiki's database.
+rename_item() {   # rename_item [OLD NEW after-restore]   (with OLD and NEW: no path questions)
+    local old=${1:-} new=${2:-} again=${3:-} key root rel nkey nrel web nweb dbold='' dbnew='' other site f
+    local keep i n sum code_n=0 data_n=0 db_n=0 rebuilt='' check
+    local -a code_dirs code_files data_files code_hits=() data_hits=() db_hits=() ren_env=() db_toks=() db_news=() changed=()
+    if [ -z "$old" ]; then
+        Lblock <<'EOF'
+   Which file or folder? Type its path inside the garden folder. Press Tab to
+   complete the names as you type. Examples:
+      local/images/Gallery        the gallery's photos
+      local/images/HeroBanner     the big pictures at the top of the pages
+      site/privacy.html           a page
+EOF
+        old=$(ask_path "File or folder (empty = back)")
+    fi
+    old=$(tidy_path "$old"); [ -n "$old" ] || return 0
+    [ -e "$old" ] || { fail "$old is not there. Check the spelling (Tab helps)."; return 1; }
+    if ! IFS=$'\t' read -r key root rel < <(rename_area "$old"); then
+        Lblock <<'EOF'
+   Only the website's own files can be renamed here: what is inside site/,
+   local/images/ and local/data/ (or where choice 2 moved those). The programs
+   themselves (rust/, beds/, docker/, garden.sh ...) keep their names: renaming
+   them would break the garden. To move one of those big folders, use choice 2.
+EOF
+        return 1
+    fi
+    case "$key" in IMAGES_DIR) web=images/$rel ;; DATA_DIR) web=data/$rel ;; *) web=$rel ;; esac
+    # Names the programs use by themselves, or that phones already look for.
+    case "$web" in
+        images/Database/.thumbs*|images/plan/web|images/plan/web/*|images/plan/tags|images/plan/tags/*|apps|apps/*)
+            fail "$old is used by name inside the programs (or by the phone app), so it keeps its name."; return 1 ;;
+    esac
+    [[ "$rel" =~ ^[A-Za-z0-9._/-]+$ ]] || { fail "$old has a space or a sign in its name. Rename it by hand (it cannot be in any web address as it is)."; return 1; }
+
+    if [ -z "$new" ]; then
+        note "Type the new name. Just a name renames it where it is (example: Photos)."
+        note "Letters, numbers, - _ and . only: no spaces (web addresses break on spaces)."
+        new=$(ask_path "New name (empty = back)")
+        new=$(tidy_path "$new"); [ -n "$new" ] || return 0
+        case "$new" in */*) ;; *) new=$(dirname "$old")/$new; new=${new#./} ;; esac
+    fi
+    new=$(tidy_path "$new")
+    [ -e "$new" ] && { fail "$new already exists. Pick a name that is not used."; return 1; }
+    IFS=$'\t' read -r nkey _ nrel < <(rename_area "$new")
+    [ "${nkey:-}" = "$key" ] || { fail "the new place must stay in the same area as the old one ($root)."; return 1; }
+    [[ "$nrel" =~ ^[A-Za-z0-9._/-]+$ ]] && [[ ! "/$nrel/" =~ /\.\.?/ ]] && [[ "$nrel" != *//* ]] ||
+        { fail "\"$nrel\": use letters, numbers, - _ and . only (no spaces)."; return 1; }
+    case "/$nrel/" in "/$rel/"*) fail "a folder cannot go inside itself."; return 1 ;; esac
+    case "$key" in IMAGES_DIR) nweb=images/$nrel ;; DATA_DIR) nweb=data/$nrel ;; *) nweb=$nrel ;; esac
+    if [ -f "$old" ] && [ "${old##*.}" != "${new##*.}" ]; then
+        warn "the ending changes (.${old##*.} to .${new##*.}). Only the name changes; the file itself is not converted."
+        confirm "Use this name anyway?" n || return 0
+    fi
+    # A photo in a photo folder: the database keeps only its name inside that
+    # folder (abc.webp), so it must stay in its folder, and the name must be unique.
+    if [ "$key" = IMAGES_DIR ] && [ -f "$old" ] && [[ "$rel" == */* ]]; then
+        [ "${rel%%/*}" = "${nrel%%/*}" ] || { fail "a photo can be renamed inside its own photo folder (${rel%%/*}), not moved to another one."; return 1; }
+        dbold=${rel#*/}; dbnew=${nrel#*/}
+        for other in "$root"/*/"$dbold"; do
+            [ -e "$other" ] && [ "$other" != "$root/$rel" ] &&
+                { fail "another photo folder has a file with the same name ($other). The database cannot tell them apart, so this one keeps its name."; return 1; }
+        done
+    fi
+
+    # What to look for. Photos: images/NAME (and images}/NAME in docker-compose.yml).
+    # Site and data files: their short name, only right after / " ' ( = or `.
+    site=$(env_get SITE_DIR)
+    case "$key" in
+        IMAGES_DIR) ren_env=(REN_OLD1="$web" REN_NEW1="$nweb" REN_STRICT1= REN_OLD2="images}/$rel" REN_NEW2="images}/$nrel" REN_STRICT2=)
+                    code_dirs=(rust/junsgarden/src rust/junsgarden/templates rust/common "$site" beds docker docker-compose.yml android-app/app/src)
+                    db_toks=("$web"); db_news=("$nweb") ;;
+        SITE_DIR)   ren_env=(REN_OLD1="$rel" REN_NEW1="$nrel" REN_STRICT1=1)
+                    code_dirs=(rust/junsgarden/src rust/junsgarden/templates rust/common "$site" docker/caddy android-app/app/src)
+                    db_toks=("/$rel"); db_news=("/$nrel") ;;
+        DATA_DIR)   ren_env=(REN_OLD1="$rel" REN_NEW1="$nrel" REN_STRICT1=1)
+                    code_dirs=(rust/junsgarden/src rust/junsgarden/templates rust/common "$site" docker)
+                    db_toks=("/$web"); db_news=("/$nweb") ;;
+    esac
+    [ -n "$dbold" ] && { db_toks+=("$dbold"); db_news+=("$dbnew"); }
+
+    say "Looking for every place that uses $old"
+    mapfile -d '' -t code_files < <(find "${code_dirs[@]}" -type d \( -name target -o -name build -o -name .gradle -o -name node_modules -o -name .git \) -prune \
+        -o -type f -size -2M ! -name '*.md' -print0 2>/dev/null)
+    mapfile -d '' -t data_files < <(find "$(env_get IMAGES_DIR)" "$(env_get DATA_DIR)" "$(env_get CACHE_DIR)" -type d -name .thumbs -prune \
+        -o -type f -size -50M \( -name '*.csv' -o -name '*.json' -o -name '*.txt' -o -name '*.html' \) -print0 2>/dev/null)
+    while IFS=$'\t' read -r _ n f; do code_hits+=("$f"); code_n=$((code_n + n)); done < <(env "${ren_env[@]}" perl -e "$RENAME_PERL" -- count "${code_files[@]}")
+    while IFS=$'\t' read -r _ n f; do data_hits+=("$f"); data_n=$((data_n + n)); done < <(env "${ren_env[@]}" perl -e "$RENAME_PERL" -- count "${data_files[@]}")
+    note "Code and pages: $code_n place(s) in ${#code_hits[@]} file(s):"
+    if [ "${#code_hits[@]}" -gt 0 ]; then
+        env "${ren_env[@]}" perl -e "$RENAME_PERL" -- show "${code_hits[@]}" | grep -v '^COUNT' | head -40
+        [ "$code_n" -gt 40 ] && note "   ... and more (all of them are changed the same way)"
+    fi
+    note "Photo and data lists: $data_n place(s) in ${#data_hits[@]} file(s):"
+    for f in "${data_hits[@]}"; do printf '      %s\n' "$f"; done
+    # The database: every text column of every table, garden and wiki.
+    local where db t c tok sql=
+    wait_db || note "The database does not answer yet."
+    while IFS=$'\t' read -r db t c; do
+        where=
+        for tok in "${db_toks[@]}"; do where="${where:+$where OR }\`$c\` REGEXP '$(db_regex "$tok")'"; done
+        sql+=$(printf "SELECT '%s.%s.%s', COUNT(*) FROM \`%s\`.\`%s\` WHERE %s;" "$db" "$t" "$c" "$db" "$t" "$where")$'\n'
+    done < <(db_text_columns)
+    if [ -n "$sql" ]; then
+        while IFS=$'\t' read -r f n; do [ "${n:-0}" -gt 0 ] && { db_hits+=("$f"); db_n=$((db_n + n)); }; done < <(printf '%s' "$sql" | db_root)
+    else
+        warn "could not look inside the database (is it running? menu 2 starts the garden)."
+        confirm "Carry on without the database?" n || return 0
+    fi
+    note "Database: $db_n row(s) in ${#db_hits[@]} column(s):"
+    for f in "${db_hits[@]}"; do printf '      %s\n' "$f"; done
+    [ $((code_n + data_n + db_n)) -eq 0 ] && note "Nothing names it: only the name itself changes. (Pictures found by looking in a folder, like the hero banner pictures, need nothing else.)"
+
+    echo
+    note "Rename: $old  ->  $new"
+    [ -z "$again" ] && warn "the guides will still show the old name. logs/renames.tsv will list this change."
+    confirm "Change all of this now?" y || { note "Nothing changed."; return 0; }
+    if [ -z "$again" ] && confirm "Make a full backup first (recommended, a few minutes)?" y; then
+        do_backup before-rename || { fail "the backup did not finish, so nothing was changed"; return 1; }
+    fi
+
+    free_files "$old" keep-db || { note "Nothing changed."; dc up -d >/dev/null; return 0; }
+    keep="logs/rename_$(date +%Y-%m-%d_%H%M%S)"
+    mkdir -p "$keep"
+    note "Copies of everything it changes go to $keep first."
+    for f in "${code_hits[@]}" "${data_hits[@]}"; do
+        if ! { mkdir -p "$keep/files/$(dirname "${f#/}")" && cp -p "$f" "$keep/files/${f#/}"; }; then
+            fail "could not keep a copy of $f, so nothing was changed"; dc up -d >/dev/null; return 1
+        fi
+    done
+    if [ "${#db_hits[@]}" -gt 0 ]; then
+        for db in juns_garden_db junsgarden_wiki; do
+            mapfile -t changed < <(printf '%s\n' "${db_hits[@]}" | awk -F. -v d="$db" '$1 == d {print $2}' | sort -u)
+            [ "${#changed[@]}" -gt 0 ] || continue
+            # shellcheck disable=SC2016
+            dk exec garden-db sh -c 'MYSQL_PWD="$MARIADB_ROOT_PASSWORD" exec mariadb-dump -uroot --single-transaction "$@"' sh "$db" "${changed[@]}" | gzip > "$keep/$db-before.sql.gz" ||
+                { fail "could not keep a copy of the database rows, so nothing was changed"; dc up -d >/dev/null; return 1; }
+        done
+        chmod -R go-rwx "$keep"
+    fi
+
+    # 1. The file or folder itself.
+    mkdir -p "$(dirname "$new")"
+    if ! mv -- "$old" "$new" 2>/dev/null && ! run sudo mv -- "$old" "$new"; then
+        fail "the rename failed; nothing was changed"; dc up -d >/dev/null; return 1
+    fi
+    note "Renamed: $old -> $new"
+    # 2. The code, the pages and the lists.
+    if [ "${#code_hits[@]}" -gt 0 ] || [ "${#data_hits[@]}" -gt 0 ]; then
+        env "${ren_env[@]}" perl -e "$RENAME_PERL" -- apply "${code_hits[@]}" "${data_hits[@]}" >/dev/null ||
+            warn "some files could not be changed. The copies are in $keep."
+        note "Changed $((code_n + data_n)) place(s) in $(( ${#code_hits[@]} + ${#data_hits[@]} )) file(s)."
+    fi
+    # 3. The database rows.
+    if [ "${#db_hits[@]}" -gt 0 ]; then
+        sql=
+        for f in "${db_hits[@]}"; do
+            IFS=. read -r db t c <<< "$f"
+            for i in "${!db_toks[@]}"; do
+                sql+=$(printf "UPDATE \`%s\`.\`%s\` SET \`%s\` = REGEXP_REPLACE(\`%s\`, '%s', '%s') WHERE \`%s\` REGEXP '%s';" \
+                    "$db" "$t" "$c" "$c" "$(db_regex "${db_toks[$i]}")" "${db_news[$i]}" "$c" "$(db_regex "${db_toks[$i]}")")$'\n'
+            done
+        done
+        if printf '%s' "$sql" | db_root; then note "Changed $db_n database row(s)."
+        else warn "the database did not take every change. Its rows from before are in $keep (gzip)."; fi
+    fi
+    # 4. A renamed picture folder is made under its new name by a later install.
+    if [ "$key" = IMAGES_DIR ] && [[ "$rel" != */* ]]; then
+        sum=$(env_get IMAGE_FOLDERS); sum=${sum:-$IMAGE_FOLDERS_FIRST}
+        # shellcheck disable=SC2086  # one folder name per line
+        env_set IMAGE_FOLDERS "$(printf '%s\n' $sum | sed "s/^$rel\$/$nrel/" | paste -sd' ' -)"
+    fi
+    rename_log renamed "$old" "$new"
+    # For the Windows menu: which garden files changed, so it can update its own copy.
+    { for f in "${code_hits[@]}"; do case "$f" in /*) ;; *) printf 'edit\t%s\n' "${f#./}" ;; esac; done
+      case "$old" in /*) ;; site/*) printf 'move\t%s\t%s\n' "$old" "$new" ;; esac; } > logs/last-rename.txt
+
+    # 5. Start again. Rust and garden-tool changes need a rebuild (a few minutes).
+    printf '%s\n' "${code_hits[@]}" | has '^rust/' && rebuilt=site
+    printf '%s\n' "${code_hits[@]}" | has '^beds/' && has_part beds && rebuilt="$rebuilt beds"
+    if [ -n "$rebuilt" ]; then
+        note "The website's code changed, so it is built again (a few minutes):"
+        # shellcheck disable=SC2086  # the list of programs is meant to split into words
+        run dc up -d --build $rebuilt || warn "the build stopped. The old copies are in $keep; rename it back (this menu, names swapped)."
+    fi
+    printf '%s\n' "${db_hits[@]}" | has '^junsgarden_wiki\.' && has_part wiki && dc up -d --force-recreate wiki >/dev/null 2>&1
+    dc up -d >/dev/null
+    wait_site || return 1
+    # 6. Check: the website hands out the file (or a file inside the folder) under the new name.
+    if [ "$key" != DATA_DIR ]; then
+        if [ -d "$new" ]; then
+            check=$(find "$new" -type f \( -name '*.webp' -o -name '*.jpg' -o -name '*.png' -o -name '*.html' -o -name '*.css' -o -name '*.js' \) -print -quit)
+            [ -n "$check" ] || check=$(find "$new" -type f ! -name '.*' -print -quit)
+        else check=$new; fi
+        if [ -n "$check" ]; then
+            check=${check#"$new"}; check=$nweb$check
+            if curl -fsS -o /dev/null --max-time 10 "$(site_url)/$check"; then note "Checked: $(site_url)/$check answers."
+            else warn "$(site_url)/$check does not answer. Look at it in the browser; to undo, rename it back."; fi
+        fi
+    fi
+    if [ -d .git ] && [ "${#code_hits[@]}" -gt 0 ]; then
+        git add -- "${code_hits[@]}" 2>/dev/null && git commit -q -m "Renamed $old to $new (menu M, 18)" -- "${code_hits[@]}" 2>/dev/null \
+            && note "Saved in your git history (git show shows every changed line)."
+    fi
+    printf '%s\n' "${code_hits[@]}" | has '^android-app/' && note "The phone app's code changed too: build the app again (android-app/README.md) for phones."
+    note "Done. Press Ctrl+Shift+R in the browser if a page still shows the old picture."
+    note "To undo: choose this again and rename it back (new name -> old name)."
+}
+
+# After a restore or a photos download: a backup made BEFORE a rename brings the
+# old name back. Offer to do those renames again, in the order they were made
+# (the code already uses the new names; the files and the database follow).
+redo_renames() {
+    [ -s "$RENAME_LOG" ] || return 0
+    local -a whens=() olds=() news=()
+    local when what old new i j name
+    while IFS=$'\t' read -r when what old new; do
+        [ "$what" = renamed ] || continue
+        whens+=("$when"); olds+=("$old"); news+=("$new")
+    done < "$RENAME_LOG"
+    for i in "${!olds[@]}"; do
+        # Follow the later renames to today's name (A -> B, later B -> C: today it is C).
+        name=${news[$i]}
+        for ((j = i + 1; j < ${#olds[@]}; j++)); do [ "${olds[$j]}" = "$name" ] && name=${news[$j]}; done
+        old=${olds[$i]}
+        [ "$name" = "$old" ] && continue          # renamed and later renamed back: nothing to do
+        [ -e "$old" ] || continue
+        if [ -e "$name" ]; then
+            warn "both $old and $name are here now (the old name came back with a backup or download)."
+            note "Move what you want to keep from $old into $name, then delete $old."
+            continue
+        fi
+        warn "$old has its old name again (it is called $name since ${whens[$i]})."
+        confirm "Rename it again, with everything that uses it?" y && rename_item "$old" "$name" after-restore
+    done
+}
+
+# Choice 2: move one of the garden's big folders (its line in .env changes too).
 do_move_folder() {
-    say "Move or rename one of the garden's folders"
+    say "Move one of the garden's big folders to another place or disk"
     local keys=(SITE_DIR IMAGES_DIR DATA_DIR CACHE_DIR DB_DIR N8N_DIR AUTH_DIR BACKUP_DIR) i c key old new
     for i in "${!keys[@]}"; do printf '   %d) %-11s %s\n' $((i + 1)) "${keys[$i]}" "$(env_get "${keys[$i]}")"; done
     c=$(ask "Which one (0 = back)" 0); [ "$c" = 0 ] && return 0
     key=${keys[$((c - 1))]:-}; [ -n "$key" ] || { note "No such number."; return 0; }
     old=$(env_get "$key")
-    note "Type the new place. Inside the garden folder, start with ./  (example ./my-photos)"
-    new=$(ask "New place for $key" "$old")
+    note "Type the new place. Inside the garden folder, start with ./  (example ./my-photos)."
+    note "On another disk, type the whole path (example /mnt/bigdisk/garden-photos). Tab completes names."
+    new=$(ask_path "New place for $key (empty = back)")
+    case "$new" in "") return 0 ;; /*|"~"*) new=$(tidy_path "$new") ;; *) new=./$(tidy_path "$new") ;; esac
     [ "$new" = "$old" ] && { note "Same as before; nothing to do."; return 0; }
     [ -e "$new" ] && { fail "$new already exists. Pick a name that is not used."; return 1; }
+    case "$(realpath -m -- "$new")/" in "$(realpath -m -- "$old")/"*) fail "a folder cannot go inside itself."; return 1 ;; esac
+    if [ "$key" != BACKUP_DIR ] && ! linux_disk "$new"; then
+        fail "that place is on a $(disk_type "$new") disk. The garden's programs need a Linux disk (ext4): Windows and USB disks (NTFS, exFAT) cannot keep Linux owners and permissions. Backups can go there; this folder cannot."
+        return 1
+    fi
+    note "The guides show where this folder was ($old). logs/renames.tsv will list the move."
     confirm "Stop the garden, move $old to $new, and start again?" y || return 0
-    run dc stop >/dev/null
-    mkdir -p "$(dirname "$new")"
-    if [ "$key" = DB_DIR ] || [ "$key" = AUTH_DIR ]; then run sudo mv "$old" "$new"; else run mv "$old" "$new"; fi || { fail "the move failed; nothing was changed"; run dc up -d; return 1; }
+    free_files "$old" || { note "Nothing changed."; dc up -d >/dev/null; return 0; }
+    mkdir -p "$(dirname "$new")" 2>/dev/null || run sudo mkdir -p "$(dirname "$new")"
+    if [ "$key" = DB_DIR ] || [ "$key" = AUTH_DIR ]; then run sudo mv "$old" "$new"; else run mv "$old" "$new" || run sudo mv "$old" "$new"; fi || { fail "the move failed; nothing was changed"; run dc up -d; return 1; }
     env_set "$key" "$new"
+    rename_log moved "$old" "$new"
     run dc up -d >/dev/null
     [ "$key" = BACKUP_DIR ] && nightly_backup
     wait_site && note "Moved. The checklist (menu 5) confirms every folder is found."
+}
+
+# Choice 3: move the WHOLE garden folder (for example to a bigger disk), then fix
+# what points at it: the nightly backup schedule, the desktop icon, settings that
+# name the folder, and Docker's programs (they are made again from the new place).
+move_garden() {
+    local old=$HERE new parent before after k v
+    explain "Move the whole garden folder" \
+        "Moves the garden folder (the programs, your photos, the database, the backups inside it) to a new place, then fixes what points at it: the nightly backup schedule, the desktop icon and Docker's programs." \
+        "For example to a bigger disk. A signpost (a link) can stay at the old place, so the Windows menu and your habits still find it." ""
+    note "Now: $old"
+    note "Type the new place, the whole path (example: /mnt/bigdisk/junsgarden). Tab completes names."
+    new=$(tidy_path "$(ask_path "New place (empty = back)")")
+    [ -n "$new" ] || return 0
+    case "$new" in /*) ;; *) fail "type the whole path, starting with / (or ~ for your home folder)."; return 1 ;; esac
+    # Moving back to where it was: the signpost left there is replaced by the garden itself.
+    local back=''
+    if [ -L "$new" ] && [ "$(readlink -f "$new")" = "$old" ]; then back=1
+    elif [ -e "$new" ]; then fail "$new already exists. Pick a name that is not used."; return 1; fi
+    parent=$(dirname "$new")
+    # (The parent's real place plus the name: a signpost link there is not followed.)
+    case "$(realpath -m -- "$parent")/$(basename "$new")/" in "$old/"*) fail "the garden folder cannot go inside itself."; return 1 ;; esac
+    linux_disk "$parent" || { fail "that place is on a $(disk_type "$parent") disk. The garden needs a Linux disk (ext4): Windows and USB disks (NTFS, exFAT) cannot keep Linux owners and permissions."; return 1; }
+    if [ "$(stat -c %d "$old")" != "$(stat -c %d "$(realpath -m -- "$parent" | sed 's#/*$##')" 2>/dev/null || echo x)" ]; then
+        local need free
+        need=$(sudo du -sk "$old" | cut -f1)
+        k=$parent; while [ ! -d "$k" ]; do k=$(dirname "$k"); done
+        free=$(df -Pk "$k" | awk 'NR == 2 {print $4}')
+        [ "$need" -lt "$free" ] || { fail "not enough space there: the garden needs $((need / 1024)) MB, the disk has $((free / 1024)) MB free."; return 1; }
+        note "Another disk: everything is copied there ($((need / 1024)) MB), then removed here. This takes a while."
+    fi
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+        warn "this is Windows' own Ubuntu. The Windows menu looks for the garden in ~/$REMOTE_DIR: keep the signpost (next question) so it still finds it."
+    fi
+    note "The guides show the garden folder in its first place. logs/renames.tsv will list the move."
+    confirm "Stop the garden, move it to $new, and start it again there?" y || return 0
+    free_files "$old" || { note "Nothing changed."; dc up -d >/dev/null; return 0; }
+    run dc down >/dev/null 2>&1
+    before=$(sudo find "$old" | wc -l)
+    [ -d "$parent" ] || mkdir -p "$parent" 2>/dev/null || run sudo mkdir -p "$parent"
+    cd / || return 1
+    [ -n "$back" ] && { rm -f "$new" 2>/dev/null || sudo rm -f "$new"; }
+    if ! run sudo mv -- "$old" "$new"; then
+        cd "$old" 2>/dev/null || true; fail "the move failed; the garden stays where it was"; dc up -d >/dev/null; return 1
+    fi
+    HERE=$new; cd "$HERE" || return 1
+    after=$(sudo find "$new" | wc -l)
+    if [ "$before" = "$after" ]; then note "All $after files and folders arrived."
+    else warn "$before files and folders before, $after after. Look before deleting anything."; fi
+    # Settings that name the old place in full move along with it.
+    for k in SITE_DIR IMAGES_DIR DATA_DIR CACHE_DIR DB_DIR N8N_DIR AUTH_DIR BACKUP_DIR; do
+        v=$(env_get "$k"); case "$v" in "$old"/*) env_set "$k" "$new/${v#"$old"/}" ;; esac
+    done
+    # The schedules (nightly backup, automatic check-up) start in the new place.
+    crontab -l 2>/dev/null | OLD=$old NEW=$new perl -pe 's/\Qcd "$ENV{OLD}"\E/cd "$ENV{NEW}"/g' | crontab -
+    [ -f "$HOME/.local/share/applications/junsgarden.desktop" ] && make_icon
+    rename_log moved "$old" "$new"
+    if confirm "Leave a signpost at the old place (a link to the new one; the Windows menu needs it)?" y; then
+        ln -s "$new" "$old" 2>/dev/null || run sudo ln -s "$new" "$old"
+        note "Signpost: $old -> $new"
+    fi
+    run dc up -d >/dev/null
+    wait_site || return 1
+    note "Done. The garden now lives in $new."
+    note "This terminal is still in the old place: when the menu closes, type:  cd $new"
 }
 
 # Settings 9: new random passwords for the database's own accounts.
@@ -2989,7 +3553,7 @@ uninstall_programs() {   # uninstall_programs [noask]
     run dc --profile tools --profile dbweb --profile wiki-setup --profile beds --profile wiki \
         --profile n8n --profile gate --profile llm down --rmi local --remove-orphans
     say "Removing the schedule, the icon and the NAS connection"
-    ( crontab -l 2>/dev/null | grep -v -e 'garden.sh backup' -e 'docker/backup.sh' ) | crontab -
+    ( crontab -l 2>/dev/null | grep -v -e 'garden.sh backup' -e 'docker/backup.sh' -e 'garden.sh checkup' ) | crontab -
     rm -f "$HOME/.local/share/applications/junsgarden.desktop" "$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")/junsgarden.desktop"
     local n
     for n in $NAS_SLOTS; do
@@ -3086,16 +3650,19 @@ do_check() {
         if command -v "$p" >/dev/null 2>&1; then ok "$p is installed"; else bad "$p is missing" "bash garden.sh install"; fi
     done
     if dk compose version >/dev/null 2>&1; then ok "docker compose is installed"; else bad "docker compose is missing" "bash garden.sh install"; fi
+    if [ "$(docker_mode)" = engine ] && docker_desktop_shared; then wn "Docker Desktop (Windows) shares its Docker with this Ubuntu" "Docker Desktop > Settings > Resources > WSL integration: switch this Ubuntu off (guide 25)"; fi
     if [ -x /usr/sbin/sshd ]; then ok "SSH server is installed"; else wn "SSH server is not installed" "sudo apt install -y openssh-server"; fi
 
     echo; echo "== 2. Services that must be running"
-    if systemctl is-active --quiet docker 2>/dev/null; then ok "Docker service is running"; else bad "Docker is not running" "sudo systemctl start docker"; fi
+    if [ "$(docker_mode)" = desktop ]; then
+        if dk info 2>/dev/null | has 'Docker Desktop'; then ok "Docker Desktop is running and connected"; else bad "Docker Desktop does not answer" "start Docker Desktop on Windows; Settings > Resources > WSL integration: this Ubuntu on"; fi
+    elif systemctl is-active --quiet docker 2>/dev/null; then ok "Docker service is running"; else bad "Docker is not running" "sudo systemctl start docker"; fi
     if systemctl is-active --quiet ssh 2>/dev/null; then ok "SSH service is running"; else wn "SSH service is not running" "sudo systemctl enable --now ssh"; fi
     container garden-db "database"
     container garden-site "website"
     has_part beds && container junsgarden-ingest "garden tools"
     has_part wiki && container garden-wiki "wiki"
-    has_part n8n  && container n8n "automations"
+    has_part n8n  && container garden-n8n "automations"
     has_part gate && container garden-auth "sign-in page"
     local h; h=$(curl -fsS --max-time 5 "$(site_url)/healthz" 2>/dev/null)
     if echo "$h" | has '"status":"ok"'; then ok "Website answers: $h"; else bad "Website does not answer on $(site_url)" "bash garden.sh logs"; fi
@@ -3139,6 +3706,8 @@ do_check() {
             d=$(env_get "$k")
             if [ -d "$d" ]; then ok "$k=$d ($(find "$d" -type f 2>/dev/null | wc -l) files)"; else bad "$k=$d does not exist" "rename the folder back, or fix the line in .env (guide 13)"; fi
         done
+        [ -s "$RENAME_LOG" ] && info "Renamed or moved: $(($(wc -l < "$RENAME_LOG") - 1)) change(s), listed in $RENAME_LOG. The guides show the first names."
+        garden_is_off && info "The garden is switched OFF ($(head -1 "$OFF_MARK")). On again: bash garden.sh on"
     else bad "No .env settings file" "bash garden.sh install"; fi
 
     echo; echo "== 5. Backups"
@@ -3168,7 +3737,7 @@ do_check() {
         if [ -n "$dns" ] && [ "$dns" = "$pub" ]; then ok "$name points at this home ($pub)"; else wn "$name points at ${dns:-nothing}, this home is ${pub:-?}" "wait 5 minutes, then: sudo systemctl status noip-duc"; fi
     fi
     local pct; pct=$(df --output=pcent / | tail -1 | tr -dc '0-9')
-    if [ "${pct:-100}" -lt 85 ]; then ok "Disk is ${pct}% full"; else bad "Disk is ${pct}% full" "delete old backups, then: docker system prune"; fi
+    if [ "${pct:-100}" -lt 85 ]; then ok "Disk is ${pct}% full"; else bad "Disk is ${pct}% full" "copy old backups to a USB stick and delete them, then: bash garden.sh cleanup"; fi
 
     echo
     echo "RESULT: $P pass, $W warn, $F fail   (PASS good, WARN fix soon, FAIL fix first)"
@@ -3214,7 +3783,7 @@ EOF
         local c; echo; read -r -p "  $(Lt "Type a number or letter, then press Enter"): " c || { echo; exit 0; }   # no more input (window closed): stop, do not loop
         case "$c" in
             1) do_install ;;
-            2) run dc up -d && wait_site ;;
+            2) if garden_is_off; then power_on; else run dc up -d && wait_site; fi ;;
             3) run dc stop && note "Stopped. Nothing was deleted." ;;
             4) xdg-open "$(site_url)" >/dev/null 2>&1 & note "Opening $(site_url)" ;;
             5) do_check ;;
@@ -3395,6 +3964,188 @@ EOF
     note "Your devices: https://login.tailscale.com/admin/machines . Off again: this same menu item."
 }
 
+# ---------- the on / off switch and Docker's check-up (More 14; garden.sh off | on | checkup | cleanup) ----
+# OFF stops every garden program and the front door. It is "docker compose down"
+# WITHOUT -v: the containers are removed, but every file stays. Your plants (the
+# database folder), photos, data, cache, backups and settings live in folders on
+# this computer, not inside Docker. ON starts it all again, even months later,
+# and checks it. The check-up starts a stuck program again. The clean-up removes
+# only Docker's leftovers (old image versions, images nothing uses, old build
+# notes): never an image the garden uses, never a volume, never one of your folders.
+OFF_MARK=.garden-off
+garden_is_off() { [ -f "$OFF_MARK" ]; }
+
+do_power() {
+    [ -f .env ] || { fail "install first (menu 1)"; return 1; }
+    say "On / off switch and Docker check-up"
+    if garden_is_off; then note "Now: OFF ($(head -1 "$OFF_MARK"))."
+    else note "Now: ON ($(dc ps -q 2>/dev/null | wc -l) programs running)."; fi
+    Lblock <<'EOF'
+   Nothing here deletes your plants, photos, data, cache, backups or settings.
+
+   1) Everything OFF: stops all the garden's programs and the front door.
+      For when you do not want to host the site for a while, or the internet
+      traffic is too much. Turn it on again any time, even months later.
+   2) Everything ON again: starts it all and checks the website
+   3) Off the internet only: the garden keeps running at home (More 1 puts it back)
+   4) Check-up: start again any program that is stuck
+   5) Clean-up: remove Docker's leftovers to free disk space (safe)
+   6) Automatic check-up every 6 hours (on / off)
+   0) Back
+EOF
+    case "$(ask "Number" 0)" in
+        1) power_off ;;        2) power_on ;;
+        3) do_public_off ;;    4) docker_checkup ;;
+        5) docker_cleanup ;;   6) checkup_schedule ;;
+        *) return 0 ;;
+    esac
+}
+
+# Switch 1 (garden.sh off): everything off; every file stays.
+power_off() {
+    garden_is_off && { note "It is already off. Choice 2 turns it on."; return 0; }
+    explain "Everything off" \
+        "Stops and removes the garden's programs (docker compose down, WITHOUT -v) and stops the front door (Caddy). Your plants, photos, data, cache, backups and settings stay in their folders, untouched. The nightly backup pauses: nothing changes while it is off." \
+        "When you do not want to host the site for a while, or the traffic is too much. Visitors then get no answer. Turning it on again brings back exactly what was there." \
+        "https://docs.docker.com/reference/cli/docker/compose/down/"
+    confirm "Turn the garden off now?" n || return 0
+    local caddy=0
+    if systemctl is-enabled --quiet caddy 2>/dev/null; then caddy=1; run sudo systemctl disable --now caddy; fi
+    # shellcheck disable=SC2046  # the profile list is meant to split into words
+    run dc $(profile_args) --profile dbweb down || { fail "Docker did not stop everything; look at: docker ps"; return 1; }
+    printf 'since %s\ncaddy=%s\n' "$(date '+%Y-%m-%d %H:%M')" "$caddy" > "$OFF_MARK"
+    note "Off. Nothing is running, and nothing was deleted."
+    Lblock <<'EOF'
+   While it is off:
+   - A free No-IP web name must still be confirmed every 30 days (No-IP emails
+     you a link). Keep clicking it, or the name is lost.
+   - The padlock (HTTPS) certificate renews by itself when the garden is on again.
+   - On again: menu M, 14, then 2 (or menu 2, or: bash garden.sh on).
+EOF
+}
+
+# Switch 2 (garden.sh on; menu 2 too when it was switched off): start it all and check.
+power_on() {
+    local since='' caddy=0 days plants
+    if garden_is_off; then
+        since=$(sed -n 's/^since //p' "$OFF_MARK"); caddy=$(sed -n 's/^caddy=//p' "$OFF_MARK")
+    fi
+    say "Turning the garden on"
+    # If Docker lost a program's image meanwhile, "up" builds it again (that takes longer).
+    run dc up -d || { fail "the programs did not start. Look at:  bash garden.sh logs"; return 1; }
+    rm -f "$OFF_MARK"
+    [ "$caddy" = 1 ] && run sudo systemctl enable --now caddy
+    wait_site || return 1
+    wait_db; plants=$(echo "SELECT COUNT(*) FROM juns_garden_db.data_source;" | db_root 2>/dev/null)
+    note "The website answers at $(site_url). Plants in the database: ${plants:-?}"
+    if [ -n "$since" ]; then
+        days=$(( ($(date +%s) - $(date -d "$since" +%s 2>/dev/null || date +%s)) / 86400 ))
+        note "It was off for $days day(s), since $since."
+        [ "$days" -ge 1 ] && confirm "Make a backup now (the nightly one was paused)?" y && do_backup
+    fi
+    [ "$caddy" = 1 ] && note "The front door is on again. An old padlock certificate renews by itself within minutes."
+    return 0
+}
+
+# Switch 4 (garden.sh checkup; also every 6 hours if switched on): every garden
+# program that should run is running and healthy. A stuck one (stopped with an
+# error, "unhealthy", or restarting over and over) is made again and started.
+# It never deletes a file. Quiet (from the schedule): prints only what it fixed.
+docker_checkup() {   # docker_checkup [quiet]
+    local quiet=${1:-} svc state health code fixed=0 n=0
+    if garden_is_off; then
+        [ -n "$quiet" ] || note "The garden is switched off, so there is nothing to check. Choice 2 turns it on."
+        return 0
+    fi
+    # "|" between the fields, not a tab: bash's read joins tabs, so an empty
+    # health field would shift the exit code into its place.
+    while IFS='|' read -r svc state health code; do
+        n=$((n + 1))
+        case "$state" in
+            running) [ "$health" = unhealthy ] || continue ;;
+            exited)  case "$svc" in *-init|*-setup) [ "$code" = 0 ] && continue ;; esac ;;
+        esac
+        note "$(date '+%Y-%m-%d %H:%M') $svc was $state${health:+ ($health)}: starting it again."
+        dc up -d --force-recreate "$svc" >/dev/null 2>&1 && fixed=$((fixed + 1))
+    done < <(dc ps -a --format '{{.Service}}|{{.State}}|{{.Health}}|{{.ExitCode}}' 2>/dev/null)
+    # Anything missing altogether is made again too.
+    dc up -d >/dev/null 2>&1
+    if ! curl -fsS -o /dev/null --max-time 10 "$(site_url)/healthz"; then
+        note "$(date '+%Y-%m-%d %H:%M') the website did not answer; restarting it."
+        dc restart site >/dev/null 2>&1 && fixed=$((fixed + 1))
+    fi
+    if [ -z "$quiet" ] && systemctl is-enabled --quiet caddy 2>/dev/null && ! systemctl is-active --quiet caddy; then
+        note "The front door (Caddy) had stopped: starting it again."; run sudo systemctl restart caddy
+    fi
+    [ -n "$quiet" ] && return 0
+    if [ "$fixed" -eq 0 ]; then note "All $n programs are fine. Nothing needed doing."
+    else note "Started again: $fixed. If one keeps getting stuck, its messages say why: bash garden.sh logs"; fi
+}
+
+# Switch 5 (garden.sh cleanup): remove Docker's leftovers, safely.
+docker_cleanup() {
+    explain "Clean-up: Docker's leftovers" \
+        "Removes old versions of the garden's programs (left behind each time one is rebuilt or updated) that are older than 7 days, and Docker's build notes older than 30 days. It keeps every image the garden uses, also those of parts that are off right now, and anything newer than 7 days (after you edited files and rebuilt, the old version stays in case you need to go back). Images of your other Docker projects are left alone. Use it with care: it shows the list and asks first, and Enter means no." \
+        "Docker keeps old copies forever; after some updates they can fill gigabytes. Your plants, photos, data, cache, backups and settings are not Docker's: they are never touched. Docker volumes are never touched either." \
+        "https://docs.docker.com/engine/manage-resources/pruning/"
+    garden_is_off && { fail "the garden is switched off. Turn it on first (choice 2): the clean-up runs only while the garden runs."; return 1; }
+    dc ps --status running -q 2>/dev/null | has . || { fail "the garden's programs are not running. Start them first (menu 2)."; return 1; }
+    local keep keep_names id repo p made young=0
+    local -a all_profiles=() remove=()
+    # Every image the garden uses, with every part switched on (so nothing of a part that is off goes).
+    for p in $(grep -o 'profiles: \["[a-z-]*"\]' docker-compose.yml | grep -o '"[a-z-]*"' | tr -d '"' | sort -u); do all_profiles+=(--profile "$p"); done
+    keep=$(dc "${all_profiles[@]}" config --images 2>/dev/null | sed -E '/:[^/]*$/!s/$/:latest/')
+    [ -n "$keep" ] || { fail "could not read the garden's list of images, so nothing was removed"; return 1; }
+    keep_names=$(printf '%s\n' "$keep" | sed -E 's/:[^/:]*$//' | sort -u)
+    run dk system df
+    # A leftover: an image that no container uses (running or stopped), and that is
+    # either nameless ("<none>": an old version a rebuild left behind) or an older
+    # version of one of the garden's own images (same name, another version).
+    # Images of other Docker projects (Docker Desktop may run many) never qualify.
+    while IFS=$'\t' read -r id repo; do
+        printf '%s\n' "$keep" | has -Fx "$repo" && continue
+        if [ "$repo" != "<none>:<none>" ]; then printf '%s\n' "$keep_names" | has -Fx "${repo%:*}" || continue; fi
+        [ -n "$(dk ps -a -q --filter ancestor="$id")" ] && continue
+        # Newer than 7 days stays: a recent rebuild's old version may still be wanted.
+        made=$(date -d "$(dk image inspect -f '{{.Created}}' "$id" 2>/dev/null)" +%s 2>/dev/null || date +%s)
+        if [ $(( $(date +%s) - made )) -lt $((7 * 86400)) ]; then young=$((young + 1)); continue; fi
+        remove+=("$( [ "$repo" = "<none>:<none>" ] && echo "$id" || echo "$repo" )")
+    done < <(dk images --format '{{.ID}}\t{{.Repository}}:{{.Tag}}')
+    if [ "${#remove[@]}" -gt 0 ]; then
+        note "Leftovers that nothing uses:"
+        printf '      %s\n' "${remove[@]}"
+        if confirm "Remove these?" n; then
+            # No -f: Docker itself refuses to remove an image that something still uses.
+            for id in "${remove[@]}"; do dk rmi "$id" >/dev/null 2>&1 && note "removed $id"; done
+        fi
+    else
+        note "No unused images older than 7 days."
+    fi
+    [ "$young" -gt 0 ] && note "Kept $young newer than 7 days (they go in a later clean-up)."
+    note "Old build notes (older than 30 days):"
+    run dk builder prune -f --filter until=720h
+    run dk system df
+    note "Done. Never used here: docker volume prune, docker system prune --volumes, or anything with -v."
+}
+
+# Switch 6: the automatic check-up every 6 hours (a cron line), on or off.
+checkup_schedule() {
+    if crontab -l 2>/dev/null | has -F 'garden.sh checkup'; then
+        confirm "The automatic check-up is on. Switch it off?" n || return 0
+        ( crontab -l 2>/dev/null | grep -v -F 'garden.sh checkup' ) | crontab -
+        note "Off."
+        return 0
+    fi
+    explain "Automatic check-up" \
+        "Every 6 hours, cron runs 'garden.sh checkup': a program that is stuck is started again, and a line goes into logs/checkup.log. It never deletes anything, and does nothing while the garden is switched off." \
+        "So the garden mends small hiccups by itself, also while you are away. See the line: crontab -l" ""
+    confirm "Switch it on?" y || return 0
+    local line="15 */6 * * * cd \"$HERE\" && bash garden.sh checkup >> logs/checkup.log 2>&1"
+    mkdir -p logs
+    ( crontab -l 2>/dev/null | grep -v -F 'garden.sh checkup'; echo "$line" ) | crontab -
+    note "On: $line"
+}
+
 menu_more() {
     while true; do
         banner "More"
@@ -3413,10 +4164,11 @@ menu_more() {
   11) Look at the files that came from Jason (and check them)
   12) Uninstall (programs only, or everything)
   13) Subdomains with DuckDNS (wiki., n8n., ...): add, remove
-  14) Turn the front door off (take the garden off the internet)
+  14) On / off: the whole garden, or only off the internet; check-up, clean-up
   15) AI cost control: LiteLLM gateway with a monthly limit (on / off)
   16) Website name swap: use another web name than junsgarden.zapto.org
   17) Reach the garden from anywhere, privately (Tailscale): on / off
+  18) Rename or move a file or folder (every place that uses it follows)
 
    0) Back
 EOF
@@ -3428,9 +4180,9 @@ EOF
             7) do_rebuild ;;             8) do_dbweb ;;
             9) do_ai ;;                  10) make_icon ;;
             11) do_whats_from_jason ;;  12) do_uninstall ;;
-            13) do_subdomains ;;        14) do_public_off ;;
+            13) do_subdomains ;;        14) do_power ;;
             15) do_llm ;;               16) do_webname ;;
-            17) do_tailscale ;;
+            17) do_tailscale ;;         18) do_rename ;;
             0|b|B) return 0 ;;
             *) note "Please type one of the numbers shown." ;;
         esac
@@ -3443,7 +4195,7 @@ case "${1:-menu}" in
     install)    do_install ;;
     public)     do_public ;;
     remote)     do_remote ;;
-    start)      dc up -d && wait_site ;;
+    start)      if garden_is_off; then power_on; else dc up -d && wait_site; fi ;;
     stop)       dc stop ;;
     open)       xdg-open "$(site_url)" >/dev/null 2>&1 & ;;
     logs)       dc logs --tail 50 ;;
@@ -3479,6 +4231,14 @@ case "${1:-menu}" in
     lockdown)   do_lockdown ;;
     webname)    do_webname ;;
     tailscale)  do_tailscale ;;
+    rename)     do_rename ;;
+    renames)    show_renames ;;
+    redo-renames) redo_renames ;;
+    power)      do_power ;;
+    off)        power_off ;;
+    on)         power_on ;;
+    checkup)    docker_checkup "${2:-}" ;;
+    cleanup)    docker_cleanup ;;
     photos)     do_photos ;;
     test)       dk run --rm -v "$HERE/rust":/build -w /build rust:1.95-bookworm cargo test --locked -p junsgarden ;;
     *)          sed -n '2,34p' "$0" ;;

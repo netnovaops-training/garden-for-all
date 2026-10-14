@@ -48,7 +48,7 @@
 | 웹사이트만 다시 시작하기 | `docker compose restart site` |
 | 노트북 다시 시작하기(많은 것을 고쳐 줘요) | `sudo reboot` |
 | 무엇이 디스크를 쓰고 있는지 보기 | `docker system df`와 `df -h /` |
-| 안전하게 공간 비우기 | `docker system prune`(먼저 물어봐요. 내 데이터 폴더는 지우지 않아요) |
+| 안전하게 공간 비우기 | `bash garden.sh cleanup`(메뉴 `M`, `14`, `5`): 7일이 넘은 정원의 옛 버전만. 먼저 물어봐요. 내 데이터 폴더는 절대 지우지 않아요 |
 
 ---
 
@@ -71,7 +71,7 @@
 | 빌드가 멈춰요: "killed" 또는 "out of memory"(메모리 부족) | `free -h`, 그다음 `dmesg --level=err` | 스왑을 추가하고(`lab/01-prepare-ubuntu.sh`), 다른 프로그램을 닫고, 다시 빌드하세요 |
 | 빌드가 아주 느려요 | 예전 노트북에서는 정상이에요 | 기다리세요. 첫 빌드는 15~45분 걸려요(아주 오래된 노트북이나 Pi에서는 1시간까지) |
 | 포트가 이미 쓰이고 있어요 | `sudo ss -ltnp`(:8030을 찾으세요) | 다른 프로그램을 멈추거나, `docker-compose.yml`에서 포트를 바꾸세요 |
-| 디스크가 꽉 찼어요 | `df -h /` | `docker system prune`. `backups/`의 예전 파일을 다른 곳에 복사한 뒤 지우세요 |
+| 디스크가 꽉 찼어요 | `df -h /` | `bash garden.sh cleanup`. `backups/`의 예전 파일을 다른 곳에 복사한 뒤 지우세요 |
 
 ## 정원 웹사이트
 | 문제 | 확인 | 해결 |

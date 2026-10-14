@@ -40,7 +40,7 @@ Before the front door is set up, you visit the website directly at
 | `rust/junsgarden/templates/` | The HTML of each page. `{{ ... }}` are the holes Rust fills in. | Edit, then rebuild (menu `M`, `7`) |
 | `rust/junsgarden/src/pages/` | One Rust file per page. `catalog.rs` makes `/catalog.php`. | Edit, then rebuild |
 | `rust/junsgarden/src/main.rs` | The list of web addresses and which function answers each | Edit, then rebuild |
-| `local/images/` | Your photos (in `Database/`, `Gallery/`, `post/`, `blog/`, `plan/`, `HeroBanner/`) | Upload through the website. Do not rename them by hand. |
+| `local/images/` | Your photos (in `Database/`, `Gallery/`, `post/`, `blog/`, `plan/`, `HeroBanner/`) | Upload through the website. Do not rename them by hand: to rename, use menu `M`, then `18` (guide 26). |
 | `local/data/` | Comments, guestbook, the facts on the home page | Through the website |
 | `.env` | Settings and passwords | Menu `8` Settings. You never need to open it. |
 | `docker-compose.yml` | How every program starts (every line has a comment) | Read it to learn. Change it with care. |

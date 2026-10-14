@@ -46,7 +46,7 @@ problems with the exact check and fix for each.
 | Restart just the website | `docker compose restart site` |
 | Restart the laptop (fixes many things) | `sudo reboot` |
 | See what is using the disk | `docker system df` and `df -h /` |
-| Free space safely | `docker system prune` (asks first; does not delete your data folders) |
+| Free space safely | `bash garden.sh cleanup` (menu `M`, `14`, `5`): only the garden's old versions, older than 7 days; asks first; never your data folders |
 
 ---
 
@@ -69,7 +69,7 @@ problems with the exact check and fix for each.
 | Build stops: "killed" or "out of memory" | `free -h`, then `dmesg --level=err` | Add swap (`lab/01-prepare-ubuntu.sh`), close other programs, build again |
 | Build is very slow | Normal on old laptops | Wait; the first build takes 15 to 45 minutes (up to an hour on a very old laptop or a Pi) |
 | Port is already in use | `sudo ss -ltnp` (look for :8030) | Stop the other program, or change the port in `docker-compose.yml` |
-| Disk full | `df -h /` | `docker system prune`; delete old files in `backups/` after copying them |
+| Disk full | `df -h /` | `bash garden.sh cleanup`; delete old files in `backups/` after copying them |
 
 ## The garden website
 | Problem | Check | Fix |

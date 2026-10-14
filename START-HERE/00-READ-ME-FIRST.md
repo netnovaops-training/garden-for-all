@@ -51,13 +51,32 @@ any step and come back.
 | `AGENTS.md`, `GEMINI.md` | Rules that AI helpers read, so they help you safely |
 | `WHAT-GETS-INSTALLED.md`, `WHY-THESE-PROGRAMS.md` | Every program, where it comes from, and why it was chosen |
 
+## Searching the guides
+The guides are many, so the handbook has a search box at the top of every page.
+Open `00-WELCOME.html` (in the garden folder; on Windows it opens after the install).
+
+1. Click the search box at the top (or press `/`). With nothing typed, it shows
+   common topics: click one, for example **router**, **backup** or **rename**.
+2. Or type any word, for example `password` or `NAS`. Several words find the places
+   that have all of them: `backup Google Drive`.
+3. Next to the box, choose the language: **English + 한국어**, **English** or **한국어**.
+   The menu remembers your choice.
+4. Click a result: the guide opens at that very section. `Enter` opens the first
+   result; `Esc` clears the box.
+
+It searches every guide here, in both languages, and the other guides too (the n8n
+and project guides, what gets installed, the summary, the journal). It works on
+this computer, with no internet, and nothing you type is sent anywhere.
+
 ## Looking after your garden
 
 | Guide | What it covers |
 |---|---|
+| [03 Use your garden at home](03-run-your-garden.md) | Your password, email, the AI boxes, your first edit, the everyday menu |
 | [23 The full setup](23-full-setup.md) | Everything, the way the garden runs today, in order: choose your level (Easy, Recommended or Full), then one part at a time |
 | [11 How your website works](11-maintain-your-site.md) | Where each file lives, and the safe way to change things |
 | [12 Your database](12-your-database.md) | The tables, looking inside, safe habits |
+| [26 Rename, move, switch off and tidy up](26-rename-move-and-switch.md) | Your own names for folders and pages, moving to a bigger disk, the on / off switch, Docker on Windows |
 | [13 Backups and folder names](13-backups-and-folders.md) | Backup names, restoring, moving and renaming folders |
 | [14 Reserve your IP, open two ports](14-reserve-your-ip.md) | The router side |
 | [04 Put it on the internet](04-go-public-no-ip-caddy.md) | Your No-IP account, the front door, practising first |

@@ -121,7 +121,7 @@ AI 키, 이메일을 물어요(2~4 부분). 아래 표는 `2`(CUSTOM)로 하는 
 대문자가 `Enter`의 뜻을 알려 줘요: `(Y/n)`은 yes, `(y/N)`은 no예요.
 
 **Windows PC에서 한다면**(안내 설치 프로그램, `Start-Here-Windows.cmd`): 2쪽에서 **Another
-computer at home**(집에 있는 다른 컴퓨터)을 고르고, 그 컴퓨터의 IP 주소와 거기서 쓰는 내 사용자
+computer at home**(집에 있는 다른 컴퓨터)을 고르고, 그 컴퓨터의 IP 주소(또는 **Find it for me**(찾아 줘요) 클릭)와 거기서 쓰는 내 사용자
 이름을 입력하세요. 3쪽은 이름, 이메일, 웹 이름을 물어요(그대로 두세요). 4쪽에서 **Garden
 tools**(정원 도구)와 **Wiki**(위키)에 체크하세요(n8n은 마음대로). 그다음 **Start the
 install**(설치 시작): 검은 창에서 `2`(CUSTOM)를 고르세요. 이름, 이메일, 웹 이름, 구성 요소는

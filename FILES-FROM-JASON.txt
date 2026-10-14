@@ -1,63 +1,65 @@
 8f49826cece4880d1c29d6f79d4c1bd62cfeefca214b185d5a7108e03261b48f  ./.gitattributes
 91c9be0a4d05dcc7af6464f41c987a76cc64c6c4f71ccabc5b1399d3780eee49  ./.gitignore
-019d5865fc73eb57d2152169208db0262f9c94421c01cf439a0fe04e996ea4c2  ./00-HOW-IT-WORKS-KO.html
-f216a6af6219ccfeac037f20bccc750abfeeaf073d5cafad056f3ca90887f03d  ./00-HOW-IT-WORKS.html
-f07b2fcf57d0ade4e238ce3e98fb9f997c4a8e21059eff7b614c43c4827f5ed6  ./00-READ-ME-FIRST-KO.html
-7fe3b43cdeafb318faa98d11f8d3cdc3390e90dd92759a8c7a21549cf24f93cc  ./00-READ-ME-FIRST.html
-dc3dd04d082d5ed74e6cc3f4f4d98bb6c4cef805b2a782b8545f276eccfa4986  ./00-WELCOME.html
+af60d0271a01ab2256bb88a8effb6370c70790d4b59eb95c15f4460e6a527ef2  ./00-HOW-IT-WORKS-KO.html
+42f1ced704a657fa81f7ae970c2f9acec08ba47845037dd1c4ef735dcf6e464c  ./00-HOW-IT-WORKS.html
+a96a0be6ab3df45886bb96bc237f869456a5f9e947b623b67e4a4140d0ea6465  ./00-READ-ME-FIRST-KO.html
+014149f58c2154d975149b5575b9229490054d0ca2823d070cff4e1cb1d28417  ./00-READ-ME-FIRST.html
+0c562016d3ae21de99fb7f70cd4790ddbe5266910ba3267ae2e53a63d482d1df  ./00-WELCOME.html
 94f97bc02b056c4064c4f5f7dd5b7164e5513e0b2bd18bf31272e46b6cfb80ed  ./AGENTS.md
-ba27c6af48b4668834414363d264908436526d6ce56249c06729e9cd48a6969d  ./CHANGES.md
+45f4dfa47b31c0e8962bdef6db64f0ed5d14c6fe760f3c8853099bb9a68b65db  ./CHANGES.md
 b2ca375a4a109983e3fc2a3e1d5224260ac6e0b38f61fb477e4bff10a4eca57f  ./CLAUDE.md
+0449c9861dd6fc285f5b2d6dcbb73df7fe13ae26855c522150bbb21e9f870e6e  ./DOWNLOADS-SHA256.txt
 386c889ba654aae6357578fda7521f7c69b84410f5f94d2108397f18aae51184  ./GEMINI.md
 87e3cf83fe7dc1ea8ff2fbc958d49ec58cf503aa0c17a62e0a9c659878cf5297  ./Garden-Menu-Windows.cmd
-775a4cf69cdd01103f2047ca2ad2aa66645f0df7f74a33017b28ba37351dcc82  ./HANDOVER-SUMMARY.md
-c7240584244e455c8acfb7ebf0dd1fef8dbfd5737704c169e73aa0c05e4e10d6  ./JOURNAL.ko.md
-79384279dbf762955d2e24270bce4ad966c1306e99806d96ff2143d2a02a7b3c  ./JOURNAL.md
+122381d68329f4a18e5025792b5d32121a7c81aab66f2e1e9c317a084e1f622f  ./HANDOVER-SUMMARY.md
+da9f9c0befe84fcf8ba8b4917370979cbe2d5bee1ee7e7cd3261d10fcf997a66  ./JOURNAL.ko.md
+fbf3f4758685b06600b04d0ca37eed356ffc9bc50239d812dd2a75fee9776b84  ./JOURNAL.md
 123153543387becfe7e93c321ab6fcd96ce9f68324f749526bf7c5852f0a95f3  ./LICENSE
-8f7211fafeb3a441ad254d69e1ada702bdb16a898aac88f3b5d80f4b62e52f57  ./README.md
-e78f6f612122a18189c8d1d35c305ddeac3f817d34506ff43212600f2c760bf9  ./START-HERE/00-READ-ME-FIRST.md
-45602418f44a0466cf9b63236b5b512fdcd282c894e39ddbf98e45791ed306ea  ./START-HERE/00b-before-you-start.md
+b07a55d096782adca707b746f7cf0945a75dde087c0956f6266f912fcd5ae216  ./README.md
+1dd443d7601e8efd0a3027850032e8b28a9391e589990e5c60a4cfb0fed834d3  ./START-HERE/00-READ-ME-FIRST.md
+c54f1da6ee9696155b06eab3d0c1502a6068a8ef70f8d0cd613f6d3b4b02918d  ./START-HERE/00b-before-you-start.md
 9281c490ccac19c40f9eef59a5e1dd73dbe8218c5172d23aab43cae2a4262acf  ./START-HERE/01-ubuntu-laptop.md
-7682b4f15b37a667671482efe6e5f4ecdfdd9be7d61fd9992ebf5f8ec6182e39  ./START-HERE/02-docker.md
+539f734394a4ae7038d6a27d767e29e840425bc3803789d26a802d0d63941abd  ./START-HERE/02-docker.md
 1081289028a441607d6cc4dc11f92ace874d609ddf3a4c439ad2be5b95913470  ./START-HERE/02a-what-is-docker.md
 28df9676e0e7c8477f7ddf95742df48aaaef5237ce8dfd9be176d86a89461946  ./START-HERE/03-run-your-garden.md
-0e6012d10cf1d6a816e80a0a2193604b1a354b5a611ef6ea5de61461bd4289d8  ./START-HERE/04-go-public-no-ip-caddy.md
+2a1ac4dcfc6800edb94905832a88baf7521ac50672782455bcd0f5725bc4a971  ./START-HERE/04-go-public-no-ip-caddy.md
 f7ae3b94266150fd840fcaaea41f0e5954f0d204d1d5d1e92619c3a723e65762  ./START-HERE/04b-take-over-junsgarden-zapto.md
 2d51490a49a2088c65ce585846b4e2523d3c6893929b327a2cff4fb16989ddb7  ./START-HERE/05-gemini-prompts.md
 611411b1ebc16dcd16cb2a6cc007879f95232b03a919525f908d7ae009919491  ./START-HERE/06-shopping-list.md
-f17ce429e384a92a97499933201e6d1ca9061547e00abf138dc6f4151f57b973  ./START-HERE/07-sso-gate.md
+596eb4e9dcaf1a4b9a268b44e33d30b28f073aa9521645fc1c420c36d035d0e6  ./START-HERE/07-sso-gate.md
 f0941cc9c7c4fa3e437900ffd8982bc4feb7e6abc0280bd085eb871c3b970f3d  ./START-HERE/08-gemini-setup.md
-5688c286e85f26e295a78d6d57c41453ffe87c38ca9ca9f465c81708d8158afd  ./START-HERE/09-troubleshooting.md
+28f51a473e52c7114fe953111263a42c0b521f51c0fdd6f2c18029427ecb4a56  ./START-HERE/09-troubleshooting.md
 183f9f3c65b43fc2b9ae47bbc746c4459fb252c5921ea5a63239aa92a98a4ea1  ./START-HERE/10-the-plan.md
-e1cd38eb903c9fb57bcdd9487c01955d91ed78232eca343c7e7f2a61876ec68d  ./START-HERE/11-maintain-your-site.md
+92e9de0028ffc274a08b6de0f5c162cecd0e520191f64858c95aa79b8c05f2a7  ./START-HERE/11-maintain-your-site.md
 60eb487345a5b29d54fd52bd9b6fae329cf900b9d2f9c42b13c2bdf0a6a9a23f  ./START-HERE/12-your-database.md
-eecd64ad3f01ec2bb67e4b6f0f5b14158b20e3681171bcfd99eea2d0072dd6ff  ./START-HERE/13-backups-and-folders.md
-38aed17016044d0b282320262127ffccb6a5af9e0f8662031c7c8b4f1cbc2fb5  ./START-HERE/14-reserve-your-ip.md
+a1cfbf91753847f41d2094bbfa369306216bda26072480cacbf5132995b15ea2  ./START-HERE/13-backups-and-folders.md
+ba18360c770777682fc1aebd39c2d047c4a3ded13f02628dbd6e4af976b4055d  ./START-HERE/14-reserve-your-ip.md
 19c95fb5ab73d1919767f212ed9edc75542c2a2d18faec1e28837a2830489716  ./START-HERE/15-local-ai.md
 5ed3610a9b8727cabbbbe4baa9bff7cceb5fa83255d42a549330650c21bbdb74  ./START-HERE/16-ai-studio.md
 1743f765a182e978625aea900e5f5f687cbe040a4ae5174b014b4f3d838de075  ./START-HERE/17-android-app-and-ai-coding.md
 8a12c393c052272d3b7c0a44b8e23b8d94662ed78e15afd83ae12e3acb65066b  ./START-HERE/18-review-the-code.md
-ef85a8e93c7a006df421b22ccb9acf31a55d7b08bb108a5081d3c978d6a7f463  ./START-HERE/19-every-menu-option.md
+37835e78652a60ed91a436dc2fa1883ac9413bf4ee77dd97a99ca5684cf27c75  ./START-HERE/19-every-menu-option.md
 cf80fa25f55c42879855d4f4339c829bd2a278b37dba6a80a8ee6f38171c4511  ./START-HERE/20-ssh-and-remote-desktop.md
-d19a7ef1275e0a32da294e43f53ee72e938faf8f396d4858585c6a22fb049d08  ./START-HERE/21-software-and-sources.md
+e4ec4e23ad0c3902fa7cd75d99cca82763d3ba5f4e4b24d91aab30d86c9dfcb9  ./START-HERE/21-software-and-sources.md
 d3a603c5ed0018395177f3403b80af2c64031509dc67ce473ffd4ec44a47ca4b  ./START-HERE/22-bash-walkthrough.md
-41827714daf5ef25401cb62af1b2c26c2303bec5f296739511a6569e86c63526  ./START-HERE/23-full-setup.md
+24244828c08cf3b32c1a666efb91ae067204927240ed4eb4074e4fe1b5dfe8c3  ./START-HERE/23-full-setup.md
 42eb2a77f454e7158447f7c1709420866361b60c6b94ce9c51c84d6912064f41  ./START-HERE/24-optional-tools.md
-8c72bcb728d3d3f94c6289c29906b74b8bd89e64d9597055485d0cf958db4997  ./START-HERE/25-common-questions.md
+8f4ca719096315954d4924de434d056acd0a90674241dbcb538f13f1f3eedff4  ./START-HERE/25-common-questions.md
+97665c997b25c8721464197690fe956cf07be46341f3b2cf1d14341fac1f45cd  ./START-HERE/26-rename-move-and-switch.md
 73dfb2f718bfbf8efd55ab27d4590ed92737c0b385b947df6e3b924944bfbf52  ./START-HERE/MY-WINS.md
 1d5d87c41bb4cdd5226cd26a7f0946ceb499934f64aa8074d212a8599bb0b181  ./START-HERE/images/docker-1-vm-en.svg
 09834247ed83294316a60a57d6fc5a7882166611400255aff935a5f714fb03d9  ./START-HERE/images/docker-1-vm-ko.svg
 29e2ebe504280cb8f6e6a022a550b0efa3a6afa8694b136145aaf6c57cd16d3e  ./START-HERE/images/docker-2-boxes-en.svg
 547e98c36c9f01944618be598269da71d500fa69888c88e23c199dbebb834ec8  ./START-HERE/images/docker-2-boxes-ko.svg
 e867dbd9f0a222f7eb3029b8419898186f493d61578747215c123a49c5155202  ./START-HERE/images/screen-01-main-menu.png
-a152297d8a2c92990a03ba7b43238a3183e68703f24016133b3da9ede7826ce1  ./START-HERE/images/screen-02-more-menu.png
+67a02cb5c683eb002509a56a160c3288b35ed8ae16c57524e077447445dfdf43  ./START-HERE/images/screen-02-more-menu.png
 a9307cba3dbf93e770dbc2f84e08e23ba5f57aa247c03a0fe912822678ef87ab  ./START-HERE/images/screen-03-easy-or-custom.png
 6356f537a549708e1cdb19f006730e6113c8fcfb6fe3cce2a5d331b458e30026  ./START-HERE/images/screen-04-install-start.png
 14031d153a22a70c8f2645250715f60fd39d8b3bc58e84d9f6e0ea40e020c2ea  ./START-HERE/images/screen-05-install-firewall.png
 55bc398d8f625e222d8a169ddd3dd3d6b7c0503d3307a86a7d0b454ebd72afe8  ./START-HERE/images/screen-06-install-plants-photos.png
 05223054b3a0214a1efaca30db7cd8f928f2537870a52cba46b0cab67d07d290  ./START-HERE/images/screen-07-install-done.png
 c027da19677fdfd988d376121dac41c67fa2e45667049b1cdd4c30ca2f21e194  ./START-HERE/images/screen-09-parts.png
-08c5647b5c1a84e6d8966ddc15cbc6eb49a26cd0bbc2ff50ec4610211a6269b9  ./START-HERE/images/screen-10-settings.png
+ae583ec172a540d36efd94364c736bd14a3dd75cdd29c7b53f31e408f1adf44c  ./START-HERE/images/screen-10-settings.png
 3075fcde08e1a32b1b776e2d5c43347c25685c5bb887f18ddb5a03d022ad0f6d  ./START-HERE/images/screen-11-users.png
 d77ba6227f8195e8e8abddae2241d9155f2c0a019dc1f7fa4982d135f0e21bda  ./START-HERE/images/screen-12-keys.png
 310472f7cfba3e65a4a2db853ede3671c438a52559dfb0ab8318d6ed5f32008b  ./START-HERE/images/screen-13-backups.png
@@ -72,6 +74,11 @@ ecb801fee5e92ba497ecae8c20f04d4673c332f34338433c121c9502c887d2af  ./START-HERE/i
 adcac8573740d7d460593f1715a44adb472b7d6ce2c8cbb449de79b725038b00  ./START-HERE/images/screen-22-nas-stop.png
 f6d70644b073682a64554f7615602f16fdfb5fb7803fb00b6af4d2233d4b68f7  ./START-HERE/images/screen-23-email.png
 35282f91e3e2b9e5e1104ab53115a35018e733d0613cdd3d35bc7772c637182e  ./START-HERE/images/screen-24-tailscale.png
+f5702424688272c0901fac2dc472f2bde907d19c17f65b8e0904bc5823f1a65c  ./START-HERE/images/screen-25-rename-menu.png
+03f8724f4b08cd01b17f675e01e490e6ab1b19d354e781388eb7a03ea4ffb75e  ./START-HERE/images/screen-26-rename-preview.png
+2e89dc18d4b8a9f5aeabe5ed8c8a547c582cc397dc4416f17e4c59c542526198  ./START-HERE/images/screen-27-rename-done.png
+9360b6a8dd75d19e86864b2ea57c0e31fa49c9030e718c2656a6606f7976f86a  ./START-HERE/images/screen-28-switch.png
+3948f8458163232eb5dc7405f8df4c8c81924f94c7feef1b21dc0e296ac1a20c  ./START-HERE/images/screen-29-cleanup.png
 17baa58acf500d09ce6ac0c22ad91f5deb06e206be430e58bb541c5c8fd0da6c  ./START-HERE/images/website-catalog.png
 7f1fc44e97121545db4145bc4b744e4553c84359433da15e2a2c9d207572110e  ./START-HERE/images/website-home.png
 5622e7eb22fe0c9f9b723486b5bd5b795c83cbef2615fe3f61c4ef7f783dc4f5  ./START-HERE/images/website-login.png
@@ -81,41 +88,43 @@ f6d70644b073682a64554f7615602f16fdfb5fb7803fb00b6af4d2233d4b68f7  ./START-HERE/i
 de842ecbf080afbcd56136ef2b8eca078b89e53be63a49f79d0699fbdcaa9ae1  ./START-HERE/images/windows-onedrive-note.png
 9745f6fd5f6d97963ed096b8c2d2d6c46fff65855bc266dac4be1f8b576b7119  ./START-HERE/images/wizard-0-onedrive.png
 dbca424aef8d04b979491b093602a8068b5af7beb4454914ff7b343042c63526  ./START-HERE/images/wizard-1-welcome.png
-989d11ec916d8f366de3c9a6a3dad2f30398409492ee7422917458954f60b248  ./START-HERE/images/wizard-2-where.png
+fb12d33eb2275c6b47b69620069f443efa97f6e76b6b873ecbc2a3d6d48e4532  ./START-HERE/images/wizard-2-where.png
+ebe510b686673d960782adac1f87d02e83d9ca008ffd003b768ad5fce167e94d  ./START-HERE/images/wizard-2b-this-pc.png
 b910075bf2bbc575aa8d08bf6458315355aa68872f664a500ca3581d780ac17e  ./START-HERE/images/wizard-3-about-you.png
 799ed8dc7f831430d6e10a0882dc149ac07d213f24292f9890ef747a657a47d7  ./START-HERE/images/wizard-4-what-gets-installed.png
 a1c42727d011924f2970c3bb33b65a0b4fae4c27ce5191a1ddb6fedd61091da3  ./START-HERE/images/wizard-5-install.png
 b56fa16ab486c68105fee8edeaea0418de4908dd2588b4ef08a00c54efa1236a  ./START-HERE/images/wizard-6-done.png
-5a33dea5cdd5fa8edaa279acb4d1d6c9c146cd759bc2e96f82b27c4cbf95b832  ./START-HERE/ko/00-READ-ME-FIRST.md
-d2792144468eafeedb50129758686afe62299a9f579aa851e0b0a92848b2bcfe  ./START-HERE/ko/00b-before-you-start.md
+d0e4848a883590b969e219510839e72d5ea12e40c03986c73fde4aaf9954a802  ./START-HERE/ko/00-READ-ME-FIRST.md
+d8a128a5ff55fb5b463c68163d4807dfbd18494f0bc50b2048d08eb18c955d23  ./START-HERE/ko/00b-before-you-start.md
 5e579113a70177b2570b8e1ef537e183582c3559295c68be942cec849e6330f2  ./START-HERE/ko/01-ubuntu-laptop.md
 a6984d1407350df21672be4c54f8973fbc73f3472066259e881fb1441642fe38  ./START-HERE/ko/02-docker.md
 5f1b229cf424d3ddac6a117f5cd324ba5f8befdd69ed47220370c178b1a18c0c  ./START-HERE/ko/02a-what-is-docker.md
 d5643f5467757b679c5848cf2d3a92ca157d99ffd6e3aa3a125a37a29ada6abe  ./START-HERE/ko/03-run-your-garden.md
-0c52d03eeba588a5a4b51ed4da07b0ed80427a132ef265dfcedb00d0b20822e3  ./START-HERE/ko/04-go-public-no-ip-caddy.md
+cf217c064d93ee4e0e3016d239f507ea24af456c515aa1343c2ca8c3c7506c7f  ./START-HERE/ko/04-go-public-no-ip-caddy.md
 d9eb402ab85976b32600b010f5ee46e196b886e213b15bcfff354df0236bf964  ./START-HERE/ko/04b-take-over-junsgarden-zapto.md
 f8719e18ad28e2e77cb73b9df736fb66bff30527163e15811f1a93d44a346a66  ./START-HERE/ko/05-gemini-prompts.md
 e824f372b29f1adc7e0fe0f205fb19d573dc638fbef1439100fe30260f82cd82  ./START-HERE/ko/06-shopping-list.md
-de71a300f4f7214f739ff83d361fcef137ace40d7868b2d09ede500d1f874867  ./START-HERE/ko/07-sso-gate.md
+28d7f4ec233180814b178be770941eb29825143a32b775d6bd6418311ff93a28  ./START-HERE/ko/07-sso-gate.md
 0b352bc6a4c9cefdb92ff8bba61bd82cf2fb62da5edf3473336d498f56a830af  ./START-HERE/ko/08-gemini-setup.md
-e8430eda22a74b6b8d422e69642978d259cf5a4cbb84bd002ff9f716fe48044d  ./START-HERE/ko/09-troubleshooting.md
+a475bb0e6b9636aa45a642a26eef943ac55fdc9d2e45b084fe9abf6f72abc6de  ./START-HERE/ko/09-troubleshooting.md
 3bb5f8bd477cd786ee5729c03230d17c24ffd8f561de0f48930c648ee3f841f8  ./START-HERE/ko/10-the-plan.md
 177563da863ee7f6cf316d9e608fa4c66f843cbed5483159430b5fd831c80743  ./START-HERE/ko/11-maintain-your-site.md
 b6c73bbbffb157355a5566e73226dce83f3883f1d8c9e6ff3ad5158a81e527ee  ./START-HERE/ko/12-your-database.md
-4d77a4b5bb781f746bb491ebbfd004f97a6631b78c3a710590a89733c6cadd7e  ./START-HERE/ko/13-backups-and-folders.md
-be5fe9254010ecf2c9fa7b549f76543bd4322d0c561dc9ac85c9a58e327c37e7  ./START-HERE/ko/14-reserve-your-ip.md
+f536165ce00d3114ea8ce0be0af164692b9b5d92d3540b83f06e5743f2287943  ./START-HERE/ko/13-backups-and-folders.md
+c3f5e3be80ec50f3f135efc98873ba1fce96816765e749f352a0687edebe0088  ./START-HERE/ko/14-reserve-your-ip.md
 e5e9968e0468c9e4edbfb30cbc702869fd25e16367ce323c3b402ae67a71d0db  ./START-HERE/ko/15-local-ai.md
 731a12109afd6cbb17b1030164feec1204380534f93b429b36bb82006b4c0462  ./START-HERE/ko/16-ai-studio.md
 7d9fc056d3eebded45ef01d2d21fb34479611386d28179647d9fc33f61351d46  ./START-HERE/ko/17-android-app-and-ai-coding.md
-91ee90224160a967a020a8047d21b6aeef752a70c4dc6c2192917329131bc184  ./START-HERE/ko/18-review-the-code.md
-2108e0487d263a084663f55d16e7dcf2d0756970105329bdeb67122257923b0a  ./START-HERE/ko/19-every-menu-option.md
+1053b1520a904b15b9d675f4ae6341d86d3e9d842e0ea2545bf0a1fba96a5fa8  ./START-HERE/ko/18-review-the-code.md
+6f552e633246c21732a943c0ae62f21e4af318653c6d440ab7de3b092aaf8124  ./START-HERE/ko/19-every-menu-option.md
 3c8cff8274433096287558b700c72d86cbebb563fa8b5a361f1b67bba1be819a  ./START-HERE/ko/20-ssh-and-remote-desktop.md
-d293cd1b195acac7287a5be516e47579ecbbb147b989355532b7ae47958bc561  ./START-HERE/ko/21-software-and-sources.md
-24dddfae6a5f500a4443b52fc4fe1bd16f2f1016f7ce3cca278ab4f36d32c250  ./START-HERE/ko/23-full-setup.md
-85ff4bf4b5f969627b81aa7384277aed2dbe0d0192dd4c18c584e137c78e2db1  ./START-HERE/ko/25-common-questions.md
-872afd5be6884bd80391ed7d602df1da5bba9580fc4838569797136c299c1b16  ./START-HERE/n8n/N1-install-and-first-email.md
+c87f92ba17ff53fd4a1afb2ce7474a717880c064fd64ba9708c4c943d32ef390  ./START-HERE/ko/21-software-and-sources.md
+280b3c7722fb2f56e5f306963b6b9dea531c80cb6264f92c239d1c3128cabea8  ./START-HERE/ko/23-full-setup.md
+ec790f1bee5ad49e022c635ad16315b202baa284d946a02b92e0e8ee878e9026  ./START-HERE/ko/25-common-questions.md
+3570ac14004f3e44360a64f104de3356b76a734051656ae7a16dfee9657d7512  ./START-HERE/ko/26-rename-move-and-switch.md
+793ae63e48824397350f92c87a3c2c47de6bbb3dc6c9aa152a657c0768a02133  ./START-HERE/n8n/N1-install-and-first-email.md
 48b5c227aa0385f5b70116a54aca61c4a327682a77bfb0958c6834f58a5721f7  ./START-HERE/n8n/N2-dry-soil-email.md
-821719bc055811c481376224377d00720df6e1358f5d150db6456f8cb460e28c  ./START-HERE/n8n/N3-weekly-garden-report.md
+3d00d976e2b17956d5d2c90299a85273d50dc4244b5098278bb4320e8f7b2121  ./START-HERE/n8n/N3-weekly-garden-report.md
 c9e5a400fecc0e10dd2d7a44a863e3e3dcf8ae384ce71a8b0061518e856c8054  ./START-HERE/projects/P01-uptime-kuma.md
 7d8723b85d98eef6fd9c1f46ad02b589f2b8c0c802f4b29d858b73ee8b5f81db  ./START-HERE/projects/P02-backups.md
 9c68748ab2e9760494fdfa0b3eda349c054ddd4b84a96feb797cd390d2213082  ./START-HERE/projects/P03-home-assistant.md
@@ -125,96 +134,98 @@ c7980a440c30270581ac703b6daf2bb653b898e524c5f82fc69f7f5b228ac257  ./START-HERE/p
 432e9f436e4982a4c65d2b7172965f60a5c6325c066cbe7c151642b7d0badffb  ./START-HERE/projects/P07-automatic-watering.md
 4c91163d9efaa5b9f64b7255d407b84da5a5dcc6732b3be1fc9a63f3f5c6d775  ./START-HERE/projects/P08-readings-on-your-website.md
 a7143f22d99d2d73c5fa9b50052105b7958f72c887c5f0a050a1c2a2280c4370  ./START-HERE/projects/P09-more-ideas.md
-e5787178e1786b5df5ef3a70aac0de99b8f91ff4e7468987380829386db61836  ./Setup documentation/English/0 - Start here/FULL - 00 READ ME FIRST.pdf
-ec37097c0bd5b50b03f5fc5e535d689fdaf97d1231f149efb6af66a04be5b617  ./Setup documentation/English/0 - Start here/FULL - 00b before you start.pdf
-472a2edf5afa06e738fa79f65c6fb316799d3c8f6da1b29a4c2d573953aa3f77  ./Setup documentation/English/0 - Start here/FULL - 02a what is docker.pdf
-22a068acc1ac04bc8d4c7ea36b7b036a86a93cf72582393ea400648c378eeca5  ./Setup documentation/English/0 - Start here/FULL - 23 full setup.pdf
-f25ea34f474becc4600a437a559e62161f93028a581ec236284e8b5a00409809  ./Setup documentation/English/0 - Start here/QUICK - 00 READ ME FIRST.pdf
-71c0ea14a44d10c02b3a0c4e3d3e4f764845ad97c60c686463e84c87cc496bc3  ./Setup documentation/English/0 - Start here/QUICK - 02a what is docker.pdf
-06699954f3c17c42322e6c8baaa834ec002f0e2f53bc7d90b03565a595f84d6c  ./Setup documentation/English/0 - Start here/QUICK - 23 full setup.pdf
-80d0b4fbbe924bc462a440fdfe086187a63f52ef651f7aa82d757829bbdb573e  ./Setup documentation/English/1 - Ubuntu on the computer/FULL - 01 ubuntu laptop.pdf
-146e20b8934e682544c00ec433c5702d44f15ba999665e020a7bf00485d3715b  ./Setup documentation/English/1 - Ubuntu on the computer/QUICK - 01 ubuntu laptop.pdf
-8f4bfb3dd15802bfc74288472876ddc3b513737adc739d7b1770a77665dd21a4  ./Setup documentation/English/2 - Docker and the install/FULL - 02 docker.pdf
-15d36b362ccc4099c4fc4bcd93df732b280e173c58e9bd21a6c298db88389eca  ./Setup documentation/English/2 - Docker and the install/FULL - 03 run your garden.pdf
-d53f4de1c679fa1bfdc43f272c13058e4fe6897f44008b4dd8f50c0210dd02b4  ./Setup documentation/English/2 - Docker and the install/QUICK - 02 docker.pdf
-373f16d291cf0603d2e218e6a321063c623b800b30b847815f12656b3e01cfd6  ./Setup documentation/English/2 - Docker and the install/QUICK - 03 run your garden.pdf
-323fc461a9d32bb109cb9687c1017d0104203fef808f90ef34358ae08a011227  ./Setup documentation/English/3 - Going online/FULL - 04 go public no ip caddy.pdf
-e3e3444d98a1191000be19df63ad2e48e442d90d160dfc1e70848b66639112d1  ./Setup documentation/English/3 - Going online/FULL - 04b take over junsgarden zapto.pdf
-2ccd59af529b3ff5d3541e38528f7a104fd044dc17507c8d66258a5e589fb36e  ./Setup documentation/English/3 - Going online/FULL - 07 sso gate.pdf
-64454c891af694b82ea29d78747c0b14ba3ff5264ad64d0f7d56ad1a2ef2b9ac  ./Setup documentation/English/3 - Going online/FULL - 14 reserve your ip.pdf
-b56a4268742a2c6ae8a29c380d5bd6b1e7ff37679a4694b276d129178ce1cfcb  ./Setup documentation/English/3 - Going online/FULL - 20 ssh and remote desktop.pdf
-4b98441560c4f96501f62aab758c7db1ba927fb6ec84377694187a7d2de03abf  ./Setup documentation/English/3 - Going online/QUICK - 04 go public no ip caddy.pdf
-180ccb2d445eccd0a2973cd591f99fb0a148a35b9818533b159e210d26aa2ed5  ./Setup documentation/English/3 - Going online/QUICK - 04b take over junsgarden zapto.pdf
-96f6a508e24500f1f7106b1d509249a77632f28adfda33e1b7eb85d0f72417a1  ./Setup documentation/English/3 - Going online/QUICK - 07 sso gate.pdf
-84dc42d1f9c2db3a0433644bb60520d2645cfa82cc3f2b43b2c719e62848c2f7  ./Setup documentation/English/3 - Going online/QUICK - 14 reserve your ip.pdf
-0190e28b488ab02a4e82877f9cb2291a59e1e4762eedeede28690d26d5eb042e  ./Setup documentation/English/3 - Going online/QUICK - 20 ssh and remote desktop.pdf
-59a844483e408ea6086accade5258448fc87e18fcd6ff6878a40082f4f66c4bf  ./Setup documentation/English/4 - Email, keys and AI/FULL - 05 gemini prompts.pdf
-5c0fddbf1703a06d7f18a436dd04f20ea0271cfda27f7f6efdb9e312f32cce5c  ./Setup documentation/English/4 - Email, keys and AI/FULL - 08 gemini setup.pdf
-60a379bbda024a00cf8cda24087ed6d81e4f6027ca33ac8a799b38f9c4b8e063  ./Setup documentation/English/4 - Email, keys and AI/FULL - 15 local ai.pdf
-8d31e36f8af6cb97505fd40c940e70199ffe3115d9c94c8db56eed390f094104  ./Setup documentation/English/4 - Email, keys and AI/FULL - 16 ai studio.pdf
-b5f5adf54549cd69e52178e2f81fa994201e217d4742c363b37d32a72e71f2be  ./Setup documentation/English/4 - Email, keys and AI/FULL - 17 android app and ai coding.pdf
-e5dca7ec79e773d590b7e8eb0de9bb5e9f2037b759dd59a4c51051f6b3f297d3  ./Setup documentation/English/4 - Email, keys and AI/QUICK - 05 gemini prompts.pdf
-b1fcefd378d708bd20201d63e51807ad9bfc9bef0c516a90ff5f0504808ff4f0  ./Setup documentation/English/4 - Email, keys and AI/QUICK - 08 gemini setup.pdf
-2134744975df4303570198acde4ceee4758bd57ac20023b9693ef6c8e48f8e4c  ./Setup documentation/English/4 - Email, keys and AI/QUICK - 15 local ai.pdf
-69b3c6b5cdedc7943ccd37e170ac618ff8532dcd0f8a5b97b4a85ca24403bd5b  ./Setup documentation/English/4 - Email, keys and AI/QUICK - 16 ai studio.pdf
-88f8e61724a93c94620c752cf1a3b5de31d497b5160ba04cf8141a455b279f58  ./Setup documentation/English/4 - Email, keys and AI/QUICK - 17 android app and ai coding.pdf
-8be0a76460cf86a0e501a9fc5bca750ea6d0a6fbf84016980422c136ac1466a2  ./Setup documentation/English/5 - Backups and your data/FULL - 12 your database.pdf
-decaf19309ad87c05d89c77edcc50303bd977da31b227da71242c30324eb0006  ./Setup documentation/English/5 - Backups and your data/FULL - 13 backups and folders.pdf
-6144fc6d4d5c9a23df918e74b45863ee0b88d6d43f7dc735dcc6f618fb89a895  ./Setup documentation/English/5 - Backups and your data/QUICK - 12 your database.pdf
-30cf4262ef70b77bf1ca954d6364f5b49237640f5155d85848136b4a3b1bf34b  ./Setup documentation/English/5 - Backups and your data/QUICK - 13 backups and folders.pdf
-479aabbe1808fee7a1d9eb9cc4375f455bde655f11e7c975f315b79d7bb26524  ./Setup documentation/English/6 - Everyday use and help/FULL - 06 shopping list.pdf
-2367bdd65ab827373149676c8d2a0c3a9ee2ac3d1bdc9fdc6f7f7b3d6bf7a485  ./Setup documentation/English/6 - Everyday use and help/FULL - 09 troubleshooting.pdf
-9566591b9a3b994857fcd38a234c3109a19cc69c8c7f1aad6a509b4bb6db6c7f  ./Setup documentation/English/6 - Everyday use and help/FULL - 10 the plan.pdf
-1dab4b1fc38f6a6875d90183a54a3b75e626bd6850d1b63bdb95d71bf9d74c3c  ./Setup documentation/English/6 - Everyday use and help/FULL - 11 maintain your site.pdf
-5833082fbceba0a99614ff1b70256c44241a4c42e43ad30052948b63183f5a15  ./Setup documentation/English/6 - Everyday use and help/FULL - 18 review the code.pdf
-263232c5c0db30128dbff842fb45756c91741938adf7ecc1599b2bf9d5f90145  ./Setup documentation/English/6 - Everyday use and help/FULL - 19 every menu option.pdf
-ffc690deb809c7d93823608e3fa020427c8508f27b9d4724597275759e58a870  ./Setup documentation/English/6 - Everyday use and help/FULL - 25 common questions.pdf
-0da6a739d4b87210f072773651abb971df8acc98f64400b2be1b2121c642a625  ./Setup documentation/English/6 - Everyday use and help/QUICK - 06 shopping list.pdf
-7486bc08c9824276c1a82dcddf9406c627b85e287485acd1a5868a6290d64781  ./Setup documentation/English/6 - Everyday use and help/QUICK - 09 troubleshooting.pdf
-5df22b6f4438f0ad9ffd015fca3788bea5502a306b349d00f7c5bdab50ce3931  ./Setup documentation/English/6 - Everyday use and help/QUICK - 10 the plan.pdf
-25a34088584d8e51da30e01419421bb9eeb355949a414e5f26bc0dc3c97e0bf9  ./Setup documentation/English/6 - Everyday use and help/QUICK - 11 maintain your site.pdf
-a8aefe331f4ed756be8ed800e7e4f2035a86c53409e8ce2ec5c59a4adf5c9724  ./Setup documentation/English/6 - Everyday use and help/QUICK - 18 review the code.pdf
-03b7e5f17543a8a039cab08ad8fe6d373faec9d62f89217bfe014fd2b2b2ef7b  ./Setup documentation/English/6 - Everyday use and help/QUICK - 19 every menu option.pdf
-9ea5d4f1a20baa7ce8afa6b7df598829dcbbb5e04fc08f7e68f7a43f65a8b503  ./Setup documentation/English/6 - Everyday use and help/QUICK - 25 common questions.pdf
-0420a0c1610728c4a3192411e2075f52f43aa3d21123090cea9544f392cb3c58  ./Setup documentation/English/6b - The terminal way (bash), harder but not tough/FULL - 22 bash walkthrough.pdf
-a97d1513a75a12bd4f23e669fcf4d663371a5f897abc6835779d0717ae19331c  ./Setup documentation/English/6b - The terminal way (bash), harder but not tough/FULL - 24 optional tools.pdf
-92368e2162538332c41eb208d9262ee7b2ea78a02f5f6a8d1163b4b76f9c2cb1  ./Setup documentation/English/6b - The terminal way (bash), harder but not tough/QUICK - 22 bash walkthrough.pdf
-14e647085bc6716f6d34e59f1d46dfcdd020e1bd80f2e6476c8668bdcc287277  ./Setup documentation/English/6b - The terminal way (bash), harder but not tough/QUICK - 24 optional tools.pdf
-1809d9d772d475e8dc49d121da921ac675dc977c6500404c1eddf00615b3e0db  ./Setup documentation/English/7 - Reference/FULL - CHANGES.pdf
-1b5a6e45c1a5be4d3351f8fec4bc6407856e3897f3d56784398e64b7747ee0b2  ./Setup documentation/English/7 - Reference/FULL - HANDOVER SUMMARY.pdf
-fe282cb33cb16c5c621a2ede731403a398e5bfbc17e1eb9cbc011383dc46a7a8  ./Setup documentation/English/7 - Reference/FULL - JOURNAL.pdf
-3000b017a0712b0ca640256a28b44cc585e51781a6c8c017805379fd3d433b17  ./Setup documentation/English/7 - Reference/FULL - WHAT GETS INSTALLED.pdf
-1caf8ffca238ca0d68642aabe70c29a3185368fc820961cf06dbc7f9e1497ee0  ./Setup documentation/English/7 - Reference/FULL - WHY THESE PROGRAMS.pdf
-bbca2f3bbe6cc224ad8cc8cba57d5d75046d64a0a8913967f5bd480162460964  ./Setup documentation/English/7 - Reference/QUICK - WHAT GETS INSTALLED.pdf
-e3f3d2a4a9bf267e2ab59a0d35e5a39ecaf20de926f114f49157cc6f23ab6cac  ./Setup documentation/English/7 - Reference/QUICK - WHY THESE PROGRAMS.pdf
-d3015d31c7fd092f1489736926f40ff4d1200a651208742b8a4ae5636883b66e  ./Setup documentation/English/8 - Projects (optional, for fun)/n8n/FULL - N1 install and first email.pdf
-a57b0fff416302c5648c29708f298d2f0aa5744dec51e940f2ed67a1804d49de  ./Setup documentation/English/8 - Projects (optional, for fun)/n8n/FULL - N2 dry soil email.pdf
-20bfb0989eb6f07094189645d80749e3c6eefc055abbf4bb86214d55399a7a7c  ./Setup documentation/English/8 - Projects (optional, for fun)/n8n/FULL - N3 weekly garden report.pdf
-6c27ddaa37ea1c1435a6021c69c1550d0f241555fb0790be519e5a2579443e2a  ./Setup documentation/English/8 - Projects (optional, for fun)/n8n/QUICK - N1 install and first email.pdf
-cf575ba80e13847b07ab7c2fc552f18e581cb94ade993d8df62b811e9ed00953  ./Setup documentation/English/8 - Projects (optional, for fun)/n8n/QUICK - N2 dry soil email.pdf
-2916bdd88cec888cf4ffe4cef917355b987b79580e5585da3ed0457f52e925d9  ./Setup documentation/English/8 - Projects (optional, for fun)/n8n/QUICK - N3 weekly garden report.pdf
-4641fb0c9833933fe6aba9c2f41d933302968fd4a85044a1c3eff21beb483a5d  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P01 uptime kuma.pdf
-a3d08afc63b4a836f61e4abe437c64cad1642f7f204de4d03bf66fd756d4dad6  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P02 backups.pdf
-cf99c9d1f53ad6d5b82a54399b0c4ec50585e369d02ae98c04b532e601439eec  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P03 home assistant.pdf
-defded163dc7499808cd759bffef9bdadc88ee35097896ce0f0e49696a21012d  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P04 govee lights.pdf
-cff38d8a6bca4197240f3e74190f7eef1f42609a4570ba12beefe94aec53ef3c  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P05 weather and rain.pdf
-39dfeccb99a367c72566e2ca7d2fb8612f04fa3b62d8f055dbb4aff0c002fc1f  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P06 soil sensor.pdf
-c74b20aaaf2ecb5a680cd9ba7b9fbe78a7abc955d767cd3e7b87e13395b7c1c6  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P07 automatic watering.pdf
-addb4bcce442411f053fdcfe7dd3ebc9f7be9fc6e93d25d66fe494d76f728140  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P08 readings on your website.pdf
-ccffbb009c2358bb135ca4e8e0f603af7f85887b1f87ac624c4027ca5a777ad2  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P09 more ideas.pdf
-34611cc4dfd3e66df449bb5cd985842626880b0d3e472b9a8dc3c73f8f52f8a2  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P01 uptime kuma.pdf
-46260b9f2170eab2636f6f117932e62ccd3f881cf7f205b78c6740aee3b3b90c  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P02 backups.pdf
-75fcce0c6a0a77b0930854095faba4df2433c5603b3b00b82d1e084b67ad071d  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P03 home assistant.pdf
-30e0b3e955e53c84f5c2f4e1a9394724fd9b6f546514ad3483d46e4d5e16f18f  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P04 govee lights.pdf
-cdcaf2cf76b215c1b951f07a9c0b1c8a18ad858f3a4c411c47733e23b5e74648  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P05 weather and rain.pdf
-564f0807c39f597a198ab28a4a4d2ef2b377a7ffb71b8646454ad61c7d7d3d3d  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P06 soil sensor.pdf
-e6dca8021503dea15f8537f9d51502752e4e884e0ed7b455945116f5873edc71  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P07 automatic watering.pdf
-29161913864db650510c086eee7472972e08af62c81d94aee848200ec17be170  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P08 readings on your website.pdf
-c8b49b72e36bd9f573eee20a7daccc0f4b845b439aa06ce293ef6d0ea7e44095  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P09 more ideas.pdf
+a0a626f06e6c60b3bd84add40cc68de439cc681fac8256f01044e0f9f703bd46  ./Setup documentation/English/0 - Start here/FULL - 00 READ ME FIRST.pdf
+7b42929ee7c43b2e4f5515cb2cdafcf25e494f970f27277de46e45a3ccf11c0a  ./Setup documentation/English/0 - Start here/FULL - 00b before you start.pdf
+4291dabcc32313765117e08bd61070e24adb3daa0ddc20782922d58808834bc7  ./Setup documentation/English/0 - Start here/FULL - 02a what is docker.pdf
+5feef654a04bfe05e28dd9b90106c668d59b37fcfbeecb81d132c7f35572e096  ./Setup documentation/English/0 - Start here/FULL - 23 full setup.pdf
+5d2b91a2e49e650702268ec35463f4c2016947bed94bf1cecfb80325485a0be7  ./Setup documentation/English/0 - Start here/QUICK - 00 READ ME FIRST.pdf
+1955bb915f2f3e8ae61133e5747948d46b638f51716302851aa55bec622f873d  ./Setup documentation/English/0 - Start here/QUICK - 02a what is docker.pdf
+b9db2347b32fd1c464fc50a0b8d9ee0dcaf5fe30152067ab0c6dcc69f75b9c8b  ./Setup documentation/English/0 - Start here/QUICK - 23 full setup.pdf
+5fba3cda69f98e2eeaf9542235d13441db44201defe54240b84e29645215f2ad  ./Setup documentation/English/1 - Ubuntu on the computer/FULL - 01 ubuntu laptop.pdf
+2b7b343cc209dfbe8244ad4eaefa849167ee2a2262a7e6709c6513638f9e60a9  ./Setup documentation/English/1 - Ubuntu on the computer/QUICK - 01 ubuntu laptop.pdf
+aded38b4f7f1b7ea6cffdc3a80e0a4be9db5bb07829a4ef12c66427afa1afda4  ./Setup documentation/English/2 - Docker and the install/FULL - 02 docker.pdf
+ff566cd15834b366ad38003f82becfdac7e4cb98222713defb0adaf04ff4af44  ./Setup documentation/English/2 - Docker and the install/FULL - 03 run your garden.pdf
+881b144e42f0bbca27c736f8222fe5b1f74ef2d60924b4b9b94f1dac5dc29004  ./Setup documentation/English/2 - Docker and the install/QUICK - 02 docker.pdf
+a2894b05cbbd64a1502c8df9fd1e040e09f794c03a20c8a4b30c57a317b03073  ./Setup documentation/English/2 - Docker and the install/QUICK - 03 run your garden.pdf
+59c50b949b4638394453de1641d39a94ad9a362088d553df5d4c81af8d79dbd8  ./Setup documentation/English/3 - Going online/FULL - 04 go public no ip caddy.pdf
+c4c4669ba32ff2b6fb26ba4c5c7d5d33678c494a901c032a55e0ed5fee211883  ./Setup documentation/English/3 - Going online/FULL - 04b take over junsgarden zapto.pdf
+ae7f5f066024cd2a3c06c2d2c7af2ee8fe00171f01f99f32372f15f896c72367  ./Setup documentation/English/3 - Going online/FULL - 07 sso gate.pdf
+80132d2716ad98a8db7a2c3ed09b55c828da3a5e321972ddf0aa31407ee29818  ./Setup documentation/English/3 - Going online/FULL - 14 reserve your ip.pdf
+0f147382ea4d84e84bd8b1e2842ec54d96ee6129dc10cd66d26769dbf206878d  ./Setup documentation/English/3 - Going online/FULL - 20 ssh and remote desktop.pdf
+25aebbdd00b545d06c9f57ae8bf0f59405c2cfc1091b02d634673aab644ae4c9  ./Setup documentation/English/3 - Going online/QUICK - 04 go public no ip caddy.pdf
+c4e2e37c66292ab647854c15a714f977df276e9ac9bf819e88a63bbd4df1b641  ./Setup documentation/English/3 - Going online/QUICK - 04b take over junsgarden zapto.pdf
+829b4d2035891325aef54408a12e2365afeb67e02d7ddda39c23c2d0f10997bc  ./Setup documentation/English/3 - Going online/QUICK - 07 sso gate.pdf
+6a5855b8018812219d2942074ef04ec6a8a9c9c29bb6274dd4e333ffc1223d62  ./Setup documentation/English/3 - Going online/QUICK - 14 reserve your ip.pdf
+18dbac16c38ac7ad15a35d563561acf111283fc26b534835c5788243fe2ccbbc  ./Setup documentation/English/3 - Going online/QUICK - 20 ssh and remote desktop.pdf
+591a97c574fd3612d6a9298a2b8e00cad5c558a5ba8d0ca73ba3afe917213e2a  ./Setup documentation/English/4 - Email, keys and AI/FULL - 05 gemini prompts.pdf
+3d0f3cbd11bc8b0d28785e0f1a6691a4f7c52f8f19bd03cda98d2b5353ce5f8d  ./Setup documentation/English/4 - Email, keys and AI/FULL - 08 gemini setup.pdf
+448e9828ba9903d0995f30bbd6d3c4984f9cdffd029f317acd3a5560a31c4079  ./Setup documentation/English/4 - Email, keys and AI/FULL - 15 local ai.pdf
+c7716cf733cd655789cca78f4857bcbc5329576d8207dbdf42d238d11ec0ed4f  ./Setup documentation/English/4 - Email, keys and AI/FULL - 16 ai studio.pdf
+da2b16cf1c1a58d96d66b170648264a7dc846b136ab3828558f18abde3d582c9  ./Setup documentation/English/4 - Email, keys and AI/FULL - 17 android app and ai coding.pdf
+a3073fc7dee71867c816632a182aff140b04abbefc246822c93e333c335a3876  ./Setup documentation/English/4 - Email, keys and AI/QUICK - 05 gemini prompts.pdf
+a76de17b30b80aecb24d29e9b2a3eb8f80b5372249830a99ccc09832588fcd35  ./Setup documentation/English/4 - Email, keys and AI/QUICK - 08 gemini setup.pdf
+335cddcafdce52bd8bc6e0ddbce3f20fc853f53668466526aa43c0921364844e  ./Setup documentation/English/4 - Email, keys and AI/QUICK - 15 local ai.pdf
+9dc72d9f63bd3ef4a5cb73120e267c615f577f12f797676cc9733d2442603d2a  ./Setup documentation/English/4 - Email, keys and AI/QUICK - 16 ai studio.pdf
+902243674fa6496cfe8ec85943242b3f035a1afe49f7a777f5a74890b488647c  ./Setup documentation/English/4 - Email, keys and AI/QUICK - 17 android app and ai coding.pdf
+e7ad6fb9c3d2c507e5326bb3af04e4fc06382ebea4f579575ea7e278709cef48  ./Setup documentation/English/5 - Backups and your data/FULL - 12 your database.pdf
+3736066581d9d764b6c17d9df9a72f4ebeb53ee8e4abd8f5066c2bfe1397e434  ./Setup documentation/English/5 - Backups and your data/FULL - 13 backups and folders.pdf
+cc714b335251bbe18edfacc145944643c3802f3100252662a426fb04e9100abf  ./Setup documentation/English/5 - Backups and your data/QUICK - 12 your database.pdf
+07df1bbe43136c5bc6317eb60916de95954a65754aa2309e5ff32732da6059c6  ./Setup documentation/English/5 - Backups and your data/QUICK - 13 backups and folders.pdf
+59bdeeec3dc96ccd20df5016aa022eef5499c63e21ab1ad4fc44c4196a54ef10  ./Setup documentation/English/6 - Everyday use and help/FULL - 06 shopping list.pdf
+ae027f1a3686f50b4394d2ea61d4cabcce01f61e05a0ae84f9f005cebbcde454  ./Setup documentation/English/6 - Everyday use and help/FULL - 09 troubleshooting.pdf
+0074b64770cb57fa97a4fcad275a797f7ae115f1c76d11f7d76554c03cbbe273  ./Setup documentation/English/6 - Everyday use and help/FULL - 10 the plan.pdf
+b08bd2827af528dfcbea0b5dd08aeebda9154f6d17d69de0913d7a50542f6f02  ./Setup documentation/English/6 - Everyday use and help/FULL - 11 maintain your site.pdf
+f6a115b1b262bafeb400de9a8174b6fd390cc75b315b9bbd1b27a243eb2a71e5  ./Setup documentation/English/6 - Everyday use and help/FULL - 18 review the code.pdf
+384893c3c82688465837e1b03cfedcc1627e91c8c56896cf44ce2f024b95fd0a  ./Setup documentation/English/6 - Everyday use and help/FULL - 19 every menu option.pdf
+8adfa0c4f76769c10721b6ddb46cba987c9f00bd207a139b5ad3c61e925c886c  ./Setup documentation/English/6 - Everyday use and help/FULL - 25 common questions.pdf
+77b48e25cab2d42dd8a249178a034bd532116d1ca20aad671371388ebe1d632a  ./Setup documentation/English/6 - Everyday use and help/FULL - 26 rename move and switch.pdf
+f4378227fb1b9f8361c58273a886c1790f931b9cf395c4d57076f635a93b3d1f  ./Setup documentation/English/6 - Everyday use and help/QUICK - 06 shopping list.pdf
+610bed5099b0853c11e96ab1e2729ffea30561e00429d8d3d409cc485c14e5aa  ./Setup documentation/English/6 - Everyday use and help/QUICK - 09 troubleshooting.pdf
+5200b23d1f47a30a9011f0765e338c18110897041261bf9dd2d46785a8bec298  ./Setup documentation/English/6 - Everyday use and help/QUICK - 10 the plan.pdf
+c16c327cf8fd357375c801d658cc175b9ca76929d8a282838741f0df5a42398b  ./Setup documentation/English/6 - Everyday use and help/QUICK - 11 maintain your site.pdf
+9ee8c5d54a4b02aa553cc3b2948dd53b6935acdbc92c52489d277e3acf3f840e  ./Setup documentation/English/6 - Everyday use and help/QUICK - 18 review the code.pdf
+63ee1fd79f238ac863e594863f28feeba288b11557b6102985321f400d0aaa65  ./Setup documentation/English/6 - Everyday use and help/QUICK - 19 every menu option.pdf
+e27caf8f983af706202d254398e6d052ece26a0fc9e489ae2d485fd08b9219b8  ./Setup documentation/English/6 - Everyday use and help/QUICK - 25 common questions.pdf
+1f4da883faf766c54dedb1f42eda7f18b6ce8bf5be4a78a4cb402e3da4db8d08  ./Setup documentation/English/6 - Everyday use and help/QUICK - 26 rename move and switch.pdf
+93c1e5a7f4c69d7005d8fa432dfda1631959f772ffd66ef9393a1d2cd42f42a2  ./Setup documentation/English/6b - The terminal way (bash), harder but not tough/FULL - 22 bash walkthrough.pdf
+647fdc7d7bf446dff1db5adc344d5f6d89f53b2336c4944e3e42a6bef85b728c  ./Setup documentation/English/6b - The terminal way (bash), harder but not tough/FULL - 24 optional tools.pdf
+d6df675a3a3341cfe4766afcaa01734e9f8585c8515c648a36860f25be3fd32b  ./Setup documentation/English/6b - The terminal way (bash), harder but not tough/QUICK - 22 bash walkthrough.pdf
+9368836a0b349ab439ec702c803a65323478bfb261fba46c1a6d749d55b236e0  ./Setup documentation/English/6b - The terminal way (bash), harder but not tough/QUICK - 24 optional tools.pdf
+c7902e9eb24976d57e94b86cfc8b435d5143a56117eacd9892de663610f87f9c  ./Setup documentation/English/7 - Reference/FULL - CHANGES.pdf
+afcdc404cc2e816cb32c7db743f63df1b9e172684ba9b378c2b9fa560de250d5  ./Setup documentation/English/7 - Reference/FULL - HANDOVER SUMMARY.pdf
+dae7f86d4cd67ce7a894a50848251afe73acc7c9210601311c03b815db5a887b  ./Setup documentation/English/7 - Reference/FULL - JOURNAL.pdf
+604a38f437575658e073ff8e9e5086869f1b769be85442e4cc2ac289491972a2  ./Setup documentation/English/7 - Reference/FULL - WHAT GETS INSTALLED.pdf
+26ee98ff9d9000423f6274ea583a9edf7a7098e4035011aa37662a16a29e8775  ./Setup documentation/English/7 - Reference/FULL - WHY THESE PROGRAMS.pdf
+b98df9d064c39bfee73cbd93ebd2bad703aff082322530ea3f1dc59592c4993b  ./Setup documentation/English/7 - Reference/QUICK - WHAT GETS INSTALLED.pdf
+12c90768798a8eb71cf1d842edb5e64fb5d14f8466fc8c4f2c8116f226afa50c  ./Setup documentation/English/7 - Reference/QUICK - WHY THESE PROGRAMS.pdf
+c2d34216b8777c5f48fb61ffb03d4d477d635dc3598acb7832d6c9df92a58934  ./Setup documentation/English/8 - Projects (optional, for fun)/n8n/FULL - N1 install and first email.pdf
+f98eb85fcb5c232e6b9ffe03f07e9807a6f95718ca0734e6bde91ff8f1daa00a  ./Setup documentation/English/8 - Projects (optional, for fun)/n8n/FULL - N2 dry soil email.pdf
+5a97b17a2246ea8c9a5894bac39f4e87c1f855e9b4acc2c4636be66bd19fd6df  ./Setup documentation/English/8 - Projects (optional, for fun)/n8n/FULL - N3 weekly garden report.pdf
+2236e4940ba9dd19f234430ed9ffb89576a9b79e7bbc590b2944e96c59842c43  ./Setup documentation/English/8 - Projects (optional, for fun)/n8n/QUICK - N1 install and first email.pdf
+1a9dccc4017557a344a3c982f4d7cb275e3002d95327f1e18773cb086cb6ae92  ./Setup documentation/English/8 - Projects (optional, for fun)/n8n/QUICK - N2 dry soil email.pdf
+081d0ebf47fbe514421ea9cccf14c8ba2cc1d67bcf77894008bca4665bb99d9a  ./Setup documentation/English/8 - Projects (optional, for fun)/n8n/QUICK - N3 weekly garden report.pdf
+e96fea46669c240900b48d6cad44c53c9010685e35b49e449a28bdd71c707f91  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P01 uptime kuma.pdf
+3d71646c92ecbcff6003c40556e7d01a5ee0a267b3482bf214a1008221caba2e  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P02 backups.pdf
+3d62d5ff08d005454752441593572383b16965dfd3c66522a9eb19eab10f46b2  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P03 home assistant.pdf
+053152a4c5580d9fbf31f1392258e23801d60dcb4f41bb2032fc615800b808b5  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P04 govee lights.pdf
+d49bb5a456cd6713314f4a159da9d11a4d58d570e86e7c5945d0187a5e143f13  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P05 weather and rain.pdf
+47acd5008ba3585344f3563e21a1dcf95a3a6409c84706915074e4de2a4c9fa9  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P06 soil sensor.pdf
+a07544129939a371a7190adb3d80381358d3a094d38e4d27c5017e074f82ded3  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P07 automatic watering.pdf
+acba6b8a84bc1e592db7a1d93ea6390eafce11ae808353af9bc3a003a4108842  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P08 readings on your website.pdf
+c992b55f1fc5f60d21049e7a789c5c7b3673c3390a03854b95b08f720cbf838d  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/FULL - P09 more ideas.pdf
+683fd782a8d3aaac28127433ab4f9f5b2e4832c585b083caa6d0b30cf554e25f  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P01 uptime kuma.pdf
+fdb652f32790e7c37fbc61a3a96e5bf9667335dfbe2106667703914206361276  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P02 backups.pdf
+625fe12833acd51ddcb45843312b633fcd36363c247ac8f41470fe7f1e55406a  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P03 home assistant.pdf
+bdef25e0a69b81b40586480529176c06a6511046e832e0f25811e9ddc1848649  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P04 govee lights.pdf
+aa87b2d67c534ce8e394e4f34b8edda48ed40ecb0f61b0d9b44a14e0052f5e65  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P05 weather and rain.pdf
+0739ab0d2bb7ece0d7e7792258142c9610abd377fcee00b75857b9e2248e3ed6  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P06 soil sensor.pdf
+d7e601fdd3bfa503f59476c53cd4a5e429fd3133483df6a1a8d022b60fa03b5d  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P07 automatic watering.pdf
+e61750c1acbce8d609a9273d6bad762bf9e8123a2d74dc237695408fb658ceff  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P08 readings on your website.pdf
+e144196a48e940a5c67a94786a08ec75a81a4ea5a313d4866c06ed8185e16723  ./Setup documentation/English/8 - Projects (optional, for fun)/projects/QUICK - P09 more ideas.pdf
 5b1eadf4a9969aaaa50c048fb194a4fd552962da9e5282b2eafdcee5ee49d474  ./Start-Here-Ubuntu.sh
 9f3c395ca6b4d08513a1ec4b96112fabc4cf89d01f6aa4778779b89b66da9610  ./Start-Here-Windows.cmd
-1633a70f4cf756c6f8de4d5df3a3330c67e955fdd4248f7f7ca6bbbb1ff6608e  ./WHAT-GETS-INSTALLED.ko.md
-52e433e1d0b2a70c7cbb30cf4976b468fb9ac330cf5fa7f6a0f7c85af2624c73  ./WHAT-GETS-INSTALLED.md
+6dfa6966ff9836f3f5d15a67431734fa1937abe758841452188b56d56cb6f0af  ./WHAT-GETS-INSTALLED.ko.md
+22b79ae4c48f8572c8fd6810b1293893cc7672126e50b96451c22552039198a4  ./WHAT-GETS-INSTALLED.md
 dc71ba5cf9005cccf5159db2098f0c8856ed6589f3e9acd087f3308adcec9eae  ./WHY-THESE-PROGRAMS.ko.md
 5481caf1141383c66ba1222e263ff588b93740788e16b149bdb8d6114ca4ebfd  ./WHY-THESE-PROGRAMS.md
 83affafd6c18c3561ba594209c8ee8217c5bbd3769253ce7248036ef2499c943  ./android-app/.gitattributes
@@ -308,7 +319,7 @@ f235fdaa7ff09ca599509980b4a18397bdacd80a9ddaaf70f8cfcf732f2f6dbf  ./beds/tagphot
 9b5aab31287ddc1065d45a9724ac992dbf9e2d69d8ead423c6a2d77d21d92243  ./beds/wikidraft.py
 35c5284df9b5d8568625cfee13808363f82582e5e47f2815fa8ad4a90017830e  ./beds/wikijs.py
 3e4ac801bec198e7c7be06210c07228d8f57be9469ecf036f123d37cae55463a  ./db/schema.sql
-e8045af6ef1a65030075426ff06c041fd3dbdcda69986dae028b7ecd9d2ba9b2  ./docker-compose.yml
+44159f18df01e29da97fef6e607b287e15d13e1760225273f9cb37ac0d2deb4d  ./docker-compose.yml
 16f7887a27769ff5b8620fd51b544defb6bbb6c02b5e049343d564ca3989ff79  ./docker/backup.sh
 75aee7dcafe5af8e1ccb677ee27e7b7b7223d5fd355bcd75768a74179eb94559  ./docker/caddy/Caddyfile.template
 0309c0ca40e68fcaeecf50f35378e51a713024fbcde45e114256b90fc800d225  ./docker/extras/Caddyfile.example
@@ -319,7 +330,7 @@ cdfa3a5b5e1e14605bf14e85bb8f37703d7cc205988c8f813613ed7275a71a03  ./docker/extra
 b60936ce38f0e2383e79ab54ee1e7629c4f460017fe18175ec224cb71db6c47d  ./docker/extras/ha_to_garden.py
 2109b26f75e45b8493599fc239cd6e0d17a561d9606c2a5ae9622ecbdc52a4c6  ./docker/extras/home-assistant.yml
 3aea22b107de97e233cdbe4de9e59e7a65fbe73cb0a261ebfe81c945a362b94c  ./docker/extras/mosquitto.conf
-767702767acf86a0806ca5c6d94c879c8af25d82b961c3060a4640203f1f8b56  ./docker/extras/n8n.yml
+dc5e4200b69864327f751337f615be47db31312c7640ab510787941d93499407  ./docker/extras/n8n.yml
 3a81910cdcc5a1e842e1262960463a957c9553e74cd942070b719483e7b55014  ./docker/extras/uptime-kuma.yml
 c9117b3cd3ef6f43086ccd2fe04f6a0514d083f6bcd4897345677e1ebccdc021  ./docker/set-password.sh
 e40a8c765f36f1f939c6b761c36dd0e423681bf00755cb70ffc2e71d642d20b1  ./docker/tools/Dockerfile
@@ -331,6 +342,7 @@ f00fddd7df288934da9adc56df4fd941085b1b01298a4b0577573b6d9db5135d  ./docker/wiki/
 d42704a13287b6c3e5b623baad0b60b85f1c3019b03e40b946256cb42822ecd9  ./docker/wiki/seed/wiki-pages.sha256
 debee7f1c5e7987cf0d94d51a79cfea549741025401ee5350737386d90e5fe24  ./docker/wiki/wiki-db-init.sh
 0887114991f619af8447cb97d5c92916d5f2e159ccd6bf6400679764337a986a  ./docker/wiki/wiki_setup.py
+b8344601961710a3aab9653ebde9cc05bc96802e3d4be75352710705933585d7  ./docs/release-notes/2026-10-14-technical.md
 695fe67b03aa2faeec3e8ea4420e93446b331e6d01da84481f0732a6b1d3bbff  ./docs/rust-port/CODE-TOUR.md
 e73f1f45fe5c449924a487651d295d0716aa7d70e7162b49c6993212af2192ce  ./docs/rust-port/DEVIATIONS.md
 62cb1b6c157803750379fc1b7a000663575942f965af5b3304fffc3b5746d37d  ./docs/rust-port/README.md
@@ -389,37 +401,40 @@ ce4ed500d5cd5eb06fa2aa0e83a70e421f21e867b81a2c061d57a1e1512f2373  ./docs/streaml
 f21cfae0d8b6d9f7eea879bb99ceeefe424205bf12630bef221a338a4576d1eb  ./docs/streamlit-port/baseline-text/12-Bed-Assignment.txt
 e156bbd3450cfe7e706bf7fc0fcc0f62dfb47a8317dd1ea8519366a1e4984efe  ./docs/streamlit-port/baseline-text/13-Wishlist.txt
 c55fac6dea3a48db5bbeee16b8e08b6304cdcdf3551764808f6b4c3305ace4a6  ./docs/streamlit-port/baseline-text/14-Barcodes.txt
-8b97e9e87909f04f395391f3dc744c623cb6577710bcce3735773645867a4355  ./garden.sh
-619eeba89874318d6e3a828300f34be449fbbae79810c0d046125d87eef6c1ca  ./handbook/00-READ-ME-FIRST.html
-a9e9a34be613ecd22c2ac71c9615bb56e3e5d85710a571e1a1f4515a55d7d4e1  ./handbook/00b-before-you-start.html
-0bd6a342681514d6934c1d6092a7b0b938d3eb004d18e3a15a299074f64fce29  ./handbook/01-ubuntu-laptop.html
-cf5b80bcb8422f25b16deb74f5d0e1f0e7b56291c2bf268897042da8c064638a  ./handbook/02-docker.html
-b5732feebbfc1536bfece810dde3dd575c716a92514ed8b0892c874dd3253763  ./handbook/02a-what-is-docker.html
-e4e30c7d941f3bf3d79a37ecb69439657ec07321d6418e06dbec5c893339b2f0  ./handbook/03-run-your-garden.html
-eb09d35d58fe32b0e53d0379def8fb8321a99d1bdeb9ce9838c6d9dea5bc1d52  ./handbook/04-go-public-no-ip-caddy.html
-5d63f92f7519125a39df81706631db0bd7668942afe5d1b21633653c7bf0f63b  ./handbook/04b-take-over-junsgarden-zapto.html
-15de08700ad68c678c58f45ad4436e29f435c0b25081f3a9f2a8e8d7151c3a5e  ./handbook/05-gemini-prompts.html
-0ce1f1c4b6dfa5fa89d7dacf50563c6e71dbfc8f028fcbeb219cff62c3131cea  ./handbook/06-shopping-list.html
-64d368bb5ec5dfb6ec77c0a13be482aa5ecee012330a708ca7304e1bdc35316c  ./handbook/07-sso-gate.html
-0cca4d957c35b35ff638152a002cfbf323a3a5e17bcaf1d99576eea2f3df4219  ./handbook/08-gemini-setup.html
-1f5c2b1da47ca3425ab98e312680ee2d6fff34437825b2f62a36352f76c76290  ./handbook/09-troubleshooting.html
-e39b26da0999699d2588f9a57492192f298c4c944ceded66ffbdf0805094a7ea  ./handbook/10-the-plan.html
-a898367cc6a15cc80e1398c7783dc688fa1edb078b1a6b96f408415116f205ef  ./handbook/11-maintain-your-site.html
-53f7c40eecdfa421b7177f5b1e18baad8688d52304b9944855ff7dc6f47bbd23  ./handbook/12-your-database.html
-fce5abfb2c6a2e8b3c833a540fdf7c3d8deaf7b72233e8d7e64a342ccba58d4d  ./handbook/13-backups-and-folders.html
-168702daba4c4a5e40801a7458a3a6b7156d5da168b6a26dbe01f92f027bb7b3  ./handbook/14-reserve-your-ip.html
-14aca65f29c8328008a7505e4458462acfd40647b725622750138d09d1ff0f7c  ./handbook/15-local-ai.html
-fc4f9e86d67a72972a92fb1d1ca136a5dc7cd5f2fd631b390dcc437fc36dbde2  ./handbook/16-ai-studio.html
-ffdf937dc1a5eb7ca8c2d63b8ed60a1722d57e9426e7f2b853ff1ada485178a9  ./handbook/17-android-app-and-ai-coding.html
-5211ba1c6a206d8ebadbf675f519093588de2636d911a442c12859c2b4594a43  ./handbook/18-review-the-code.html
-f10d9f5558b639f4489ec85ee9f19fbd6be7a173bce89642f22db4821f9de2d4  ./handbook/19-every-menu-option.html
-5bcd217f41280a1d80f3f2a09763206eb107eba1025a40e438370791f5055eed  ./handbook/20-ssh-and-remote-desktop.html
-96f885d61b6a65e2339c352f58eedbbc07d3a5b751ba94cadb9651b952a08d03  ./handbook/22-bash-walkthrough.html
-2112f31e61b89f374bd9755e2a99f7d2405f8ec53e2f3fe35a6cad4812bffa6f  ./handbook/23-full-setup.html
-d08a33c518225f61c12a78418c443bd84a1f79c5153f2c408eeb3bc969faac19  ./handbook/24-optional-tools.html
-addfdbe396ae45a37fb4818a715a9a181805b4d28fa6d9dd22e7d8ec4f248896  ./handbook/25-common-questions.html
-57341539f061d2d2a4a45c612201973b943ff0f050410353ce8992ce228aec2d  ./handbook/assets/handbook.css
+49017bb9b0fd87fd38f4c173492e7368f0a2cc6f4443c2b6e8f7bf3081408e2e  ./garden.sh
+f5b630c7784d3656880c03c0299bd8a2e51e8447681cb8903c1c265b66d5a889  ./handbook/00-READ-ME-FIRST.html
+6553c25382a053cb6386e9e1715fdef9ad187ba1baa893ee3d873358f5414719  ./handbook/00b-before-you-start.html
+7a0b5d73a3764640cfc15bd0c8d095d49e1f554dedb647ba3ee8cb8849c18ab8  ./handbook/01-ubuntu-laptop.html
+1dba60f695eaf2f6a9eb85422e8079ebbc436fcbc5146c543e799dd46cd6d5ef  ./handbook/02-docker.html
+9cdca01b809d157d4df94c049a036af5bc11fc1b87017c20cc94196dc314e3cc  ./handbook/02a-what-is-docker.html
+2850d153833b35a3c15b834372b4186af797fef2107485275ae272416a44f13e  ./handbook/03-run-your-garden.html
+94cecc6752ae2bfda124f593d5689a87e7dbd3891d87e1ecb200c30f2fa9b4dc  ./handbook/04-go-public-no-ip-caddy.html
+b3c81848149c9d8d80690ba45cc5b8b3247b9fa29f6898044ec047edadf2771f  ./handbook/04b-take-over-junsgarden-zapto.html
+7745221ac7b76b4cc8cc11ad22725595660497962e3d51dd8d57edd88d44fffb  ./handbook/05-gemini-prompts.html
+0f52528639d89bc6db8b06e7191cf7d010a11dad1d9ea5c7e4cd35a68c27ed91  ./handbook/06-shopping-list.html
+7f789d9ef9cdaf06bc3ed699da69f9db94b37623d0548d7ac385399218a856c2  ./handbook/07-sso-gate.html
+0c85ebc36058a55b772ddd2235cca466a19ba88964d6a40e4ea6695d4962a9fc  ./handbook/08-gemini-setup.html
+956d2716f3f24074e004bdb58215c2c2b8bfb505eeb708b8aa969d5bc7920b9c  ./handbook/09-troubleshooting.html
+a9f9d6a2dd7570d8cc2e5af13c617d5cd98d1965f3772d6d7c1cf5e0259919b1  ./handbook/10-the-plan.html
+a8dd4f47911a7ec7c163eaabbe04efc06d1b3b3bf1aba5c0451b9b0e5a56d198  ./handbook/11-maintain-your-site.html
+c4a566395810574d28bc1e92f0a468b723903f09d96cd1fdbb60c1fd5aca6cd5  ./handbook/12-your-database.html
+f4dc94b982217ba5f937cc2ffbc4854bcc6426fee0de074841c687fafb6f0a56  ./handbook/13-backups-and-folders.html
+83a4341889a53a165754a4d7b0bf689c100e2b7b13d09ef110ca6495086d4ce4  ./handbook/14-reserve-your-ip.html
+88c79b7624290c2d184050ee6f6051434dc68d4535965e2bef1e15d998668d35  ./handbook/15-local-ai.html
+748e7dd2fa0e424fa81f9721374dad5ea92feabad17f24ddc008681ce99cbeb3  ./handbook/16-ai-studio.html
+ab051114f44259314fc8166a56ea479381e44d243deff3109d926fbd1955ead0  ./handbook/17-android-app-and-ai-coding.html
+c9a95ae8f0e91888e12663e283e5e828dd8e7dd6a624d7ceba883127eb731344  ./handbook/18-review-the-code.html
+c4f0c540ead44303f0d34558cedfeda94e5a330f878a38aa3186cb0eda318f5d  ./handbook/19-every-menu-option.html
+65bb50f2f990472fe745ed77de625813835b3655da978b961ff1edeb00b76440  ./handbook/20-ssh-and-remote-desktop.html
+28ba0c75188681afe0d36484e5401875f7b12600248c9acc9d6f2915bb4bc954  ./handbook/22-bash-walkthrough.html
+9e4ba5d1f946da27c4763e031f45c43d7705331b88a8e4027facc2ec35292366  ./handbook/23-full-setup.html
+89605d85729d1667efeac59fd9c2c5adfcc1670b0cb47a5f23bebfad135c02fa  ./handbook/24-optional-tools.html
+fc732e9ca3b449fa8dd7a4975a3b6eeb5ba3029bc6740d7698d1608ef832f968  ./handbook/25-common-questions.html
+aabd0bd0970578ccb7f2ff35dbd8930c5ea02da183187574f2fcd9537f966861  ./handbook/26-rename-move-and-switch.html
+ca9bac7b3546d857beb24a291535dbdab053f688849ecd58becbe8d9a2d6ac98  ./handbook/assets/handbook.css
 131ac88750ece8f64886cb58d41bdc1d1f93a763069a79d617e7db0a9bdaed68  ./handbook/assets/logo.png
+a9376e87c0aebfa5a4b0c9ba0316556e7317e1725f5a180c7f3832c3701817e4  ./handbook/assets/search-index.js
+442ba34846ff2fb0a416a16b02f7d9c3d776537dda477c5962003639e4913efc  ./handbook/assets/search.js
 5bab6ff55d440e88b3d68faf614682a0db8972d9a5e4cfc5d3a817c1ce1e81c6  ./lab/01-prepare-ubuntu.sh
 7beb9f12f00008a962fd5f5cfb99d16615b632d1bfb8ac988c7122b478763c98  ./lab/02-install-docker.sh
 986c13b241a0cff51c738318ea2b0c78854a1600a821faed39659c193313229c  ./lab/03-start-garden.sh
@@ -433,7 +448,7 @@ a2048e10673ce066012fe88f2457ae9b256c251ab254421d464d3c2ee63dc56a  ./lab/08-insta
 7adf29ba60b1cc5f348d000f317dbef93f132bb81baf55aa0ca6bd6c33333753  ./lab/README.md
 b85b54548276238e60973b088b693a841d9dcc29adb83800592abfcce2e6bfd1  ./lang/check_ko.py
 6faf2d0a44fac6d534d809122765229e43e7c8345362b6fd3ca66be48b03226a  ./lang/extract_strings.py
-2da47db3d64056dc051ffa15e90b3c5bd7bc0ed4e41d15a4e4e35493d8db33cd  ./lang/ko.tsv
+8f3357b03481fe8c8e8681c7531abcefaad7d1758c8cf09f852e5c6771464ca4  ./lang/ko.tsv
 3a1eb00630471caba8f9387e3cdaad1febc2c8bd011823e5dc8ed04d4fde8ec5  ./rust/Cargo.lock
 38081d49ceaa9175e0c2fb6c1ec8cf88a205f975176cc3a92f129264af0a737f  ./rust/Cargo.toml
 adfd36f1d42da33b08398f00bd5bfea2097216c84f8c001d8e2b99ab6ecfbd48  ./rust/Dockerfile
@@ -560,25 +575,38 @@ f12fc50f882be9acdc56459d60e9cbf07bb7b72c21cc0970b985dbab514bc863  ./site/section
 9ab16c4cce9d66fe9af04b644f982856f3a26de7dcf25a3b4152058b0a0a2b4f  ./site/style.css
 03f3f1a37f3b1a2c85ba604af86d1a5967b375ffbfd267550fe4fc115732a226  ./site/user-notes.css
 eb2701c375a4765de583d59b8366bbe485211c798e59c6d8d89f7a94bac8b793  ./tools/check-secrets.sh
-9715e3dece8b526692164df1870d3ba59d4d04113288382881f406759ba130b4  ./tools/release/README.md
+60511939a888fc2eede78d044e48094b92f2b5101adb73d13d6e3482c3bc36ee  ./tools/release/README.md
 975ceb41bb63e938a1ee6f8f6139692f1c9be0e3ae3037d80c89ddb0985cdd6a  ./tools/release/build_release.py
+cd7809370144bcf2673ad4f7d08330e4a4725509b4567006366e0b2aae1b8407  ./tools/release/capture-menus.sh
 3eaffe391b6b36b2ca6d03ef8df99b7009b592d6fc92cec24998992d4756f86c  ./tools/release/check_ko_guides.py
 5f932322c94a95c367806dc73239d827b9475dea8dc4efec1291dc6b3915ffce  ./tools/release/check_links.py
 2c315094b7907b659518c66029cd0be4bcc09db0f40abc3fcbb1fe5460359ff5  ./tools/release/clean-pictures/wizard-0-onedrive.png
 5510ce5a8aa5c5a8b173a3984aca53d1911f2ec1968bbe484391676dc3834424  ./tools/release/clean-pictures/wizard-1-welcome.png
-433d82978abe7ae1a78aa747e214f22c5c022cd7308dc4d5c7e7d6dd28de59b3  ./tools/release/clean-pictures/wizard-2-where.png
+2324e8787fd8315f4647c1114dd81f3c738ab2eddef5613f75430b7fc6da2341  ./tools/release/clean-pictures/wizard-2-where.png
+308c7c657e34cc631c730d235c50a23b25ec4ad415907c7f251f2226674087f0  ./tools/release/clean-pictures/wizard-2b-this-pc.png
 162830bdb7573a0a622aa4e7d0d957d26419fb9c8b06b3d489a896c7d37a3394  ./tools/release/clean-pictures/wizard-3-about-you.png
 730b5138869f28c9f1b4f36fee41ebd6d1235c9addca8e6287e316b1f9648627  ./tools/release/clean-pictures/wizard-4-what-gets-installed.png
 0e2c4932b609fae23b23050b7337a34fe39f890503c1da75d675f88d48520a3c  ./tools/release/clean-pictures/wizard-5-install.png
 60d5a7bdf32e2db8f1ffa21c65d24493504fb14098040f2b4850a939a26d437e  ./tools/release/clean-pictures/wizard-6-done.png
+a07f5113e582a987fa5e0ff1e9835bb4346a27031894ad2bc533cbb0667a04ba  ./tools/release/export-from-server.sh
 9c1bd88957a7260c090fced0ced372cd0984bcff395d965efbe9b1970a6da705  ./tools/release/make_docker_svgs.py
-49204d76bfa23f2dd82a7f73f6b4e87fb2f70c0c0d08e927725d3762d5178bd1  ./tools/release/make_handbook.py
-5fd3c949ae70ca38ca508370f627f6e254d92f5363e7b638aa4aa2277493a736  ./tools/release/make_pdfs.py
+6418fe4941e23ca31324fcd5f4c866f4f439ae53ad42f83f4e118d3c6379cfb7  ./tools/release/make_handbook.py
+8c8cc92f8e6924440125355bbdb19cc42aaa0bc931436c491c70d6b5df58fee6  ./tools/release/make_menu_pictures.py
+f7cbb69165a03a53c7d11e8803218d7f272a2f81da8d4db6bce3108a81661706  ./tools/release/make_pdfs.py
 c29dde4382b49b480b84372190cf78fe38bdf93e4139ab75809b251110d43a54  ./tools/release/make_small_test.py
 49a741bfe1d15d83eb7f176abf4298452dc67a85ddfd2b1cd998e78ad94a8bdd  ./tools/release/make_zip.py
-947e7e9bf78227fbe59d1c87675fdcc52d5d75714a063b0af96ac8c011190da5  ./tools/release/mark_pictures.py
+b2b8a90c718ae193266b06ddfa792fe5ed1cd664be3079f2e519d505f2fa79f1  ./tools/release/mark_pictures.py
 cec7e5f90b6e67e21a3bf3916646a0e4b37f02b457d86bc4a1982f8d442e0013  ./tools/release/place_screenshots.py
-ae5a221bcdafe96c7d22b07988ae9a75c351024ea0c7dd4413d16632474e9a98  ./tools/release/shoot-wizard.ps1
+2ed2dec1811db27a9eeda0596b75419f84c8450fd11261d3fcae0b6bc41e79e5  ./tools/release/shoot-wizard.ps1
 6c48b4752203c7ae9f4b9bf37a94540e85b0af9ee7336144b3e415b7e2ea245c  ./tools/release/term_shot.py
-bb589ea308139d625125d478868fe8ef7413a5a590b5fcd29e3f71cb933334e2  ./windows/Garden-Menu.ps1
-8c8a55178fea59ce91ed072099419021cb26693c823fc825c4de1a6b0c3b4692  ./windows/Garden-Setup.ps1
+b8960229de129e630604ad93c20a761084965e09d7b4a4fd33ac3b3af7b82579  ./tools/release/tests/check-after-install.sh
+834408e088d0fc82e40ae3063dd583dd13de193c6d6ce822768cff23cdac0b32  ./tools/release/tests/drive-cycle.ps1
+1f059e41b9c7b098505654ae3c8978c39081dd89aafd981571fe004e63d5ceb6  ./tools/release/tests/test-all-options.sh
+8d68991bf94f2e3fdda8210db24ef7693d58fe194e2108be2af80101f1650e14  ./tools/release/tests/test-linux-from-drive.sh
+06a709b969fdcf60b594bfcbffe3726a916ffe0e3941e1c20e989a8cb89a7261  ./tools/release/tests/test-rename-and-switch.sh
+1162ea48384c7954b703ead215f7d1d9a8a9b52373e777ae26b78f7c7fe84495  ./tools/release/tests/test-webname.sh
+e515452e69a327a7024431bff394073c52e7669f87e4d659957005248fe78a46  ./tools/release/tests/test-windows-functions.ps1
+f5444b3d7176d1bda37572fdcab05b26b0fcbba4598f776dec3be958e3e20a3d  ./tools/release/upload-to-drive.sh
+5344e5626dbed6253ffadbdf48afd3161340aca261691a503d3dfeb8749fcffa  ./windows/Garden-Menu.ps1
+e254f56b06a211b8edd70f96b101eed948717a905ce0b7298b86920b477ea2f3  ./windows/Garden-Network.ps1
+93c3738ebf9f47adbbdb0f1f98645104b43b922b37ed256c892c34a2347efd08  ./windows/Garden-Setup.ps1

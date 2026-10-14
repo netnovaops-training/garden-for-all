@@ -172,15 +172,18 @@ sign-in page and still through only the two router ports. Guide 04, "Advanced". 
       a window with <strong>Next</strong> and <strong>Back</strong> buttons.
       <div class="note">The garden always <strong>runs on Ubuntu</strong>. The installer asks where:
         <br>&bull; <strong>Another computer at home</strong> (an Ubuntu laptop or a Raspberry Pi, recommended): you type its
-        <strong>local IP address</strong> (on that computer type <code>hostname -I</code>; it looks like <code>192.168.1.50</code>)
-        and your user name there. It copies everything over and installs it there. That computer needs the SSH server once:</div>
+        <strong>local IP address</strong> (on that computer type <code>hostname -I</code>; it looks like <code>192.168.1.50</code>,
+        or click <strong>Find it for me</strong> and pick it from the list) and your user name there. It copies everything over and installs it there. That computer needs the SSH server once:</div>
       <div class="cmd"><code>sudo apt install -y openssh-server</code><button class="copy" type="button">Copy</button></div>
       <div class="note">&bull; <strong>This Windows PC</strong>: Windows installs its own Ubuntu (WSL, by Microsoft) and the
         garden runs in it. Here the garden is <strong>for using on this PC itself</strong>. Putting it on the internet, and
         showing it to phones and other computers at home, needs a separate garden computer (an Ubuntu laptop or a Pi):
         Windows' own Ubuntu has its own internal address inside the PC that the router and your phones cannot reach.
         (To learn more: <a href="https://learn.microsoft.com/windows/wsl/networking">WSL networking, by Microsoft</a>;
-        the garden does not set this up.)</div>
+        the garden does not set this up.)
+        <br>Then it asks which Docker runs the garden's programs: <strong>Docker Desktop</strong>, the easy way, with buttons
+        to see, start and stop them (the installer gets it for you), or <strong>Docker inside Ubuntu</strong>, the
+        hands-on way. Guide 26 compares them.</div>
       <p><strong>If you choose This Windows PC</strong>, the first time goes like this:</p>
       <ul>
         <li>Windows asks permission to switch WSL on (click <strong>Yes</strong>), then needs <strong>one restart</strong>.
@@ -257,7 +260,7 @@ sign-in page and still through only the two router ports. Guide 04, "Advanced". 
   <div class="card"><h4>Optional (it asks)</h4>
     Garden tools (<code>/beds</code>), the wiki, email with your Gmail, a desktop icon.</div>
   <div class="card"><h4>Advanced (later, menu <code>M</code>)</h4>
-    The front door: HTTPS (Caddy), your sign-in page (Authelia), your web name (No-IP), router ports 80 and 443. Also n8n, the database viewer, local AI.</div>
+    The front door: HTTPS (Caddy), your sign-in page (Authelia), your web name (No-IP), router ports 80 and 443. Also n8n, the database viewer, local AI, Tailscale (reach it from anywhere), your own names for folders and pages, and the on / off switch (guide 26).</div>
 </div>
 
 <h2>If something stops or looks stuck</h2>

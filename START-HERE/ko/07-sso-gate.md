@@ -9,7 +9,7 @@
 - 관문이 일부러 두 개예요: 정원을 바꾸려면 로그인해야 하고, `gardeners` 그룹에도 들어 있어야 해요.
 - 웹사이트와 로그인 페이지에 비밀번호 하나: 메뉴 `U`, `5`.
 - 사람 관리는 메뉴 `U`: `2`는 편집할 수 있는 사람 추가, `3`은 게스트 추가, `4`는 사람 지우기, `8`은 모두 잠그기예요.
-- 더 튼튼하게: 휴대폰 코드(2단계 인증). `local/authelia/configuration.yml`에서 `one_factor`를 `two_factor`로 바꾸고, 메뉴 `2`.
+- 더 튼튼하게: 휴대폰 코드(2단계 인증). `local/authelia/configuration.yml`에서 `one_factor`를 `two_factor`로 바꾸고, `docker compose restart authelia`.
 - 비밀번호를 틀려서 잠겼나요? 10분 기다리세요.
 
 ---

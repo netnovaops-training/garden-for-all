@@ -77,7 +77,7 @@ The test email arrives. The next Sunday at 8 am another one arrives by itself.
 |---|---|
 | `ECONNREFUSED` for port 8030 | The garden is not running. `docker compose up -d` in the project folder, then `curl http://127.0.0.1:8030/healthz`. |
 | `ECONNREFUSED` for port 8123 | Home Assistant is not running: `bash lab/07-start-extras.sh ha`. |
-| n8n will not open at `localhost:5678` | `docker logs n8n` shows why. Check that no other program uses port 5678: `sudo ss -ltnp` (look for :5678). |
+| n8n will not open at `localhost:5678` | `docker logs garden-n8n` shows why. Check that no other program uses port 5678: `sudo ss -ltnp` (look for :5678). |
 | 401 from Home Assistant | The token is wrong or has no `Bearer ` in front. Make a new token. |
 | `state` is `unavailable` | The sensor is offline. Check Project 6. |
 | No email on Sunday | The workflow must be **Active**. Check **Executions** (left menu) for errors. |

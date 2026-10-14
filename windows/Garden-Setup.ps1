@@ -26,6 +26,7 @@ Add-Type -AssemblyName System.Drawing
 
 $Root = Split-Path -Parent $PSScriptRoot          # the garden folder
 $Menu = Join-Path $PSScriptRoot "Garden-Menu.ps1"  # the program that does the work
+. (Join-Path $PSScriptRoot "Garden-Network.ps1")  # this PC's address; find computers at home
 $Progress = $null                                   # where the install writes its steps
 
 # ---------- first: not inside OneDrive -------------------------------------------
@@ -216,14 +217,56 @@ $btnTest.add_Click({
     } catch { $lbTest.Text = "That address does not look right."; $lbTest.ForeColor = [Drawing.Color]::DarkRed }
     finally { $c.Close() }
 })
+# Find the garden computer for you: the computers at home with the SSH door open.
+$btnFind = New-Object Windows.Forms.Button; $btnFind.Text = "Find it for me"; $btnFind.Location = New-Object Drawing.Point(530, 161); $btnFind.AutoSize = $true
+$p2.Controls.Add($btnFind)
+$mnFound = New-Object Windows.Forms.ContextMenuStrip
+$btnFind.add_Click({
+    $lbTest.Text = "Looking on your home network for computers with the SSH door (port 22)..."; $lbTest.ForeColor = [Drawing.Color]::Black
+    $form.Cursor = [Windows.Forms.Cursors]::WaitCursor; [Windows.Forms.Application]::DoEvents()
+    $found = @(Find-Home-Computers)
+    $form.Cursor = [Windows.Forms.Cursors]::Default
+    if ($found.Count -eq 0) {
+        $lbTest.Text = "None found. Is it on, with the SSH server installed? Or type its address."; $lbTest.ForeColor = [Drawing.Color]::DarkRed; return
+    }
+    $lbTest.Text = "Found $($found.Count). Pick the garden computer from the list."; $lbTest.ForeColor = $green
+    $mnFound.Items.Clear()
+    foreach ($f in $found) {
+        $it = $mnFound.Items.Add(("{0}   {1}" -f $f.IP, $f.Name).Trim()); $it.Tag = $f.IP
+        $it.add_Click({ param($s, $e) $tbIp.Text = $s.Tag; $lbTest.Text = "Chosen: $($s.Tag). Now your user name on it." })
+    }
+    $mnFound.Show($btnFind, (New-Object Drawing.Point(0, $btnFind.Height)))
+})
+$me = Get-This-PC
 $rbWsl = New-Object Windows.Forms.RadioButton
 $rbWsl.Text = "This Windows PC, inside Windows' own Ubuntu (WSL)"
+if ($me) { $rbWsl.Text = "This Windows PC ($($me.Name), $($me.IP)), inside Windows' own Ubuntu (WSL)" }
 $rbWsl.Location = New-Object Drawing.Point(26, 282); $rbWsl.AutoSize = $true
 $p2.Controls.Add($rbWsl)
 Add-Text $p2 ("Windows installs Ubuntu as an app (by Microsoft and Canonical) and the garden runs in it exactly like " +
     "on a real Ubuntu computer. The PC must stay on and signed in for the website to be up. " +
     "Switching WSL on the first time needs your permission and one restart.") 308 70 | Out-Null
 Add-Link $p2 "What is WSL? (Microsoft)" "https://learn.microsoft.com/windows/wsl/about" 40 382 | Out-Null
+# On this PC only: which Docker runs the garden's programs. (A panel of its own,
+# so these two buttons do not switch off the two above.)
+$pnEngine = New-Object Windows.Forms.Panel
+$pnEngine.Location = New-Object Drawing.Point(40, 406); $pnEngine.Size = New-Object Drawing.Size(680, 96)
+$p2.Controls.Add($pnEngine)
+$rbDesktop = New-Object Windows.Forms.RadioButton
+$rbDesktop.Text = "Docker Desktop: the easy way to manage it, with buttons (recommended on this PC)"
+$rbDesktop.Location = New-Object Drawing.Point(0, 0); $rbDesktop.AutoSize = $true; $rbDesktop.Checked = $true
+$pnEngine.Controls.Add($rbDesktop)
+$rbEngine = New-Object Windows.Forms.RadioButton
+$rbEngine.Text = "Docker inside Ubuntu: the hands-on way, the same as on any Ubuntu computer"
+$rbEngine.Location = New-Object Drawing.Point(0, 26); $rbEngine.AutoSize = $true
+$pnEngine.Controls.Add($rbEngine)
+$lbEngine = New-Object Windows.Forms.Label
+$lbEngine.Text = ("Docker Desktop is a free Windows app (personal use) that shows the garden's programs with start, " +
+    "stop and message buttons. The install gets it for you and shows the one switch to turn on.")
+$lbEngine.Location = New-Object Drawing.Point(0, 52); $lbEngine.Size = New-Object Drawing.Size(680, 40)
+$pnEngine.Controls.Add($lbEngine)
+$pnEngine.Enabled = $false
+$rbWsl.add_CheckedChanged({ $pnEngine.Enabled = $rbWsl.Checked })
 
 # ---------- page 3: about you -------------------------------------------------------------
 $p3 = New-Page "About you"
@@ -347,7 +390,8 @@ $timer = New-Object Windows.Forms.Timer; $timer.Interval = 5000
 $btnGo.add_Click({
     $parts = @(); if ($cbBeds.Checked) { $parts += "beds" }; if ($cbWiki.Checked) { $parts += "wiki" }; if ($cbN8n.Checked) { $parts += "n8n" }
     $a = "-NoProfile -ExecutionPolicy Bypass -File `"$Menu`" -Action install -Name $($tbName.Text.Trim()) -Email $($tbEmail.Text.Trim()) -Parts `"$($parts -join ',')`""
-    if ($rbRemote.Checked) { $a += " -Mode remote -RemoteHost $($tbIp.Text.Trim()) -RemoteUser $($tbUser.Text.Trim())" } else { $a += " -Mode wsl" }
+    if ($rbRemote.Checked) { $a += " -Mode remote -RemoteHost $($tbIp.Text.Trim()) -RemoteUser $($tbUser.Text.Trim())" }
+    else { $a += " -Mode wsl -Engine $(if ($rbDesktop.Checked) { 'desktop' } else { 'engine' })" }
     # A new web name, or the one it came with (then the black window does not ask again).
     if ($rbNewName.Checked -and $tbWebName.Text) { $a += " -WebName $($tbWebName.Text)" } else { $a += " -WebName $curName" }
     # -NoExit keeps the black window open at the end, so you can read it.

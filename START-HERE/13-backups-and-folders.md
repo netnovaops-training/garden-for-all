@@ -10,8 +10,8 @@
 - Keep 3 copies: on the garden computer, on your NAS (menu `6`, then `4`) and on Google Drive (menu `6`, then `5`). A second NAS or a PC's shared folder can get every backup too (menu `6`, then `13`; up to 3 network places).
 - A Windows PC can collect a copy every week, into a folder you pick: Windows menu, `M`, then `13`.
 - A backup on the same laptop does not protect you from a broken laptop. Copy one to a USB stick now and then.
-- To move or rename one of the garden's folders (photos, backups and so on), use menu `8`, then `8`.
-- Never rename the folders inside your photos folder, or photo files, by hand.
+- To rename or move a file or folder (photos, pages, backups and so on), use menu `M`, then `18` (or menu `8`, then `8`). Every place that uses it changes with it: guide 26.
+- Do not rename the folders inside your photos folder, or photo files, by hand: use that menu, so the website and the database follow.
 
 ---
 
@@ -306,9 +306,9 @@ name, so it restores fine even if the folders are named differently there.
 
 ## Renaming or moving folders
 Every folder the garden uses is set in ONE place, and **Settings** changes it for
-you: menu `8`, then `8` (Move or rename a folder). It stops the garden, moves the
-folder, saves the new name, and starts again. The checklist then confirms every
-folder is found.
+you: menu `8`, then `8` (Rename or move a file or folder), then `2`. It stops the
+garden, moves the folder (to another disk too), saves the new place, and starts
+again. The checklist then confirms every folder is found. Guide 26 shows every step.
 
 | Setting | Default | Holds |
 |---|---|---|
@@ -321,19 +321,20 @@ folder is found.
 | `AUTH_DIR` | `./local/authelia` | the sign-in page |
 | `BACKUP_DIR` | `./backups` | backups |
 
-**Never rename these by hand:**
+**Do not rename these by hand** (the website would lose them):
 - **The folders INSIDE your photos folder** (`Database`, `Gallery`, `post`, `blog`,
   `plan`, `HeroBanner`). The website looks for exactly those names.
 - **Photo file names.** The database remembers each photo by its name.
-  Rename one and the page shows a broken picture. Upload a new photo through the
-  website instead.
 
-**Moving the whole garden folder** (for example into `~/Projects/`):
-1. Menu `3` (stop).
-2. Move the folder.
-3. Open the menu from its new place and choose `1` (install). It carries on,
-   and fixes the desktop icon and the nightly backup line, which remember the
-   folder's full path.
+To give them your own names, use menu `M`, then `18`, then `1`: it renames the folder
+or file AND changes every place that uses the name (code, pages, photo lists,
+database), with a backup first. The guides keep showing the first names;
+`logs/renames.tsv` lists what is called what now. Guide 26.
+
+**Moving the whole garden folder** (for example to a bigger disk): menu `M`, then
+`18`, then `3`. It stops the garden, moves it, counts the files, and fixes the
+desktop icon, the nightly backup line and Docker's programs, which remember the
+folder's full path. Guide 26.
 
 ## Read more
 - tar (the archive format): <https://www.gnu.org/software/tar/manual/>

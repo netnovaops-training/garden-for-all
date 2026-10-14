@@ -245,12 +245,13 @@
 - **무엇을 하나요:** Subdomains(하위 도메인) 메뉴를 열어요(아래에 따로 부분이 있어요).
 - **명령:** `bash garden.sh subdomains`. **안내서:** [`04-go-public-no-ip-caddy.md`](04-go-public-no-ip-caddy.md)(고급).
 
-### 14) Turn the front door off (take the garden off the internet) — 정문 끄기(정원을 인터넷에서 내리기)
-- **무엇을 하나요:** Caddy를 멈추고, 방화벽에서 문 80과 443(그리고 집에서만 쓰는 문)을 닫고, No-IP 업데이트 프로그램과 DuckDNS 업데이트 프로그램을 멈추고, 로그인 페이지를 꺼요. 정원은 집에서 계속 실행돼요.
-- **언제 쓰나요:** 정원을 잠시 인터넷에서 내리고 싶을 때, 또는 옮기기 전에.
-- **무엇을 설치하거나 바꾸나요:** Caddy와 No-IP 업데이트 프로그램은 꺼져요(지워지지는 않아요). DuckDNS cron 줄은 지워져요. `.env`: 웹 이름이 비워지고, 주소가 localhost로 돌아가요.
-- **되돌리려면:** More, 1을 다시 하세요(No-IP 업데이트 프로그램을 다시 켜요). 하위 도메인이 있었다면 Subdomains, 1도 하세요(DuckDNS 업데이트 프로그램을 다시 추가해요). 완전히 닫고 싶다면, 공유기에서 80과 443 전달도 직접 지우세요.
-- **명령:** `bash garden.sh offline`
+### 14) On / off: the whole garden, or only off the internet; check-up, clean-up — 켜기 / 끄기: 정원 전체, 또는 인터넷에서만 내리기; 점검, 정리
+- **무엇을 하나요:** 여섯 가지 선택이 있는 화면 하나예요. `1`은 모두 꺼요(`docker compose down`, `-v` 없이: 아무것도 지우지 않아요). 현관문도 멈춰요. `2`는 몇 달 뒤에도 모두 다시 켜고 웹사이트를 확인해요. `4`는 멈춘 프로그램을 다시 시작해요. `5`는 Docker의 남은 것(7일이 넘은 정원 프로그램의 옛 버전, 오래된 빌드 기록)을 물어본 뒤 지워요. Enter는 '아니요'예요. `6`은 6시간마다 점검을 해요.
+- **`3`, 인터넷에서만 내리기:** Caddy를 멈추고, 방화벽에서 문 80과 443(그리고 집에서만 쓰는 문)을 닫고, No-IP 업데이트 프로그램과 DuckDNS 업데이트 프로그램을 멈추고, 로그인 페이지를 꺼요. 정원은 집에서 계속 실행돼요.
+- **언제 쓰나요:** `1`은 한동안 사이트를 운영하고 싶지 않을 때나 접속이 너무 많을 때. `3`은 인터넷에서는 내리고 집에서는 쓰고 싶을 때, 또는 옮기기 전에. `5`는 디스크가 찰 때.
+- **무엇을 설치하거나 바꾸나요:** `1`은 `.garden-off`를 만들어요(그 파일이 있는 동안 밤 백업도 쉬어요). `3`: Caddy와 No-IP 업데이트 프로그램은 꺼져요(지워지지는 않아요). DuckDNS cron 줄은 지워지고, `.env`의 웹 이름이 비워지고 주소가 localhost로 돌아가요. `6`은 cron 한 줄이에요.
+- **되돌리려면:** `1`: `2`를 고르세요. `3`: More, 1을 다시 하세요(No-IP 업데이트 프로그램을 다시 켜요). 하위 도메인이 있었다면 Subdomains, 1도 하세요. 완전히 닫고 싶다면 공유기에서 80과 443 전달도 직접 지우세요. `6`: 다시 고르세요.
+- **명령:** `bash garden.sh power`, 또는 바로 `bash garden.sh off`, `bash garden.sh on`, `bash garden.sh offline`(`3`), `bash garden.sh checkup`, `bash garden.sh cleanup`. 안내서: [`26-rename-move-and-switch.md`](26-rename-move-and-switch.md).
 
 ### 15) AI cost control: LiteLLM gateway with a monthly limit (on / off) — AI 비용 관리: 월 한도가 있는 LiteLLM 게이트웨이(켜기 / 끄기)
 - **무엇을 하나요:** LiteLLM을 켜거나, 켜져 있으면 관리해요(아래 "AI 비용 관리(LiteLLM)"를 보세요).
@@ -285,6 +286,14 @@
 - **무엇을 설치하거나 바꾸나요:** `tailscale` 프로그램(Tailscale 자체의 패키지 저장소에서 와요)과 방화벽 줄 하나. 공유기에는 포트를 하나도 열지 않아요.
 - **되돌리려면:** 같은 항목을 다시 고르세요(연결을 끊고 방화벽 줄을 지워요). 프로그램까지 지우려면 `sudo apt remove tailscale`.
 - **명령:** `bash garden.sh tailscale`
+
+### 18) Rename or move a file or folder (every place that uses it follows) — 파일이나 폴더 이름 바꾸기 또는 옮기기(그것을 쓰는 모든 곳이 따라와요)
+- **무엇을 하나요:** 네 가지 선택. `1`은 웹사이트의 파일이나 폴더(사진 폴더, 페이지, 데이터 파일)의 이름을 바꾸고, 그 이름을 쓰는 모든 곳을 바꿔요: 코드, 페이지, 사진 목록, 데이터베이스 줄. `2`는 큰 폴더 하나를 다른 곳이나 다른 디스크로 옮겨요(예전 설정 8과 같아요). `3`은 정원 폴더 전체를 옮겨요. `4`는 지금까지 바꾸거나 옮긴 것을 보여 줘요. 먼저 모든 곳을 보여 주고, 백업을 권하고, 내가 `y`를 입력하기 전에는 아무것도 바꾸지 않아요.
+- **언제 쓰나요:** 웹사이트에 내 이름을 붙이고 싶을 때, 또는 정원을 더 큰 디스크로 옮기고 싶을 때.
+- **무엇을 설치하거나 바꾸나요:** 그 이름, 그것을 쓰는 모든 곳, 사진 폴더 이름을 바꾸면 `.env`의 `IMAGE_FOLDERS`, git 기록 한 줄, `logs/renames.tsv`의 한 줄. 바꾸는 것의 사본은 먼저 `logs/rename_DATE/`에 남겨요.
+- **되돌리려면:** 다시 골라서 원래 이름으로 바꾸세요.
+- **알아 두기:** 안내서에는 계속 정원이 처음 가진 이름이 나와요.
+- **명령:** `bash garden.sh rename`. 안내서: [`26-rename-move-and-switch.md`](26-rename-move-and-switch.md).
 
 ## Backups (6): 백업 메뉴
 
@@ -421,12 +430,12 @@
 - **무엇을 하나요:** 이름만이 아니라 정문 단계 전체를 열어요(More, 1과 같아요).
 - **되돌리려면:** More, 14. (파일에 적힌 이름을 바꾸려면 More, 16을 쓰세요.)
 
-### 8) Move or rename a folder — 폴더 옮기기 또는 이름 바꾸기
-- **무엇을 하나요:** 정원 폴더 8개(웹사이트 파일, 사진, 데이터, 캐시, 데이터베이스, n8n, 로그인 페이지, 백업)를 보여 줘요. 하나를 고르고 새 위치를 입력하세요. 정원을 멈추고, 폴더를 옮기고, `.env`를 업데이트하고, 다시 시작해요.
-- **언제 쓰나요:** 폴더를 다른 곳에 두거나 다른 이름으로 바꾸고 싶을 때.
+### 8) Rename or move a file or folder — 파일이나 폴더 이름 바꾸기 또는 옮기기
+- **무엇을 하나요:** 더 보기 18과 같아요(네 가지 선택). `2`를 고르면 정원 폴더 8개(웹사이트 파일, 사진, 데이터, 캐시, 데이터베이스, n8n, 로그인 페이지, 백업)를 보여 줘요. 하나를 고르고 새 위치를 입력하세요. 정원 폴더 안이나 다른 Linux 디스크도 돼요. 정원을 멈추고, 폴더를 옮기고, `.env`를 업데이트하고, 다시 시작해요.
+- **언제 쓰나요:** 폴더를 다른 곳에 두고 싶을 때, 또는 웹사이트의 파일이나 폴더에 내 이름을 붙이고 싶을 때(`1`).
 - **무엇을 설치하거나 바꾸나요:** 폴더의 위치와 `.env`의 그 줄. 백업 폴더를 옮기면 매일 밤 백업의 cron 줄도 다시 써요.
 - **되돌리려면:** 8을 다시 고르고 원래 자리로 옮기세요.
-- **안내서:** [`13-backups-and-folders.md`](13-backups-and-folders.md).
+- **안내서:** [`13-backups-and-folders.md`](13-backups-and-folders.md), [`26-rename-move-and-switch.md`](26-rename-move-and-switch.md).
 
 > **왜 파일 탐색기가 아니라 메뉴로 하나요?**
 > 정원은 폴더마다 `.env`에 있는 한 줄로 그 폴더를 찾아요(예: `IMAGES_DIR=./local/images`).
@@ -709,7 +718,7 @@ Windows 메인 메뉴는 Ubuntu와 **같은 번호와 글자**를 쓰고, **T**�
 
 ### 1) INSTALL  (first time, or carry on, or repair) — 설치(처음, 이어서 하기, 또는 고치기)
 - **시작하기 전에:** 정원 폴더가 OneDrive 안에 있으면, `Start-Here-Windows.cmd`가 먼저 폴더를 OneDrive 밖으로(`C:\Users\<you>\junsgarden-for-jun`, 또는 내가 고른 곳으로) 옮기자고 해요. 모든 파일이 도착했는지 확인하고, 새 위치에서 설치 프로그램을 열어요. 예전 폴더는 절대 대신 지우지 않아요. Windows 메뉴의 INSTALL도 이것을 알려 줘요. 안내서: [`00b-before-you-start.md`](00b-before-you-start.md), "바탕 화면이 OneDrive 안에 있다면".
-- **무엇을 하나요:** 아직 고르지 않았다면 정원이 어디서 실행될지 물어봐요(T를 보세요). 다른 컴퓨터: SSH 포트를 확인하고, 이 PC의 SSH 키를 만들어 거기에 추가해요(그 컴퓨터의 비밀번호를 한 번 입력해요). 이 PC: WSL을 켜고(그다음 Windows를 한 번 다시 시작해요), `JunsGarden`이라는 이름으로 Ubuntu 24.04를 설치하고, Ubuntu 사용자를 만들어요. 그다음 물어봐요: 웹 이름을 그대로 쓸지, 새로 고를지. 정원 폴더와 최신 백업을 복사하고, 사진 zip과 위키 zip을 정원 폴더, 바탕화면(OneDrive 바탕화면도), 또는 Downloads에서 바로 그쪽으로 보내고(PC에 사본을 하나 더 만들지 않아요), 거기서 `garden.sh install`을 실행해요.
+- **무엇을 하나요:** 아직 고르지 않았다면 정원이 어디서 실행될지 물어봐요(T를 보세요). 다른 컴퓨터: SSH 포트를 확인하고, 이 PC의 SSH 키를 만들어 거기에 추가해요(그 컴퓨터의 비밀번호를 한 번 입력해요). 이 PC: WSL을 켜고(그다음 Windows를 한 번 다시 시작해요), `JunsGarden`이라는 이름으로 Ubuntu 24.04를 설치하고, Ubuntu 사용자를 만들어요. Docker Desktop을 고르면 필요할 때 Docker Desktop을 설치하고(winget) WSL integration 스위치를 기다려요(안내서 26). 그다음 물어봐요: 웹 이름을 그대로 쓸지, 새로 고를지. 정원 폴더와 최신 백업을 복사하고, 사진 zip과 위키 zip을 정원 폴더, 바탕화면(OneDrive 바탕화면도), 또는 Downloads에서 바로 그쪽으로 보내고(PC에 사본을 하나 더 만들지 않아요), 거기서 `garden.sh install`을 실행해요.
 - **무엇을 설치하거나 바꾸나요:** 이 PC에: `.ssh\id_ed25519`(새로 만든 경우), `.garden-target-windows.txt`. WSL을 쓰면 Windows 안의 Ubuntu, 그리고(yes라고 하면) 작업 스케줄러(Task Scheduler) 작업 "Jun's Garden keep running". 이 작업은 내가 로그인해 있는 동안 Ubuntu가 계속 켜져 있게 해요. 정원 컴퓨터에: 메뉴 1이 설치하는 모든 것.
 - **되돌리려면:** 정원 컴퓨터에서 More 12(Uninstall). Windows 안의 Ubuntu와 작업 스케줄러 작업은 메뉴가 지우지 않아요. Windows에서 직접 지우세요.
 
@@ -721,7 +730,7 @@ Windows 메인 메뉴는 Ubuntu와 **같은 번호와 글자**를 쓰고, **T**�
 - **무엇을 하나요:** 정원 컴퓨터에서 언어 선택을 실행해요(Ubuntu의 L과 같아요).
 
 ### T) Choose the garden computer — 정원 컴퓨터 고르기
-- **무엇을 하나요:** 1) 집에 있는 다른 컴퓨터(그 컴퓨터의 로컬 IP와, 거기서 쓰는 사용자 이름을 물어봐요), 또는 2) WSL 안의, 이 Windows PC.
+- **무엇을 하나요:** 1) 집에 있는 다른 컴퓨터(그 컴퓨터의 로컬 IP와, 거기서 쓰는 사용자 이름을 물어봐요), 또는 2) WSL 안의, 이 Windows PC. 1은 `F`를 입력하면 SSH가 열린 집의 컴퓨터를 찾아 줘요. 2는 그다음 물어요: Docker Desktop(쉬운 방법) 또는 Ubuntu 안의 Docker.
 - **무엇을 설치하거나 바꾸나요:** 선택을 `.garden-target-windows.txt`에 저장해요(IP와 사용자 이름만, 비밀번호는 절대 저장하지 않아요).
 - **되돌리려면:** T를 다시 고르세요.
 
@@ -736,15 +745,17 @@ Windows 메인 메뉴는 Ubuntu와 **같은 번호와 글자**를 쓰고, **T**�
 | 11, 12 | Ubuntu와 같아요 | 11, 12 |
 | 13 | Weekly automatic copy of the backup to THIS PC (on / off)(매주 이 PC로 백업 자동 복사, 켜기 / 끄기) | (Windows에만 있어요) |
 | 14 | Subdomains with DuckDNS(DuckDNS 하위 도메인) | 13 |
-| 15 | Turn the front door off(정문 끄기) | 14 |
+| 15 | On / off: the whole garden, or only off the internet; check-up, clean-up(켜기 / 끄기, 점검, 정리) | 14 |
 | 16 | AI cost control: LiteLLM(AI 비용 관리: LiteLLM) | 15 |
 | 17 | Website name swap(웹사이트 이름 바꾸기) | 16 |
 | 18 | Desktop shortcuts: Garden terminal (SSH) and Garden screen (Remote Desktop)(바탕화면 바로 가기: Garden terminal(SSH)과 Garden screen(원격 데스크톱)) | (Windows에만 있어요) |
 | 19 | Reach the garden from anywhere, privately (Tailscale): on / off(어디서나 나만 정원에 닿기(Tailscale): 켜기 / 끄기) | 17 |
+| 20 | Rename or move a file or folder(파일이나 폴더 이름 바꾸기 또는 옮기기) | 18 |
+| 21 | Find the garden computer again(정원 컴퓨터 다시 찾기) | (Windows만) |
 
-`garden.sh`가 보여 주는 메시지는 Ubuntu 번호를 써요. 그래서 Windows에서는
-Subdomains부터는 번호에 1을 더하세요(Ubuntu의 "menu M, then 13"은 Windows의
-More 14예요. 그다음 것들도 마찬가지예요).
+`garden.sh`가 보여 주는 메시지는 Ubuntu 번호를 써요. Windows에서는 Ubuntu 13~16은
+1을 더하고(Ubuntu의 "menu M, then 13"은 Windows의 More 14예요), Ubuntu 17과 18은 2를
+더하세요(Tailscale은 Windows More 19, 이름 바꾸기는 Windows More 20이에요).
 
 ### More 5) Open a terminal on the garden computer — 정원 컴퓨터의 터미널 열기
 - **무엇을 하나요:** 정원 컴퓨터의 터미널이 있는 새 창을 열어요(SSH, 또는 정원 폴더에 있는 WSL Ubuntu).
@@ -782,6 +793,17 @@ More 14예요. 그다음 것들도 마찬가지예요).
 - **되돌리려면:** 바로 가기 두 개를 지우세요.
 - **안내서:** [20-ssh-and-remote-desktop.md](20-ssh-and-remote-desktop.md)
 
+### More 20) Rename or move a file or folder — 파일이나 폴더 이름 바꾸기 또는 옮기기
+- **무엇을 하나요:** 정원 컴퓨터에서 이름 바꾸기 도구를 실행하고(Ubuntu 더 보기 18), 이 PC에 있는 정원 폴더 사본도 똑같이 맞춰요: 바뀐 파일을 여기로 복사하고 같은 사이트 파일의 이름을 바꿔요. 그래서 나중에 이 PC에서 INSTALL을 해도 옛 이름이 돌아오지 않아요.
+- **무엇을 설치하거나 바꾸나요:** 두 컴퓨터의 같은 파일. 이 PC의 옛 파일은 `logs\rename-windows_DATE\`에 남아요.
+- **되돌리려면:** 이름을 바꿔서 다시 실행하세요.
+
+### More 21) Find the garden computer again (if its address changed) — 정원 컴퓨터 다시 찾기(주소가 바뀌었으면)
+- **무엇을 하나요:** 정원 컴퓨터가 저장한 주소에서 아직 대답하는지 확인해요. 아니면 SSH 문(포트 22)이 열린 집의 컴퓨터를 살펴서, 같은 네트워크 카드(MAC 주소)나 이름을 가진 것을 찾아 새 주소를 저장해요. 못 찾으면 목록에서 다시 고르게 해요. 메뉴는 모든 작업 전과 매주 백업 복사 전에 이것을 스스로 해요.
+- **언제 쓰나요:** 공유기가 주소를 예약하지 못할 때, 또는 공유기를 바꾼 뒤.
+- **무엇을 설치하거나 바꾸나요:** `.garden-target-windows.txt`의 저장된 주소(그리고 네트워크 카드 ID와 이름)만. 포트 22를 두드려 보기만 하고, 로그인하지 않아요.
+- **안내서:** [`14-reserve-your-ip.md`](14-reserve-your-ip.md), "공유기가 주소를 예약하지 못하면".
+
 ---
 
 ## 모든 명령 단어
@@ -809,13 +831,17 @@ More 14예요. 그다음 것들도 마찬가지예요).
 | `dbweb` | More 8 | `ai` | More 9 |
 | `icon` | More 10 | `files` | More 11 |
 | `uninstall` | More 12 | `subdomains` | More 13 |
-| `offline` | More 14 | `llm` | More 15 |
-| `webname` | More 16 | | |
+| `offline` | More 14, 3 | `llm` | More 15 |
+| `webname` | More 16 | `tailscale` | More 17 |
+| `rename` | More 18 | `power` | More 14 |
+| `off` / `on` | More 14, 1 / 2 | `checkup` / `cleanup` | More 14, 4 / 5 |
+| `renames` | More 18, 4 | | |
 
 메뉴 번호가 없는 명령:
 
 - `bash garden.sh wiki`: 위키 설정을 다시 실행해요(위키 추가 zip이 있으면 정원 페이지를 넣어요).
 - `bash garden.sh dbweb-stop`: Adminer를 멈추고 지워요.
+- `bash garden.sh redo-renames`: 옛 백업을 손으로 복원한 뒤, 그 이름 바꾸기를 다시 해요.
 - `bash garden.sh db`: 데이터베이스 명령줄이에요(SQL을 입력해요. 나가려면 `exit`). 안내서: [`12-your-database.md`](../12-your-database.md)(영어).
 - `bash garden.sh test`: 웹사이트의 Rust 테스트를 실행해요(처음에는 느려요).
 
@@ -831,8 +857,8 @@ More 14예요. 그다음 것들도 마찬가지예요).
 | 정원 도구, 위키, n8n | Parts (9) | Parts (9), 같은 번호, 그다음 A |
 | 위키 페이지(`junsgarden-wiki-addon.zip`) | 위키 ON, 그다음 `bash garden.sh wiki` | Parts에서 위키 OFF |
 | 사진(`junsgarden-photos-addon.zip`) | Backups 11 | (평범한 파일이에요. 실행되는 것이 없어요) |
-| 집 Wi-Fi, 연습, 또는 온라인(정문) | More 1 | More 14 |
-| 하위 도메인(DuckDNS) | More 13(Windows 14) | Subdomains 3. More 14는 업데이트 프로그램을 멈춰요 |
+| 집 Wi-Fi, 연습, 또는 온라인(정문) | More 1 | More 14, 3 |
+| 하위 도메인(DuckDNS) | More 13(Windows 14) | Subdomains 3. More 14, 3은 업데이트 프로그램을 멈춰요 |
 | LiteLLM(AI 지출 한도) | More 15(Windows 16) | LiteLLM 메뉴, 7 |
 | 이메일(Gmail) | More 3 | K, Gmail app password, 4 |
 | NAS 사본 | Backups 4(두 번째, 세 번째 장소: Backups 13) | Backups 8 |

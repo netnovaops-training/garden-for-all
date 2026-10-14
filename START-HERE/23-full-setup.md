@@ -129,8 +129,8 @@ right-click `Start-Here-Ubuntu.sh` and choose **Run as a Program** (or type
 Capital letters show what `Enter` means: `(Y/n)` is yes, `(y/N)` is no.
 
 **From a Windows PC instead** (the guided installer, `Start-Here-Windows.cmd`):
-on page 2 choose **Another computer at home** and type its IP address and your
-user name there. Page 3 asks your name, your email and the web name (keep it).
+on page 2 choose **Another computer at home** and type its IP address (or click
+**Find it for me**) and your user name there. Page 3 asks your name, your email and the web name (keep it).
 On page 4 tick **Garden tools** and **Wiki** (n8n is your choice). Then **Start
 the install**: in the black window choose `2` (CUSTOM). Your name, your email,
 the web name and the parts are already answered, so the black window asks the

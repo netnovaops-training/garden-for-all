@@ -27,7 +27,7 @@ STEPS = [
     ("3 - Going online", "3 - 인터넷에 올리기", ["04-go-public-no-ip-caddy", "04b-take-over-junsgarden-zapto", "07-sso-gate", "14-reserve-your-ip", "20-ssh-and-remote-desktop"]),
     ("4 - Email, keys and AI", "4 - 이메일, 키, AI", ["16-ai-studio", "05-gemini-prompts", "08-gemini-setup", "15-local-ai", "17-android-app-and-ai-coding"]),
     ("5 - Backups and your data", "5 - 백업과 내 데이터", ["13-backups-and-folders", "12-your-database"]),
-    ("6 - Everyday use and help", "6 - 평소에 쓰기와 도움", ["19-every-menu-option", "25-common-questions", "09-troubleshooting", "11-maintain-your-site", "10-the-plan", "18-review-the-code", "06-shopping-list"]),
+    ("6 - Everyday use and help", "6 - 평소에 쓰기와 도움", ["19-every-menu-option", "25-common-questions", "26-rename-move-and-switch", "09-troubleshooting", "11-maintain-your-site", "10-the-plan", "18-review-the-code", "06-shopping-list"]),
     # The terminal way: harder than Garden Bridge, but not tough, with Jason's walkthrough. English only.
     ("6b - The terminal way (bash), harder but not tough", "6b - 터미널로 하기(bash), 조금 어렵지만 힘들지 않아요", ["22-bash-walkthrough", "24-optional-tools"]),
 ]

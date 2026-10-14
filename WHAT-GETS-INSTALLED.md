@@ -9,7 +9,7 @@
 - Nothing gives anybody else access to your computer. The setup only downloads programs from the official places listed.
 - Only ports 80 and 443 (Caddy, after the front door step) can be reached from the internet. SSH (22) is for your home network only. The rest are for this computer only.
 - The checklist (menu `5`) checks all of this every time you run it.
-- To remove it: menu `M`, then Uninstall. It keeps your photos, database and backups.
+- To remove it: menu `M`, then `12` (Uninstall). It keeps your photos, database and backups.
 
 ---
 
@@ -53,6 +53,7 @@ downloads programs from the official places listed below.
 | AI keys (Gemini, OpenRouter) | Nothing is installed: you paste YOUR own free keys with menu `K`. Gemini (Google AI Studio) reads tag photos and fills plant facts. OpenRouter is only a backup that passes the same request to a free model when Gemini is busy. Both are your own accounts; nobody else can see them, and they never see your computer, only the plant photo or question the garden sends. | So the AI boxes work | Settings only | <https://ai.google.dev/gemini-api/docs>, <https://openrouter.ai/docs>, guide 16 |
 | Email (Gmail) | Your Gmail sends the site's emails (password links) | Email sent straight from a home connection lands in spam | Settings only, nothing installed | <https://support.google.com/accounts/answer/185833> |
 | Desktop icon | "Jun's Garden" in the app list and on the desktop | Opens the menu with one click | Ubuntu | <https://specifications.freedesktop.org/desktop-entry-spec/latest/> |
+| Docker Desktop (Windows only, if you choose it) | Docker Inc.'s Windows app: it runs the garden's programs and shows them with buttons (start, stop, their messages). Installed with winget; free for personal use | The easy way to manage the garden on a Windows PC. The other way, Docker inside Ubuntu, needs nothing more on Windows | Windows | <https://docs.docker.com/desktop/setup/install/windows-install/>, guide 26 |
 
 ## Advanced optional (later, from menu `M`)
 
@@ -64,6 +65,9 @@ downloads programs from the official places listed below.
 | Router settings | You do this in your router: reserve the laptop's address, forward 80 and 443 | Visitors from the internet can reach Caddy, and only Caddy | Your router | `START-HERE/14-reserve-your-ip.md` |
 | n8n | Drag-and-drop automations ("soil is dry, so email me") | Fun and powerful when you are ready | Docker, `127.0.0.1:5678` | <https://docs.n8n.io> |
 | Adminer | A one-page web viewer for the database | Look inside the tables without typing SQL | Docker, `127.0.0.1:8082`, only while you use it | <https://www.adminer.org> |
+| LiteLLM (menu `M`, `15`) | One private address for AI, with a monthly spending limit | So a paid AI key can never cost more than you chose | Docker, `127.0.0.1:4000` | <https://docs.litellm.ai> |
+| DuckDNS updater (menu `M`, `13`) | One cron line that tells DuckDNS your home address, for subdomains | Free extra names (wiki., n8n., ...) behind your sign-in page | Ubuntu (cron) | <https://www.duckdns.org/install.jsp> |
+| Tailscale (menu `M`, `17`) | Tailscale's own program: a private network of only your devices | Reach the garden computer from anywhere, with no port opened in the router | Ubuntu | <https://tailscale.com/kb/1017/install> |
 | Local AI (Ollama) | AI models on a strong computer at home (not this laptop) | Private, free AI for the site's AI boxes | That other computer | <https://github.com/ollama/ollama>, `START-HERE/15-local-ai.md` |
 | cifs-utils (NAS) | Ubuntu's program for connecting a network drive (SMB), from Ubuntu's store | A second copy of every backup on your NAS | Ubuntu (menu 6, then 4) | <https://manpages.ubuntu.com/manpages/noble/man8/mount.cifs.8.html> |
 | rclone (Google Drive) | A well-known free program that copies files to cloud storage, from Ubuntu's store | A weekly copy of your backup away from home (3-2-1) | Ubuntu (menu 6, then 5) | <https://rclone.org/drive/> |
@@ -81,7 +85,7 @@ is thrown away after it runs.
 |---|---|---|
 | 22 | SSH | Only computers on your home network (firewall rule) |
 | 80, 443 | Caddy (after the front door step) | The internet. These are the only two ports the router forwards. |
-| 8030, 8025, 3000, 9091, 5678, 8082 | website, garden tools, wiki, sign-in page, n8n, Adminer | This computer only (`127.0.0.1`). Caddy passes visits to them. |
+| 8030, 8025, 3000, 9091, 5678, 8082, 4000 | website, garden tools, wiki, sign-in page, n8n, Adminer, LiteLLM | This computer only (`127.0.0.1`). Caddy passes visits to them. |
 | 3306 | database | Nobody outside Docker |
 
 The checklist (menu `5`) checks all of this every time you run it.
@@ -102,6 +106,6 @@ The checklist (menu `5`) checks all of this every time you run it.
 
 ## Removing it
 
-Menu `M`, then `Uninstall`, stops and removes the garden's programs, the nightly
-backup and the icon. It keeps your photos, database and backups. It prints the
-commands that remove Docker, Caddy and the No-IP updater, so you decide.
+Menu `M`, then `12` (Uninstall), stops and removes the garden's programs, the nightly
+backup and the icon, and removes Caddy and the No-IP updater too. It keeps your photos,
+database and backups. It prints the command that removes Docker, so you decide.

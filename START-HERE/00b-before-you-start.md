@@ -41,7 +41,7 @@ Either way you can add or remove parts later (guide 19 lists every option).
 
 | What | Why | Time |
 |---|---|---|
-| **A garden computer** that can stay on: an Ubuntu laptop (tested), this Windows PC with Windows' own Ubuntu (tested; for using the garden on this PC only, see below), or a Raspberry Pi 5 (expected to work, not tested yet) | The garden runs on it | Laptop: 2 to 3 hours to put Ubuntu on it the first time (guide 01). A Pi 5 with its starter kit: about 1 hour. Windows: set up by the installer (one restart) |
+| **A garden computer** that can stay on: an Ubuntu laptop (tested), this Windows PC with Windows' own Ubuntu (tested; for using the garden on this PC only, see below), or a Raspberry Pi 5 (tested on 64-bit Raspberry Pi OS; it needs good cooling, a fan, because it gets hot while the website is built) | The garden runs on it | Laptop: 2 to 3 hours to put Ubuntu on it the first time (guide 01). A Pi 5 with its starter kit: about 1 hour. Windows: set up by the installer (one restart) |
 | **Free disk space**: about 60 GB on an Ubuntu laptop; on Windows, about 60 GB free on C: | Docker, the website, the photos, and the 7 nightly backups (about 6 GB together) | Nothing to do; just check before you start |
 | **A USB stick, 16 GB or larger** (only to put Ubuntu on a laptop) | To install Ubuntu (it is erased) | Included in the 2 to 3 hours |
 | **The three downloads** from the Google Drive folder | The garden (about 70 MB), the photos (about 800 MB), the wiki pages (under 1 MB; only if you want the wiki) | Garden: 1 to 2 minutes. Photos: about 2 minutes on fast internet, 15 to 20 minutes on slow internet |
@@ -79,6 +79,11 @@ account anywhere.
   use a separate garden computer (an Ubuntu laptop or a Raspberry Pi). To learn
   more, Microsoft explains WSL's networking here (reading only; the garden does
   not set it up): <https://learn.microsoft.com/windows/wsl/networking>
+- **Which Docker (page 2):** **Docker Desktop**, the easy way: a Windows app with
+  buttons that shows the garden's programs, starts with Windows, and is free for
+  personal use. The installer gets it for you and waits for one switch (Settings >
+  Resources > WSL integration: `JunsGarden` on). Or **Docker inside Ubuntu**, the
+  hands-on way: the same as on any Ubuntu computer. Guide 26 compares them.
 - **One restart:** the first time, Windows asks permission to switch WSL on and
   needs one restart. After the restart, double-click `Start-Here-Windows.cmd`
   again and click through the same pages: it carries on where it stopped.
@@ -172,8 +177,48 @@ Windows' own Ubuntu on a Windows PC (see "On a Windows PC" above).
 
 | What | Why | Time |
 |---|---|---|
+| **A Gmail just for your website** (recommended, free): <https://accounts.google.com/signup> | One account for everything the website needs: it sends the password emails, keeps the Google Drive backups and the AI key, and signs in to Tailscale, DuckDNS and No-IP (they offer "Sign in with Google"). Your personal inbox stays apart, and handing the website on later means handing on one account | About 10 minutes |
 | **A Gmail app password** (needs 2-Step Verification on your Google account) | So "forgot password" emails reach you. You only need to remember one password; if you forget it, a reset email comes straight to you (the website and the sign-in page each send their own; menu U then 5 sets both to the same new one again) | 5 minutes (10 if 2-Step Verification is not on yet) |
 | **A password manager**, or a notebook kept somewhere safe | For the keys and passwords below | 5 minutes |
+
+## Plan your website's name and email (10 minutes, on paper)
+
+**1. A name.** Short, easy to say on the phone, lowercase letters, numbers and `-`
+only, for example `momsgarden`. It becomes your web name (`momsgarden.zapto.org`,
+guide 04) and, if it is free, your website's Gmail (`momsgarden.site@gmail.com`).
+Check both are free before you decide.
+
+**2. An email.** Three choices; each works:
+
+| Choice | Good | Less good |
+|---|---|---|
+| Your own email | Nothing new to make | The website's mail mixes with yours; handing the website on later is harder |
+| One you already use for sign-ups (or spam) | Keeps your main inbox quiet | Easy to miss the important mails (password links, No-IP's 30-day email) |
+| **A new Gmail just for the website** (recommended): <https://accounts.google.com/signup> | Everything in one place, apart from your own mail; easy to hand on | One more password (keep it in your password manager) |
+
+**3. One Gmail, many addresses ("plus addresses").** Gmail delivers
+`momsgarden.site+noip@gmail.com` to `momsgarden.site@gmail.com`: add `+` and any word
+before the `@`. Give each service its own word when you sign up:
+
+| Service | Sign up with |
+|---|---|
+| No-IP (web name) | `momsgarden.site+noip@gmail.com` |
+| DuckDNS, Tailscale | `momsgarden.site+duckdns@gmail.com`, `momsgarden.site+tailscale@gmail.com` |
+| Google AI Studio, OpenRouter | `momsgarden.site+ai@gmail.com` |
+
+The "To" line of each email then shows which service it came through, and spam to
+`+noip` tells you who passed your address on. To sort them for you: in Gmail, the
+search box, **Show search options**, type the address under **To**, **Create filter**,
+then choose a label (for example "No-IP"). Google's steps:
+<https://support.google.com/a/users/answer/9308648> and <https://support.google.com/mail/answer/6579>.
+
+Good to know:
+- A few websites refuse a `+` in an address; then use the plain one.
+- Someone can remove the `+word`, so it tells you where an address leaked, but does not hide it.
+- Dots do not matter in Gmail (`momsgarden.site` = `momsgardensite`):
+  <https://support.google.com/mail/answer/7436150>.
+- The Gmail app password (menu `M`, `3`) belongs to the plain address: type that one there.
+- The garden's own sign-in is always your garden password, never this email account.
 
 ## Optional (only if you want them)
 
@@ -195,7 +240,7 @@ Windows' own Ubuntu on a Windows PC (see "On a Windows PC" above).
 |---|---|
 | The garden computer's **user name** and its **password** | You choose them when installing Ubuntu (or, on Windows, when the installer sets up Windows' own Ubuntu). Explained in [START-HERE/00-READ-ME-FIRST.md, section "Three names for one computer"](00-READ-ME-FIRST.md#three-names-for-one-computer-people-mix-these-up-all-the-time) |
 | Its **computer name** (host name) | Ubuntu: Settings, System, About ("Device Name"). Also shown by menu M, then 2 (Network) |
-| Its **local IP address** (looks like 192.168.1.50) | Ubuntu: Settings, Wi-Fi (or Network), the gear next to your connection, "IPv4 Address". Or menu M, then 2 |
+| Its **local IP address** (looks like 192.168.1.50) | Ubuntu: Settings, Wi-Fi (or Network), the gear next to your connection, "IPv4 Address". Or menu M, then 2. Or on a Windows PC: the installer's **Find it for me** button |
 | Your **router's address and password** | The sticker on the router |
 | Your **garden password** | You choose it at the end of the install |
 | The **wiki admin password** (only with the wiki) | You choose it when the wiki is set up |

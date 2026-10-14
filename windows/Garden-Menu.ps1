@@ -29,6 +29,7 @@ param(
     [string]$Email = "",
     [string]$Parts = $null,
     [string]$WebName = "",
+    [ValidateSet("", "desktop", "engine")][string]$Engine = "",
     [switch]$Yes
 )
 
@@ -55,6 +56,7 @@ function Set-Status($word) {
 $TunnelPort = 18030                               # this PC's end of the SSH tunnel
 $DefaultDistro = "JunsGarden"                     # the WSL Ubuntu made for the garden
 Set-Location $Root
+. (Join-Path $PSScriptRoot "Garden-Network.ps1")  # this PC's address; find computers at home
 try { $Host.UI.RawUI.WindowTitle = "Jun's Garden" } catch { }
 
 # ---------- small helpers ------------------------------------------------------
@@ -88,7 +90,7 @@ function Run-Console($exe, $argString) {
 function Pause-Menu { if (-not $Yes -and $Action -eq "menu") { Read-Host "`nPress Enter to go back to the menu" | Out-Null } }
 
 # ---------- the garden computer (target) ---------------------------------------------
-$T = @{ mode = ""; ip = ""; user = ""; distro = $DefaultDistro; copyto = "" }
+$T = @{ mode = ""; ip = ""; user = ""; distro = $DefaultDistro; copyto = ""; engine = "engine"; mac = ""; host = "" }
 # Read which computer runs the garden (saved in .garden-target-windows.txt, no passwords).
 function Load-Target {
     if (Test-Path $TargetFile) {
@@ -98,14 +100,15 @@ function Load-Target {
     if ($RemoteHost) { $T.ip = $RemoteHost }
     if ($RemoteUser) { $T.user = $RemoteUser }
     if ($Distro) { $T.distro = $Distro }
+    if ($Engine) { $T.engine = $Engine }
 }
 # Remember which computer runs the garden (IP and user name only, never a password).
-function Save-Target { Set-Content -Path $TargetFile -Encoding UTF8 -Value @("mode=$($T.mode)", "ip=$($T.ip)", "user=$($T.user)", "distro=$($T.distro)", "copyto=$($T.copyto)") }
+function Save-Target { Set-Content -Path $TargetFile -Encoding UTF8 -Value @("mode=$($T.mode)", "ip=$($T.ip)", "user=$($T.user)", "distro=$($T.distro)", "copyto=$($T.copyto)", "engine=$($T.engine)", "mac=$($T.mac)", "host=$($T.host)") }
 # Describe the garden computer in words, for the top of the menu.
 function Target-Text {
     switch ($T.mode) {
         "remote" { return "another computer: $($T.user)@$($T.ip) (over SSH)" }
-        "wsl"    { return "this PC, inside Windows' Ubuntu ($($T.distro))" }
+        "wsl"    { if ($T.engine -eq "desktop") { return "this PC, inside Windows' Ubuntu ($($T.distro)), with Docker Desktop" } else { return "this PC, inside Windows' Ubuntu ($($T.distro))" } }
         default  { return "not chosen yet" }
     }
 }
@@ -129,22 +132,183 @@ function Choose-Target {
 
    0) Back
 "@
+    $me = Get-This-PC
+    if ($me) { Note "This PC: $($me.Name), address $($me.IP) (router $($me.Router))." }
     $c = Ask "Type 1, 2 or 0" "1"
     if ($c -eq "1") {
         $T.mode = "remote"
-        $T.ip = Ask "Its local IP address (on it: hostname -I)" $T.ip
+        Note "Type its address, or F to find the computers at home that have the SSH door open."
+        $a = Ask "Its local IP address (on it: hostname -I), or F" $T.ip
+        if ($a -match '^[fF]$') {
+            Note "Looking on your home network for the SSH door (port 22). A few seconds..."
+            $list = @(Find-Home-Computers)
+            if ($list.Count -eq 0) {
+                Note "None found. Is the garden computer on, with the SSH server (sudo apt install -y openssh-server)?"
+                $a = Ask "Its local IP address (on it: hostname -I)" $T.ip
+            } else {
+                for ($i = 0; $i -lt $list.Count; $i++) { Note ("{0}) {1}  {2}" -f ($i + 1), $list[$i].IP, $list[$i].Name) }
+                $p = Ask "Which one is the garden computer (number)" "1"
+                if ($p -match '^\d+$' -and [int]$p -ge 1 -and [int]$p -le $list.Count) { $a = $list[[int]$p - 1].IP } else { $a = "" }
+            }
+        }
+        $T.ip = $a
         Note "User name = the name you LOG IN with on that computer (on it, type: whoami). Not its host name."
         $T.user = Ask "Your user name on it" $T.user
         if (-not $T.ip -or -not $T.user) { Fail "need both the address and the user name"; return $false }
     } elseif ($c -eq "2") {
         $T.mode = "wsl"
+        if ($me) { Note "The garden goes on THIS PC: $($me.Name) ($($me.IP))." }
+        Choose-Engine
     } else { return $false }
+    $T.mac = ""; $T.host = ""
     Save-Target
+    if ($T.mode -eq "remote") { Remember-Garden-Computer }   # its network card, if it answers now
     Note "Garden computer: $(Target-Text)"
     return $true
 }
+# On this PC: which Docker runs the garden's programs? Asked only when "this
+# Windows PC" was chosen. (On another computer it is always Docker inside Ubuntu.)
+function Choose-Engine {
+    Write-Host @"
+
+   Which Docker should run the garden's programs on this PC?
+
+   1) Docker Desktop: the easy way to manage it  (recommended on Windows)
+      A Windows app with buttons: see the garden's programs, start and stop
+      them, read their messages. It starts with Windows. Free for personal use.
+
+   2) Docker inside Ubuntu: the hands-on way
+      The same as on any Ubuntu computer: everything from the menu and the
+      terminal. Nothing more to install on Windows.
+
+"@
+    $e = Ask "Type 1 or 2" "1"
+    if ($e -eq "2") { $T.engine = "engine" } else { $T.engine = "desktop" }
+    Note "Docker: $(if ($T.engine -eq 'desktop') { 'Docker Desktop (the easy way)' } else { 'inside Ubuntu (the hands-on way)' }). Choose again: menu T."
+}
+
+# The easy way: Docker Desktop (a Windows app by Docker Inc., free for personal
+# use) runs the garden's programs, with buttons to start, stop and read their
+# messages. Three checks: is it installed, is it running, and is it shared with
+# the garden's Ubuntu ("WSL integration")? Each says what to do if not.
+# Docker Desktop installs for all users (Program Files) or, newer, for one user (AppData).
+function Docker-Desktop-Dir {
+    foreach ($d in (Join-Path $env:ProgramFiles "Docker\Docker"), (Join-Path $env:LOCALAPPDATA "Programs\DockerDesktop")) {
+        if (Test-Path (Join-Path $d "Docker Desktop.exe")) { return $d }
+    }
+    return (Join-Path $env:ProgramFiles "Docker\Docker")
+}
+$DockerDesktopExe = Join-Path (Docker-Desktop-Dir) "Docker Desktop.exe"
+$DockerDesktopCli = Join-Path (Docker-Desktop-Dir) "resources\bin\docker.exe"
+function Docker-Desktop-Up {
+    if (-not (Test-Path $DockerDesktopCli)) { return $false }
+    & $DockerDesktopCli info *> $null
+    return ($LASTEXITCODE -eq 0)
+}
+function Docker-Desktop-In-Wsl {
+    $os = (& wsl.exe -d $T.distro -- docker info --format "{{.OperatingSystem}}" 2>$null) -join ""
+    return ($os -match 'Docker Desktop')
+}
+function Prepare-Docker-Desktop {
+    Say "Docker Desktop (the easy way to manage the garden's programs)"
+    Note "A Windows app by Docker Inc. Free for personal use and small businesses."
+    Note "Read: https://docs.docker.com/desktop/setup/install/windows-install/"
+    if (-not (Test-Path $DockerDesktopExe)) {
+        Note "It is not on this PC yet."
+        if ((Get-Command winget.exe -ErrorAction SilentlyContinue) -and (Confirm-Step "Install Docker Desktop now with winget (Windows' own app installer)?")) {
+            Run-Console "winget.exe" "install -e --id Docker.DockerDesktop" | Out-Null
+        } else {
+            Start-Process "https://docs.docker.com/desktop/setup/install/windows-install/"
+            Note "Download and install it from the page that just opened, then start the install again."
+        }
+        $script:DockerDesktopExe = Join-Path (Docker-Desktop-Dir) "Docker Desktop.exe"
+        $script:DockerDesktopCli = Join-Path (Docker-Desktop-Dir) "resources\bin\docker.exe"
+        if (-not (Test-Path $DockerDesktopExe)) { Fail "Docker Desktop is not installed yet"; return $false }
+    }
+    if (-not (Docker-Desktop-Up)) {
+        Note "Starting Docker Desktop. The first time, it shows its own welcome and terms:"
+        Note "read them and accept there; signing in to a Docker account is not needed (Skip)."
+        Start-Process $DockerDesktopExe
+        $ok = $false
+        for ($i = 0; $i -lt 60; $i++) { Start-Sleep -Seconds 5; if (Docker-Desktop-Up) { $ok = $true; break } }
+        if (-not $ok) { Fail "Docker Desktop did not start within 5 minutes. Finish its welcome window, then start the install again."; return $false }
+    }
+    Note "Docker Desktop is running."
+    if (-not (Docker-Desktop-In-Wsl)) {
+        Say "One switch in Docker Desktop"
+        Note "Docker Desktop > Settings (the gear, top right) > Resources > WSL integration:"
+        Note "switch ON '$($T.distro)', then click 'Apply & restart'."
+        Note "This window waits and carries on by itself when it sees the switch (up to 10 minutes)."
+        $ok = $false
+        for ($i = 0; $i -lt 120; $i++) { Start-Sleep -Seconds 5; if (Docker-Desktop-In-Wsl) { $ok = $true; break } }
+        if (-not $ok) { Fail "Docker Desktop is not shared with '$($T.distro)' yet. Switch it on, then start the install again."; return $false }
+    }
+    Note "Connected. The garden's programs will show in Docker Desktop, under Containers, as 'junsgarden'."
+    return $true
+}
+
 # Make sure a garden computer has been chosen; ask if not.
-function Need-Target { if (-not $T.mode) { return (Choose-Target) } else { return $true } }
+# Also: on another computer, make sure its saved address still reaches it (see below).
+function Need-Target {
+    if (-not $T.mode) { return (Choose-Target) }
+    if ($T.mode -eq "remote") { [void](Update-Target-Address) }
+    return $true
+}
+
+# ---------- keeping the garden computer's address, even when it changes ----------------
+# A router gives each computer an address, and without a reservation (guide 14)
+# that address can change after a restart. So the menu also remembers the garden
+# computer by its network card's fixed ID (its MAC address) and its name. When
+# nothing answers at the saved address, it looks at the computers at home with
+# the SSH door open (Garden-Network.ps1), finds the one with the same network
+# card, and saves its new address. Nothing is sent anywhere.
+
+# The network card ID (MAC) of a computer at home, from this PC's own list of
+# neighbours (Windows fills it in after one knock on the SSH door).
+function Get-Mac($ip) {
+    if (-not (Test-Port22 $ip)) { return "" }
+    $n = Get-NetNeighbor -IPAddress $ip -ErrorAction SilentlyContinue |
+        Where-Object { $_.LinkLayerAddress -and $_.LinkLayerAddress -ne "00-00-00-00-00-00" } | Select-Object -First 1
+    if ($n) { return $n.LinkLayerAddress } else { return "" }
+}
+# Remember the garden computer by its network card and name, next to its address.
+function Remember-Garden-Computer {
+    if ($T.mode -ne "remote" -or -not $T.ip) { return }
+    $mac = Get-Mac $T.ip
+    if ($mac) { $T.mac = $mac }
+    try { $n = [Net.Dns]::GetHostEntry($T.ip).HostName; if ($n -and $n -ne $T.ip) { $T.host = $n } } catch { }
+    Save-Target
+}
+# Still at its saved address? If not, find it again by its network card (or its
+# name) and save the new address. Quiet: for the weekly copy, nobody watching.
+function Update-Target-Address([switch]$Quiet) {
+    if ($T.mode -ne "remote" -or -not $T.ip) { return $true }
+    if (Test-Port22 $T.ip) { if (-not $T.mac) { Remember-Garden-Computer }; return $true }
+    if (-not $T.mac -and -not $T.host) { return $false }
+    if (-not $Quiet) { Note "The garden computer does not answer at $($T.ip). Looking for it on your home network..." }
+    foreach ($c in @(Find-Home-Computers)) {
+        $same = ($T.mac -and (Get-Mac $c.IP) -eq $T.mac) -or (-not $T.mac -and $T.host -and $c.Name -eq $T.host)
+        if ($same) {
+            $old = $T.ip; $T.ip = $c.IP; Save-Target
+            if (-not $Quiet) { Note "Found it: its address changed from $old to $($c.IP). Saved for next time." }
+            return $true
+        }
+    }
+    if (-not $Quiet) { Warn "not found at home. Is it switched on? Menu T sets its address by hand." }
+    return $false
+}
+# More 21: find the garden computer again now (or pick it from the list).
+function Find-Garden-Again {
+    if (-not $T.mode) { [void](Choose-Target); return }
+    if ($T.mode -ne "remote") { Note "The garden is on THIS PC (Windows' own Ubuntu): its address cannot get lost."; return }
+    if (Update-Target-Address) {
+        Note "The garden computer answers at $($T.ip)$(if ($T.mac) { ", network card $($T.mac)" })$(if ($T.host) { ", name $($T.host)" })."
+        return
+    }
+    Note "Choose it again:"
+    [void](Choose-Target)
+    Remember-Garden-Computer
+}
 
 # Run "bash garden.sh <job>" on the garden computer, in this window.
 function Invoke-Garden($job, $envs = "") {
@@ -262,9 +426,54 @@ function OneDrive-Note {
     Note "Guide: START-HERE\00b-before-you-start.md, 'If your Desktop is in OneDrive'."
 }
 
+# Windows' path to the inside of an Ubuntu (WSL). \\wsl.localhost is the newer
+# name; older Windows 10 has only \\wsl$. Both are Microsoft's, with the same files.
+function Wsl-Root($distro) {
+    foreach ($p in "\\wsl.localhost\$distro", "\\wsl`$\$distro") { if (Test-Path "$p\") { return $p } }
+    return "\\wsl`$\$distro"
+}
+
+# Ubuntu's programs read text files with Linux line endings (LF). A Windows editor
+# can save Windows endings (CRLF) instead, and then bash stops with "$'\r': command
+# not found". Before copying, find such files among the ones Ubuntu runs, keep a
+# copy in logs\, and change only their line endings. The .cmd files stay as they are.
+function Fix-Line-Endings {
+    $names = @("*.sh", "*.py", "*.tsv", "*.yml", "*.yaml", "*.template", "*.conf", "*.service", "Dockerfile", "*.env.example")
+    # Folders inside the garden folder to leave alone (matched on the part INSIDE it,
+    # so a garden folder under, say, AppData\Local is still checked).
+    $skip = '(^|\\)(local|backups|logs|\.git|target|build|\.gradle|node_modules)\\'
+    $keep = Join-Path $Root ("logs\line-endings_" + (Get-Date -Format "yyyy-MM-dd_HHmmss"))
+    $n = 0
+    foreach ($f in (Get-ChildItem $Root -Recurse -File -Include $names -ErrorAction SilentlyContinue)) {
+        $rel = $f.FullName.Substring($Root.Length).TrimStart('\')
+        if ($rel -match $skip) { continue }
+        $bytes = [IO.File]::ReadAllBytes($f.FullName)
+        if ([Array]::IndexOf($bytes, [byte]13) -lt 0) { continue }
+        $copy = Join-Path $keep $rel
+        New-Item -ItemType Directory -Force (Split-Path $copy) | Out-Null
+        Copy-Item $f.FullName $copy
+        $text = [Text.Encoding]::UTF8.GetString($bytes) -replace "`r`n", "`n"
+        [IO.File]::WriteAllBytes($f.FullName, [Text.Encoding]::UTF8.GetBytes($text))
+        Note "Linux line endings again: $rel"
+        $n++
+    }
+    if ($n -gt 0) { Note "$n file(s) had Windows line endings (a Windows editor adds them). The old copies are in $keep" }
+}
+
+# Docker Desktop on this PC is fine: the garden does not use it. It runs its own
+# Docker inside Ubuntu, so it works the same for everyone and keeps running when
+# Docker Desktop is closed. Only Docker Desktop's "WSL integration" for the
+# garden's Ubuntu must be off; garden.sh checks that and says how.
+function Docker-Desktop-Note {
+    if (-not (Test-Path (Join-Path (Docker-Desktop-Dir) "Docker Desktop.exe"))) { return }
+    Note "Docker Desktop is on this PC. That is fine: the garden uses its own Docker inside Ubuntu."
+    Note "Keep Docker Desktop's WSL integration OFF for '$($T.distro)' (Settings > Resources > WSL integration)."
+}
+
 # Pack the garden folder (not settings or private data) and copy it to the garden computer.
 function Copy-Garden {
     Say "Copying the garden folder (not your settings or private data)"
+    Fix-Line-Endings
     # The separate downloads (the photos, the wiki's pages), if they are in the
     # garden folder, on the Desktop or in Downloads: they go straight to the
     # garden computer after the folder (no second copy on this PC).
@@ -319,7 +528,11 @@ function Do-Install {
     Save-Target   # remember the garden computer for next time (no passwords are saved)
     Say "Install on the garden computer: $(Target-Text)"
     OneDrive-Note
-    if ($T.mode -eq "remote") { if (-not (Prepare-Remote)) { return } } else { if (-not (Prepare-Wsl)) { return } }
+    if ($T.mode -eq "remote") { if (-not (Prepare-Remote)) { return }; Remember-Garden-Computer }
+    else {
+        if (-not (Prepare-Wsl)) { return }
+        if ($T.engine -eq "desktop") { if (-not (Prepare-Docker-Desktop)) { return } } else { Docker-Desktop-Note }
+    }
     if (-not (Choose-Webname)) { return }
     if (-not (Copy-Garden)) { return }
     $envs = "GARDEN_REMOTE_INSTALL=1 "
@@ -329,6 +542,8 @@ function Do-Install {
     # [string] that was left out is "", not $null, and "" would mean "no parts".
     if ($PartsGiven) { $envs += "GARDEN_PARTS=$Parts " }
     if ($Yes) { $envs += "ASSUME_YES=1 " }
+    # Which Docker runs it on this PC (garden.sh remembers it in .garden-docker).
+    if ($T.mode -eq "wsl") { $envs += "GARDEN_DOCKER=$($T.engine) " }
     Say "Running the install ON the garden computer (it explains every step)"
     if ((Invoke-Garden "install" $envs) -ne 0) { Fail "the install stopped. Read the lines above; choose INSTALL again to carry on."; return }
     if ($T.mode -eq "wsl") { Keep-Wsl-Running }
@@ -444,6 +659,51 @@ function Set-Webname-Here($old, $new) {
     Note "The old files are kept in $keep"
 }
 
+# More 20 (after garden.sh rename ran on the garden computer): make THIS PC's copy
+# of the garden folder match, so a later "Install" from this PC does not copy the
+# old names back. garden.sh writes the list in logs/last-rename.txt:
+#   edit<TAB>file        a file whose text changed: copied here from the garden computer
+#   move<TAB>old<TAB>new a site file or folder that was renamed: renamed here too
+# This PC's old files are kept in logs\rename-windows_DATE first.
+function Sync-Renamed-Here {
+    $list = "$RemoteDir/logs/last-rename.txt"
+    if ($T.mode -eq "remote") {
+        $tgt = "$($T.user)@$($T.ip)"
+        $lines = & $SshExe $tgt "cat ~/$list 2>/dev/null"
+    } else {
+        $lines = & wsl.exe -d $T.distro --cd ~ -- bash -c "cat ~/$list 2>/dev/null"
+        # The garden folder's real place in Ubuntu (it may have moved; a signpost points there).
+        $real = ("" + (& wsl.exe -d $T.distro --cd ~ -- bash -c "cd ~/$RemoteDir && pwd -P")).Trim()
+    }
+    if (-not $lines) { return }
+    Say "Renaming on this PC's copy too, so the two copies stay the same"
+    $keep = Join-Path $Root ("logs\rename-windows_" + (Get-Date -Format "yyyy-MM-dd_HHmmss"))
+    foreach ($line in $lines) {
+        $p = "$line".Split("`t")
+        if ($p.Count -lt 2 -or $p[1] -notmatch '^[A-Za-z0-9._/-]+$') { continue }
+        $here = Join-Path $Root ($p[1] -replace '/', '\')
+        if ($p[0] -eq "move" -and $p.Count -ge 3 -and $p[2] -match '^[A-Za-z0-9._/-]+$') {
+            $to = Join-Path $Root ($p[2] -replace '/', '\')
+            if ((Test-Path $here) -and -not (Test-Path $to)) {
+                New-Item -ItemType Directory -Force (Split-Path $to) | Out-Null
+                Move-Item $here $to
+                Note "renamed: $($p[1]) -> $($p[2])"
+            }
+        } elseif ($p[0] -eq "edit") {
+            if (Test-Path $here) {
+                $copy = Join-Path $keep ($p[1] -replace '/', '\')
+                New-Item -ItemType Directory -Force (Split-Path $copy) | Out-Null
+                Copy-Item $here $copy
+            }
+            New-Item -ItemType Directory -Force (Split-Path $here) | Out-Null
+            if ($T.mode -eq "remote") { & $ScpExe -q "${tgt}:$RemoteDir/$($p[1])" "$here" }
+            else { Copy-Item -Force ((Wsl-Root $T.distro) + (("$real/" + $p[1]) -replace '/', '\')) $here }
+            Note "updated: $($p[1])"
+        }
+    }
+    if (Test-Path $keep) { Note "This PC's old files are kept in $keep" }
+}
+
 # More 18: two shortcuts on the Windows desktop (guide 20).
 #   "Garden terminal"  opens SSH to the garden computer (or Windows' own Ubuntu)
 #   "Garden screen"    opens Remote Desktop Connection to it (a separate computer only;
@@ -547,6 +807,7 @@ function Copy-Newest-Quiet {
     try {
         New-Item -ItemType Directory -Force $dest -ErrorAction Stop | Out-Null
         if ($T.mode -eq "remote") {
+            [void](Update-Target-Address -Quiet)   # its address may have changed since last week
             $tgt = "$($T.user)@$($T.ip)"
             # BatchMode: never ask a question (it runs while nobody is watching).
             $name = (& $SshExe -o BatchMode=yes -o ConnectTimeout=10 $tgt "ls -t ~/$RemoteDir/backups/junsgarden-backup_*.tar | head -1").Trim()
@@ -560,7 +821,7 @@ function Copy-Newest-Quiet {
             $name = (& wsl.exe -d $T.distro -- bash -c "ls -t ~/$RemoteDir/backups/junsgarden-backup_*.tar 2>/dev/null | head -1")
             $name = "$name".Trim()
             if (-not $name) { throw "no backup found in the garden" }
-            Copy-Item -Force ("\\wsl.localhost\$($T.distro)" + ($name -replace '/', '\')) $dest -ErrorAction Stop
+            Copy-Item -Force ((Wsl-Root $T.distro) + ($name -replace '/', '\')) $dest -ErrorAction Stop
         }
         # Keep the newest 8 copies, delete older ones (only in that folder).
         Get-ChildItem $dest -Filter "junsgarden-backup_*.tar" | Sort-Object LastWriteTime -Descending |
@@ -684,11 +945,13 @@ function Show-More {
   12) Uninstall
   13) Weekly automatic copy of the backup to THIS PC (on / off)
   14) Subdomains with DuckDNS (wiki., n8n., ...): add, remove
-  15) Turn the front door off (take the garden off the internet)
+  15) On / off: the whole garden, or only off the internet; check-up, clean-up
   16) AI cost control: LiteLLM gateway with a monthly limit (on / off)
   17) Website name swap: use another web name than junsgarden.zapto.org
   18) Desktop shortcuts: Garden terminal (SSH) and Garden screen (Remote Desktop)
   19) Reach the garden from anywhere, privately (Tailscale): on / off
+  20) Rename or move a file or folder (every place that uses it follows)
+  21) Find the garden computer again (if its address changed)
 
    0) Back
 "@
@@ -708,11 +971,13 @@ function Show-More {
             "12" { Invoke-Garden "uninstall" | Out-Null }
             "13" { Schedule-Backup-Copy }
             "14" { Invoke-Garden "subdomains" | Out-Null }
-            "15" { Invoke-Garden "offline" | Out-Null }
+            "15" { Invoke-Garden "power" | Out-Null }
             "16" { Invoke-Garden "llm" | Out-Null }
             "17" { Invoke-Garden "webname" | Out-Null; Sync-Webname-Here }
             "18" { Make-Shortcuts }
             "19" { Invoke-Garden "tailscale" | Out-Null; Note "On this PC too: install Tailscale from https://tailscale.com/download and sign in with the same account." }
+            "20" { Invoke-Garden "rename" | Out-Null; Sync-Renamed-Here }
+            "21" { Find-Garden-Again }
             "0"  { return }
             default { Note "Please type one of the numbers shown." }
         }

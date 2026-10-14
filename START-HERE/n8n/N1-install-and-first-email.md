@@ -6,6 +6,7 @@
 - n8n (say "n-eight-n") in Docker, connected to your own Gmail, and a first workflow that emails you when you click a button.
 - Easy, 45 minutes, free. Do guide 02 (Docker) first.
 - Start it: `docker compose -f docker/extras/n8n.yml up -d`, then open <http://localhost:5678> and make an owner account with a **new** password.
+- Already switched n8n on in the menu (menu `9`, Parts)? Then it is running (and in your backups): skip the start command. Use one way or the other, not both: both run as `garden-n8n`.
 - Make a Gmail app password (2-Step Verification must be on). Google shows it only once.
 - In n8n, make an SMTP credential: host `smtp.gmail.com`, port `465`, SSL/TLS on.
 - Make a workflow: **Trigger manually**, then **Send Email**. Click **Execute workflow** and check your inbox (and spam).
@@ -102,7 +103,7 @@ The email arrived in your inbox, sent by your own computer.
 |---|---|
 | `Invalid login` / `535` | The app password was typed wrong, or 2-Step Verification is off. Make a new app password. |
 | `ETIMEDOUT` or `ECONNREFUSED` | Your network blocks port 465. Try port `587` with SSL/TLS **off** (n8n then upgrades the connection to secure by itself). |
-| Cannot open `localhost:5678` | `docker ps` should list `n8n`. If not: run step 1 again. `docker logs n8n` shows why. |
+| Cannot open `localhost:5678` | `docker ps` should list `garden-n8n`. If not: run step 1 again. `docker logs garden-n8n` shows why. |
 | Email went to spam | Mark "Not spam". Sending to yourself from yourself is usually fine after that. |
 
 ## Make it yours

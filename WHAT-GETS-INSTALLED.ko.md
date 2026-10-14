@@ -11,7 +11,7 @@
 - 다른 사람이 내 컴퓨터에 들어오게 하는 것은 하나도 없어요. 설치는 적혀 있는 공식 출처에서 프로그램을 내려받기만 해요.
 - 인터넷에서 들어올 수 있는 포트는 80과 443(정문 단계 뒤의 Caddy)뿐이에요. SSH(22)는 집 네트워크에서만 돼요. 나머지는 이 컴퓨터 안에서만 돼요.
 - 점검표(메뉴 `5`)가 실행할 때마다 이 모든 것을 확인해요.
-- 지우려면: 메뉴 `M`, 그다음 Uninstall(제거). 사진, 데이터베이스, 백업은 남겨 둬요.
+- 지우려면: 메뉴 `M`, 그다음 `12`(Uninstall, 제거). 사진, 데이터베이스, 백업은 남겨 둬요.
 
 ---
 
@@ -54,6 +54,7 @@
 | 위키(고르지 않으면 꺼져 있어요) | Wiki.js 2, 현대적인 위키. 정원 글은 따로 내려받는 `junsgarden-wiki-addon.zip`에 있어요. 없으면 위키는 빈 채로 시작해요 | 내가 편집하는 나의 백과사전. 원할 때만: 프로그램을 하나 더 내려받고, 페이지를 넣는 데 약 30분 걸려요 | Docker, `127.0.0.1:3000` | <https://docs.requarks.io>, <https://js.wiki> |
 | 이메일(Gmail) | 내 Gmail이 사이트의 이메일(비밀번호 링크)을 보내요 | 집 인터넷에서 바로 보낸 이메일은 스팸함으로 가요 | 설정만, 설치하는 것 없음 | <https://support.google.com/accounts/answer/185833> |
 | 바탕화면 아이콘 | 앱 목록과 바탕화면의 "Jun's Garden" | 한 번 클릭으로 메뉴를 열어요 | Ubuntu | <https://specifications.freedesktop.org/desktop-entry-spec/latest/> |
+| Docker Desktop(Windows만, 고를 때만) | Docker Inc.의 Windows 앱: 정원의 프로그램을 돌리고 버튼(시작, 멈춤, 메시지)과 함께 보여 줘요. winget으로 설치해요. 개인 사용은 무료 | Windows PC에서 정원을 다루는 쉬운 방법. 다른 방법인 Ubuntu 안의 Docker는 Windows에 더 설치할 것이 없어요 | Windows | <https://docs.docker.com/desktop/setup/install/windows-install/>, 안내서 26 |
 
 ## 고급 선택(나중에, 메뉴 `M`에서)
 
@@ -65,6 +66,9 @@
 | 공유기(router) 설정 | 공유기에서 직접 해요: 노트북 주소 예약, 80과 443 전달 | 인터넷 방문자가 Caddy에, 그리고 Caddy에만 닿을 수 있어요 | 내 공유기 | `START-HERE/14-reserve-your-ip.md`(한국어: [START-HERE/ko/14-reserve-your-ip.md](START-HERE/ko/14-reserve-your-ip.md)) |
 | n8n | 끌어다 놓기로 만드는 자동화("흙이 마르면 이메일 보내기") | 준비가 되면 재미있고 강력해요 | Docker, `127.0.0.1:5678` | <https://docs.n8n.io> |
 | Adminer | 데이터베이스를 보는 한 페이지짜리 웹 프로그램 | SQL을 입력하지 않고 표 안을 볼 수 있어요 | Docker, `127.0.0.1:8082`, 쓰는 동안에만 | <https://www.adminer.org> |
+| LiteLLM(메뉴 `M`, `15`) | 월 지출 한도가 있는, AI를 위한 개인 주소 하나 | 유료 AI 키가 내가 정한 것보다 더 쓰지 못하게 | Docker, `127.0.0.1:4000` | <https://docs.litellm.ai> |
+| DuckDNS 업데이트 프로그램(메뉴 `M`, `13`) | 하위 도메인을 위해 내 집 주소를 DuckDNS에 알려 주는 cron 한 줄 | 로그인 페이지 뒤의 무료 추가 이름(wiki., n8n., ...) | Ubuntu(cron) | <https://www.duckdns.org/install.jsp> |
+| Tailscale(메뉴 `M`, `17`) | Tailscale 자체 프로그램: 내 기기만 들어오는 개인 네트워크 | 공유기에 포트를 열지 않고 어디서나 정원 컴퓨터에 닿기 | Ubuntu | <https://tailscale.com/kb/1017/install> |
 | 로컬 AI(Ollama) | 집에 있는 성능 좋은 컴퓨터(이 노트북 말고)에서 돌리는 AI 모델 | 사이트의 AI 상자를 위한 비공개 무료 AI | 그 다른 컴퓨터 | <https://github.com/ollama/ollama>, `START-HERE/15-local-ai.md` |
 | cifs-utils(NAS) | 네트워크 드라이브(SMB)를 연결하는 Ubuntu 프로그램. Ubuntu 스토어에서 받아요 | 모든 백업의 두 번째 사본을 NAS에 둬요 | Ubuntu(메뉴 6, 그다음 4) | <https://manpages.ubuntu.com/manpages/noble/man8/mount.cifs.8.html> |
 | rclone(Google Drive) | 파일을 클라우드 저장소로 복사하는 잘 알려진 무료 프로그램. Ubuntu 스토어에서 받아요 | 일주일에 한 번 백업 사본을 집 밖에 둬요(3-2-1) | Ubuntu(메뉴 6, 그다음 5) | <https://rclone.org/drive/> |
@@ -82,7 +86,7 @@
 |---|---|---|
 | 22 | SSH | 집 네트워크 안의 컴퓨터만(방화벽 규칙) |
 | 80, 443 | Caddy(정문 단계 뒤) | 인터넷. 공유기가 전달하는 포트는 이 두 개뿐이에요. |
-| 8030, 8025, 3000, 9091, 5678, 8082 | 웹사이트, 정원 도구, 위키, 로그인 페이지, n8n, Adminer | 이 컴퓨터만(`127.0.0.1`). Caddy가 방문을 이쪽으로 넘겨줘요. |
+| 8030, 8025, 3000, 9091, 5678, 8082, 4000 | 웹사이트, 정원 도구, 위키, 로그인 페이지, n8n, Adminer, LiteLLM | 이 컴퓨터만(`127.0.0.1`). Caddy가 방문을 이쪽으로 넘겨줘요. |
 | 3306 | 데이터베이스 | Docker 밖에서는 아무도 못 닿아요 |
 
 점검표(메뉴 `5`)는 실행할 때마다 이것을 모두 확인해요.
@@ -103,6 +107,6 @@
 
 ## 지우기
 
-메뉴 `M`, 그다음 `Uninstall`(제거하기)은 정원의 프로그램, 매일 밤 백업, 아이콘을
-멈추고 지워요. 사진, 데이터베이스, 백업은 남겨 둬요. Docker, Caddy, No-IP 업데이트
-프로그램을 지우는 명령은 화면에 보여 주기만 해요. 지울지는 본인이 정해요.
+메뉴 `M`, 그다음 `12`(Uninstall, 제거하기)는 정원의 프로그램, 매일 밤 백업, 아이콘을
+멈추고 지우고, Caddy와 No-IP 업데이트 프로그램도 지워요. 사진, 데이터베이스, 백업은
+남겨 둬요. Docker를 지우는 명령은 화면에 보여 주기만 해요. 지울지는 본인이 정해요.

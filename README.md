@@ -33,7 +33,7 @@ Its public home: <https://github.com/netnovaops-training/garden-for-all>.
 | [`beds/`](beds/) | Garden tools: bed planner, checkup, tag scan (Python) |
 | [`android-app/`](android-app/) | The Android app (Kotlin) |
 | [`docker/`](docker/), [`docker-compose.yml`](docker-compose.yml) | Each program in its own container; only the front door faces the internet |
-| [`START-HERE/`](START-HERE/) | Guides 00 to 23, each with a quick version first; Korean in [`START-HERE/ko/`](START-HERE/ko/) |
+| [`START-HERE/`](START-HERE/) | Guides 00 to 26, each with a quick version first; Korean in [`START-HERE/ko/`](START-HERE/ko/) |
 | [`tools/release/`](tools/release/) | How the downloads, PDFs and the web handbook are built (`build_release.py`), and the checks run before each release |
 
 The garden's own data (plants database, photos, wiki pages) is **not** in this

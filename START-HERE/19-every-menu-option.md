@@ -162,7 +162,7 @@ after 4; see "Windows-only items" at the end. `0) Back` returns to the main menu
 - **What it does:** Offers three ways to open the garden to other devices (see "The front door's three choices" below).
 - **When to use it:** When you want the garden on your home Wi-Fi, to practise, or to put it on the internet.
 - **What it installs or changes:** Depends on the choice: Caddy, the sign-in page, firewall doors 80 and 443, the No-IP updater.
-- **To undo it:** More, 14 (Turn the front door off).
+- **To undo it:** More, 14, then 3 (Off the internet only).
 - **Command:** `bash garden.sh public`. Guides: `04-go-public-no-ip-caddy.md`, `04b-take-over-junsgarden-zapto.md`, `07-sso-gate.md`.
 
 ### 2) Network: my IP address and reserving it in the router
@@ -243,12 +243,13 @@ after 4; see "Windows-only items" at the end. `0) Back` returns to the main menu
 - **What it does:** Opens the Subdomains menu (its own section below).
 - **Command:** `bash garden.sh subdomains`. Guide: `04-go-public-no-ip-caddy.md` (Advanced).
 
-### 14) Turn the front door off (take the garden off the internet)
-- **What it does:** Stops Caddy, closes doors 80 and 443 in the firewall (and the home-only door), stops the No-IP updater and the DuckDNS updater, and switches the sign-in page off. The garden keeps running at home.
-- **When to use it:** To take the garden offline for a while, or before moving it.
-- **What it installs or changes:** Caddy and the No-IP updater are switched off (not removed). The DuckDNS cron line is removed. `.env`: the web name is cleared and the address goes back to localhost.
-- **To undo it:** More, 1 again (it switches the No-IP updater back on). If you had subdomains, also Subdomains, 1 (it adds the DuckDNS updater again). In the router, also remove the 80 and 443 forwarding yourself if you want it fully closed.
-- **Command:** `bash garden.sh offline`
+### 14) On / off: the whole garden, or only off the internet; check-up, clean-up
+- **What it does:** One screen with six choices. `1` switches everything off (`docker compose down`, without `-v`: nothing is deleted) and stops the front door. `2` switches it all on again, even months later, and checks the website. `4` starts again a program that is stuck. `5` removes Docker's leftovers (old versions of the garden's programs older than 7 days, old build notes), after asking; Enter means no. `6` runs the check-up every 6 hours.
+- **`3`, off the internet only:** Stops Caddy, closes doors 80 and 443 in the firewall (and the home-only door), stops the No-IP updater and the DuckDNS updater, and switches the sign-in page off. The garden keeps running at home.
+- **When to use it:** `1` when you do not want to host the site for a while, or the traffic is too much; `3` to take it off the internet but keep it at home, or before moving it; `5` when the disk fills up.
+- **What it installs or changes:** `1` writes `.garden-off` (the nightly backup rests while it is there). `3`: Caddy and the No-IP updater are switched off (not removed), the DuckDNS cron line is removed, and in `.env` the web name is cleared and the address goes back to localhost. `6` is one cron line.
+- **To undo it:** `1`: choose `2`. `3`: More, 1 again (it switches the No-IP updater back on); with subdomains, also Subdomains, 1; in the router, also remove the 80 and 443 forwarding yourself if you want it fully closed. `6`: choose it again.
+- **Command:** `bash garden.sh power`, or straight away `bash garden.sh off`, `bash garden.sh on`, `bash garden.sh offline` (`3`), `bash garden.sh checkup`, `bash garden.sh cleanup`. Guide: `26-rename-move-and-switch.md`.
 
 ### 15) AI cost control: LiteLLM gateway with a monthly limit (on / off)
 - **What it does:** Switches LiteLLM on, or manages it when it is on (see "AI cost control (LiteLLM)" below).
@@ -290,6 +291,14 @@ after 4; see "Windows-only items" at the end. `0) Back` returns to the main menu
 - **To undo it:** the same item again (it disconnects and removes the firewall line);
   `sudo apt remove tailscale` removes the program.
 - **Command:** `bash garden.sh tailscale`
+
+### 18) Rename or move a file or folder (every place that uses it follows)
+- **What it does:** Four choices. `1` renames a file or folder of the website (a photo folder, a page, a data file) and changes every place that uses the name: the code, the pages, the photo lists and the database rows. `2` moves one of the big folders to another place or disk (the same as Settings 8 used to). `3` moves the WHOLE garden folder. `4` lists what was renamed or moved so far. It shows every place first, offers a backup, and changes nothing until you type `y`.
+- **When to use it:** To give the website your own names, or to move the garden to a bigger disk.
+- **What it installs or changes:** The name, every place that uses it, `IMAGE_FOLDERS` in `.env` for a renamed photo folder, one git entry, and a line in `logs/renames.tsv`. Copies of everything it changes go to `logs/rename_DATE/` first.
+- **To undo it:** Choose it again and rename it back.
+- **Good to know:** The guides keep showing the names the garden came with.
+- **Command:** `bash garden.sh rename`. Guide: `26-rename-move-and-switch.md`.
 
 ## Backups (6)
 
@@ -426,12 +435,12 @@ never shown. `0) Back` returns to the main menu.
 - **What it does:** Opens the whole front door step (the same as More, 1), not only a name.
 - **To undo it:** More, 14. (To change the name written in the files, use More, 16.)
 
-### 8) Move or rename a folder
-- **What it does:** Lists the 8 garden folders (website files, photos, data, cache, database, n8n, sign-in page, backups). You pick one and type its new place. It stops the garden, moves the folder, updates `.env` and starts again.
-- **When to use it:** If you want a folder somewhere else or under another name.
+### 8) Rename or move a file or folder
+- **What it does:** The same as More 18 (four choices). Choice `2` lists the 8 garden folders (website files, photos, data, cache, database, n8n, sign-in page, backups). You pick one and type its new place, inside the garden folder or on another Linux disk. It stops the garden, moves the folder, updates `.env` and starts again.
+- **When to use it:** If you want a folder somewhere else, or a file or folder of the website under your own name (choice `1`).
 - **What it installs or changes:** The folder's place and its line in `.env`. Moving the backups folder also rewrites the nightly backup's cron line.
 - **To undo it:** Choose 8 again and move it back.
-- Guide: `13-backups-and-folders.md`.
+- Guides: `13-backups-and-folders.md`, `26-rename-move-and-switch.md`.
 
 > **Why use the menu for this, not File Explorer?**
 > The garden finds each folder through its line in `.env` (for example
@@ -716,7 +725,7 @@ work differently on Windows:
 
 ### 1) INSTALL  (first time, or carry on, or repair)
 - **Before it starts:** If the garden folder is inside OneDrive, `Start-Here-Windows.cmd` first offers to move it out (to `C:\Users\<you>\junsgarden-for-jun`, or a place you pick), checks every file arrived, and opens the installer from the new place. The old folder is never deleted for you. The Windows menu's INSTALL shows a note about it too. Guide: `00b-before-you-start.md`, "If your Desktop is in OneDrive".
-- **What it does:** Asks where the garden runs if you have not chosen yet (see T). Another computer: checks the SSH port, makes this PC's SSH key and adds it there (you type its password once). This PC: switches on WSL (then restart Windows once), installs Ubuntu 24.04 named `JunsGarden`, and makes your Ubuntu user. Then asks: keep the web name or a new one. Copies the garden folder and newest backup, sends the photos and wiki zips straight there from the garden folder, the Desktop (also a OneDrive Desktop) or Downloads (no extra copy on the PC), and runs `garden.sh install` there.
+- **What it does:** Asks where the garden runs if you have not chosen yet (see T). Another computer: checks the SSH port, makes this PC's SSH key and adds it there (you type its password once). This PC: switches on WSL (then restart Windows once), installs Ubuntu 24.04 named `JunsGarden`, and makes your Ubuntu user; with Docker Desktop, it installs Docker Desktop (winget) if needed and waits for its WSL integration switch (guide 26). Then asks: keep the web name or a new one. Copies the garden folder and newest backup, sends the photos and wiki zips straight there from the garden folder, the Desktop (also a OneDrive Desktop) or Downloads (no extra copy on the PC), and runs `garden.sh install` there.
 - **What it installs or changes:** On this PC: `.ssh\id_ed25519` (if new), `.garden-target-windows.txt`; with WSL, Windows' Ubuntu, and (if you say yes) a Task Scheduler task "Jun's Garden keep running" so Ubuntu stays on while you are signed in. On the garden computer: everything menu 1 installs.
 - **To undo it:** More 12 (Uninstall) on the garden computer. Windows' Ubuntu and the Task Scheduler task are not removed by the menu; remove them in Windows yourself.
 
@@ -728,7 +737,7 @@ work differently on Windows:
 - **What it does:** Runs the language choice on the garden computer (the same as Ubuntu's L).
 
 ### T) Choose the garden computer
-- **What it does:** 1) another computer at home (asks its local IP and your user name on it), or 2) this Windows PC inside WSL.
+- **What it does:** 1) another computer at home (asks its local IP, or type `F` to find the computers at home with SSH, and your user name on it), or 2) this Windows PC inside WSL, then asks: Docker Desktop (the easy way) or Docker inside Ubuntu.
 - **What it installs or changes:** Saves the choice in `.garden-target-windows.txt` (IP and user name only, never a password).
 - **To undo it:** Choose T again.
 
@@ -743,14 +752,17 @@ work differently on Windows:
 | 11, 12 | the same as Ubuntu | 11, 12 |
 | 13 | Weekly automatic copy of the backup to THIS PC (on / off) | (Windows only) |
 | 14 | Subdomains with DuckDNS | 13 |
-| 15 | Turn the front door off | 14 |
+| 15 | On / off: the whole garden, or only off the internet; check-up, clean-up | 14 |
 | 16 | AI cost control: LiteLLM | 15 |
 | 17 | Website name swap | 16 |
 | 18 | Desktop shortcuts: Garden terminal (SSH) and Garden screen (Remote Desktop) | (Windows only) |
 | 19 | Reach the garden from anywhere, privately (Tailscale): on / off | 17 |
+| 20 | Rename or move a file or folder | 18 |
+| 21 | Find the garden computer again (if its address changed) | (Windows only) |
 
-Messages printed by `garden.sh` use the Ubuntu numbers, so on Windows add one
-from Subdomains onward (Ubuntu "menu M, then 13" is Windows More 14, and so on).
+Messages printed by `garden.sh` use the Ubuntu numbers. On Windows, add one for
+Ubuntu 13 to 16 (Ubuntu "menu M, then 13" is Windows More 14), and two for Ubuntu
+17 and 18 (Tailscale is Windows More 19, rename is Windows More 20).
 
 ### More 5) Open a terminal on the garden computer
 - **What it does:** Opens a new window with the garden computer's terminal (SSH, or WSL Ubuntu in the garden folder).
@@ -788,6 +800,17 @@ from Subdomains onward (Ubuntu "menu M, then 13" is Windows More 14, and so on).
 - **To undo it:** Delete the two shortcuts.
 - **Guide:** `20-ssh-and-remote-desktop.md`
 
+### More 20) Rename or move a file or folder
+- **What it does:** Runs the rename tool on the garden computer (Ubuntu More 18), then makes this PC's copy of the garden folder match: it copies the changed files here and renames the same site files, so a later INSTALL from this PC does not bring the old names back.
+- **What it installs or changes:** The same files on both computers. This PC's old files go to `logs\rename-windows_DATE\`.
+- **To undo it:** Run it again with the names swapped.
+
+### More 21) Find the garden computer again (if its address changed)
+- **What it does:** Checks the garden computer still answers at its saved address. If not, it looks at the computers at home with the SSH door open (port 22), finds the one with the same network card (MAC address) or name, and saves its new address. If it is not found, it lets you choose it again (with a list). The menu does this by itself before each job and before the weekly backup copy.
+- **When to use it:** When your router cannot reserve an address, or after a new router.
+- **What it installs or changes:** Only the saved address (and the network card ID and name) in `.garden-target-windows.txt`. It only knocks on port 22; nothing logs in.
+- **Guide:** `14-reserve-your-ip.md`, "If your router cannot reserve an address".
+
 ---
 
 ## Every command word
@@ -814,13 +837,17 @@ list shows the short help at the top of `garden.sh`. New to typing commands?
 | `dbweb` | More 8 | `ai` | More 9 |
 | `icon` | More 10 | `files` | More 11 |
 | `uninstall` | More 12 | `subdomains` | More 13 |
-| `offline` | More 14 | `llm` | More 15 |
-| `webname` | More 16 | | |
+| `offline` | More 14, 3 | `llm` | More 15 |
+| `webname` | More 16 | `tailscale` | More 17 |
+| `rename` | More 18 | `power` | More 14 |
+| `off` / `on` | More 14, 1 / 2 | `checkup` / `cleanup` | More 14, 4 / 5 |
+| `renames` | More 18, 4 | | |
 
 Commands with no menu number:
 
 - `bash garden.sh wiki`: runs the wiki's setup again (adds the garden pages once the wiki add-on zip is there).
 - `bash garden.sh dbweb-stop`: stops and removes Adminer.
+- `bash garden.sh redo-renames`: after restoring an old backup by hand, does its renames again.
 - `bash garden.sh db`: a database command line (type SQL; leave with `exit`). Guide: `12-your-database.md`.
 - `bash garden.sh test`: runs the website's Rust tests (slow the first time).
 
@@ -836,8 +863,8 @@ can be switched off again:
 | Garden tools, wiki, n8n | Parts (9) | Parts (9), the same number, then A |
 | Wiki pages (`junsgarden-wiki-addon.zip`) | wiki ON, then `bash garden.sh wiki` | wiki OFF in Parts |
 | Photos (`junsgarden-photos-addon.zip`) | Backups 11 | (plain files; nothing runs) |
-| Home Wi-Fi, practice, or online (front door) | More 1 | More 14 |
-| Subdomains (DuckDNS) | More 13 (Windows 14) | Subdomains 3; More 14 stops the updater |
+| Home Wi-Fi, practice, or online (front door) | More 1 | More 14, 3 |
+| Subdomains (DuckDNS) | More 13 (Windows 14) | Subdomains 3; More 14, 3 stops the updater |
 | LiteLLM (AI spending limit) | More 15 (Windows 16) | LiteLLM menu, 7 |
 | Email (Gmail) | More 3 | K, Gmail app password, 4 |
 | NAS copies | Backups 4 (a second or third place: Backups 13) | Backups 8 |

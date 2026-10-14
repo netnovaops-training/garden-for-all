@@ -109,3 +109,27 @@ Garden Bridge, but not tough.
 
 **Screenshots.** Every menu and option now has a picture, taken from the real
 program, with sample names and addresses instead of anyone's real ones.
+
+## 2026-10-14: your own names, an off switch, and Docker Desktop
+
+**Your own names.** The folders and pages came with Jason's names (Gallery,
+HeroBanner, privacy.html...). Menu M, 18 now renames a file or folder of the
+website and changes every place that uses the name with it: the code, the
+pages, the photo lists and the database. It shows every place first, offers a
+backup, and checks the website afterwards. The guides keep the first names; a
+small list, `logs/renames.tsv`, says what is called what now. The same menu
+moves a big folder, or the whole garden, to a bigger disk.
+
+**An off switch.** Menu M, 14 switches everything off without deleting
+anything, for a quiet month or too much traffic, and on again later. A check-up
+restarts a program that got stuck (it can run by itself every 6 hours), and a
+clean-up removes Docker's old leftovers, never your files and never another
+project's.
+
+**Docker Desktop.** On a Windows PC the installer now asks: Docker Desktop (the
+easy way, with buttons) or Docker inside Ubuntu (the hands-on way). Guide 26
+explains both, and why an old Windows 7 PC is better turned into an Ubuntu
+laptop.
+
+All of it is plain scripts, with no AI inside: each does one job, and every line
+can be read. Each new option was tried on a real test garden before release.

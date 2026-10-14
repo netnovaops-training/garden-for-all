@@ -10,6 +10,7 @@
 - How do I know it is working?
 - Where are my web addresses?
 - On Windows: does the PC have to stay on?
+- Can I switch the garden off for a while?
 
 **Passwords and people**
 - I forgot my website password.
@@ -18,6 +19,7 @@
 - Who can see my garden?
 - Someone should not have access any more.
 - Where are my passwords and keys kept?
+- Should the website have its own Gmail?
 - I pasted a password or key somewhere by mistake.
 
 **When something is wrong**
@@ -36,7 +38,13 @@
 
 **Moving or removing**
 - How do I move the garden to a new computer?
+- Can I give folders and pages my own names?
 - How do I uninstall it?
+
+**Windows and Docker**
+- I already use Docker Desktop. Is that a problem?
+- I have an old Windows 7 PC. Can I use it?
+- Can someone else start their own garden with this?
 
 ---
 
@@ -92,6 +100,17 @@ again; if not, use the Windows menu `2`.
 
 ---
 
+### Can I switch the garden off for a while?
+Yes. Menu `M`, then `14`, then `1` (Everything OFF). It stops every program and the
+front door, and deletes nothing: your plants, photos, data, cache, backups and
+settings stay in their folders. Use it when you do not want to host the site for a
+while, or when the traffic is too much. Menu `M`, `14`, then `2` turns it all on
+again, even months later, and checks the website. While it is off, keep confirming
+your free No-IP name every 30 days.
+
+**Keys:** menu `M`, then `14`
+**More:** [guide 26](26-rename-move-and-switch.md) (The on / off switch)
+
 ## Passwords and people
 
 ### I forgot my website password.
@@ -140,6 +159,19 @@ Menu `U`, then `4` removes every login that person has. Menu `U`, then `8`
 (LOCK DOWN) leaves only you: new passwords, and everyone is signed out.
 
 **More:** [guide 19](19-every-menu-option.md) (Users and access)
+
+### Should the website have its own Gmail?
+It is a good idea, and free: <https://accounts.google.com/signup>. Use it for the
+website's email (menu `M`, `3`), the Google Drive backups, the AI key, and to sign in
+to Tailscale, DuckDNS and No-IP with "Sign in with Google". Your personal inbox stays
+apart, and handing the website on one day means handing on one account. Turn on its
+2-Step Verification. The garden's own sign-in stays your garden password: no outside
+account can open the garden.
+
+One Gmail can also give each service its own address (`name+noip@gmail.com`), so you see who
+sends what: guide 00b, "Plan your website's name and email".
+
+**More:** [guide 00b](00b-before-you-start.md)
 
 ### Where are my passwords and keys kept?
 In one private file, `.env`, in the garden folder. Only you can read it. The
@@ -198,11 +230,12 @@ your home. If the updater is not running: menu `K`, then `N`.
 The checklist's last check says "Disk is ...% full": PASS under 85%, FAIL from
 85%. Nightly backups are deleted by themselves after 7 days. Backups you make
 yourself are never deleted for you, and each one is about 800 MB. To free
-space, copy your old ones to a USB stick, delete them from `backups/`, then run
-`docker system prune` (it asks first).
+space, copy your old ones to a USB stick, delete them from `backups/`, then use
+the clean-up: menu `M`, `14`, then `5`. It removes only Docker's leftovers (old
+versions of the garden's programs, older than 7 days) and asks first.
 
-**Keys:** menu `5`
-**More:** [guide 13](13-backups-and-folders.md), [guide 09](09-troubleshooting.md)
+**Keys:** menu `5`, and menu `M`, then `14`
+**More:** [guide 13](13-backups-and-folders.md), [guide 09](09-troubleshooting.md), [guide 26](26-rename-move-and-switch.md)
 
 ### Where are the logs?
 The garden programs' recent messages: menu `M`, then `6`. The install and the
@@ -272,12 +305,51 @@ computer (guide 14).
 
 **More:** [guide 13](13-backups-and-folders.md) (Moving to a new computer), [guide 14](14-reserve-your-ip.md)
 
+### Can I give folders and pages my own names?
+Yes, with menu `M`, then `18`. Do not rename them by hand: the code and the
+database still use the old name, and the page would break. The menu renames the
+file or folder AND every place that uses it, shows you everything first, and makes
+a backup. One thing to know: the guides keep showing the names the garden came
+with. `logs/renames.tsv` lists what is called what now (menu `M`, `18`, then `4`).
+Moving the whole garden folder to a bigger disk is in the same menu (`3`).
+
+**Keys:** menu `M`, then `18`
+**More:** [guide 26](26-rename-move-and-switch.md)
+
 ### How do I uninstall it?
 Menu `M`, then `12`. Choice `1` removes the programs and keeps your garden
 (photos, database, backups); menu `1` installs it again. Choice `2` removes
 everything, but first makes a final backup and asks you to type `DELETE`.
 
 **More:** [guide 19](19-every-menu-option.md) (Uninstall)
+
+## Windows and Docker
+
+### I already use Docker Desktop. Is that a problem?
+No. When you install on this PC, the installer asks which Docker to use. Docker
+Desktop is the easy way: the garden's programs show in its window, with buttons.
+Docker inside Ubuntu is the hands-on way. If you picked the hands-on way, keep
+Docker Desktop's WSL integration switched off for `JunsGarden` (Docker Desktop >
+Settings > Resources > WSL integration); the checklist warns you if it is on. The
+clean-up never touches the images of your other Docker projects.
+
+**More:** [guide 26](26-rename-move-and-switch.md) (On Windows: two ways to run Docker)
+
+### I have an old Windows 7 PC. Can I use it?
+Not for the garden. Windows 7 gets no security updates since January 2020, so it is
+not safe for a website on the internet, and it has no WSL and no current Docker.
+Put Ubuntu on that old laptop instead (copy your files to a USB stick first), or run
+the garden on another computer and use the old PC only to look at it.
+
+**More:** [guide 26](26-rename-move-and-switch.md), [guide 01](01-ubuntu-laptop.md)
+
+### Can someone else start their own garden with this?
+Yes: the code is public and free to use (MIT license). Without your garden's data
+the installer sets up an empty garden. A starter garden for new people, with
+free-to-use plants for their area and their own photos, is an idea for a later
+version; it is not in this one.
+
+**More:** [guide 18](18-review-the-code.md) (the public code)
 
 ---
 

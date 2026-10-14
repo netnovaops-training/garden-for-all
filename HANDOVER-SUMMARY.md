@@ -30,8 +30,9 @@ transparent, free, public, and with no way in for anyone but him.
   key and account of the previous owner.
 - The garden's own data (plants database, photos, wiki pages): a separate,
   private download for Jun, not in this repository.
-- Planned for later: a tool to rename the website's folders and everything that
-  points at them.
+- Ideas for a later version (not in this one): a starter garden for new people
+  (free-to-use plants for their area, their own photos, and credit to the original
+  Jun's Garden code), and custom addresses and ports for the front door.
 
 ## Enhancements
 
@@ -55,18 +56,32 @@ transparent, free, public, and with no way in for anyone but him.
 - **Remote access:** SSH with keys, WinSCP for files between Linux and Windows,
   Termius for a terminal on the phone, and Tailscale (menu M, 17) to reach the
   computer from anywhere with no port opened.
-- **Guides:** 28 in English and 26 in Korean, plus 12 project guides; a beginner's
-  bash walkthrough; 41 pictures taken from the real program, with sample names and
+- **Guides:** 30 in English and 28 in Korean, plus 12 project and automation guides; a
+  beginner's bash walkthrough; 43 pictures taken from the real program (and 4 diagrams), with sample names and
   rings on what to click; PDFs with a colour per step; a web handbook with a
   step > guide > topic tree for when Jun is stuck.
 - **Korean** on screen too: the menu speaks English, Korean or both (every one of
   its sentences is translated).
+- **Rename and move, safely** (menu M, 18; guide 26): a file or folder of the website
+  gets Jun's own name, and every place that uses it follows (code, pages, photo lists,
+  database), with a preview, a backup and a check. Big folders move to another disk;
+  the whole garden folder moves too. The guides keep the first names, and
+  `logs/renames.tsv` lists what is called what now.
+- **An on / off switch** (menu M, 14): everything off without deleting anything, on
+  again even months later; a check-up that restarts a stuck program (also every 6
+  hours if wanted); a clean-up that removes only Docker's leftovers older than 7 days, after asking.
+- **Windows: two ways to run Docker:** Docker Desktop (the easy way, with buttons) or
+  Docker inside Ubuntu (the hands-on way), chosen in the installer. The installer can
+  find the garden computer at home for you ("Find it for me"), and the menu finds it
+  again by its network card if its address changes.
+- **No AI inside:** the menus, the installer and the app are plain scripts and
+  programs, each doing one job, so every step can be read.
 
 ## Fixes
 
 Testing every option on Ubuntu, on Windows (the Garden Bridge, downloading from
-Google Drive as Jun will) and on a Raspberry Pi 5 found **40 problems**, all fixed
-and each tested again (`CHANGES.md`, Parts 2 and 5). A few examples:
+Google Drive as Jun will) and on a Raspberry Pi 5 found **50 problems**, all fixed
+and each tested again (`CHANGES.md`, Parts 2, 5 and 6). A few examples:
 
 - The firewall step could have locked out SSH on a computer whose SSH uses
   another port; it now keeps the real port open, from home only.
@@ -75,6 +90,8 @@ and each tested again (`CHANGES.md`, Parts 2 and 5). A few examples:
 - Yes/no checks could answer a wrong "no" when a program's output was long.
 - A Korean Ubuntu's folders (다운로드, 바탕화면) were not searched for the downloads.
 - Moving the garden folder out of OneDrive would have broken the scheduled backup copy.
+- A clean-up command in the guides could have deleted other Docker projects' stopped
+  programs on a shared Docker; the new clean-up touches only the garden's leftovers.
 
 ## Security
 
@@ -106,5 +123,10 @@ the internet. Ten improvements came from the review (`CHANGES.md`, Part 4).
   정원의 데이터(따로 내려받는 파일)는 포함하지 않아요.
 - **좋아진 것:** 설치가 모든 일을 하고 단계마다 설명해요. 세 단계(맥주·와인·샴페인)로
   시간을 계획할 수 있어요. 이메일 비밀번호 찾기, 3-2-1 백업, Tailscale로 어디서든 나만 접속.
-- **고친 것:** 테스트에서 찾은 문제 40개를 모두 고치고 다시 확인했어요(`CHANGES.md`).
+  파일과 폴더에 내 이름 붙이기(쓰는 곳이 모두 따라와요), 켜기 / 끄기 스위치와 점검,
+  Windows에서는 Docker Desktop(쉬운 방법)이나 Ubuntu 안의 Docker 중에서 고르기(안내서 26).
+  메뉴와 앱에는 AI가 없어요: 하나에 한 가지 일만 하는 평범한 스크립트예요.
+- **고친 것:** 테스트에서 찾은 문제 50개를 모두 고치고 다시 확인했어요(`CHANGES.md`).
+- **나중 버전을 위한 생각:** 새로 시작하는 사람을 위한 시작 정원(자유롭게 쓸 수 있는 식물,
+  자기 사진, 원래 Jun's Garden 코드에 대한 감사 표시), 현관문 주소와 포트 바꾸기.
 - **보안:** 이 코드를 읽어도, 준의 이름과 이메일을 알아도, 준으로 로그인할 수 없어요.

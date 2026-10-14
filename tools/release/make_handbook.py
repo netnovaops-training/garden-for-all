@@ -16,7 +16,7 @@ buttons open "Setup documentation/English/...", which the release build puts
 in the download. The logo is Jason's emblem: it is passed in at release time
 (GARDEN_LOGO=path) and is not kept in git.
 """
-import html, os, pathlib, re, shutil, sys, urllib.parse
+import html, json, os, pathlib, re, shutil, sys, urllib.parse
 import markdown
 import make_pdfs as m
 
@@ -265,13 +265,162 @@ def fix_links(body, here_dir, base=None):
 
 def page(title, body, logo, home):
     logo_tag = f'<img src="{logo}" alt="">' if logo else ""
+    # The search box: every guide's sections, English and Korean, searched on this
+    # computer (handbook/assets/search-index.js); nothing is sent anywhere.
+    search = (f'<form class="search" role="search" onsubmit="return false">'
+              f'<input id="q" type="search" data-home="{home}" placeholder="Search the guides  (press /)" '
+              f'aria-label="Search the guides" autocomplete="off">'
+              f'<select id="qlang" aria-label="Language"><option value="all">English + 한국어</option>'
+              f'<option value="en">English</option><option value="ko">한국어</option></select>'
+              f'<div id="qres" class="qres" hidden></div></form>')
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title><link rel="stylesheet" href="{home}handbook/assets/handbook.css"></head>
 <body><header class="top"><a class="brand" href="{home}00-WELCOME.html">{logo_tag}<div><b>Jun's Garden</b><span>Your handbook</span></div></a>
-<a class="home" href="{home}00-WELCOME.html">All steps</a></header>
-{body}</body></html>
+{search}<a class="home" href="{home}00-WELCOME.html">All steps</a></header>
+{body}<script src="{home}handbook/assets/search-index.js"></script><script src="{home}handbook/assets/search.js"></script></body></html>
 """
+
+
+SEARCH_CSS = """
+/* The search box in the top bar, and its list of results */
+.search { position:relative; flex:1; max-width:560px; display:flex; gap:8px; margin-left:16px; }
+.search input { flex:1; min-width:0; font:15px var(--ui); padding:8px 12px; border:1px solid var(--rule); border-radius:8px; background:var(--sheet); color:var(--ink); }
+.search select { font:14px var(--ui); padding:6px 8px; border:1px solid var(--rule); border-radius:8px; background:var(--sheet); color:var(--ink); }
+.search input:focus-visible, .search select:focus-visible { outline:2px solid var(--lav); outline-offset:1px; }
+.qres { position:absolute; top:calc(100% + 6px); left:0; right:0; max-height:70vh; overflow:auto; background:var(--sheet);
+        border:1px solid var(--rule); border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.18); padding:6px; z-index:20; }
+.qres a { display:block; padding:8px 10px; border-radius:8px; text-decoration:none; color:var(--ink); font:14px/1.45 var(--ui); }
+.qres a:hover, .qres a:focus-visible { background:var(--petal); }
+.qres b { display:block; font-weight:600; }
+.qres span { color:var(--moss); }
+.qres small { display:block; color:var(--muted); font-size:13px; }
+.qres mark { background:var(--petal); color:inherit; font-weight:700; }
+.qres .n { margin:4px 10px; font:13px var(--ui); color:var(--muted); }
+.qres .keys { display:flex; flex-wrap:wrap; gap:6px; margin:4px 8px 8px; }
+.qres .keys button { font:13px var(--ui); padding:4px 10px; border:1px solid var(--rule); border-radius:999px; background:var(--paper); color:var(--ink); cursor:pointer; }
+.qres .keys button:hover, .qres .keys button:focus-visible { background:var(--petal); border-color:var(--lav); }
+@media (max-width:760px) { .top { flex-wrap:wrap; } .search { order:3; flex-basis:100%; margin-left:0; max-width:none; } }
+"""
+
+# The search itself: every word typed must appear in a section (its guide's
+# title, its heading or its text); a word in the heading counts more. Plain
+# JavaScript, from the page's own folder, so it works offline from the disk.
+SEARCH_JS = r"""(function () {
+  var box = document.getElementById('q'), sel = document.getElementById('qlang'), out = document.getElementById('qres');
+  if (!box || !window.GARDEN_INDEX) return;
+  var home = box.getAttribute('data-home') || '';
+  try { var l = localStorage.getItem('gardenSearchLang'); if (l) sel.value = l; } catch (e) {}
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function words(q) { return q.toLowerCase().split(/\s+/).filter(Boolean); }
+  function mark(s, ws) {
+    var h = esc(s);
+    ws.forEach(function (w) {
+      var re = new RegExp('(' + esc(w).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+      h = h.replace(re, '<mark>$1</mark>');
+    });
+    return h;
+  }
+  function snippet(x, ws) {
+    var i = x.toLowerCase().indexOf(ws[0]); if (i < 0) i = 0;
+    var start = Math.max(0, i - 60);
+    return mark((start ? '... ' : '') + x.slice(start, start + 190) + (start + 190 < x.length ? ' ...' : ''), ws);
+  }
+  function run() {
+    var ws = words(box.value), lang = sel.value;
+    try { localStorage.setItem('gardenSearchLang', lang); } catch (e) {}
+    if (!ws.length) { out.hidden = true; out.innerHTML = ''; return; }
+    var hits = [];
+    window.GARDEN_INDEX.forEach(function (e) {
+      if (lang !== 'all' && e.l !== lang) return;
+      var head = (e.t + ' ' + e.h).toLowerCase(), hay = head + ' ' + e.x.toLowerCase(), score = 0;
+      for (var i = 0; i < ws.length; i++) {
+        if (hay.indexOf(ws[i]) < 0) return;
+        score += head.indexOf(ws[i]) >= 0 ? 5 : 1;
+      }
+      hits.push([score, e]);
+    });
+    hits.sort(function (a, b) { return b[0] - a[0]; });
+    out.innerHTML = hits.length
+      ? '<p class="n">' + hits.length + (hits.length === 1 ? ' place' : ' places') + (hits.length > 40 ? ' (the best 40)' : '') + '</p>' +
+        hits.slice(0, 40).map(function (h) {
+          var e = h[1];
+          var href = e.u ? home + e.u : home + 'handbook/' + e.g + '.html#' + encodeURIComponent(e.a);
+          return '<a href="' + href + '"' + (e.l === 'ko' ? ' lang="ko"' : '') + '>' +
+                 '<b>' + esc(e.t) + '</b><span>' + mark(e.h, ws) + '</span><small>' + snippet(e.x, ws) + '</small></a>';
+        }).join('')
+      : '<p class="n">Nothing found. Try another word' + (lang !== 'all' ? ', or both languages' : '') + '.</p>';
+    out.hidden = false;
+  }
+  box.addEventListener('input', run);
+  sel.addEventListener('change', run);
+  // An empty box shows common topics: one click searches for it.
+  var KEYS = ['router', 'backup', 'restore', 'password', 'email', 'Gmail', 'rename', 'move', 'off switch', 'clean-up',
+              'Docker Desktop', 'Tailscale', 'SSH', 'NAS', 'Google Drive', 'web name', 'HTTPS', 'firewall', 'uninstall',
+              'Raspberry Pi', '공유기', '백업', '비밀번호', '이름 바꾸기', '끄기'];
+  function topics() {
+    out.innerHTML = '<p class="n">Common topics (or type any word):</p><p class="keys">' +
+      KEYS.map(function (k) { return '<button type="button">' + esc(k) + '</button>'; }).join('') + '</p>';
+    out.hidden = false;
+  }
+  out.addEventListener('click', function (ev) {
+    var b = ev.target.closest('.keys button'); if (!b) return;
+    box.value = b.textContent; box.focus(); run();
+  });
+  box.addEventListener('focus', function () { if (box.value) run(); else topics(); });
+  box.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') { box.value = ''; run(); }
+    if (ev.key === 'Enter') { ev.preventDefault(); var a = out.querySelector('a'); if (a) location.href = a.href; }
+  });
+  out.addEventListener('click', function (ev) { if (ev.target.closest('a')) out.hidden = true; });
+  document.addEventListener('keydown', function (ev) {
+    var t = document.activeElement && document.activeElement.tagName;
+    if (ev.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(t)) { ev.preventDefault(); box.focus(); }
+  });
+  document.addEventListener('click', function (ev) { if (!ev.target.closest('.search')) out.hidden = true; });
+  // A link like 00-WELCOME.html?q=router&lang=ko opens with that search.
+  var p = new URLSearchParams(location.search);
+  if (p.get('q')) { box.value = p.get('q'); if (p.get('lang')) sel.value = p.get('lang'); run(); }
+})();
+"""
+
+
+def search_entries(n, title, body, lang, first="full", head=None, url=None):
+    """One search entry per section of a guide page: its heading, the place to jump to, and its text.
+    `url` (a file in the package) is for the guides that are not handbook pages."""
+    out, anchor = [], first
+    head = head or title
+    for part in re.split(r'(<h[23] id="[^"]+">.*?</h[23]>)', body, flags=re.S):
+        mo = re.match(r'<h[23] id="([^"]+)">(.*?)</h[23]>', part, re.S)
+        if mo:
+            anchor, head = mo.group(1), html.unescape(re.sub("<[^>]+>", "", mo.group(2))).strip()
+            continue
+        text = re.sub(r"\s+", " ", html.unescape(re.sub("<[^>]+>", " ", part))).strip()
+        if text:
+            e = {"g": n, "t": title, "h": head, "a": anchor, "l": lang, "x": text[:3000]}
+            if url:
+                e["u"] = url
+            out.append(e)
+    return out
+
+
+# The other guides, which are files in the package rather than handbook pages.
+OTHER_DOCS = sorted(str(p.relative_to(PKG)).replace(os.sep, "/") for p in
+                    list((SRC / "n8n").glob("*.md")) + list((SRC / "projects").glob("*.md")) + list(SRC.glob("MY-WINS.md")))
+OTHER_DOCS += [f for f in ("WHAT-GETS-INSTALLED.md", "WHAT-GETS-INSTALLED.ko.md", "WHY-THESE-PROGRAMS.md", "WHY-THESE-PROGRAMS.ko.md",
+                           "HANDOVER-SUMMARY.md", "JOURNAL.md", "JOURNAL.ko.md", "CHANGES.md", "README.md") if (PKG / f).exists()]
+
+
+def other_entries():
+    out = []
+    for rel in OTHER_DOCS:
+        text = (PKG / rel).read_text(encoding="utf-8")
+        title = title_of(text)
+        lang = "ko" if (".ko." in rel or "/ko/" in rel) else "en"
+        body = markdown.Markdown(extensions=["tables", "fenced_code", "sane_lists", "toc"]).convert(
+            text.split("\n", 1)[1] if text.startswith("# ") else text)
+        out += search_entries(rel, title, body, lang, first="", url=urllib.parse.quote(rel))
+    return out
 
 
 def step_nav(current):
@@ -432,7 +581,9 @@ VIEW_JS = """<script>
 
 def build():
     (HB / "assets").mkdir(parents=True, exist_ok=True)
-    (HB / "assets" / "handbook.css").write_text(CSS, encoding="utf-8")
+    (HB / "assets" / "handbook.css").write_text(CSS + SEARCH_CSS, encoding="utf-8")
+    (HB / "assets" / "search.js").write_text(SEARCH_JS, encoding="utf-8")
+    index = []
     logo = ""
     if LOGO and os.path.exists(LOGO):
         shutil.copyfile(LOGO, HB / "assets" / "logo.png")
@@ -458,6 +609,11 @@ def build():
             ko = fix_links(conv(kt, slugify_unicode), HB, SRC / "ko")
         else:
             ko = '<p lang="ko">이 안내서는 영어로만 있어요. <b>Full</b>(전체)을 눌러 영어로 읽어 보세요.</p>'
+        # The search index: the short version, every section of the full guide, and the Korean.
+        index += search_entries(n, TITLES[n], brief, "en", first="brief", head="In brief")
+        index += search_entries(n, TITLES[n], body, "en")
+        if ko_file.exists():
+            index += search_entries(n, title_of(ko_file.read_text(encoding="utf-8")), ko, "ko", first="ko")
         heads = re.findall(r'<h2 id="([^"]+)">(.*?)</h2>', body)
         toc = "".join(f'<a href="#{hid}">{re.sub("<[^>]+>", "", t)}</a>' for hid, t in heads)
         folder, num, label = STEP_NAMES[n]
@@ -484,6 +640,11 @@ def build():
                 f'<nav class="pager" aria-label="Previous and next guide">{pager}</nav></main>'
                 f'<aside class="toc"><b>On this page</b>{toc}</aside></div>{VIEW_JS}')
         (HB / f"{n}.html").write_text(page(TITLES[n], main, ("../" + logo) if logo else "", "../"), encoding="utf-8")
+    # The other guides, then the whole index as one script file (a script file,
+    # not JSON, so the browser reads it straight from the disk).
+    index += other_entries()
+    (HB / "assets" / "search-index.js").write_text(
+        "window.GARDEN_INDEX = " + json.dumps(index, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
     # The welcome page.
     steps = []
     for folder, _ko, names in m.STEPS:
@@ -542,7 +703,8 @@ def build():
     first = ORDER[0]
     welcome = (f'<section class="hero"><div><h1>Your garden, one step at a time.</h1>'
                f'<p>Every guide is here, in order. Read it on screen, or open its PDF to keep or print. '
-               f'Everything opens from this computer, so you need no internet.</p>'
+               f'Everything opens from this computer, so you need no internet. Looking for something? Use the search box at the top '
+               f'(or press /), in English, Korean or both.</p>'
                f'<p class="quiet">Your garden itself: <a href="http://localhost:8030">http://localhost:8030</a> '
                f'(on Windows, the garden menu, 4). The same PDFs are in your Google Drive folder, "Setup documentation".</p>'
                f'<div class="begin"><a class="btn solid" href="handbook/{first}.html">Start with the first guide</a>'

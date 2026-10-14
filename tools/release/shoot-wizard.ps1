@@ -9,6 +9,7 @@ $shoot = @'
 $names = @("wizard-1-welcome", "wizard-2-where", "wizard-3-about-you", "wizard-4-what-gets-installed", "wizard-5-install", "wizard-6-done")
 $form.add_Shown({
     $tbEmail.Text = "you@gmail.com"
+    $rbWsl.Text = "This Windows PC (MY-PC, 192.168.1.23), inside Windows' own Ubuntu (WSL)"   # a sample, not this PC
     for ($i = 0; $i -lt $pages.Count; $i++) {
         Show-Page $i
         [Windows.Forms.Application]::DoEvents()
@@ -16,6 +17,12 @@ $form.add_Shown({
         $form.DrawToBitmap($bmp, (New-Object Drawing.Rectangle(0, 0, $form.Width, $form.Height)))
         $bmp.Save((Join-Path $OUTDIR ($names[$i] + ".png")), [Drawing.Imaging.ImageFormat]::Png); $bmp.Dispose()
     }
+    # Page 2 again with "This Windows PC" ticked: the choice of Docker shows.
+    Show-Page 1; $rbWsl.Checked = $true
+    [Windows.Forms.Application]::DoEvents()
+    $bmp = New-Object Drawing.Bitmap($form.Width, $form.Height)
+    $form.DrawToBitmap($bmp, (New-Object Drawing.Rectangle(0, 0, $form.Width, $form.Height)))
+    $bmp.Save((Join-Path $OUTDIR "wizard-2b-this-pc.png"), [Drawing.Imaging.ImageFormat]::Png); $bmp.Dispose()
     $form.Close()
 })
 [void]$form.ShowDialog()

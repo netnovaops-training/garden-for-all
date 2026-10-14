@@ -12,7 +12,7 @@
 services:
   n8n:
     image: docker.n8n.io/n8nio/n8n
-    container_name: n8n
+    container_name: garden-n8n   # "garden-" so it cannot clash with another n8n on the same Docker
     restart: unless-stopped
     network_mode: host
     environment:

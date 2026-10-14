@@ -175,15 +175,18 @@
         한국어를 고를 수 있어요.</div>
       <div class="note">정원은 항상 <strong>Ubuntu에서 실행돼요</strong>. 설치 프로그램이 어디에서 실행할지 물어봐요:
         <br>&bull; <strong>집에 있는 다른 컴퓨터</strong>(Ubuntu 노트북 또는 Raspberry Pi, 추천): 그 컴퓨터의
-        <strong>로컬 IP 주소</strong>(그 컴퓨터에서 <code>hostname -I</code>를 입력하세요. <code>192.168.1.50</code>처럼 생겼어요)와
-        그 컴퓨터의 사용자 이름을 입력해요. 설치 프로그램이 모든 것을 그쪽으로 복사하고 거기에 설치해요. 그 컴퓨터에는 SSH 서버가 한 번 필요해요:</div>
+        <strong>로컬 IP 주소</strong>(그 컴퓨터에서 <code>hostname -I</code>를 입력하세요. <code>192.168.1.50</code>처럼 생겼어요.
+        또는 <strong>Find it for me</strong>(찾아 줘요)를 눌러 목록에서 고르세요)와 그 컴퓨터의 사용자 이름을 입력해요. 설치 프로그램이 모든 것을 그쪽으로 복사하고 거기에 설치해요. 그 컴퓨터에는 SSH 서버가 한 번 필요해요:</div>
       <div class="cmd"><code>sudo apt install -y openssh-server</code><button class="copy" type="button">복사</button></div>
       <div class="note">&bull; <strong>이 Windows PC</strong>: Windows가 자기만의 Ubuntu(WSL, Microsoft가 만든 것)를 설치하고,
         정원은 그 안에서 실행돼요. 여기서 정원은 <strong>이 PC 자신에서 쓰는 용도</strong>예요. 인터넷에 올리는 것, 그리고
         집에 있는 휴대폰과 다른 컴퓨터에 보여 주는 것은 따로 있는 정원 컴퓨터(Ubuntu 노트북 또는 Pi)가 필요해요:
         Windows 안의 Ubuntu는 PC 안에 자기만의 내부 주소가 있어서, 공유기와 휴대폰이 닿을 수 없어요.
         (더 알고 싶다면: <a href="https://learn.microsoft.com/windows/wsl/networking">WSL 네트워크, Microsoft</a>.
-        정원은 이것을 설정하지 않아요.)</div>
+        정원은 이것을 설정하지 않아요.)
+        <br>그다음 정원의 프로그램을 어떤 Docker로 돌릴지 물어요: <strong>Docker Desktop</strong>은 쉬운 방법이에요(버튼으로
+        보고, 시작하고, 멈춰요. 설치 프로그램이 대신 받아 줘요). <strong>Ubuntu 안의 Docker</strong>는 직접 하는
+        방법이에요. 안내서 26에서 둘을 비교해요.</div>
       <p><strong>이 Windows PC를 고르면</strong>, 처음에는 이렇게 진행돼요:</p>
       <ul>
         <li>Windows가 WSL을 켜도 되는지 허락을 물어요(<strong>Yes</strong>(예)를 누르세요). 그다음 <strong>다시 시작이 한 번</strong>
@@ -258,7 +261,7 @@
   <div class="card"><h4>선택(물어봐요)</h4>
     정원 도구(<code>/beds</code>), 위키, Gmail로 이메일 보내기, 바탕화면 아이콘.</div>
   <div class="card"><h4>고급(나중에, 메뉴 <code>M</code>)</h4>
-    정문(front door): HTTPS(Caddy), 로그인 페이지(Authelia), 웹 이름(No-IP), 공유기 포트 80과 443. 그리고 n8n, 데이터베이스 보기 프로그램, 로컬 AI.</div>
+    정문(front door): HTTPS(Caddy), 로그인 페이지(Authelia), 웹 이름(No-IP), 공유기 포트 80과 443. 그리고 n8n, 데이터베이스 보기 프로그램, 로컬 AI, Tailscale(어디서나 접속), 폴더와 페이지에 내 이름 붙이기, 켜기 / 끄기 스위치(안내서 26).</div>
 </div>
 
 <h2>멈추거나 멈춘 것처럼 보이면</h2>

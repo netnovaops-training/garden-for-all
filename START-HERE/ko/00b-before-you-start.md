@@ -41,7 +41,7 @@
 
 | 무엇 | 왜 | 시간 |
 |---|---|---|
-| 계속 켜 둘 수 있는 **정원 컴퓨터**: Ubuntu 노트북, Raspberry Pi 5, 또는 이 Windows PC(Windows 자체의 Ubuntu 사용. 이 PC에서만 쓰는 용도예요, 아래를 보세요) | 정원이 그 위에서 돌아가요 | 노트북: 처음 Ubuntu를 설치하는 데 2~3시간(안내서 [01](01-ubuntu-laptop.md)). 스타터 키트가 있는 Pi 5: 약 1시간. Windows: 설치 프로그램이 설정해요(재시작 한 번) |
+| 계속 켜 둘 수 있는 **정원 컴퓨터**: Ubuntu 노트북(테스트함), Raspberry Pi 5(64비트 Raspberry Pi OS에서 테스트함. 웹사이트를 만들 때 뜨거워져서 팬 같은 좋은 냉각이 필요해요), 또는 이 Windows PC(Windows 자체의 Ubuntu 사용. 이 PC에서만 쓰는 용도예요, 아래를 보세요) | 정원이 그 위에서 돌아가요 | 노트북: 처음 Ubuntu를 설치하는 데 2~3시간(안내서 [01](01-ubuntu-laptop.md)). 스타터 키트가 있는 Pi 5: 약 1시간. Windows: 설치 프로그램이 설정해요(재시작 한 번) |
 | **디스크 빈 공간**: Ubuntu 노트북은 약 60 GB. Windows는 C:에 약 60 GB | Docker, 웹사이트, 사진, 그리고 매일 밤 백업 7개(모두 합쳐 약 6 GB) | 할 일은 없어요. 시작하기 전에 확인만 하세요 |
 | **USB 메모리, 16 GB 이상**(노트북에 Ubuntu를 설치할 때만) | Ubuntu 설치용(안의 내용은 지워져요) | 2~3시간 안에 들어 있어요 |
 | Google Drive 폴더의 **다운로드 파일 세 개** | 정원(약 70 MB), 사진(약 800 MB), 위키 페이지(1 MB 미만, 위키를 원할 때만) | 정원: 1~2분. 사진: 빠른 인터넷에서 약 2분, 느린 인터넷에서 15~20분 |
@@ -75,6 +75,11 @@
   없어요. 그런 일에는 따로 있는 정원 컴퓨터(Ubuntu 노트북 또는 Raspberry Pi)를 쓰세요.
   더 알고 싶다면 Microsoft가 WSL의 네트워크를 여기서 설명해요(읽기만 하세요. 정원은 이것을
   설정하지 않아요): <https://learn.microsoft.com/windows/wsl/networking>
+- **어떤 Docker(2쪽):** **Docker Desktop**은 쉬운 방법이에요: 정원의 프로그램을 보여 주는
+  버튼 있는 Windows 앱이고, Windows와 함께 시작하며, 개인 사용은 무료예요. 설치 프로그램이
+  대신 받아 주고 스위치 하나를 기다려요(Settings > Resources > WSL integration:
+  `JunsGarden` 켜기). 또는 **Ubuntu 안의 Docker**는 직접 하는 방법이에요: 어느 Ubuntu
+  컴퓨터에서나와 같아요. 안내서 26에서 둘을 비교해요.
 - **재시작 한 번:** 처음에는 Windows가 WSL을 켜도 되는지 허락을 묻고, 재시작이 한 번
   필요해요. 재시작한 뒤 `Start-Here-Windows.cmd`를 다시 더블클릭하고 같은 페이지를
   넘기세요: 멈춘 곳부터 이어서 해요.
@@ -162,8 +167,47 @@ Ubuntu로는 안 돼요(위의 "Windows PC에서"를 보세요).
 
 | 무엇 | 왜 | 시간 |
 |---|---|---|
+| **웹사이트만을 위한 Gmail**(추천, 무료): <https://accounts.google.com/signup> | 웹사이트에 필요한 모든 것을 한 계정으로: 비밀번호 이메일을 보내고, Google Drive 백업과 AI 키를 두고, Tailscale, DuckDNS, No-IP에 로그인해요("Sign in with Google"을 써요). 개인 메일함은 따로 지켜지고, 나중에 웹사이트를 넘겨줄 때도 계정 하나만 넘기면 돼요 | 약 10분 |
 | **Gmail 앱 비밀번호**(Google 계정에 2단계 인증이 필요해요) | "비밀번호를 잊었어요" 이메일이 나에게 오도록요. 비밀번호는 하나만 기억하면 돼요. 잊어버리면 재설정 이메일이 바로 나에게 와요(웹사이트와 로그인 페이지가 각자 보내요. 메뉴 U, 그다음 5를 하면 둘 다 같은 새 비밀번호로 다시 맞춰요) | 5분(2단계 인증이 아직 꺼져 있으면 10분) |
 | **비밀번호 관리자**, 또는 안전한 곳에 두는 공책 | 아래의 키와 비밀번호를 적어 두려고요 | 5분 |
+
+## 내 웹사이트의 이름과 이메일 정하기(10분, 종이에)
+
+**1. 이름.** 짧고, 전화로 말하기 쉽고, 소문자, 숫자, `-`만 써요. 예: `momsgarden`.
+이것이 웹 이름(`momsgarden.zapto.org`, 안내서 04)이 되고, 비어 있으면 웹사이트의
+Gmail(`momsgarden.site@gmail.com`)도 돼요. 정하기 전에 둘 다 비어 있는지 확인하세요.
+
+**2. 이메일.** 세 가지 중 어느 것이든 돼요:
+
+| 선택 | 좋은 점 | 덜 좋은 점 |
+|---|---|---|
+| 내 이메일 | 새로 만들 것이 없어요 | 웹사이트 메일이 내 메일과 섞여요. 나중에 웹사이트를 넘겨주기가 어려워요 |
+| 가입용으로(또는 스팸용으로) 이미 쓰는 이메일 | 주 메일함이 조용해요 | 중요한 메일(비밀번호 링크, No-IP의 30일 메일)을 놓치기 쉬워요 |
+| **웹사이트만을 위한 새 Gmail**(추천): <https://accounts.google.com/signup> | 모두 한곳에, 내 메일과 따로. 넘겨주기 쉬워요 | 비밀번호가 하나 더 생겨요(비밀번호 관리자에 두세요) |
+
+**3. Gmail 하나, 주소 여러 개("+ 주소").** Gmail은 `momsgarden.site+noip@gmail.com`을
+`momsgarden.site@gmail.com`으로 보내 줘요: `@` 앞에 `+`와 아무 낱말이나 붙이면 돼요.
+가입할 때 서비스마다 다른 낱말을 주세요:
+
+| 서비스 | 가입할 주소 |
+|---|---|
+| No-IP(웹 이름) | `momsgarden.site+noip@gmail.com` |
+| DuckDNS, Tailscale | `momsgarden.site+duckdns@gmail.com`, `momsgarden.site+tailscale@gmail.com` |
+| Google AI Studio, OpenRouter | `momsgarden.site+ai@gmail.com` |
+
+그러면 메일마다 "받는 사람(To)" 줄이 어느 서비스로 왔는지 보여 주고, `+noip`로 온 스팸은
+누가 내 주소를 넘겼는지 알려 줘요. 자동으로 나누려면: Gmail 검색창, **Show search options**(검색
+옵션 표시), **To**(받는 사람)에 주소 입력, **Create filter**(필터 만들기), 그다음 라벨을
+고르세요(예: "No-IP"). Google의 안내:
+<https://support.google.com/a/users/answer/9308648>, <https://support.google.com/mail/answer/6579>.
+
+알아 두기:
+- `+`가 들어간 주소를 받지 않는 웹사이트도 있어요. 그때는 그냥 주소를 쓰세요.
+- 누군가 `+word`(+낱말)를 지울 수 있어요. 주소가 어디서 샜는지는 알려 주지만, 숨겨 주지는 않아요.
+- Gmail에서는 점이 상관없어요(`momsgarden.site` = `momsgardensite`):
+  <https://support.google.com/mail/answer/7436150>.
+- Gmail 앱 비밀번호(메뉴 `M`, `3`)는 그냥 주소의 것이에요: 거기에는 그 주소를 입력하세요.
+- 정원 자체의 로그인은 언제나 내 정원 비밀번호예요. 이 이메일 계정이 아니에요.
 
 ## 선택(원할 때만)
 

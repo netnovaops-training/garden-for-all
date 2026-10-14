@@ -91,6 +91,7 @@ instead, which is why the browser warns there.
 | Program | Why | Official documents |
 |---|---|---|
 | **WSL** (Windows' own Ubuntu, by Microsoft) | Runs the garden on this PC | <https://learn.microsoft.com/windows/wsl/about> |
+| **Docker Desktop** (optional, by Docker Inc.; free for personal use) | The easy way to run the garden's programs on this PC, with buttons to see, start and stop them (guide 26). Installed with winget only if you choose it | <https://docs.docker.com/desktop/setup/install/windows-install/>, WSL: <https://docs.docker.com/desktop/features/wsl/> |
 | **PowerShell** (built into Windows) | The Windows menu and guided installer are PowerShell scripts | <https://learn.microsoft.com/powershell/> |
 | **OpenSSH client** (built into Windows 10 and 11) | SSH and copying files to the garden computer | <https://learn.microsoft.com/windows-server/administration/openssh/openssh_overview> |
 | **Rufus** | Makes the Ubuntu USB stick | <https://rufus.ie> |

@@ -18,8 +18,9 @@
 #  Guide 04 shows how to put Caddy in front of it for the internet.
 #
 #  FOLDERS: every folder this file uses comes from .env (SITE_DIR, IMAGES_DIR,
-#  DATA_DIR, CACHE_DIR, DB_DIR, BACKUP_DIR). To rename a folder, stop the site,
-#  rename it, change that ONE line in .env, start again. Guide 13 shows how.
+#  DATA_DIR, CACHE_DIR, DB_DIR, BACKUP_DIR). To move or rename one, use the
+#  menu (garden.sh rename; menu M, 18): it moves the folder and changes its ONE
+#  line in .env together. Guides 13 and 26 show how.
 # =============================================================================
 
 # A fixed project name. Without it Docker names the project after the folder,
@@ -252,7 +253,7 @@ services:
   n8n:
     profiles: ["n8n"]
     image: docker.n8n.io/n8nio/n8n
-    container_name: n8n
+    container_name: garden-n8n   # "garden-" so it cannot clash with another n8n on the same Docker
     restart: unless-stopped
     network_mode: host
     environment:

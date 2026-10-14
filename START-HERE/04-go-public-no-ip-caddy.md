@@ -185,7 +185,7 @@ To undo: copy the files from `logs/web-name-change_DATE/` back, or run it again 
 > until the website answers). It can be undone, as described just above.
 
 ## Taking the garden off the internet
-Menu `M`, then `14`: stops Caddy, closes ports 80 and 443 in the firewall, stops
+Menu `M`, then `14`, then `3` (Off the internet only): stops Caddy, closes ports 80 and 443 in the firewall, stops
 the No-IP and DuckDNS updaters and the sign-in page. The garden keeps running at
 home. Menu `M`, `1` puts it back. Also remove the two forwarding rules in the router.
 

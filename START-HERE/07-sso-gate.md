@@ -7,7 +7,7 @@
 - Two gates, on purpose: you must be signed in, and be in the group `gardeners`, to change the garden.
 - One password for the website and the sign-in page: menu `U`, `5`.
 - Manage people with menu `U`: `2` adds a person who may edit, `3` adds a guest, `4` removes a person, `8` locks everything down.
-- Stronger: a phone code (two-factor). Change `one_factor` to `two_factor` in `local/authelia/configuration.yml`, then menu `2`.
+- Stronger: a phone code (two-factor). Change `one_factor` to `two_factor` in `local/authelia/configuration.yml`, then `docker compose restart authelia`.
 - Locked out after wrong passwords? Wait 10 minutes.
 
 ---
@@ -63,7 +63,8 @@ Its three secret keys are in `.env`, made by the setup.
 1. In `local/authelia/configuration.yml` change `policy: 'one_factor'` to
    `policy: 'two_factor'`. (The one place you edit a file; `nano` is fine:
    `sudo nano local/authelia/configuration.yml`, save with `Ctrl+O`, `Enter`, `Ctrl+X`.)
-2. Menu `2` (start) restarts it with the new rule.
+2. Restart the sign-in page so it reads the new rule: `docker compose restart authelia`.
+   (The menu keeps `two_factor` when it writes this file again: front door, email, subdomains.)
 3. Sign in at `/auth`. It offers to register a phone app (any authenticator app
    works). If email is not set up, the link is in `local/authelia/notification.txt`.
 

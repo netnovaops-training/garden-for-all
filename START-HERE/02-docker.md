@@ -103,6 +103,6 @@ docker compose version
 
 ## Make it yours
 - Run `docker run --rm -it ubuntu bash` to step inside a throwaway Ubuntu. Type `exit` to leave. It is gone forever when you leave.
-- Run `docker system df` to see how much space Docker uses. `docker system prune` cleans up unused stuff (it asks first).
+- Run `docker system df` to see how much space Docker uses. To clean up Docker's leftovers safely, use menu `M`, `14`, then `5` (or `bash garden.sh cleanup`): it removes only the garden's own old versions, older than 7 days, and asks first.
 
 **Next:** [03 Run your garden website](03-run-your-garden.md)

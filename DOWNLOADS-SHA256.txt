@@ -1,10 +1,10 @@
-Jun's Garden: fingerprints of the downloads (2026-10-13)
+Jun's Garden: fingerprints of the downloads (2026-10-14)
 
 These are the SHA-256 fingerprints of the three files in the Google Drive
 folder "Jun's Garden". If a file you downloaded gives the same fingerprint, it
 is exactly the file published here: nothing added, removed or changed on the way.
 
-4e057d9f26d9a7d2b24264952b3b84fa7fa0c127d75bc89dd52d716aff00f943  junsgarden-for-jun.zip   (85,165,778 bytes)
+a80e3b7a96ccf84769e1e5158e56d89eb1901e4f33beca40b5ae08633cc06ece  junsgarden-for-jun.zip   (87,464,928 bytes)
 331ed058b1d56f184b5023af2e94d0a8a7918d2793843eaee60c8668383dd1ff  junsgarden-photos-addon.zip   (807,558,073 bytes)
 8d293d6370d5f830ed8431debc4b37605938d0c6b474fe1c4808cc7a307a1813  junsgarden-wiki-addon.zip   (794,602 bytes)
 

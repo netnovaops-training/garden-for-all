@@ -92,6 +92,7 @@
 | 프로그램 | 이유 | 공식 문서 |
 |---|---|---|
 | **WSL**(Windows 자체의 Ubuntu, Microsoft가 만들었어요) | 이 PC에서 정원을 돌려요 | <https://learn.microsoft.com/windows/wsl/about> |
+| **Docker Desktop**(선택, Docker Inc.가 만들었어요. 개인 사용은 무료) | 이 PC에서 정원의 프로그램을 돌리는 쉬운 방법이에요. 버튼으로 보고, 시작하고, 멈춰요(안내서 26). 내가 고를 때만 winget으로 설치해요 | <https://docs.docker.com/desktop/setup/install/windows-install/>, WSL: <https://docs.docker.com/desktop/features/wsl/> |
 | **PowerShell**(Windows에 들어 있어요) | Windows 메뉴와 안내 설치 프로그램은 PowerShell 스크립트예요 | <https://learn.microsoft.com/powershell/> |
 | **OpenSSH client**(Windows 10과 11에 들어 있어요) | SSH, 그리고 정원 컴퓨터로 파일 복사하기 | <https://learn.microsoft.com/windows-server/administration/openssh/openssh_overview> |
 | **Rufus**(USB 만들기) | Ubuntu USB 스틱을 만들어요 | <https://rufus.ie> |
