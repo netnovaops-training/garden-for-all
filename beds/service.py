@@ -402,17 +402,25 @@ class Handler(BaseHTTPRequestHandler):
                 parts = [x for x in want.split("/") if x not in ("", ".", "..")]
                 if len(parts) != 2:
                     return self._send(404, {"error": "no such photograph"})
-                # Second check, on the real location: follow any symbolic
-                # link, then make sure the file is still inside the tags
-                # folder and is a picture (these are only ever written as
-                # images). Anything else is "no such photograph".
-                root = tagphotos.ROOT.resolve()
-                target = (tagphotos.ROOT / parts[0] / parts[1]).resolve()
-                if (not target.is_relative_to(root)
-                        or target.suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp")
-                        or not target.is_file()):
+                # Second check, on the finished path as a plain string: join
+                # it under the tags folder, tidy it (normpath), and refuse
+                # anything that does not start with the folder's own name.
+                # Then follow any symbolic link (realpath) and make the same
+                # test again, so a link pointing outside is refused too. Only
+                # then is the file opened, and only if it is a picture (these
+                # are only ever written as images).
+                base = os.path.realpath(str(tagphotos.ROOT))
+                full = os.path.normpath(os.path.join(base, parts[0], parts[1]))
+                if not full.startswith(base + os.sep):
                     return self._send(404, {"error": "no such photograph"})
-                data = target.read_bytes()
+                full = os.path.realpath(full)
+                if not full.startswith(base + os.sep):
+                    return self._send(404, {"error": "no such photograph"})
+                if (os.path.splitext(full)[1].lower() not in (".jpg", ".jpeg", ".png", ".webp")
+                        or not os.path.isfile(full)):
+                    return self._send(404, {"error": "no such photograph"})
+                with open(full, "rb") as fh:
+                    data = fh.read()
                 self.send_response(200)
                 self.send_header("Content-Type", "image/jpeg")
                 self.send_header("Content-Length", str(len(data)))

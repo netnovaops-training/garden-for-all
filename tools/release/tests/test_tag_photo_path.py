@@ -58,13 +58,13 @@ os.makedirs(os.path.join(tags, "1"))
 os.makedirs(os.path.join(tags, "unassigned"))
 os.makedirs(outside)
 JPEG = b"\xff\xd8\xff\xe0FAKE-TAG-PHOTO"
-SECRET = b"\xff\xd8\xff\xe0OUTSIDE-SECRET"
+OUTSIDE_PIC = b"\xff\xd8\xff\xe0OUTSIDE-PICTURE"
 for rel in ("1/abc.jpg", "unassigned/good.JPG", "1/pic.png"):
     open(os.path.join(tags, *rel.split("/")), "wb").write(JPEG)
 open(os.path.join(tags, "1", "notes.txt"), "wb").write(b"not a picture")
 open(os.path.join(tags, "1", "noext"), "wb").write(b"not a picture")
-open(os.path.join(outside, "secret.jpg"), "wb").write(SECRET)
-open(os.path.join(outside, "passwd"), "wb").write(b"root:x:0:0")
+open(os.path.join(outside, "elsewhere.jpg"), "wb").write(OUTSIDE_PIC)
+open(os.path.join(outside, "listing"), "wb").write(b"OUTSIDE-LISTING-TEXT")
 
 os.environ["GARDEN_PHOTO_DIR"] = photos
 os.environ["BEDS_ALLOWED_EMAILS"] = "tester@example.com"
@@ -102,7 +102,7 @@ def get(file_param):
 
 def refused(label, file_param, why=""):
     status, body, _ = get(file_param)
-    ok(label, status == 404 and SECRET not in body and b"root:" not in body and b"not a picture" not in body,
+    ok(label, status == 404 and OUTSIDE_PIC not in body and b"OUTSIDE-LISTING" not in body and b"not a picture" not in body,
        f"{why} status={status} body={body[:60]!r}")
 
 
@@ -115,11 +115,11 @@ status, body, _ = get("1/pic.png")
 ok("a .png tag is served", status == 200 and body == JPEG, f"status={status}")
 
 # ---- 2. the old cleaning still holds ------------------------------------------------
-refused("..  : ../outside/secret.jpg", "../outside/secret.jpg")
+refused("..  : ../outside/elsewhere.jpg", "../outside/elsewhere.jpg")
 refused("..  : ../../etc/passwd", "../../etc/passwd")
-refused("..  : 1/../../outside/secret.jpg", "1/../../outside/secret.jpg")
+refused("..  : 1/../../outside/elsewhere.jpg", "1/../../outside/elsewhere.jpg")
 refused("absolute path: /etc/passwd", "/etc/passwd")
-refused("absolute path to the outside folder", os.path.join(outside, "secret.jpg").replace("\\", "/"))
+refused("absolute path to the outside folder", os.path.join(outside, "elsewhere.jpg").replace("\\", "/"))
 refused("only one piece: abc.jpg", "abc.jpg")
 refused("three pieces: 1/2/abc.jpg", "1/2/abc.jpg")
 refused("missing file: 1/missing.jpg", "1/missing.jpg")
@@ -130,15 +130,15 @@ refused("a file with no extension is not served", "1/noext")
 
 # ---- 4. symbolic links that point outside the tags folder -----------------------------
 try:
-    os.symlink(os.path.join(outside, "secret.jpg"), os.path.join(tags, "1", "evil.jpg"))
+    os.symlink(os.path.join(outside, "elsewhere.jpg"), os.path.join(tags, "1", "evil.jpg"))
     os.symlink(outside, os.path.join(tags, "2"), target_is_directory=True)
-    os.symlink(os.path.join(outside, "passwd"), os.path.join(tags, "1", "pw.jpg"))
+    os.symlink(os.path.join(outside, "listing"), os.path.join(tags, "1", "pw.jpg"))
     can_link = True
 except (OSError, NotImplementedError, AttributeError):
     can_link = False
 if can_link:
     refused("a file link pointing outside (1/evil.jpg) is not followed", "1/evil.jpg")
-    refused("a folder link pointing outside (2/secret.jpg) is not followed", "2/secret.jpg")
+    refused("a folder link pointing outside (2/elsewhere.jpg) is not followed", "2/elsewhere.jpg")
     refused("a .jpg link to a non-picture outside (1/pw.jpg) is not followed", "1/pw.jpg")
     # a link that stays inside the tags folder is harmless and still works
     os.symlink(os.path.join(tags, "1", "abc.jpg"), os.path.join(tags, "1", "alias.jpg"))
