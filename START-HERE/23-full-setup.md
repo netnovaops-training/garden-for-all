@@ -76,6 +76,9 @@ building the app yourself (about 3 hours, guide 17).
   `junsgarden-for-jun.zip` (unzip this one), `junsgarden-photos-addon.zip` and
   `junsgarden-wiki-addon.zip` (leave these two zipped). The full setup needs
   all three. Where to put them: `00-READ-ME-FIRST.html` (one folder up), step 1.
+  The main zip is small: the first start gets the program itself from GitHub
+  (about 75 MB, so the garden computer needs the internet then) and checks every
+  file against `FILES-FROM-AUTHOR.txt` before using it.
 - **A password manager.** This route makes many passwords and keys. Each one
   goes in it first. Guide 00b, "Write these down", lists them.
 
@@ -103,7 +106,7 @@ starts empty, and the install tells you so. (Later, with the zip in place,
 
 **Start it on the garden computer:** open the `junsgarden-for-jun` folder,
 right-click `Start-Here-Ubuntu.sh` and choose **Run as a Program** (or type
-`bash garden.sh` in a terminal there). Type `1` (INSTALL) and press Enter.
+`bash Start-Here-Ubuntu.sh` in a terminal there). Type `1` (INSTALL) and press Enter.
 
 ![The install asks EASY or CUSTOM: for the full setup, type 2](images/screen-03-easy-or-custom.png)
 

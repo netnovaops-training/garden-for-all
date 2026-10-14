@@ -23,6 +23,9 @@ transparent, free, public, and with no way in for anyone but him.
   handbook that opens from the disk, and a welcome page with every guide.
 - Backups, going online with his own web name, a sign-in page, remote access,
   and the tests that prove each part works.
+- A small download (about 5 MB): only the garden's own data, the music and the
+  handbook. The first start gets the program from GitHub at one fixed version
+  and checks every file against the list of fingerprints that came in the zip.
 
 **Out of scope, on purpose:**
 

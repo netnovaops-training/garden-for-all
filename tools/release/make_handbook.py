@@ -12,8 +12,8 @@ COPY of the package; the default is this package). It writes:
   handbook/assets/         the style sheet, and the logo (GARDEN_LOGO, if set)
 
 Everything works from the disk (file://): no server, no internet. The PDF
-buttons open "Setup documentation/English/...", which the release build puts
-in the download. The logo is the author's emblem: it is passed in at release time
+buttons open "PDF guides/English/...", which is part of the program (in git,
+and on GitHub). The logo is the author's emblem: it is passed in at release time
 (GARDEN_LOGO=path) and is not kept in git.
 """
 import html, json, os, pathlib, re, shutil, sys, urllib.parse
@@ -243,7 +243,7 @@ def title_of(text):
 
 def pdf_href(stem, kind, prefix):
     folder = STEP_NAMES[stem][0]
-    return prefix + urllib.parse.quote(f"Setup documentation/English/{folder}/{kind} - {m.pretty(stem)}.pdf")
+    return prefix + urllib.parse.quote(f"PDF guides/English/{folder}/{kind} - {m.pretty(stem)}.pdf")
 
 
 def fix_links(body, here_dir, base=None):
@@ -729,7 +729,7 @@ def build():
                f'Everything opens from this computer, so you need no internet. Looking for something? Use the search box at the top '
                f'(or press /), in English, Korean or both.</p>'
                f'<p class="quiet">Your garden itself: <a href="http://localhost:8030">http://localhost:8030</a> '
-               f'(on Windows, the garden menu, 4). The same PDFs are in your Google Drive folder, "Setup documentation".</p>'
+               f'(on Windows, the garden menu, 4). The same PDFs are in the folder "PDF guides" (English and Korean).</p>'
                f'<div class="begin"><a class="btn solid" href="handbook/{first}.html">Start with the first guide</a>'
                f'<a class="btn" href="00-HOW-IT-WORKS.html">See the whole path on one page</a>'
                f'<a class="btn" href="#map">Stuck? See every topic</a></div></div>{mark}</section>'

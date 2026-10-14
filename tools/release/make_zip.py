@@ -1,15 +1,27 @@
 """Build Jun's three downloads (they go side by side in the Google Drive folder):
 
-  junsgarden-for-jun.zip        the program, the website, the guides, and the
-                                starter backup WITHOUT photos (plants database,
-                                comments, AI cache)
+  junsgarden-for-jun.zip        ONLY what is not on GitHub: the starter backup
+                                WITHOUT photos (plants database, comments, AI
+                                cache), the music file, the handbook, the private
+                                read-me, the file list, and the small starters
+                                that fetch the program itself (tools/get-code.*)
   junsgarden-photos-addon.zip   the photos (images.tar), big, can be fetched again
   junsgarden-wiki-addon.zip     the wiki's pages (only if Jun wants the wiki)
 
-- Text files get the right line endings (LF for Linux files, CRLF for .cmd/.ps1).
-- .sh files are marked executable (Ubuntu's "Run as a Program").
-- Writes FILES-FROM-AUTHOR.txt: sha256 of every file exactly as it will be
-  extracted, so Jun can check nothing was changed (garden.sh menu M, 11).
+The program (garden.sh, the website, the guides, the PDFs) is public code on
+GitHub. The first start (Start-Here-Ubuntu.sh / Start-Here-Windows.cmd) fetches
+it from there at ONE fixed version, GARDEN_CODE_COMMIT (written into
+CODE-SOURCE.txt), and checks every file against FILES-FROM-AUTHOR.txt.
+
+    GARDEN_CODE_COMMIT=<40-hex public commit> GARDEN_SRC=<release copy> python make_zip.py OUT.zip
+
+- Text files get the right line endings (LF for Linux files, CRLF for .cmd/.ps1);
+  .sh files are marked executable. tools/get-code.* do the same to what they
+  fetch, so the fingerprints match.
+- Writes FILES-FROM-AUTHOR.txt: sha256 of EVERY file of the finished folder (the
+  program from GitHub plus the zip), exactly as it will be on disk, so Jun can
+  check nothing was changed (garden.sh menu M, 11) and get-code refuses anything
+  that does not match.
 - The main zip carries the add-ons' fingerprints (docker/tools/photos.sha256,
   docker/wiki/seed/wiki-pages.sha256), so garden.sh refuses a wrong add-on.
 - Skips local state: .env, local/, logs/, help/, .git, build output.
@@ -46,6 +58,19 @@ PHOTOS_SHA_REL = "docker/tools/photos.sha256"
 SEED_SRC = os.path.join(SMALL, "wiki-pages.json.gz") if SMALL else os.path.join(SRC, SEED_REL.replace("/", os.sep))
 BACKUP_DIR = SMALL if SMALL else os.path.join(SRC, "backups")
 STAMP = (2026, 10, 13, 0, 0, 0)
+CODE_REPO = os.environ.get("GARDEN_CODE_REPO", "netnovaops-training/garden-for-all")
+CODE_COMMIT = os.environ.get("GARDEN_CODE_COMMIT", "")
+assert len(CODE_COMMIT) == 40 and all(c in "0123456789abcdef" for c in CODE_COMMIT), \
+    "set GARDEN_CODE_COMMIT to the full public commit (40 hex characters) the download fetches"
+# What goes in the main zip: what is NOT on GitHub, and the starters that fetch the rest.
+NOT_ON_GITHUB = {"README.md", "site/Boogie.mp3", "00-WELCOME.html"}
+STARTERS = {"Start-Here-Ubuntu.sh", "Start-Here-Windows.cmd", "Garden-Menu-Windows.cmd",
+            "tools/get-code.py", "tools/get-code.ps1"}
+
+
+def in_main_zip(rel):
+    """True for what the main zip carries; everything else comes from GitHub."""
+    return rel in NOT_ON_GITHUB or rel in STARTERS or rel.startswith("handbook/")
 
 
 def content(full, name):
@@ -144,6 +169,12 @@ with zipfile.ZipFile(WIKI, "w", zipfile.ZIP_STORED) as z:
 
 # ---- 3. The main zip ---------------------------------------------------------
 generated = {
+    "CODE-SOURCE.txt": (
+        "# Where the program comes from: the public code, at this one version.\n"
+        "# tools/get-code.py (Ubuntu) and tools/get-code.ps1 (Windows) fetch it and\n"
+        "# check every file against FILES-FROM-AUTHOR.txt. To read the same code:\n"
+        f"# https://github.com/{CODE_REPO}/tree/{CODE_COMMIT}\n"
+        f"repo={CODE_REPO}\ncommit={CODE_COMMIT}\n").encode(),
     SEED_SHA_REL: f"{seed_sha}  wiki-pages.json.gz\n".encode(),
     PHOTOS_SHA_REL: f"{photos_sha}  images.tar\n".encode(),
     f"backups/{out_name}": slim_bytes,
@@ -167,7 +198,9 @@ lines = []
 with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
     for rel, full, name in entries:
         data = content(full, name)
-        lines.append(f"{hashlib.sha256(data).hexdigest()}  ./{rel}\n")
+        lines.append(f"{hashlib.sha256(data).hexdigest()}  ./{rel}\n")   # listed: every file of the finished folder
+        if not in_main_zip(rel):
+            continue                                                     # ...but fetched from GitHub, not zipped
         info = info_for(TOP + rel, zipfile.ZipInfo.from_file(full).date_time, 0o755 if name.endswith(".sh") else 0o644)
         info.compress_type = zipfile.ZIP_STORED if os.path.splitext(name)[1].lower() in STORE_EXT else zipfile.ZIP_DEFLATED
         z.writestr(info, data)

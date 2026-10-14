@@ -118,7 +118,7 @@ sign-in page and still through only the two router ports. Guide 04, "Advanced". 
     Open the Google Drive link you were sent. The folder has <strong>three</strong> downloads:
     <table>
       <tr><th>File</th><th>What</th><th>Needed?</th></tr>
-      <tr><td><code>junsgarden-for-jun.zip</code></td><td>The program, the website and your plants (about 70 MB)</td><td><strong>Yes</strong></td></tr>
+      <tr><td><code>junsgarden-for-jun.zip</code></td><td>Your plants, the handbook and the start files (about 5 MB). The program itself comes from GitHub the first time you start</td><td><strong>Yes</strong></td></tr>
       <tr><td><code>junsgarden-photos-addon.zip</code></td><td>All the garden photos (about 800 MB)</td><td>For the pictures. Now, or later when your internet is quiet; you can download it again any time</td></tr>
       <tr><td><code>junsgarden-wiki-addon.zip</code></td><td>The wiki's pages (under 1 MB)</td><td>Only if you want the wiki</td></tr>
     </table>
@@ -156,14 +156,15 @@ sign-in page and still through only the two router ports. Guide 04, "Advanced". 
   <div class="num">3</div>
   <div>
     <h3>Start the menu</h3>
+    <div class="note">The first time, it gets the program itself from GitHub (about 75 MB, so it needs the internet) and checks every file against the list that came in the zip. That takes a minute or two, once. The zip from Google Drive holds only what is not on GitHub: your plants, the music, the handbook and the small start files.</div>
     <div data-show="ubuntu">
       Open the <code>junsgarden-for-jun</code> folder. Right-click <code>Start-Here-Ubuntu.sh</code> and choose
       <strong>Run as a Program</strong>. A terminal window opens with the menu.
       <div class="note">No "Run as a Program"? Right-click an empty spot in the folder, choose <strong>Open in Terminal</strong>,
         then paste this (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> pastes in a terminal) and press <kbd>Enter</kbd>:</div>
-      <div class="cmd"><code>bash garden.sh</code><button class="copy" type="button">Copy</button></div>
+      <div class="cmd"><code>bash Start-Here-Ubuntu.sh</code><button class="copy" type="button">Copy</button></div>
       Or open any terminal (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>T</kbd>) and paste this one, which works from anywhere:
-      <div class="cmd"><code>bash ~/junsgarden-for-jun/garden.sh</code><button class="copy" type="button">Copy</button></div>
+      <div class="cmd"><code>bash ~/junsgarden-for-jun/Start-Here-Ubuntu.sh</code><button class="copy" type="button">Copy</button></div>
     </div>
     <div data-show="windows" class="hidden">
       Open the extracted <code>junsgarden-for-jun</code> folder and double-click <code>Start-Here-Windows.cmd</code>.

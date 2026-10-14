@@ -35,6 +35,7 @@
 - How do I update the computer?
 - How do I update the garden's own programs?
 - How does the phone app update?
+- Why does the first start download from GitHub?
 
 **Moving or removing**
 - How do I move the garden to a new computer?
@@ -291,6 +292,19 @@ asks you before installing. A newer app only appears there when you build one
 yourself.
 
 **More:** [guide 17](17-android-app-and-ai-coding.md)
+
+### Why does the first start download from GitHub?
+The zip from Google Drive holds only what is not on GitHub: your plants (the
+starter backup), the music, the handbook, and the small start files. The
+program itself (the menu, the website, the guides and their PDFs) is public
+code on GitHub, so the first start gets it from there, at one fixed version
+(written in `CODE-SOURCE.txt`), never "whatever is newest". Every file is
+checked against `FILES-FROM-AUTHOR.txt`, the list of fingerprints that came in
+the zip; if one does not match, nothing is changed. It needs the internet once
+(about 75 MB). The same check works later: menu `M`, then `11`.
+
+**More:** `tools/get-code.py` (Ubuntu) and `tools/get-code.ps1` (Windows), plain
+text files you can read
 
 ---
 

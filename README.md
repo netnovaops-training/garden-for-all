@@ -40,6 +40,9 @@ Its public home: <https://github.com/netnovaops-training/garden-for-all>.
 The garden's own data (plants database, photos, wiki pages) is **not** in this
 repository; it is a separate private download for the owner. Without it, the
 installer sets up an empty garden of your own.
+The owner's download holds only that data, the handbook and small start files;
+its first start gets this code at one fixed commit (`CODE-SOURCE.txt`) and checks
+every file against `FILES-FROM-AUTHOR.txt` (`tools/get-code.py`, `tools/get-code.ps1`).
 
 One song is left out of this public copy too: the music behind the
 "End of Garden. Boogie?" button (`site/Boogie.mp3`), because its rights are not

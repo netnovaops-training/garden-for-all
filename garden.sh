@@ -815,7 +815,8 @@ build_and_start() {
 
 # ---------- the separate downloads (add-ons) ----------------------------------------
 # Jun's garden comes as up to three zips from Google Drive:
-#   junsgarden-for-jun.zip         the program, the website and the plants database
+#   junsgarden-for-jun.zip         the plants database, the handbook and the start files
+#                                  (the program itself comes from GitHub: tools/get-code.py)
 #   junsgarden-photos-addon.zip    the photos (big; can be downloaded again any time)
 #   junsgarden-wiki-addon.zip      the wiki's pages (only if you want the wiki)
 # Their fingerprints are in this folder, so a damaged or different download is

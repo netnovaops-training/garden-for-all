@@ -69,6 +69,9 @@
   `junsgarden-photos-addon.zip`과 `junsgarden-wiki-addon.zip`(이 둘은 압축된 그대로 두세요).
   전체 설정에는 세 개 모두 필요해요. 어디에 둘지: 한 폴더 위의
   [00-READ-ME-FIRST-KO.html](../../00-READ-ME-FIRST-KO.html), 1단계.
+  첫 번째 zip은 작아요: 처음 시작할 때 프로그램 자체를 GitHub에서 가져오고(약 75 MB라서
+  그때 정원 컴퓨터에 인터넷이 필요해요), 쓰기 전에 모든 파일을 `FILES-FROM-AUTHOR.txt`와
+  비교해서 확인해요.
 - **비밀번호 관리자.** 이 길에서는 비밀번호와 키를 많이 만들어요. 하나하나 먼저 거기에 넣으세요.
   안내서 00b의 "이것들을 적어 두세요" 부분에 목록이 있어요.
 
@@ -95,7 +98,7 @@ AI 키, 이메일을 물어요(2~4 부분). 아래 표는 `2`(CUSTOM)로 하는 
 
 **정원 컴퓨터에서 시작하기:** `junsgarden-for-jun` 폴더를 열고, `Start-Here-Ubuntu.sh`를
 오른쪽 클릭해서 **Run as a Program**(프로그램으로 실행)을 고르세요(또는 거기서 터미널에
-`bash garden.sh`를 입력하세요). `1`(INSTALL, 설치)을 입력하고 Enter를 누르세요.
+`bash Start-Here-Ubuntu.sh`를 입력하세요). `1`(INSTALL, 설치)을 입력하고 Enter를 누르세요.
 
 ![설치가 EASY 또는 CUSTOM을 물어요: 전체 설정은 2를 입력하세요](../images/screen-03-easy-or-custom.png)
 
