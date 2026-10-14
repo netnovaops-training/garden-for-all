@@ -1,0 +1,201 @@
+# Fast checks on every push to the branches that are worked on and on every pull request into main.
+# Each job runs only when the files it looks at changed (except the secret scan, which always runs).
+#
+#   gitleaks          secrets in the NEW commits (a manual run scans the whole history)
+#   shellcheck        every *.sh, ShellCheck v0.11.0 (pinned in a container so a newer runner cannot
+#                     suddenly add warnings); fails only on warnings not in .github/shellcheck-baseline.txt
+#   psscriptanalyzer  windows/*.ps1 and tools/**/*.ps1; fails only on Error severity, counts the warnings
+#   actionlint        syntax and mistakes in .github/workflows (also runs ShellCheck on the run: steps)
+#   zizmor            security problems in the workflows themselves; fails on high severity only
+#
+# Everything is free: public repository, GitHub-hosted runners, only the built-in GITHUB_TOKEN (read).
+name: quick-checks
+
+on:
+  push:
+    branches: [main, fixes, enhancements]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quick-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: what changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      shell: ${{ steps.f.outputs.shell }}
+      powershell: ${{ steps.f.outputs.powershell }}
+      workflows: ${{ steps.f.outputs.workflows }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: f
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -u
+          files=""
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA") || files=""
+          elif [ "$EVENT_NAME" = "push" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            files=$(git diff --name-only "$BEFORE" "$AFTER") || files=""
+          fi
+          if [ -z "$files" ]; then
+            echo "No usable list of changed files (manual run, new branch or odd history): every job runs."
+            files=$(git ls-files)
+          fi
+          flag() { if printf '%s\n' "$files" | grep -q -E "$2"; then echo "$1=true"; else echo "$1=false"; fi; }
+          {
+            flag shell '\.sh$|^\.github/(workflows/quick-checks\.yml|shellcheck-baseline\.txt)$'
+            flag powershell '\.ps1$|^\.github/workflows/quick-checks\.yml$'
+            flag workflows '^\.github/(workflows/|zizmor\.yml)'
+          } | tee -a "$GITHUB_OUTPUT"
+
+  gitleaks:
+    name: gitleaks (new commits)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Scan the new commits
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+          range=""
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            range="$BASE_SHA..$HEAD_SHA"
+          elif [ "$EVENT_NAME" = "push" ]; then
+            if git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+              range="$BEFORE..$AFTER"
+            else
+              range="origin/main..$AFTER" # a new branch: everything that is not on main yet
+            fi
+          fi
+          echo "Scanning: ${range:-the whole history}"
+          # --user: the checkout belongs to the runner user and git inside the container refuses a folder it does not own
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" \
+            zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
+            git /repo ${range:+--log-opts "$range"} --redact --no-banner --exit-code 1
+
+  shellcheck:
+    name: shellcheck
+    needs: changes
+    if: needs.changes.outputs.shell == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: ShellCheck every *.sh against the baseline
+        run: |
+          set -u
+          git ls-files '*.sh' > sh-files.txt
+          echo "$(wc -l < sh-files.txt) shell scripts"
+          # (no script name has a space in it; ShellCheck exits 1 when it finds something, 2 or more when it breaks)
+          rc=0
+          # shellcheck disable=SC2046
+          docker run --rm -v "$PWD:/mnt" -w /mnt \
+            koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d \
+            -f gcc -S warning $(cat sh-files.txt) > found-raw.txt || rc=$?
+          if [ "$rc" -gt 1 ]; then echo "ShellCheck itself failed (exit $rc)"; exit 1; fi
+          # "file CODE" per warning, so line numbers moving does not matter
+          sed -n -E 's/^([^:]+):[0-9]+:[0-9]+: [a-z]+: .*\[(SC[0-9]+)\]$/\1 \2/p' found-raw.txt | sort > found.txt
+          grep -v '^#' .github/shellcheck-baseline.txt | sort > baseline.txt
+          comm -13 baseline.txt found.txt > new.txt
+          comm -23 baseline.txt found.txt > gone.txt
+          {
+            echo "### ShellCheck v0.11.0"
+            echo "- warnings found: $(wc -l < found.txt), in the baseline: $(( $(wc -l < found.txt) - $(wc -l < new.txt) )), new: $(wc -l < new.txt)"
+            if [ -s gone.txt ]; then echo "- baseline lines that no longer match (can be removed): $(wc -l < gone.txt)"; fi
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          if [ -s new.txt ]; then
+            echo "New ShellCheck warnings (not in .github/shellcheck-baseline.txt):"
+            while read -r file code; do grep -F "$file:" found-raw.txt | grep -F "[$code]"; done < new.txt
+            exit 1
+          fi
+
+  psscriptanalyzer:
+    name: psscriptanalyzer
+    needs: changes
+    if: needs.changes.outputs.powershell == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: PSScriptAnalyzer 1.25.0 (fails on Error severity only)
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -RequiredVersion 1.25.0 -Scope CurrentUser -Force
+          $files = @(git ls-files 'windows/*.ps1' 'tools/*.ps1')
+          "$($files.Count) PowerShell scripts"
+          $results = foreach ($f in $files) { Invoke-ScriptAnalyzer -Path $f -Severity Error,Warning }
+          $errors = @($results | Where-Object Severity -eq 'Error')
+          $warnings = @($results | Where-Object Severity -eq 'Warning')
+          $lines = @('### PSScriptAnalyzer 1.25.0', "- errors: $($errors.Count), warnings: $($warnings.Count) (warnings do not fail the check)")
+          $lines += $warnings | Group-Object RuleName | Sort-Object Count -Descending | ForEach-Object { "  - $($_.Name): $($_.Count)" }
+          $lines | Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
+          foreach ($e in $errors) { "::error file=$($e.ScriptPath),line=$($e.Line)::$($e.RuleName): $($e.Message)" }
+          if ($errors.Count -gt 0) { exit 1 }
+
+  actionlint:
+    name: actionlint
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: actionlint 1.7.12
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo \
+            rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 -color
+
+  zizmor:
+    name: zizmor
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: zizmor 1.30.1 (fails on high severity only)
+        run: |
+          set -u
+          # Everything, for the numbers (never fails) ...
+          pipx run --spec zizmor==1.30.1 zizmor --offline --no-progress --format plain .github/workflows > zizmor-all.txt 2>&1 || true
+          {
+            echo "### zizmor 1.30.1"
+            echo "- $(grep -E '^[0-9]+ findings' zizmor-all.txt | tail -1)"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          # ... and the real check.
+          pipx run --spec zizmor==1.30.1 zizmor --offline --no-progress --min-severity high .github/workflows
