@@ -6,6 +6,7 @@
 *다 읽을 시간이 없나요? 짧은 버전이에요. 전체 안내서는 아래에 있어요.*
 
 - 이 패키지의 모든 것은 읽을 수 있는 평범한 글이에요. 이 안내서는 나, 친구, 또는 AI가 확인하는 방법을 보여 줘요.
+- 같은 코드가 공개되어 있어요: <https://github.com/netnovaops-training/garden-for-all>. 누구나 거기서 읽을 수 있어요.
 - 오는 길에 바뀐 것이 없는지 확인하기: 메뉴 `M`, 그다음 `11`.
 - 모든 변경 보기: `git log --oneline`, `git show`, `git diff`. 받기 전에 바뀐 것은 `CHANGES.md`가 설명해요.
 - 비밀 정보와 보안 실수 검사하기(5분): `sh tools/check-secrets.sh`. `CLEAN`이 나오거나, 찾은 것을 보여 줘요.
@@ -80,6 +81,15 @@ grep -rhoE 'https?://[A-Za-z0-9./_?=&%:-]+' garden.sh windows docker docker-comp
 '내' 키로만), OpenRouter('내' 키로만), No-IP와 DuckDNS(내가 설정했을 때만)예요.
 
 ## 6. AI에게 검토 부탁하기
+같은 코드가 <https://github.com/netnovaops-training/garden-for-all>에 공개되어 있어요(내 정원의 개인 데이터와 노래 하나만 빼고).
+웹 페이지를 읽을 수 있는 AI라면 거기서 확인할 수 있어요:
+
+- "공개 저장소 https://github.com/netnovaops-training/garden-for-all를 검토해 주세요. 해로운 것이나 숨겨진 것, 내 데이터를
+  다른 곳으로 보내는 것이 있나요? 확인한 파일을 보여 주세요."
+- "https://github.com/netnovaops-training/garden-for-all에서 주인 말고 다른 사람이 로그인할 수 있나요? 로그인 코드와 설치 프로그램을 확인해 주세요."
+- "garden.sh가 무엇을 왜 설치하는지 한 단계씩 쉬운 말로 설명해 주세요."
+
+또는 파일을 하나씩 Gemini(AI Studio, 안내서 16)에 붙여 넣어도 돼요.
 Gemini(AI Studio, 안내서 16)는 코드를 읽을 수 있어요. 좋은 질문:
 
 - "이건 garden.sh예요. 내 데이터를 어딘가로 보내거나, 다른 사람이 내 컴퓨터에 들어오게 하는

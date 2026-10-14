@@ -4,6 +4,7 @@
 *No time to read it all? This is the short version. The full guide is below.*
 
 - Everything in this package is plain text you can read. This guide shows how you, a friend or an AI can check it.
+- The same code is public: <https://github.com/netnovaops-training/garden-for-all>. Anyone can read it there.
 - Check nothing changed on the way: menu `M`, then `11`.
 - See every change: `git log --oneline`, `git show`, `git diff`. `CHANGES.md` explains the changes made before you got it.
 - Scan for secrets and security mistakes (5 minutes): `sh tools/check-secrets.sh`. It prints `CLEAN`, or what it found.
@@ -84,7 +85,16 @@ contacts while running are Google (Gemini, only with YOUR key), OpenRouter
 (only with YOUR key), No-IP and DuckDNS (only when you set them up).
 
 ## 6. Ask an AI to review it
-Gemini (AI Studio, guide 16) can read code. Good questions:
+The same code is public at <https://github.com/netnovaops-training/garden-for-all> (everything except your private
+garden data and one song). An AI that can read web pages can check it there:
+
+- "Review the public repository https://github.com/netnovaops-training/garden-for-all. Is there anything harmful or
+  hidden, or anything that sends my data elsewhere? Show me the files you checked."
+- "In https://github.com/netnovaops-training/garden-for-all, can anyone other than the owner log in? Check the
+  login code and the installer."
+- "Explain in simple words what garden.sh installs, and why, step by step."
+
+Or paste one file at a time into Gemini (AI Studio, guide 16). Good questions:
 
 - "Here is garden.sh. Does anything send my data anywhere, or give anyone else
   access to my computer? Quote the lines."

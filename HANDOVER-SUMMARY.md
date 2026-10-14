@@ -4,6 +4,8 @@ The details of every change are in [`CHANGES.md`](CHANGES.md) (what, why, and th
 effect on the program), the story in plain words is in [`JOURNAL.md`](JOURNAL.md),
 and every step is in the git history. This page is the short version.
 
+**The public code:** <https://github.com/netnovaops-training/garden-for-all>. Anyone can read and check it there.
+
 ## The scope
 
 **The goal:** hand the garden website [junsgarden.zapto.org](https://junsgarden.zapto.org)

@@ -8,6 +8,8 @@ laptop, a Raspberry Pi or a Windows PC, explaining every step as it goes.
 This is the full code of [junsgarden.zapto.org](https://junsgarden.zapto.org),
 handed over to its owner, Jun, to run on his own computer. **한국어 요약은 아래에 있어요.**
 
+Its public home: <https://github.com/netnovaops-training/garden-for-all>.
+
 ## The story
 - **PHP to Rust, faithfully.** The site began as a PHP website. In October 2026
   it was converted, page by page, to Rust (axum, askama, sqlx): the same look,
