@@ -540,7 +540,7 @@ $tbDbPw = P-Field $moreDb "Database password (16 or more letters and numbers; em
 # PDF-GUIDES-SHA256.txt. EASY does it without a page, in the language chosen on the first page.
 $pPdf = New-Page "pdfs" "PDF guides" "PDF guides"
 [void](P-Text $pPdf ("Every guide as a PDF, to read or print. They download while the garden installs " +
-    "(about 15 MB for each language, under a minute on a normal connection) and never slow the install down. " +
+    "(about 27 MB in English and 25 MB in Korean, under a minute on a normal connection) and never slow the install down. " +
     "If a download fails, nothing is written and the garden works anyway: the menu's P item tries again."))
 $rbPdfEn = P-Choice $pPdf RadioButton "English" ""
 $rbPdfKo = P-Choice $pPdf RadioButton "$KoWord (Korean)" ""

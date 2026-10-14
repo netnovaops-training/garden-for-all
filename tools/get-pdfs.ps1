@@ -195,7 +195,7 @@ foreach ($code in $codes) {
         Set-Status $folder 'ready' "$($rec.count) PDFs"
         continue
     }
-    Say ("PDF guides arriving ({0}, {1} MB)..." -f $folder, [int]($w.size / 1MB))
+    Say ("PDF guides arriving ({0}, {1} MB)..." -f $folder, [math]::Round($w.size / 1e6))
     New-Item -ItemType Directory -Force $stateDir | Out-Null
     $tmp = Join-Path $stateDir ("pdf-" + $code + "-" + $w.name)
     Set-Status $folder 'arriving'

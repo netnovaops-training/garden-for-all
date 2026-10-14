@@ -208,7 +208,7 @@ def main(argv):
                 f"{folder} PDF 안내서는 이미 최신이에요. 아무것도 받지 않았어요.")
             set_status(dest, folder, "ready", f"{parts.read_record(dest, f'pdf-{code}').get('count')} PDFs")
             continue
-        say(f"PDF guides arriving ({folder}, {size // (1 << 20)} MB)...", f"PDF 안내서를 받고 있어요 ({folder}, {size // (1 << 20)} MB)...")
+        say(f"PDF guides arriving ({folder}, {round(size / 1_000_000)} MB)...", f"PDF 안내서를 받고 있어요 ({folder}, {round(size / 1_000_000)} MB)...")
         cache = os.path.join(dest, parts.STATE_DIR, f"pdf-{code}")
         zp = os.path.join(cache, name)
         set_status(dest, folder, "arriving")

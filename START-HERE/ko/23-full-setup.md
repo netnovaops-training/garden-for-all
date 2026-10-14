@@ -186,7 +186,7 @@ Windows 사용자만 읽을 수 있는 비공개 파일 하나에 적고, 프로
 ![PDF 안내서: 영어, 한국어, 둘 다 또는 지금은 안 함](../images/wizard-4d-pdf-guides.png)
 
 모든 안내서를 읽거나 인쇄할 수 있는 PDF로 받아요. 프로그램에 들어 있지 않은 선택 사항 내려받기예요:
-**영어**(약 13 MB)와 **한국어**(약 15 MB)는 GitHub에 있는 따로따로의 파일이고, 아무것도 쓰기 전에
+**영어**(약 27 MB)와 **한국어**(약 25 MB)는 GitHub에 있는 따로따로의 파일이고, 아무것도 쓰기 전에
 프로그램에 들어 있는 지문(SHA-256, `PDF-GUIDES-SHA256.txt`)과 맞는지 확인해요. 정원을 설치하는
 동안 뒤에서 내려받고, 설치를 느리게 하지 않아요.
 
@@ -241,6 +241,10 @@ AI 키, 이메일을 물어요(2~4 부분). 아래 표는 `2`(CUSTOM)로 하는 
 **정원 컴퓨터에서 시작하기:** `junsgarden-for-jun` 폴더를 열고, `Start-Here-Ubuntu.sh`를
 오른쪽 클릭해서 **Run as a Program**(프로그램으로 실행)을 고르세요(또는 거기서 터미널에
 `bash Start-Here-Ubuntu.sh`를 입력하세요). `1`(INSTALL, 설치)을 입력하고 Enter를 누르세요.
+열린 폴더 안에 `junsgarden-for-jun` 폴더가 하나 더 있을 수 있어요(Windows의 "모두 압축 풀기"나
+"junsgarden-for-jun (1)" 같은 복사본이 그렇게 해요). 그러면 안쪽 폴더를 여세요.
+`Start-Here-Ubuntu.sh`는 안쪽 폴더에 있고, 한 줄짜리
+`bash ~/junsgarden-for-jun/Start-Here-Ubuntu.sh`는 그 폴더가 홈 폴더 바로 아래에 있을 때만 작동해요.
 
 ![설치가 EASY 또는 CUSTOM을 물어요: 전체 설정은 2를 입력하세요](../images/screen-03-easy-or-custom.png)
 

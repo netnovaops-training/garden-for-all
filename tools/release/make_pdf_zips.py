@@ -1,7 +1,7 @@
 """Make the two PDF guide downloads (one per language) and their fingerprints.
 
     python tools/release/make_pdf_zips.py OUT_FOLDER --english "PDF guides/English" --korean "PDF guides/Korean"
-                                          [--tag pdf-guides-2026-10-14b] [--list-file PDF-GUIDES-SHA256.txt]
+                                          [--tag pdf-guides-2026-10-14c] [--list-file PDF-GUIDES-SHA256.txt]
 
 The PDF guides are not in the program (not in git). They are attached to a
 release on GitHub, one zip per language, and the installer fetches them
@@ -20,7 +20,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("out")
 ap.add_argument("--english", required=True)
 ap.add_argument("--korean", required=True)
-ap.add_argument("--tag", default="pdf-guides-2026-10-14b")
+ap.add_argument("--tag", default="pdf-guides-2026-10-14c")
 ap.add_argument("--list-file", default="")
 A = ap.parse_args()
 OUT = pathlib.Path(A.out)

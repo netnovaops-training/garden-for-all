@@ -1075,10 +1075,20 @@ pdf_ask() {
     local cur def c
     cur=$(pdf_choice)
     case "$cur" in en) def=1 ;; ko) def=2 ;; both) def=3 ;; *) def=0 ;; esac
-    L "   PDF guides: every guide as a PDF to read or print (about 15 MB each language)."
+    L "   PDF guides: every guide as a PDF to read or print (about 27 MB in English, 25 MB in Korean)."
     L "   1) English   2) Korean   3) both   0) not now"
     c=$(ask "Type 1, 2, 3 or 0" "$def")
     case "$c" in 1) echo en ;; 2) echo ko ;; 3) echo both ;; 0) echo none ;; *) echo "$cur" ;; esac > .garden-pdfs
+}
+# A file path as a file:// address a browser can open: every byte except A-Z, a-z,
+# digits and - _ . ~ / becomes %XX, so spaces, brackets, & ' and Korean names all work.
+file_url() {
+    local LC_ALL=C s=$1 out="" c i
+    for (( i = 0; i < ${#s}; i++ )); do
+        c=${s:i:1}
+        case "$c" in [A-Za-z0-9._~/-]) out+=$c ;; *) out+=$(printf '%%%02X' "'$c") ;; esac
+    done
+    printf 'file://%s' "$out"
 }
 # The overview is the first thing shown when the install starts (a Windows PC opens
 # the same page from its own side).
@@ -1086,7 +1096,7 @@ open_overview() {
     [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] && [ "${ASSUME_YES:-0}" != 1 ] || return 0
     local frag=; [ "$LANG_MODE" = ko ] && frag='#ko'
     [ -f handbook/00-OVERVIEW.html ] || return 0
-    xdg-open "file://$HERE/handbook/00-OVERVIEW.html$frag" >/dev/null 2>&1 &
+    xdg-open "$(file_url "$HERE/handbook/00-OVERVIEW.html")$frag" >/dev/null 2>&1 &
     note "The overview is open in your browser: what the install does, in order."
 }
 pdf_start() {
@@ -4130,8 +4140,8 @@ do_check() {
     echo; echo "== 5. Backups"
     local nb age
     nb=$(newest_backup)
-    if [ -n "$nb" ]; then
-        age=$(( ( $(date +%s) - $(stat -c %Y "$(env_get BACKUP_DIR)/$nb") ) / 86400 ))
+    if [ -n "$nb" ] && [ -f "$(newest_backup_path)" ]; then
+        age=$(( ( $(date +%s) - $(stat -c %Y "$(newest_backup_path)") ) / 86400 ))
         if [ "$age" -le 2 ]; then ok "Newest backup: $nb ($age days old)"; else wn "Newest backup is $age days old: $nb" "bash garden.sh backup"; fi
     else wn "No backups yet" "bash garden.sh backup"; fi
     if crontab -l 2>/dev/null | has 'garden.sh backup'; then ok "Backups are scheduled ($( [ "$(env_get BACKUP_SCHEDULE)" = nightly ] && echo "every night, 2:30 am" || echo "automatic: cron looks every hour"))"; else wn "No backup schedule" "bash garden.sh install"; fi

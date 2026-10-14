@@ -35,8 +35,10 @@ program from GitHub and checks every file; that brings `garden.sh`, `lab/` and
 the guides. When the menu opens, type `0` to leave it for today: the install is
 Session 2. (`lab/` did not exist before this first start, so the commands below
 work only after it.)
-**Checkpoint:** `bash lab/09-health-check.sh` shows no red FAIL for the laptop
-section. The laptop restarts and comes back.
+**Checkpoint:** `bash lab/09-health-check.sh` runs without an error message and the
+laptop restarts and comes back. Nothing is installed yet, so red FAIL lines are
+normal here for Docker (section 1), the services (2), the ports (3) and the settings
+file (4), and section 5 says "No backups yet". They turn green after Session 2.
 **Why careful:** a good base saves hours later.
 
 ## Session 2. Docker and your garden

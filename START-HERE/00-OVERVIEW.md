@@ -41,7 +41,7 @@ After that, a few short questions: your password, and optionally email and keys.
 
 ## Guides on your own computer
 
-The installer also fetches the guides as PDFs, English and Korean (about 15 MB each), while it works. The download does not slow the install. If it fails, nothing is half-written and the garden is not affected.
+The installer also fetches the guides as PDFs, English and Korean (about 27 MB and 25 MB), while it works. The download does not slow the install. If it fails, nothing is half-written and the garden is not affected.
 
 Open `PDF guides/STATUS.txt` to see where each set is:
 

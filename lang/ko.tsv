@@ -992,7 +992,7 @@ Port 22 (SSH) is already in use on this computer, by another program or another	
 Ubuntu in WSL. The SSH server is installed but not started, so the two do not clash.	그래서 SSH 서버를 설치만 하고 켜지는 않아요. 둘이 부딪치지 않게요.
 On this PC the garden does not need it: the Windows menu reaches the garden directly.	이 PC에서는 정원에 필요 없어요: Windows 메뉴가 정원에 바로 닿아요.
 The database password: a strong one is made for you, as the setup wizard said.	데이터베이스 비밀번호: 설정 마법사가 말한 대로 강한 비밀번호를 대신 만들어요.
-PDF guides: every guide as a PDF to read or print (about 15 MB each language).	PDF 안내서: 모든 안내서를 읽거나 인쇄할 수 있는 PDF로 (언어마다 약 15 MB).
+PDF guides: every guide as a PDF to read or print (about 27 MB in English, 25 MB in Korean).	PDF 안내서: 모든 안내서를 읽거나 인쇄할 수 있는 PDF로 (영어 약 27 MB, 한국어 약 25 MB).
 1) English   2) Korean   3) both   0) not now	1) 영어   2) 한국어   3) 둘 다   0) 지금은 안 함
 The overview is open in your browser: what the install does, in order.	한눈에 보기가 브라우저에 열렸어요: 설치가 하는 일을 순서대로 보여 줘요.
 PDF guides: not now. Menu P gets them any time.	PDF 안내서: 지금은 안 받아요. 메뉴 P로 언제든 받을 수 있어요.

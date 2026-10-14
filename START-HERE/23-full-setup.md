@@ -205,7 +205,7 @@ them again (Back) before you start it again.
 ![PDF guides: English, Korean, both or not now](images/wizard-4d-pdf-guides.png)
 
 Every guide as a PDF, to read or print. They are an optional download, not part of
-the program: **English** (about 13 MB) and **Korean** (about 15 MB) are two separate
+the program: **English** (about 27 MB) and **Korean** (about 25 MB) are two separate
 files on GitHub, and each one is checked against a fingerprint (SHA-256) kept in the
 program (`PDF-GUIDES-SHA256.txt`) before anything is written. They download while the
 garden installs, in the background, and never slow the install down.
@@ -265,6 +265,11 @@ starts empty, and the install tells you so. (Later, with the zip in place,
 **Start it on the garden computer:** open the `junsgarden-for-jun` folder,
 right-click `Start-Here-Ubuntu.sh` and choose **Run as a Program** (or type
 `bash Start-Here-Ubuntu.sh` in a terminal there). Type `1` (INSTALL) and press Enter.
+If the folder you open has only one more `junsgarden-for-jun` folder inside it (Windows'
+"Extract All" and copies such as "junsgarden-for-jun (1)" do this), open the inner one:
+`Start-Here-Ubuntu.sh` is in the inner folder, and the one-line
+`bash ~/junsgarden-for-jun/Start-Here-Ubuntu.sh` works only when that folder sits
+directly in Home.
 
 ![The install asks EASY or CUSTOM: for the full setup, type 2](images/screen-03-easy-or-custom.png)
 

@@ -27,7 +27,7 @@ still coming in, you already have a guide.**
   or [guide 25, Common questions](../START-HERE/25-common-questions.md)
   (한국어: [9](../START-HERE/ko/09-troubleshooting.md), [25](../START-HERE/ko/25-common-questions.md)).
 - **You want to read a guide on paper or a phone:** every guide is a PDF, an optional download the installer fetches while it works
-  (about 15 MB per language, checked by fingerprint; menu item `P` gets them later). The same guides
+  (about 27 MB in English, 25 MB in Korean, checked by fingerprint; menu item `P` gets them later). The same guides
   are on the website at `/help`.
 - **Once the garden is running,** the same guides are on your own site at
   `/help` (after you sign in), with a short overview first and the full guide
@@ -61,5 +61,5 @@ repository. It comes in the owner's separate, much smaller download.
 **잘 안 될 때:** 내려받기가 안 되면 컴퓨터가 인터넷에 연결되어 있는지 확인하고 시작 파일을 다시
 실행하세요(파일이 맞지 않으면 아무것도 쓰지 않으니 다시 실행해도 안전해요). 막힌 단계는
 [문제 해결](../START-HERE/ko/09-troubleshooting.md)과 [자주 묻는 질문](../START-HERE/ko/25-common-questions.md)을
-보세요. 모든 안내서는 PDF로도 있어요(설치하는 동안 받는 선택 사항, 약 15 MB, 나중에는 메뉴 `P`).
+보세요. 모든 안내서는 PDF로도 있어요(설치하는 동안 받는 선택 사항, 영어 약 27 MB, 한국어 약 25 MB, 나중에는 메뉴 `P`).
 정원이 실행되면 같은 안내서를 내 사이트의 `/help`에서(로그인 후) 볼 수 있어요.

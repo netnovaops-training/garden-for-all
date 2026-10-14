@@ -612,7 +612,7 @@ function Do-Pdfs {
     Say "PDF guides"
     $st = Join-Path $Root "PDF guides\STATUS.txt"
     if (Test-Path $st) { Get-Content $st | ForEach-Object { Note $_ } }
-    Note "PDF guides: every guide as a PDF to read or print (about 15 MB each language)."
+    Note "PDF guides: every guide as a PDF to read or print (about 27 MB in English, 25 MB in Korean)."
     Note "1) English   2) Korean   3) both   0) not now"
     $cur = Pdf-Choice
     $def = @{ en = "1"; ko = "2"; both = "3"; none = "0" }[$cur]
