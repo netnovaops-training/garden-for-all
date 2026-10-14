@@ -1,0 +1,112 @@
+# Keeps CODE-FINGERPRINTS.txt right.
+#
+# Jun's installs follow `main` and check every downloaded file against the public list
+# CODE-FINGERPRINTS.txt (fail closed). A commit that changes a tracked file without
+# refreshing the list therefore breaks every first start. The pre-commit hook does the
+# refresh for local commits, but not for commits made on github.com (merging a Dependabot
+# pull request, a code-scanning autofix, an edit in the web editor).
+#
+#   push to main, fixes, enhancements  ->  job `refresh` makes the list again and, only if it
+#                                          changed, commits it as github-actions[bot].
+#   pull request into main             ->  job `fingerprints-in-sync` only CHECKS (no write).
+#   workflow_dispatch                  ->  same as a push, for the branch it is run on.
+#
+# The bot's commit changes nothing but CODE-FINGERPRINTS.txt, which is in paths-ignore, and a
+# push made with the built-in GITHUB_TOKEN does not start new workflow runs, so it cannot loop.
+# If branch protection or a ruleset that requires pull requests is ever switched on for main,
+# the bot (GitHub Actions app) must be allowed to bypass it for this job to be able to push.
+name: code-fingerprints
+
+on:
+  push:
+    branches: [main, fixes, enhancements]
+    paths-ignore:
+      - CODE-FINGERPRINTS.txt
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fingerprints-in-sync:
+    # Check only: nothing is written or pushed.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: fingerprints-check-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out the merge result
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: The list must match the files
+        env:
+          PYTHONIOENCODING: utf-8
+        run: |
+          set -u
+          python3 tools/release/make_fingerprints.py --check || {
+            {
+              echo "### CODE-FINGERPRINTS.txt is stale"
+              echo
+              echo "Merge main into the branch, run \`python tools/release/make_fingerprints.py\`,"
+              echo "\`git add CODE-FINGERPRINTS.txt\`, commit and push (see tools/release/README.md)."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+
+      - name: The repository's own fingerprint test
+        env:
+          PYTHONIOENCODING: utf-8
+        run: sh tools/release/tests/test-code-fingerprints.sh
+
+  refresh:
+    if: github.event_name != 'pull_request' && github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # pushes the refreshed list; nothing else
+    concurrency:
+      group: fingerprints-${{ github.ref }}
+      cancel-in-progress: false
+    env:
+      BRANCH: ${{ github.ref_name }}
+      PYTHONIOENCODING: utf-8
+    steps:
+      - name: Check out the branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        # The token stays in the checkout's git config because the next step pushes with it.
+
+      - name: Make the list again, commit it only if it changed
+        run: |
+          set -eu
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            python3 tools/release/make_fingerprints.py
+            git add CODE-FINGERPRINTS.txt
+            if git diff --cached --quiet; then
+              echo "CODE-FINGERPRINTS.txt is already right on $BRANCH: no commit." | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            git commit -q -m "Refresh the code fingerprints"
+            if git push origin "HEAD:refs/heads/$BRANCH"; then
+              echo "Refreshed CODE-FINGERPRINTS.txt on $BRANCH ($(git rev-parse --short HEAD))." | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            # Someone pushed in between. The list is derived data, so rather than rebase an
+            # old list (which could conflict, or be wrong for the newer files) take the new
+            # tip of the branch and make the list again from it.
+            echo "Push refused (the branch moved), attempt $attempt of 3: updating and trying again."
+            git pull --rebase --autostash origin "$BRANCH" 2>/dev/null || {
+              git rebase --abort 2>/dev/null || true
+              git fetch -q origin "$BRANCH"
+              git reset -q --hard "origin/$BRANCH"
+            }
+          done
+          echo "Could not push the refreshed list after 3 attempts." | tee -a "$GITHUB_STEP_SUMMARY"
+          exit 1
