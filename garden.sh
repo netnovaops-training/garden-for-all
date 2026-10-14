@@ -3948,7 +3948,8 @@ EOF
         else note "These files are different from the zip (changed by you, or by the setup):"; while IFS= read -r d; do note "   $d"; done <<<"$changed"; fi
         # The program itself (from GitHub) has its own public list, CODE-FINGERPRINTS.txt; zips that follow main list only what is not on GitHub.
         if [ -f CODE-FINGERPRINTS.txt ]; then
-            changed=$(sha256sum -c --quiet CODE-FINGERPRINTS.txt 2>/dev/null | grep -v ': OK$' || true)
+            # Not the start files that came in the zip: the zip's own list covers those (the public page may hold a newer version of them).
+            changed=$(awk 'NR==FNR { if (length($0) > 68) skip[substr($0, 69)] = 1; next } !(substr($0, 67) in skip)' FILES-FROM-AUTHOR.txt CODE-FINGERPRINTS.txt | sha256sum -c --quiet 2>/dev/null | grep -v ': OK$' || true)
             if [ -z "$changed" ]; then note "Every program file is exactly as the public list (CODE-FINGERPRINTS.txt) says."
             else note "These program files are different from the public list (changed by you, or by the setup):"; while IFS= read -r d; do note "   $d"; done <<<"$changed"; fi
         fi

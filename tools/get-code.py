@@ -171,8 +171,12 @@ def verify(files, odd, want, present, fixed):
     """-> (problems, listed). `listed` is True when the download was checked against its own public list
     (CODE-FINGERPRINTS.txt), False when against FILES-FROM-AUTHOR.txt (the old way, for old fixed versions)."""
     if fixed and LIST_NAME not in files:
-        if len(want) < 100:
-            sys.exit("FILES-FROM-AUTHOR.txt is damaged. Download the zip again.")
+        if len(want) < 100:        # a zip that follows main lists only its own files: it cannot vouch for an older version
+            say("That version of the program has no CODE-FINGERPRINTS.txt, and the file list that came in this zip",
+                "그 버전의 프로그램에는 CODE-FINGERPRINTS.txt가 없고, 이 zip에 들어 있는 파일 목록으로는")
+            say("does not cover it, so nothing was changed. Choose a version that has CODE-FINGERPRINTS.txt (guide 18).",
+                "확인할 수 없어서 아무것도 바꾸지 않았어요. CODE-FINGERPRINTS.txt가 있는 버전을 고르세요(안내서 18).")
+            sys.exit(1)
         return check(files, want, present), False
     fp, problems = read_fingerprints(files)
     if not problems:

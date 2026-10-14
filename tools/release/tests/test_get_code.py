@@ -248,6 +248,9 @@ def main():
             stale_source = {"CODE-SOURCE.txt": b"the list names an older CODE-SOURCE.txt"}
             attempt("CODE-SOURCE.txt edited after an old-style list named it", old, source=f"commit={FAKE_COMMIT}", ref=FAKE_COMMIT,
                     extra_listed={**all_listed, **stale_source})
+            # 7d. a zip that follows main (short list) pointed at an older version that has no list: it cannot vouch for it
+            attempt("an older version without a list, short zip list", old, source=f"commit={FAKE_COMMIT}", ref=FAKE_COMMIT,
+                    expect_ok=False, expect_text="has no CODE-FINGERPRINTS.txt")
             # 8. a fixed commit whose download has the list: checked against the list
             attempt("fixed commit that has the list", public, source=f"commit={FAKE_COMMIT}", ref=FAKE_COMMIT)
             attempt("fixed commit as ref=<hex>", public, source=f"ref={FAKE_COMMIT}", ref=FAKE_COMMIT)

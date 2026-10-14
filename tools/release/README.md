@@ -75,6 +75,32 @@ request), nobody can push to `main` directly any more, and the steps change:
 - A required status check that runs `sh tools/release/tests/test-code-fingerprints.sh` makes GitHub refuse a pull request whose
   list is stale. (This repository has no such workflow yet; adding one is a small `.github/workflows` file.)
 
+**When GitHub itself changes `main`** (merging a Dependabot pull request or a code-scanning fix on the website) the pre-commit hook
+does not run, so the list is stale from that moment and every first start refuses ("being updated, try again") until it is
+made again. This happened with Dependabot's rustls bump (`rust/Cargo.lock`). Make it again by hand:
+`git pull`, `python tools/release/make_fingerprints.py`, `git add CODE-FINGERPRINTS.txt`, commit, push; and give the package repository the same
+change. To do it automatically, a workflow like this one (`.github/workflows/fingerprints.yml`; it needs permission to push to `main`, so with branch
+protection on, the rule must let this bot through) can be added:
+
+    name: fingerprints
+    on:
+      push:
+        branches: [main]
+        paths-ignore: [CODE-FINGERPRINTS.txt]
+    permissions:
+      contents: write
+    jobs:
+      refresh:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          - run: python3 tools/release/make_fingerprints.py
+          - run: |
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git add CODE-FINGERPRINTS.txt
+              git diff --cached --quiet || (git commit -m "CODE-FINGERPRINTS.txt: made again for the new main" && git push)
+
 ## Where the data download and the Drive files came from
 
 | Script | What it does |

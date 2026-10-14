@@ -139,7 +139,11 @@ try {
             foreach ($rel in $fp.Keys) { if (-not $entries.ContainsKey($rel)) { $problems += "missing: $rel" } }
         }
     } else {
-        if ($want.Count -lt 100) { Stop-Here 'FILES-FROM-AUTHOR.txt is damaged. Download the zip again.' }
+        if ($want.Count -lt 100) {     # a zip that follows main lists only its own files: it cannot vouch for an older version
+            Say 'That version of the program has no CODE-FINGERPRINTS.txt, and the file list that came in this zip'
+            Say 'does not cover it, so nothing was changed. Choose a version that has CODE-FINGERPRINTS.txt (guide 18).'
+            exit 1
+        }
         foreach ($rel in $entries.Keys) {
             if ($present[$rel] -or $NotChecked -contains $rel -or $ZipOwn -contains $rel) { continue }
             if (-not $want.ContainsKey($rel)) { $problems += "not in the list: $rel"; continue }
