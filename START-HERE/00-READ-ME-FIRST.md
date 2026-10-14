@@ -46,7 +46,7 @@ any step and come back.
 | Wiki | Your garden encyclopedia (optional part) |
 | `garden.sh` | The menu that installs and looks after everything |
 | `START-HERE/` | These guides |
-| `Start-Here-Ubuntu.sh`, `Start-Here-Windows.cmd` | The first start: they get the program from GitHub at one fixed version (`CODE-SOURCE.txt`) and check every file against `FILES-FROM-AUTHOR.txt` |
+| `Start-Here-Ubuntu.sh`, `Start-Here-Windows.cmd` | The first start: they get the program from GitHub (the page's main version, or one commit you choose in `CODE-SOURCE.txt`) and check every file against its public list, `CODE-FINGERPRINTS.txt` |
 | `windows/` | The Windows setup wizard and the Windows menu |
 | `PDF guides/` | Every guide as a PDF, English and Korean. An optional download the installer fetches while it works (on a Windows install it lands on the PC); `PDF guides/STATUS.txt` says where each set is, and menu `P` gets or refreshes them |
 | `lab/` | Practice scripts that do single jobs, for learning (`lab/README.md`) |

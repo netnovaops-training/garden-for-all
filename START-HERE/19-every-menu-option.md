@@ -243,7 +243,7 @@ after 4; see "Windows-only items" at the end. `0) Back` returns to the main menu
 - **Command:** `bash garden.sh icon`
 
 ### 11) Look at the files that came from the author (and check them)
-- **What it does:** Shows what each folder that came from the author is (the zip plus the first-start download from GitHub), with file counts and sizes. Offers to check every file's fingerprint against `FILES-FROM-AUTHOR.txt` and list the ones that changed. Offers to open the folder in the Files app.
+- **What it does:** Shows what each folder that came from the author is (the zip plus the first-start download from GitHub), with file counts and sizes. Offers to check every file's fingerprint against `FILES-FROM-AUTHOR.txt` (what came in the zip) and `CODE-FINGERPRINTS.txt` (the program) and list the ones that changed. Offers to open the folder in the Files app.
 - **When to use it:** To see exactly what came from the author, or to find what was changed since.
 - **What it installs or changes:** Nothing.
 - **To undo it:** Nothing to undo.

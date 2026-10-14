@@ -9,7 +9,7 @@
   모두요. 각각 한두 문장으로 설명하고, 만든 곳의 공식 문서 링크도 있어요.
 - 모든 프로그램은 **공식** 출처에서 와요: Ubuntu 자체 스토어, 만든 곳의 자체 패키지,
   또는 만든 곳의 공식 Docker 이미지예요. 정원 자체의 코드는 공개 GitHub 페이지에서,
-  `CODE-SOURCE.txt`에 적힌 커밋 그대로 와요.
+  `CODE-SOURCE.txt`에 적힌 버전(`main`, 또는 커밋 하나)으로 와요.
 - 정원이 쓰는 버전도 적혀 있어요. 그래서 알맞은 문서를 읽을 수 있어요.
 - HTTPS(자물쇠)는 **Let's Encrypt**에서 와요. 무료이고, 저절로 돼요. 어떻게 작동하는지는
   아래에서 설명해요.
@@ -27,7 +27,7 @@
 |---|---|---|---|
 | **Ubuntu**(운영체제) | 24.04 LTS | 정원이 돌아가는 운영체제예요. "LTS"는 몇 년 동안 무료 보안 업데이트를 받는다는 뜻이에요 | <https://ubuntu.com/server/docs> |
 | **Raspberry Pi OS**(Pi에서 Ubuntu 대신) | 64비트 | Pi 자체의 시스템이에요. Raspberry Pi 5용이에요 | <https://www.raspberrypi.com/documentation/computers/os.html> |
-| **정원 자체의 코드**(`garden.sh`, 웹사이트, 안내서) | `CODE-SOURCE.txt`에 적힌 커밋 | 첫 시작 때 GitHub에서 받아 와요(`python3 tools/get-code.py`). `FILES-FROM-AUTHOR.txt`와 비교해서 확인해요(안내서 18) | <https://github.com/netnovaops-training/garden-for-all> |
+| **정원 자체의 코드**(`garden.sh`, 웹사이트, 안내서) | `CODE-SOURCE.txt`에 적힌 버전(`main`, 또는 커밋 하나) | 첫 시작 때 GitHub에서 받아 와요(`python3 tools/get-code.py`). 공개 목록 `CODE-FINGERPRINTS.txt`와 비교해서 확인해요(안내서 18) | <https://github.com/netnovaops-training/garden-for-all> |
 | **apt** 업데이트, `python3`(Ubuntu에 이미 있어요), `git`, `curl`, `openssl`, `rsync`, `unzip`, `ca-certificates` | Ubuntu 스토어에서 | 기본 도구예요: 업데이트, 변경 기록, 내려받기, 튼튼한 무작위 비밀번호 만들기, 복사하기, 추가 기능 압축 풀기 | <https://ubuntu.com/server/docs/how-to/software/package-management/> |
 | **OpenSSH server**(원격 접속 서버) | Ubuntu 스토어에서 | Windows PC에서 정원 컴퓨터로 일할 수 있게 해 줘요. 암호화돼요(안내서 20) | <https://www.openssh.com/manual.html> |
 | **ufw**(방화벽) | Ubuntu 스토어에서 | 들어오는 것을 모두 막아요. 정원이 허락한 것만 빼고요 | <https://ubuntu.com/server/docs/how-to/security/firewalls/> |

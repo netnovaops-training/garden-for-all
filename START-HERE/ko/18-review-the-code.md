@@ -6,7 +6,7 @@
 *다 읽을 시간이 없나요? 짧은 버전이에요. 전체 안내서는 아래에 있어요.*
 
 - 이 패키지의 모든 것은 읽을 수 있는 평범한 글이에요. 이 안내서는 나, 친구, 또는 AI가 확인하는 방법을 보여 줘요.
-- 내 코드는 이 공개 페이지에서 `CODE-SOURCE.txt`에 적힌 커밋 하나 그대로 와요: <https://github.com/netnovaops-training/garden-for-all>. 누구나 거기서 읽을 수 있어요.
+- 내 코드는 이 공개 페이지에서 와요: <https://github.com/netnovaops-training/garden-for-all>. 누구나 거기서 읽을 수 있어요. `CODE-SOURCE.txt`가 어느 버전인지 알려 줘요: `ref=main`(페이지의 현재 버전, 공개 목록과 대조해요) 또는 내가 고른 커밋 하나.
 - 오는 길에 바뀐 것이 없는지 확인하기: 메뉴 `M`, 그다음 `11`.
 - 모든 변경 보기: `git log --oneline`, `git show`, `git diff`. 받기 전에 바뀐 것은 `CHANGES.md`가 설명해요.
 - 비밀 정보와 보안 실수 검사하기(5분): `sh tools/check-secrets.sh`. `CLEAN`이 나오거나, 찾은 것을 보여 줘요.
@@ -23,10 +23,25 @@
 **코드는 어디서 오나요.** Google Drive에서 받는 `junsgarden-for-jun.zip`에는 GitHub에 없는
 것만 들어 있어요: 안내서 모음(handbook), 시작용 백업, 음악 파일, `CODE-SOURCE.txt`,
 `FILES-FROM-AUTHOR.txt`, 시작 파일. 코드 전체(`garden.sh`, `windows/`, `rust/`, `START-HERE/`
-등)는 첫 시작 때 공개 페이지 <https://github.com/netnovaops-training/garden-for-all>에서, `CODE-SOURCE.txt`에 적힌 커밋 하나
-그대로 받아 와요("가장 새것"을 받지 않아요). 모든 파일을 `FILES-FROM-AUTHOR.txt`와 비교하고,
-하나라도 맞지 않으면 아무것도 쓰지 않아요. 그러니 여기서 검토하는 코드가 바로 그 커밋의
-공개 코드예요.
+등)는 첫 시작 때 공개 페이지 <https://github.com/netnovaops-training/garden-for-all>에서 받아 와요.
+`CODE-SOURCE.txt`에는 `ref=main`이라고 적혀 있어서, 첫 시작은 페이지의 현재 main 버전을 받아요:
+거기에 올라온 수정은 새 zip 없이도 새로 설치하는 사람에게 닿아요.
+
+아무것도 확인 없이 쓰지 않아요. 공개 페이지에는 `CODE-FINGERPRINTS.txt`라는 목록이 있고, 프로그램
+파일마다 지문(SHA-256)이 적혀 있어요. 첫 시작은 모든 파일이 자기 지문과 맞는지, 목록에 있는 파일이
+빠지지 않았는지, 목록에 없는 파일이 끼어 있지 않은지 확인해요. 하나라도 다르면(예를 들어 페이지가
+업데이트되는 중이면) 아무것도 쓰지 않아요: 화면에 프로그램이 업데이트되는 중이거나 목록과 맞지
+않는다고 나오고, 몇 분 뒤에 다시 하면 돼요. 계속 그러면 제작자에게 알려 주세요.
+`FILES-FROM-AUTHOR.txt`는 GitHub에 없는 파일(zip에 들어 있던 것)만 다뤄요. 목록은 코드와 같은 페이지에서
+오기 때문에, 중간에 빠졌거나 섞였거나 망가진 내려받기는 잡아내요. 코드가 무슨 일을 하는지는 나, 친구,
+또는 AI가 읽어서 확인하는 몫이에요: 페이지의 기록("Commits" 목록)에 모든 변경이 보여요. 그러니 여기서
+검토하는 코드가 바로 설치한 때의 공개 코드예요.
+
+**한 버전에 머무르려면.** 프로그램이 저절로 바뀌지 않기를 바란다면, 첫 시작 전에 아무 텍스트
+편집기로 `CODE-SOURCE.txt`를 열어서 `ref=main` 줄을 `commit=` 다음에 원하는 버전의 40자 커밋을 붙인
+것으로 바꾸세요(페이지의 "Commits" 목록에서 복사해요. `CODE-FINGERPRINTS.txt`가 이미 들어 있는 커밋을
+고르세요). 그러면 첫 시작은 정확히 그 버전을 받아서 그 버전의 목록과 대조하고, 더 새로운 것은 컴퓨터에
+오지 않아요. (이 변경 전에 만든 zip은 이미 이렇게 동작해요: 커밋 하나가 적혀 있어요.)
 
 ![Windows 설치 마법사: 모든 쪽에 Help가 있고, 설치하는 것으로 연결돼요](../images/wizard-1-welcome.png)
 
@@ -43,14 +58,15 @@
 | `android-app/` | 휴대폰 앱의 코드 |
 | `site/` | 웹사이트가 보여 주는 사진, 스타일, 스크립트 |
 | `CHANGES.md` | 내 사본을 위해 바꾼 모든 것과 그 이유 |
-| `FILES-FROM-AUTHOR.txt` | 받은 그대로의 모든 파일의 지문(SHA-256) |
-| `CODE-SOURCE.txt` | 코드가 GitHub의 어느 공개 커밋에서 왔는지 |
-| `tools/get-code.py`, `tools/get-code.ps1` | 첫 시작(Ubuntu, Windows): 그 커밋의 코드를 받아 모든 파일을 `FILES-FROM-AUTHOR.txt`와 비교해요 |
+| `FILES-FROM-AUTHOR.txt` | zip에 들어 있던 모든 파일의 지문(SHA-256), 받은 그대로 |
+| `CODE-FINGERPRINTS.txt` | 공개 목록: GitHub 페이지의 모든 프로그램 파일의 지문(코드와 함께 와요) |
+| `CODE-SOURCE.txt` | 코드가 공개 페이지의 어느 버전에서 오는지: `ref=main` 또는 커밋 하나 |
+| `tools/get-code.py`, `tools/get-code.ps1` | 첫 시작(Ubuntu, Windows): 그 버전의 코드를 받아 모든 파일을 `CODE-FINGERPRINTS.txt`와 비교해요 |
 | `WHAT-GETS-INSTALLED.md` | 설치될 수 있는 모든 프로그램과 그 출처 |
 
 ## 2. 오는 길에 바뀐 것이 없는지 확인하기
-메뉴 `M`, 그다음 `11`(Windows에서는: More, `11`). 모든 파일을 `FILES-FROM-AUTHOR.txt`의 지문과
-비교해서 다른 것을 보여 줘요. (웹사이트 이름 바꾸기를 했다면 그 파일들은 달라요: 예상한 일이에요.) 첫 시작이 파일을
+메뉴 `M`, 그다음 `11`(Windows에서는: More, `11`). 모든 파일을 `FILES-FROM-AUTHOR.txt`(zip에 들어 있던 것)와
+`CODE-FINGERPRINTS.txt`(프로그램)의 지문과 비교해서 다른 것을 보여 줘요. (웹사이트 이름 바꾸기를 했다면 그 파일들은 달라요: 예상한 일이에요.) 첫 시작이 파일을
 쓰기 전에 이 확인을 이미 한 번 했어요. `M`, `11`은 언제든 다시 해요.
 
 ## 3. 모든 변경을 한 줄씩 보기
@@ -92,7 +108,7 @@ grep -rhoE 'https?://[A-Za-z0-9./_?=&%:-]+' garden.sh windows docker docker-comp
 '내' 키로만), OpenRouter('내' 키로만), No-IP와 DuckDNS(내가 설정했을 때만)예요.
 
 ## 6. AI에게 검토 부탁하기
-내 코드는 공개 페이지 <https://github.com/netnovaops-training/garden-for-all>에서, `CODE-SOURCE.txt`에 적힌 커밋 그대로 와요(zip에는 GitHub에 없는 것만 들어 있어요: 내 정원 데이터, 안내서 모음, 노래 하나).
+내 코드는 공개 페이지 <https://github.com/netnovaops-training/garden-for-all>에서, `CODE-SOURCE.txt`에 적힌 버전으로 와요(다른 커밋을 고르지 않았다면 `main`이에요. zip에는 GitHub에 없는 것만 들어 있어요: 내 정원 데이터, 안내서 모음, 노래 하나).
 웹 페이지를 읽을 수 있는 AI라면 거기서 확인할 수 있어요:
 
 - "공개 저장소(https://github.com/netnovaops-training/garden-for-all)를 검토해 주세요. 해로운 것이나 숨겨진 것, 내 데이터를
@@ -115,7 +131,7 @@ Gemini(AI Studio, 안내서 16)는 코드를 읽을 수 있어요. 좋은 질문
 
 ## 7. 친구에게 검토 부탁하기
 정원이 아니라 **코드**를 나누세요: `.env`, `local/`, `backups/`, `logs/`를 뺀 모든 것.
-코드는 공개 페이지에 있어요: 그 링크(그리고 `CODE-SOURCE.txt`의 커밋)를 보내면 돼요. 친구는 코드를 읽고, 4번의 검사기를 실행하거나,
+코드는 공개 페이지에 있어요: 그 링크(그리고 한 버전에 머문다면 `CODE-SOURCE.txt`의 커밋)를 보내면 돼요. 친구는 코드를 읽고, 4번의 검사기를 실행하거나,
 자기만의 빈 사본을 설치해서 해 볼 수 있어요. 그 사본은 친구의 것이에요: 내 식물, 사진,
 비밀번호나 키는 하나도 없고, 내 정원에 들어올 수도 없어요.
 
