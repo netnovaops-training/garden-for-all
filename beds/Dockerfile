@@ -4,7 +4,7 @@
 # (or let docker compose build it; see README.md in this folder)
 #
 # python:3.12-slim is a small Debian with Python 3.12 already installed.
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # The only libraries this service needs from outside Python itself:
 #   pymysql  talks to the MariaDB database
