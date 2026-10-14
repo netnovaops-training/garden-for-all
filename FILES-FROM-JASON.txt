@@ -14,8 +14,67 @@ b2ca375a4a109983e3fc2a3e1d5224260ac6e0b38f61fb477e4bff10a4eca57f  ./CLAUDE.md
 122381d68329f4a18e5025792b5d32121a7c81aab66f2e1e9c317a084e1f622f  ./HANDOVER-SUMMARY.md
 da9f9c0befe84fcf8ba8b4917370979cbe2d5bee1ee7e7cd3261d10fcf997a66  ./JOURNAL.ko.md
 fbf3f4758685b06600b04d0ca37eed356ffc9bc50239d812dd2a75fee9776b84  ./JOURNAL.md
+bb27c8276372f701abc4ac6f688d81affcdc3e970e2196cd49e0b130951bf4fe  ./Korean guides (PDF)/0 - 여기서 시작/FULL - 00 READ ME FIRST.pdf
+8dc5f3503e26858f26eced18e6f93347c8bc83cd0976f045b8322281cd37794f  ./Korean guides (PDF)/0 - 여기서 시작/FULL - 00b before you start.pdf
+446448f9c9b358d601b2e256738d4dfb21969c74fa74780a189e2109bca0e4a7  ./Korean guides (PDF)/0 - 여기서 시작/FULL - 02a what is docker.pdf
+edcd0e1fc3fc73e0df36d0ec92cb5b4e34ab0b73fa779024c6455d4b4d2e782f  ./Korean guides (PDF)/0 - 여기서 시작/FULL - 23 full setup.pdf
+401fc9373817473cdf2c6c3d0451df0507f8c0768b6a253694fb573fcd63dd99  ./Korean guides (PDF)/0 - 여기서 시작/QUICK - 00 READ ME FIRST.pdf
+4626318e060e858a93b2cd793934a071f64f44ee7ca1390e5351a30605b1a543  ./Korean guides (PDF)/0 - 여기서 시작/QUICK - 02a what is docker.pdf
+56f5394661d0b41c47e85044fac21edd113a0035541d524a3203e4a186cacf0c  ./Korean guides (PDF)/0 - 여기서 시작/QUICK - 23 full setup.pdf
+8b5639d42b99c1fca29d589676c81c9d03540eb1fd11c29c9d9d2362c0de7f59  ./Korean guides (PDF)/1 - 컴퓨터에 Ubuntu 설치/FULL - 01 ubuntu laptop.pdf
+783323545a1e7ead5dd14a5bc18dfb56398e2942b10cc28d35293efb64a6e04c  ./Korean guides (PDF)/1 - 컴퓨터에 Ubuntu 설치/QUICK - 01 ubuntu laptop.pdf
+191888fd1173010e2770db7fbfa8181c90083b1b9f360f293025831123aaaab3  ./Korean guides (PDF)/2 - Docker와 설치/FULL - 02 docker.pdf
+92c92ec97cf7aa98965c36c0b178a01267a6da4dfe5b91fdd30743cdcdd0c811  ./Korean guides (PDF)/2 - Docker와 설치/FULL - 03 run your garden.pdf
+cd7e15d7a3609697f0b67d8c7e73c014bedb2078580b60abfd1d9221884759b3  ./Korean guides (PDF)/2 - Docker와 설치/QUICK - 02 docker.pdf
+fc3536d9a07667f1e489a4bc6f1b76dae90ed4c20215bd9b83013c08d08b2984  ./Korean guides (PDF)/2 - Docker와 설치/QUICK - 03 run your garden.pdf
+49383ce64e1aaafde43ba2557afde38290adabd2e832eb2de3a24b638ea9b38c  ./Korean guides (PDF)/3 - 인터넷에 올리기/FULL - 04 go public no ip caddy.pdf
+a632a0a4cf79286817bc81cffe09f8581bc9569604f2d88968cf727721e07f4a  ./Korean guides (PDF)/3 - 인터넷에 올리기/FULL - 04b take over junsgarden zapto.pdf
+687565f097a1dfe3b22c1cb4eece800cabe5332d5a71541fa874e2dbcbf7831e  ./Korean guides (PDF)/3 - 인터넷에 올리기/FULL - 07 sso gate.pdf
+70227bffc051c91aae910f95b872dd4a22396f8e805b5d6c84bdcc42153017f2  ./Korean guides (PDF)/3 - 인터넷에 올리기/FULL - 14 reserve your ip.pdf
+c155bd270670b22c3dd576a16137aeff459c52d27c386bd508f082e82b7a97ce  ./Korean guides (PDF)/3 - 인터넷에 올리기/FULL - 20 ssh and remote desktop.pdf
+90ed71416f44c43d10b1dc4623928179c4714e7efba2d8784d1a9925c5a6efd1  ./Korean guides (PDF)/3 - 인터넷에 올리기/QUICK - 04 go public no ip caddy.pdf
+865e93a0fffa35bbeabc7943a42abd78050cdfcf0f35bf9fcbf928daf9c571c0  ./Korean guides (PDF)/3 - 인터넷에 올리기/QUICK - 04b take over junsgarden zapto.pdf
+f66ff3d0268c894213026ddce7828e31ddd576313d9732455829342cba8d9cbf  ./Korean guides (PDF)/3 - 인터넷에 올리기/QUICK - 07 sso gate.pdf
+396d17beab02b2e0912630edb45a2514c102391a314edeb8e418691dcf0ffb74  ./Korean guides (PDF)/3 - 인터넷에 올리기/QUICK - 14 reserve your ip.pdf
+010509d30ccf5bf74c24619d1ea08e2b9d572cb32f09149b858b3547b1b5e593  ./Korean guides (PDF)/3 - 인터넷에 올리기/QUICK - 20 ssh and remote desktop.pdf
+968a1e3d34a758208b71bf8aec648de1b393c69934eccaedf1d102bc2821c773  ./Korean guides (PDF)/4 - 이메일, 키, AI/FULL - 05 gemini prompts.pdf
+48326a375d8488b1a0786324db824feb456e012db82554f5e903bd791772a982  ./Korean guides (PDF)/4 - 이메일, 키, AI/FULL - 08 gemini setup.pdf
+c20f8e13ec4ed5e13bef3a9c16509caab4f008ba590beda182738c47e8112a5f  ./Korean guides (PDF)/4 - 이메일, 키, AI/FULL - 15 local ai.pdf
+c3e649086979c00174d1bd482c43f82b46e7db1a55f1bb7fb9261ce0bb07d80e  ./Korean guides (PDF)/4 - 이메일, 키, AI/FULL - 16 ai studio.pdf
+ff274b5fcf1bd69abd3371a22c31013e9f294732c26fad2bb21735a50ca83d8d  ./Korean guides (PDF)/4 - 이메일, 키, AI/FULL - 17 android app and ai coding.pdf
+1ae53147aabbfbb0c6300b997db55dcd93c9f087390c323a2bfb3f3e2c2697f1  ./Korean guides (PDF)/4 - 이메일, 키, AI/QUICK - 05 gemini prompts.pdf
+8e90fe13d31d9c38eb58a4ace611a40dc9896849811bc265a1c9dd319893b1ae  ./Korean guides (PDF)/4 - 이메일, 키, AI/QUICK - 08 gemini setup.pdf
+908824ad38eb908c55b7e6b2699342fdaf9866e00613135a1e598419afbe2c06  ./Korean guides (PDF)/4 - 이메일, 키, AI/QUICK - 15 local ai.pdf
+c4791b262a824d2eb068fe2c69ffec64d999167f66f9b4a2c857a2a53cb61eca  ./Korean guides (PDF)/4 - 이메일, 키, AI/QUICK - 16 ai studio.pdf
+ba084eb4d578471a5bc0499cf0dcdcf6804fa19ab4648640be053f94c764a1b2  ./Korean guides (PDF)/4 - 이메일, 키, AI/QUICK - 17 android app and ai coding.pdf
+b22960744bbd4f82719efec5a229fc40a0ee3c1b7678afc4285ed6d8a3594963  ./Korean guides (PDF)/5 - 백업과 내 데이터/FULL - 12 your database.pdf
+45a7cc98ac77fbd8f210113ae1c14b8ee5773b84e2beb23eeac6cb4e6689bfc5  ./Korean guides (PDF)/5 - 백업과 내 데이터/FULL - 13 backups and folders.pdf
+c7974fdf6a7752edae3a1d89ff5e237221f815b67edb489d47137ee7cd6b5cbf  ./Korean guides (PDF)/5 - 백업과 내 데이터/QUICK - 12 your database.pdf
+e80d342d454c151eb22dac1ceba64d1a9fe1cfbed0f4ed0b34cbd51b1e0cd0a3  ./Korean guides (PDF)/5 - 백업과 내 데이터/QUICK - 13 backups and folders.pdf
+547da36a1b307e8432d7aadaff2cfa3b1e45d0e815f52c064e9063c041068e8a  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/FULL - 06 shopping list.pdf
+31ea9bb3dacfe5b59005708a5bd4dffbaff0fd2d82d172c7a3e518e8a25c0115  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/FULL - 09 troubleshooting.pdf
+fcedf365839732b618d095502400201e168c4187d49f90993f40ed9da84acc40  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/FULL - 10 the plan.pdf
+9d449736d16242ea3d8e50532bf21080082d2650db6895f13fbf35e7ce376fdf  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/FULL - 11 maintain your site.pdf
+0140c0219fe09ab9527b7a558c42c0a8dd4e0976277d37a24e795b6515f5afb1  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/FULL - 18 review the code.pdf
+0ac60f5a40fcbe5231ac27a25e9d2ae17b1d99a9d4c610168dd6b8aa74b6ca89  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/FULL - 19 every menu option.pdf
+6c69d4c7917997dcaee6389cbc8982e348a740fdf97aa06fbd0924a9b90d3742  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/FULL - 25 common questions.pdf
+eba4803256fd02af2393698781f197f914715f03df6cbc5f1ccb87d8f57d827d  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/FULL - 26 rename move and switch.pdf
+e8a56629fb5b4a72226aa745da74f29002c805e71638724c880c07c4e31b40cf  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/QUICK - 06 shopping list.pdf
+ae61148f26b35f343a386d5773514e64ec4a90f47643a71cc05cead98684c52a  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/QUICK - 09 troubleshooting.pdf
+472f676b02342ab04683bb8079b70f76dacaa5e1472f3f34aad235222385bc56  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/QUICK - 10 the plan.pdf
+b4a9f940f701a3b4c8f727bdeaa6d92059e3b679dd021528d8b968c5499460e6  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/QUICK - 11 maintain your site.pdf
+75dcec9c8441b45137813f21fd0ad7574c4236c8350a63ead9f5d0c108eb7e31  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/QUICK - 18 review the code.pdf
+d60d134d255247be5a5b149da70be6afb23114be17c6e855276bb2864d913895  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/QUICK - 19 every menu option.pdf
+9b8111fb4d69f41ad334fd42b35f9a3e78477a86d554cbcd2ee1eeb322a80baa  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/QUICK - 25 common questions.pdf
+8aaaddb4f14d023dc8d5cdc2cc3bb814292cf4e046d43c3bc01c667c6e99721e  ./Korean guides (PDF)/6 - 평소에 쓰기와 도움/QUICK - 26 rename move and switch.pdf
+1988b7cb62db8dc61a01ccf0f48a63156e393a1e4ec58407b7293ff7d8e05cb7  ./Korean guides (PDF)/7 - 참고/FULL - HANDOVER SUMMARY.pdf
+bbe8b73d410ee91a14e1673643172ab727e7a33e567761ef6acba931b8e73193  ./Korean guides (PDF)/7 - 참고/FULL - JOURNAL.pdf
+5210a43ef41e00b3d805e1acf55a0b9a9856ab52a69c83717dd28d14de9ba464  ./Korean guides (PDF)/7 - 참고/FULL - WHAT GETS INSTALLED.pdf
+f7b2b3b1a8034bd6192e468c42f5c35d81d56a4dfa2249d78084b77066782c29  ./Korean guides (PDF)/7 - 참고/FULL - WHY THESE PROGRAMS.pdf
+8ed0080f5b034f5f08c3be816b59ccd144ea76e1160d71b14a485c1c91e6e169  ./Korean guides (PDF)/7 - 참고/QUICK - WHAT GETS INSTALLED.pdf
+814e5ef1458a975e4a1a466821d80b9c3ebc2981e429c0ac396671282c9f1403  ./Korean guides (PDF)/7 - 참고/QUICK - WHY THESE PROGRAMS.pdf
 123153543387becfe7e93c321ab6fcd96ce9f68324f749526bf7c5852f0a95f3  ./LICENSE
-b07a55d096782adca707b746f7cf0945a75dde087c0956f6266f912fcd5ae216  ./README.md
+725829ed14567e7db01055185b0d37c1f08873933835e942eda2cc4cbae3abe8  ./README.md
 1dd443d7601e8efd0a3027850032e8b28a9391e589990e5c60a4cfb0fed834d3  ./START-HERE/00-READ-ME-FIRST.md
 c54f1da6ee9696155b06eab3d0c1502a6068a8ef70f8d0cd613f6d3b4b02918d  ./START-HERE/00b-before-you-start.md
 9281c490ccac19c40f9eef59a5e1dd73dbe8218c5172d23aab43cae2a4262acf  ./START-HERE/01-ubuntu-laptop.md
@@ -433,8 +492,8 @@ fc732e9ca3b449fa8dd7a4975a3b6eeb5ba3029bc6740d7698d1608ef832f968  ./handbook/25-
 aabd0bd0970578ccb7f2ff35dbd8930c5ea02da183187574f2fcd9537f966861  ./handbook/26-rename-move-and-switch.html
 ca9bac7b3546d857beb24a291535dbdab053f688849ecd58becbe8d9a2d6ac98  ./handbook/assets/handbook.css
 131ac88750ece8f64886cb58d41bdc1d1f93a763069a79d617e7db0a9bdaed68  ./handbook/assets/logo.png
-a9376e87c0aebfa5a4b0c9ba0316556e7317e1725f5a180c7f3832c3701817e4  ./handbook/assets/search-index.js
-442ba34846ff2fb0a416a16b02f7d9c3d776537dda477c5962003639e4913efc  ./handbook/assets/search.js
+5d82493ce3f76a59b2df8597c9f4cb6dce146d6ede5868b5b2a350ba1e9a1227  ./handbook/assets/search-index.js
+54a9ce0e7914778d209bd1cef2d010e1f7badb2196bebd7f3532055b5d6449d3  ./handbook/assets/search.js
 5bab6ff55d440e88b3d68faf614682a0db8972d9a5e4cfc5d3a817c1ce1e81c6  ./lab/01-prepare-ubuntu.sh
 7beb9f12f00008a962fd5f5cfb99d16615b632d1bfb8ac988c7122b478763c98  ./lab/02-install-docker.sh
 986c13b241a0cff51c738318ea2b0c78854a1600a821faed39659c193313229c  ./lab/03-start-garden.sh
@@ -575,7 +634,7 @@ f12fc50f882be9acdc56459d60e9cbf07bb7b72c21cc0970b985dbab514bc863  ./site/section
 9ab16c4cce9d66fe9af04b644f982856f3a26de7dcf25a3b4152058b0a0a2b4f  ./site/style.css
 03f3f1a37f3b1a2c85ba604af86d1a5967b375ffbfd267550fe4fc115732a226  ./site/user-notes.css
 eb2701c375a4765de583d59b8366bbe485211c798e59c6d8d89f7a94bac8b793  ./tools/check-secrets.sh
-60511939a888fc2eede78d044e48094b92f2b5101adb73d13d6e3482c3bc36ee  ./tools/release/README.md
+d0ca2bc2b5ccbfd4d991e2aaaad6729ed9144fd118f97249bea34d30e0735442  ./tools/release/README.md
 975ceb41bb63e938a1ee6f8f6139692f1c9be0e3ae3037d80c89ddb0985cdd6a  ./tools/release/build_release.py
 cd7809370144bcf2673ad4f7d08330e4a4725509b4567006366e0b2aae1b8407  ./tools/release/capture-menus.sh
 3eaffe391b6b36b2ca6d03ef8df99b7009b592d6fc92cec24998992d4756f86c  ./tools/release/check_ko_guides.py
@@ -590,7 +649,7 @@ cd7809370144bcf2673ad4f7d08330e4a4725509b4567006366e0b2aae1b8407  ./tools/releas
 60d5a7bdf32e2db8f1ffa21c65d24493504fb14098040f2b4850a939a26d437e  ./tools/release/clean-pictures/wizard-6-done.png
 a07f5113e582a987fa5e0ff1e9835bb4346a27031894ad2bc533cbb0667a04ba  ./tools/release/export-from-server.sh
 9c1bd88957a7260c090fced0ced372cd0984bcff395d965efbe9b1970a6da705  ./tools/release/make_docker_svgs.py
-6418fe4941e23ca31324fcd5f4c866f4f439ae53ad42f83f4e118d3c6379cfb7  ./tools/release/make_handbook.py
+2c0e2fc0b3f479e61f905ba9b5a02fcc6fa1a51cfcff4ee44315716ad9074ea7  ./tools/release/make_handbook.py
 8c8cc92f8e6924440125355bbdb19cc42aaa0bc931436c491c70d6b5df58fee6  ./tools/release/make_menu_pictures.py
 f7cbb69165a03a53c7d11e8803218d7f272a2f81da8d4db6bce3108a81661706  ./tools/release/make_pdfs.py
 c29dde4382b49b480b84372190cf78fe38bdf93e4139ab75809b251110d43a54  ./tools/release/make_small_test.py

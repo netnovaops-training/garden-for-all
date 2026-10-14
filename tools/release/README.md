@@ -25,6 +25,9 @@ machines, kept here so anyone can see (and repeat) how the package was made.
 | `export-from-server.sh` | How the garden's data was taken from the old live server: the plants database, photos, data and AI cache, in the garden's own backup format. The logins (password hashes, sessions) were left out on purpose: the new owner sets his own |
 | `upload-to-drive.sh` | How the three downloads and the PDFs go to the Google Drive folder, how each file is checked there (Drive's fingerprint must match), and the SHA-256 fingerprints for `DOWNLOADS-SHA256.txt`. The Drive account, the folder's link and any keys are given when it runs; none of them are in the package |
 
+`Korean guides (PDF)/` in the package is a copy of the Korean PDFs that
+`build_release.py` makes (`OUT_FOLDER/korean-pdfs/Korean/`), refreshed at each release.
+
 The Korean words of the menu are checked with `python lang/check_ko.py`, and the
 code for secrets with `sh tools/check-secrets.sh`.
 

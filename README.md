@@ -34,6 +34,7 @@ Its public home: <https://github.com/netnovaops-training/garden-for-all>.
 | [`android-app/`](android-app/) | The Android app (Kotlin) |
 | [`docker/`](docker/), [`docker-compose.yml`](docker-compose.yml) | Each program in its own container; only the front door faces the internet |
 | [`START-HERE/`](START-HERE/) | Guides 00 to 26, each with a quick version first; Korean in [`START-HERE/ko/`](START-HERE/ko/) |
+| [`Korean guides (PDF)/`](Korean%20guides%20(PDF)/) | 한국어 안내서 PDF: every Korean guide as a PDF, short and full, to read or print |
 | [`tools/release/`](tools/release/) | How the downloads, PDFs and the web handbook are built (`build_release.py`), and the checks run before each release |
 
 The garden's own data (plants database, photos, wiki pages) is **not** in this

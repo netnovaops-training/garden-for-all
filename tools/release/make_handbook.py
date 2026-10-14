@@ -326,7 +326,23 @@ SEARCH_JS = r"""(function () {
     var start = Math.max(0, i - 60);
     return mark((start ? '... ' : '') + x.slice(start, start + 190) + (start + 190 < x.length ? ' ...' : ''), ws);
   }
+  // A small surprise from Jason. The words that start it are a secret on purpose
+  // (only their fingerprint, FNV-1a, is written here); the code itself is not.
+  // It plays the song that came with the garden, from this computer.
+  function fp(s) {
+    var h = 0x811c9dc5;
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h >>> 0;
+  }
+  function surprise(q) {
+    if (fp(q.toLowerCase().trim().replace(/\s+/g, ' ')) !== 0xc7e71335) return false;
+    out.innerHTML = '<p class="n" style="font-size:16px">&#9835; Jason made this. &#9835;</p>';
+    out.hidden = false;
+    try { new Audio(home + 'site/Boogie.mp3').play().catch(function () {}); } catch (e) {}
+    return true;
+  }
   function run() {
+    if (surprise(box.value)) return;
     var ws = words(box.value), lang = sel.value;
     try { localStorage.setItem('gardenSearchLang', lang); } catch (e) {}
     if (!ws.length) { out.hidden = true; out.innerHTML = ''; return; }
