@@ -28,7 +28,7 @@ concurrency:
 jobs:
   changes:
     name: what changed
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       shell: ${{ steps.f.outputs.shell }}
@@ -67,7 +67,7 @@ jobs:
 
   gitleaks:
     name: gitleaks (new commits)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -103,7 +103,7 @@ jobs:
     name: shellcheck
     needs: changes
     if: needs.changes.outputs.shell == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -131,6 +131,7 @@ jobs:
             echo "- warnings found: $(wc -l < found.txt), in the baseline: $(( $(wc -l < found.txt) - $(wc -l < new.txt) )), new: $(wc -l < new.txt)"
             if [ -s gone.txt ]; then echo "- baseline lines that no longer match (can be removed): $(wc -l < gone.txt)"; fi
           } | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=ShellCheck::$(wc -l < found.txt) warnings, $(wc -l < new.txt) new (not in the baseline), $(wc -l < gone.txt) baseline lines gone"
           if [ -s new.txt ]; then
             echo "New ShellCheck warnings (not in .github/shellcheck-baseline.txt):"
             while read -r file code; do grep -F "$file:" found-raw.txt | grep -F "[$code]"; done < new.txt
@@ -141,7 +142,7 @@ jobs:
     name: psscriptanalyzer
     needs: changes
     if: needs.changes.outputs.powershell == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -160,6 +161,7 @@ jobs:
           $lines = @('### PSScriptAnalyzer 1.25.0', "- errors: $($errors.Count), warnings: $($warnings.Count) (warnings do not fail the check)")
           $lines += $warnings | Group-Object RuleName | Sort-Object Count -Descending | ForEach-Object { "  - $($_.Name): $($_.Count)" }
           $lines | Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY -Append
+          "::notice title=PSScriptAnalyzer::$($files.Count) scripts, $($errors.Count) errors, $($warnings.Count) warnings: " + (($warnings | Group-Object RuleName | Sort-Object Count -Descending | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join ' ')
           foreach ($e in $errors) { "::error file=$($e.ScriptPath),line=$($e.Line)::$($e.RuleName): $($e.Message)" }
           if ($errors.Count -gt 0) { exit 1 }
 
@@ -167,7 +169,7 @@ jobs:
     name: actionlint
     needs: changes
     if: needs.changes.outputs.workflows == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -182,7 +184,7 @@ jobs:
     name: zizmor
     needs: changes
     if: needs.changes.outputs.workflows == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -197,5 +199,6 @@ jobs:
             echo "### zizmor 1.30.1"
             echo "- $(grep -E '^[0-9]+ findings' zizmor-all.txt | tail -1)"
           } | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=zizmor::$(grep -E '^[0-9]+ findings|^No findings' zizmor-all.txt | tail -1)"
           # ... and the real check.
           pipx run --spec zizmor==1.30.1 zizmor --offline --no-progress --min-severity high .github/workflows
