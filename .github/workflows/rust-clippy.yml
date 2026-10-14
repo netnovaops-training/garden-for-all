@@ -73,3 +73,15 @@ jobs:
           sarif_file: rust/rust-clippy-results.sarif
           category: rust-clippy
           wait-for-processing: true
+
+      - name: Count the open Clippy alerts for this ref
+        continue-on-error: true # only a number for the run page; never fails the run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          n=$(gh api "repos/$REPO/code-scanning/alerts?ref=$REF&state=open&per_page=100" --paginate \
+            --jq '.[] | select(.most_recent_instance.category == "rust-clippy") | .number' | wc -l)
+          echo "::notice title=rust-clippy alerts::$n open alerts on $REF (category rust-clippy)"
+          echo "### Clippy: $n open code-scanning alerts on $REF" >> "$GITHUB_STEP_SUMMARY"
