@@ -78,7 +78,7 @@ jobs:
       PYTHONIOENCODING: utf-8
     steps:
       - name: Check out the branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
         # The token stays in the checkout's git config because the next step pushes with it.
 
       - name: Make the list again, commit it only if it changed

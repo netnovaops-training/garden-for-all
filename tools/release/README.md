@@ -72,34 +72,22 @@ request), nobody can push to `main` directly any more, and the steps change:
   result (the merge result is then exactly the branch's files, so the list in it matches).
 - If `main` moved while the pull request was open, GitHub asks to update the branch: do it, regenerate the list on the branch
   again, push, then merge.
-- A required status check that runs `sh tools/release/tests/test-code-fingerprints.sh` makes GitHub refuse a pull request whose
-  list is stale. (This repository has no such workflow yet; adding one is a small `.github/workflows` file.)
+- The workflow `.github/workflows/code-fingerprints.yml` has a job `fingerprints-in-sync` that runs on every pull request into `main`: it checks
+  the list (and runs `sh tools/release/tests/test-code-fingerprints.sh`) and fails if the list is stale. Making it a required status check is a
+  ruleset change that the owner decides; it would also block direct pushes, so read "Making the check required" below first.
 
 **When GitHub itself changes `main`** (merging a Dependabot pull request or a code-scanning fix on the website) the pre-commit hook
-does not run, so the list is stale from that moment and every first start refuses ("being updated, try again") until it is
-made again. This happened with Dependabot's rustls bump (`rust/Cargo.lock`). Make it again by hand:
-`git pull`, `python tools/release/make_fingerprints.py`, `git add CODE-FINGERPRINTS.txt`, commit, push; and give the package repository the same
-change. To do it automatically, a workflow like this one (`.github/workflows/fingerprints.yml`; it needs permission to push to `main`, so with branch
-protection on, the rule must let this bot through) can be added:
+does not run, so the list would be stale from that moment and every first start would refuse ("being updated, try again").
+This happened with Dependabot's rustls bump (`rust/Cargo.lock`). Since then `.github/workflows/code-fingerprints.yml` does it by itself:
+on every push to `main`, `fixes` or `enhancements` its job `refresh` makes the list again and, only when it changed, commits it as
+`github-actions[bot]` ("Refresh the code fingerprints") and pushes it to the same branch. If `main` moves while it works it takes the new tip and makes
+the list again (up to three tries). It cannot loop: the bot's commit changes only `CODE-FINGERPRINTS.txt`, which the workflow ignores, and a push made
+with the built-in token does not start workflows. Give the package repository the same change afterwards (`git pull` there is not enough: its list
+is made by its own hook). A pull request's merge button on GitHub is therefore safe now; the list is right about 15 seconds after the merge.
 
-    name: fingerprints
-    on:
-      push:
-        branches: [main]
-        paths-ignore: [CODE-FINGERPRINTS.txt]
-    permissions:
-      contents: write
-    jobs:
-      refresh:
-        runs-on: ubuntu-latest
-        steps:
-          - uses: actions/checkout@v4
-          - run: python3 tools/release/make_fingerprints.py
-          - run: |
-              git config user.name "github-actions[bot]"
-              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-              git add CODE-FINGERPRINTS.txt
-              git diff --cached --quiet || (git commit -m "CODE-FINGERPRINTS.txt: made again for the new main" && git push)
+**Making the check required (later, optional).** Today `main` has no branch protection, so the bot can push. If the `fingerprints-in-sync` check is
+ever made required, or pull requests become mandatory for `main`, the ruleset needs a bypass for the GitHub Actions app (Settings, Rules, the ruleset,
+Bypass list, add "GitHub Actions"), otherwise the bot's push is refused and `main` is stale again. Do not make `refresh` itself a required check.
 
 ## Where the data download and the Drive files came from
 
