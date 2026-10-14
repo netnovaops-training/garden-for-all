@@ -238,7 +238,8 @@ with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
         info.compress_type = zipfile.ZIP_STORED if os.path.splitext(name)[1].lower() in STORE_EXT else zipfile.ZIP_DEFLATED
         z.writestr(info, data)
     for rel, data in generated.items():
-        lines.append(f"{hashlib.sha256(data).hexdigest()}  ./{rel}\n")
+        if not (CODE_REF and rel == "CODE-SOURCE.txt"):      # following main: CODE-SOURCE.txt is the person's setting (guide 18), not fingerprinted
+            lines.append(f"{hashlib.sha256(data).hexdigest()}  ./{rel}\n")
         z.writestr(info_for(TOP + rel), data)
     if PHOTOS_KEY:
         z.writestr(info_for(TOP + "photos.key", mode=0o600), open(PHOTOS_KEY, "rb").read())

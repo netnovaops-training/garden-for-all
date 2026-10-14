@@ -118,7 +118,7 @@ def new_garden(tmp, source_lines, zip_list_all=None):
         os.makedirs(os.path.dirname(p), exist_ok=True)
         open(p, "wb").write(mf.normalized(rel, data))
     # the zip's list: only what the zip carries, as it is on disk. (Old zips list everything: zip_list_all.)
-    listed = {rel: mf.normalized(rel, data) for rel, data in carried.items()}
+    listed = {rel: mf.normalized(rel, data) for rel, data in carried.items() if rel != "CODE-SOURCE.txt"}   # the setting is not fingerprinted
     if zip_list_all:
         listed.update({k: v for k, v in zip_list_all.items() if k not in listed})   # the zip's own copies stay as they are
     lines = "".join(f"{sha(b)}  ./{rel}\n" for rel, b in sorted(listed.items()))
@@ -244,6 +244,10 @@ def main():
                 listed_real = {rel: mf.normalized(rel, data) for rel, data in oldreal.items() if rel not in mf.OFF_GITHUB}
                 d, before, after, out = attempt(f"a real old commit ({real}), the old way", oldreal, source=f"commit={full}", ref=full, extra_listed=listed_real)
                 ok(f"{label}: real old commit: program files written", os.path.isfile(os.path.join(d, "garden.sh")), out)
+            # 7c. an old-style zip whose list also names CODE-SOURCE.txt, which the person then edited: still fine
+            stale_source = {"CODE-SOURCE.txt": b"the list names an older CODE-SOURCE.txt"}
+            attempt("CODE-SOURCE.txt edited after an old-style list named it", old, source=f"commit={FAKE_COMMIT}", ref=FAKE_COMMIT,
+                    extra_listed={**all_listed, **stale_source})
             # 8. a fixed commit whose download has the list: checked against the list
             attempt("fixed commit that has the list", public, source=f"commit={FAKE_COMMIT}", ref=FAKE_COMMIT)
             attempt("fixed commit as ref=<hex>", public, source=f"ref={FAKE_COMMIT}", ref=FAKE_COMMIT)

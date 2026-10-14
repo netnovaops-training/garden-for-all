@@ -28,6 +28,7 @@ $Here = Split-Path -Parent $PSScriptRoot          # the garden folder
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
 $NotChecked = @('DOWNLOADS-SHA256.txt')           # old way: cannot hold its own new fingerprint
 $ZipOwn = @('FILES-FROM-AUTHOR.txt')              # the list itself always comes from the zip
+$Settings = @('CODE-SOURCE.txt')                  # the person's own choice of version; may be edited (guide 18), so a changed copy is not an error
 $ListName = 'CODE-FINGERPRINTS.txt'               # the public list of the program's fingerprints (in the download)
 $NotListedOk = @('README.md', 'FILES-FROM-AUTHOR.txt', 'DOWNLOADS-SHA256.txt')   # public, not on that list: the zip carries the real ones
 $Base = if ($env:GARDEN_CODE_BASE) { $env:GARDEN_CODE_BASE.TrimEnd('/') } else { 'https://codeload.github.com' }   # test-only override
@@ -63,7 +64,7 @@ $present = @{}
 foreach ($rel in @($want.Keys)) {
     $p = Join-Path $Here ($rel -replace '/', '\')
     if (Test-Path -LiteralPath $p -PathType Leaf) {
-        if ((Hex ([IO.File]::ReadAllBytes($p))) -ne $want[$rel]) {
+        if (($Settings -notcontains $rel) -and (Hex ([IO.File]::ReadAllBytes($p))) -ne $want[$rel]) {
             Stop-Here "A file from the zip does not match its fingerprint: $rel. Download the zip again."
         }
         $present[$rel] = $true

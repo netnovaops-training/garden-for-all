@@ -31,6 +31,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # the garde
 CRLF_EXT = (".cmd", ".ps1", ".bat")      # Windows files get Windows line endings, like the zip had
 NOT_CHECKED = {"DOWNLOADS-SHA256.txt"}  # cannot hold its own new fingerprint; the copy on GitHub is the one to read
 ZIP_OWN = {"FILES-FROM-AUTHOR.txt"}     # the list itself always comes from the zip
+SETTINGS = {"CODE-SOURCE.txt"}          # the person's own choice of version; may be edited (guide 18), so a changed copy is not an error
 LIST_NAME = "CODE-FINGERPRINTS.txt"     # the public list of the program's fingerprints (on GitHub, in the download)
 # Public but not on that list (the private copies come in the zip); never written from GitHub in main mode.
 NOT_LISTED_OK = {"README.md", "FILES-FROM-AUTHOR.txt", "DOWNLOADS-SHA256.txt"}
@@ -203,7 +204,7 @@ def main():
     want = read_list(5)
     present = zip_files_present(want)
     # The files that came in the zip must themselves match the list.
-    bad = [rel for rel in present if hashlib.sha256(open(os.path.join(HERE, rel), "rb").read()).hexdigest() != want[rel]]
+    bad = [rel for rel in present if rel not in SETTINGS and hashlib.sha256(open(os.path.join(HERE, rel), "rb").read()).hexdigest() != want[rel]]
     if bad:
         say(f"These files from the zip do not match their fingerprints: {', '.join(bad[:5])}",
             f"zip에서 나온 이 파일들의 지문이 맞지 않아요: {', '.join(bad[:5])}")
