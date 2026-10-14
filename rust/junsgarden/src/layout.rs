@@ -216,13 +216,14 @@ pub fn render(state: &AppState, page: Page, visitor: &Visitor) -> String {
 mod tests {
     use super::*;
 
-    /// A fresh, empty folder under the system temp folder, removed by the caller.
+    /// A fresh, empty folder under the build's own `target` folder (like the router test in
+    /// `main.rs`), removed by the caller.
     fn scratch(tag: &str) -> PathBuf {
         let nanos = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_nanos())
             .unwrap_or(0);
-        let dir = std::env::temp_dir().join(format!("jg-layout-{tag}-{}-{nanos}", std::process::id()));
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../target").join(format!("jg-layout-{tag}-{}-{nanos}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }
