@@ -28,7 +28,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
     Extension,
 };
-use rand::Rng;
+use rand::RngExt;
 use serde_json::Value;
 
 use crate::formdata::{self, FormData};
@@ -97,7 +97,7 @@ struct IndexBody {
 /// Takes nothing. Gives back a CSS class name as a `String`. Rust's `format!`
 /// builds text from a pattern, like PHP string interpolation.
 fn random_theme() -> String {
-    format!("bg-theme-{}", rand::thread_rng().gen_range(0..=5))
+    format!("bg-theme-{}", rand::rng().random_range(0..=5))
 }
 
 /// `strip_tags()` for the guestbook: drop anything that looks like a tag.

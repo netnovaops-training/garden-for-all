@@ -3,8 +3,8 @@
 # Build:  docker build -t junsgarden/beds:mine .
 # (or let docker compose build it; see README.md in this folder)
 #
-# python:3.12-slim is a small Debian with Python 3.12 already installed.
-FROM python:3.12-slim
+# python:3.14-slim is a small Debian with Python 3.14 already installed.
+FROM python:3.14-slim
 
 # The only libraries this service needs from outside Python itself:
 #   pymysql  talks to the MariaDB database
@@ -13,7 +13,7 @@ FROM python:3.12-slim
 RUN pip install --no-cache-dir --root-user-action=ignore \
     pymysql==1.1.1 \
     ddgs \
-    Pillow==11.0.0
+    Pillow==12.3.0
 
 # A normal (non-root) user to run as. uid/gid 1000 is the first user on
 # most Ubuntu laptops, so photos it saves into /photos belong to that user.

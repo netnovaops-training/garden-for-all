@@ -125,7 +125,7 @@ fn hero_images(www: &Path) -> Vec<String> {
     }
     // Sort first so the order is predictable, then shuffle for a random order each load.
     found.sort();
-    found.shuffle(&mut rand::thread_rng());
+    found.shuffle(&mut rand::rng());
     found
 }
 

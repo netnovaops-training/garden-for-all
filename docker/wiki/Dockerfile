@@ -15,7 +15,7 @@
 #                   folder docker/wiki/seed to the helper, read-only. Without the
 #                   add-on the wiki is still set up, just empty.
 # =============================================================================
-FROM python:3.12-alpine
+FROM python:3.14-alpine
 
 RUN apk add --no-cache mariadb-client
 

@@ -31,7 +31,7 @@
 
 // `use` lines bring names into scope so they can be written short.
 use askama::Template;
-use rand::Rng;
+use rand::RngExt;
 use serde_json::{json, Map, Value};
 
 use crate::brain;
@@ -60,7 +60,7 @@ pub struct Rendered {
 /// A card uses it to give its HTML elements unique names, because the same card
 /// can appear twice on a page.
 fn uid(prefix: &str) -> String {
-    format!("{prefix}{}", rand::thread_rng().gen_range(1000..=9999))
+    format!("{prefix}{}", rand::rng().random_range(1000..=9999))
 }
 
 /// `round(floatval($x), $p)` for a value that may be missing.
@@ -751,19 +751,19 @@ async fn iot_heatgrid(state: &AppState) -> String {
         // The sample numbers follow a sine wave: warm in the afternoon, cool at night.
         // The PHP's demo pattern, with its small random wobble.
         // `rng` makes small random wobbles so the sample looks natural, like the PHP.
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let pi = std::f64::consts::PI;
         let mut d30 = Vec::new();
         for d in 0..7 {
             let mut hours = Vec::new();
             for h in 0..24 {
                 let hf = h as f64;
-                let base = 55.0 + 15.0 * ((hf - 6.0) * pi / 12.0).sin() + rng.gen_range(-3..=3) as f64;
+                let base = 55.0 + 15.0 * ((hf - 6.0) * pi / 12.0).sin() + rng.random_range(-3..=3) as f64;
                 hours.push((h, json!({
                     "temp": php_round(base, 1),
-                    "hum": php_round(70.0 - 20.0 * ((hf - 6.0) * pi / 12.0).sin() + rng.gen_range(-5..=5) as f64, 0),
-                    "precip": php_round((rng.gen_range(0..=10) as f64 / 100.0).max(0.0), 2),
-                    "wind": php_round(5.0 + 8.0 * (hf * pi / 12.0).sin().abs() + rng.gen_range(-2..=2) as f64, 1),
+                    "hum": php_round(70.0 - 20.0 * ((hf - 6.0) * pi / 12.0).sin() + rng.random_range(-5..=5) as f64, 0),
+                    "precip": php_round((rng.random_range(0..=10) as f64 / 100.0).max(0.0), 2),
+                    "wind": php_round(5.0 + 8.0 * (hf * pi / 12.0).sin().abs() + rng.random_range(-2..=2) as f64, 1),
                     "uv": php_round((8.0 * ((hf - 6.0).max(0.0) * pi / 12.0).sin()).max(0.0), 1),
                 })));
             }
@@ -779,7 +779,7 @@ async fn iot_heatgrid(state: &AppState) -> String {
                 hours.push((h, json!({
                     "temp": php_round(mt + 10.0 * ((hf - 6.0) * pi / 12.0).sin(), 1),
                     "hum": php_round(65.0 - 15.0 * ((hf - 6.0) * pi / 12.0).sin(), 0),
-                    "precip": php_round((rng.gen_range(0..=20) as f64 / 100.0).max(0.0), 2),
+                    "precip": php_round((rng.random_range(0..=20) as f64 / 100.0).max(0.0), 2),
                     "wind": php_round(6.0 + 5.0 * (hf * pi / 12.0).sin().abs(), 1),
                     "uv": php_round(((2.0 + m as f64 * 0.8) * ((hf - 6.0).max(0.0) * pi / 12.0).sin()).max(0.0), 1),
                 })));

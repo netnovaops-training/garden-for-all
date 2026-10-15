@@ -32,7 +32,7 @@ use std::sync::OnceLock;
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
 use argon2::Argon2;
-use rand::Rng;
+use rand::RngExt;
 use sha2::{Digest, Sha256};
 
 // `crate::` means "from this same program".
@@ -319,7 +319,7 @@ fn sha256_hex(s: &str) -> String {
 /// A new random reset code: 32 random bytes written as 64 hex characters. This is the
 /// secret part of the emailed link.
 fn new_reset_code() -> String {
-    let bytes: [u8; 32] = rand::thread_rng().gen();
+    let bytes: [u8; 32] = rand::rng().random();
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
