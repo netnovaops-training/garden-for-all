@@ -30,6 +30,9 @@ jobs:
     name: Run rust-clippy analyzing
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write   # only to upload the Clippy findings to the Security tab
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -42,6 +45,9 @@ jobs:
           rustup default stable
           rustc --version
           cargo clippy --version
+
+      - name: Install the SARIF converter (pinned)
+        run: cargo install clippy-sarif@0.8.0 sarif-fmt@0.8.0 --locked
 
       - name: Run rust-clippy
         working-directory: rust
@@ -85,6 +91,22 @@ jobs:
               print("::error title=clippy::clippy itself failed (exit code %d, build finished: %s)" % (rc, finished))
               sys.exit(1)
           PY
+
+      - name: Make a Security-tab report of only the findings that are rarely wrong
+        working-directory: rust
+        run: |
+          # correctness, suspicious and perf are the Clippy groups that are almost never
+          # false and are worth acting on. Everything else (style, pedantic, nursery,
+          # complexity) stays in the downloadable artifact below, for reading, not here.
+          cargo clippy --all-features --message-format=json -- -A clippy::all -W clippy::correctness -W clippy::suspicious -W clippy::perf > clippy-real.json || true
+          clippy-sarif < clippy-real.json > rust-clippy.sarif
+          sarif-fmt < rust-clippy.sarif || true
+
+      - name: Upload those to the Security tab (category rust-clippy)
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb # v4.31.2
+        with:
+          sarif_file: rust/rust-clippy.sarif
+          category: rust-clippy
 
       - name: Keep the full result for 14 days
         if: always()
