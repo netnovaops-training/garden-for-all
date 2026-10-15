@@ -1,0 +1,9 @@
+# ShellCheck warnings that were already in the scripts when the check was switched on
+# (ShellCheck v0.11.0, severity warning and above). One line per warning: file, then code.
+# The quick-checks workflow fails only for a warning that is NOT listed here, so new
+# problems are caught while these old ones wait for a code fix. Remove a line when its
+# warning is fixed (the workflow reminds you when a listed warning has gone).
+garden.sh SC1007
+garden.sh SC2166
+tools/release/tests/test-code-fingerprints.sh SC2034
+tools/release/tests/test-code-fingerprints.sh SC2034
