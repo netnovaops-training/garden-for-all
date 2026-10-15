@@ -7,9 +7,7 @@ plugins {
 android {
     namespace = "org.jasonagibson.junsgarden"
     compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
+        version = release(37)
     }
 
     defaultConfig {
