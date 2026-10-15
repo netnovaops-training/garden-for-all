@@ -37,8 +37,8 @@ use axum::{
     middleware::Next,
     response::{IntoResponse, Response},
 };
-// `rand::Rng` gives random numbers. `crate::` below means "from this same program".
-use rand::Rng;
+// `rand::RngExt` gives random numbers. `crate::` below means "from this same program".
+use rand::RngExt;
 
 use crate::AppState;
 
@@ -119,10 +119,10 @@ fn valid_sid(s: &str) -> bool {
 /// Not `pub`: only this file uses it.
 fn random_hex(bytes: usize) -> String {
     // A random number generator for this thread.
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     // Make `bytes` random bytes, write each as two hex digits, and join them into a String.
     // `|_|` is a closure (a small unnamed function) that ignores its input.
-    (0..bytes).map(|_| format!("{:02x}", rng.gen::<u8>())).collect()
+    (0..bytes).map(|_| format!("{:02x}", rng.random::<u8>())).collect()
 }
 
 /// A new random cookie session id: 32 hex characters, like PHP's.
@@ -243,7 +243,7 @@ pub async fn issue_app_token(state: &AppState, username: &str) -> String {
 /// Occasionally sweep expired rows so the table does not grow forever.
 // About once in 200 requests (a random number 0..200 equals 0), delete expired rows.
 async fn sweep(state: &AppState) {
-    if rand::thread_rng().gen_range(0..200) == 0 {
+    if rand::rng().random_range(0..200) == 0 {
         let _ = sqlx::query("DELETE FROM `garden_sessions` WHERE expires_at < NOW()")
             .execute(&state.db)
             .await;

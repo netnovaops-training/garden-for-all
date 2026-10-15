@@ -45,7 +45,7 @@ sha2 = "0.11"
 # Session tokens (the visitor cookie id). OsRng is the operating system's own CSPRNG --
 # a predictable token would let someone forge a session without ever seeing the
 # password, which would make the password pointless.
-rand = "0.8"
+rand = "0.10"
 # SMTP, for the password-reset code. rustls rather than native-tls so the image
 # needs no OpenSSL at runtime, matching how reqwest is configured above.
 lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "tokio1", "tokio1-rustls-tls", "builder", "hostname"] }

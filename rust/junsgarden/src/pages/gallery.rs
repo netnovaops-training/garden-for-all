@@ -188,7 +188,7 @@ fn load_photos(www: &std::path::Path) -> Vec<Value> {
 /// built; here it is the page's style and script block.
 pub async fn gallery(State(state): State<Arc<AppState>>, Extension(visitor): Extension<Visitor>) -> Html<String> {
     let mut photos = load_photos(&state.www);
-    photos.shuffle(&mut rand::thread_rng());
+    photos.shuffle(&mut rand::rng());
     let body = GalleryBody {
         total: photos.len(),
         photos_json: serde_json::to_string(&photos).unwrap_or_else(|_| "[]".to_string()),
