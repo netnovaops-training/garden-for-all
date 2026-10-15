@@ -29,7 +29,7 @@ name: junsgarden
 
 services:
   db:
-    image: mariadb:11
+    image: mariadb:13
     container_name: garden-db
     restart: unless-stopped
     environment:
@@ -142,7 +142,7 @@ services:
   #    second each time the garden starts, then stops ("Exited (0)" is normal).
   wiki-db-init:
     profiles: ["wiki"]
-    image: mariadb:11
+    image: mariadb:13
     depends_on:
       db:
         condition: service_healthy
