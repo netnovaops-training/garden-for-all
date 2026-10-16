@@ -262,3 +262,13 @@ The repository's own code scanning (CodeQL) and its Rust checks (Clippy) were re
 | 4 | Clippy (Rust style and quality checker) | 42 notes, none about wrong results or security: mostly style (`unnecessary_map_or`, `unnecessary_sort_by`) | Nothing reformatted on purpose; the two divisions it pointed at are already guarded against zero | None |
 
 Tests: `tools/release/tests/test_tag_photo_path.py` (17 cases, in Python 3.12), and the Rust suite (85 tests, including the five new ones in `layout.rs`).
+
+## Part 14. Database update: MariaDB 11 to 13 (2026-10-16)
+
+| # | Where | What was found | What changed | Effect |
+|---|---|---|---|---|
+| 1 | `docker-compose.yml` (database) | Moving to MariaDB 13 on a database first made by MariaDB 11 skipped MariaDB's own upgrade step ("upgrade required, but skipped due to $MARIADB_AUTO_UPGRADE setting") | Image `mariadb:13`, and `MARIADB_AUTO_UPGRADE: "1"`: on the first start after an update, MariaDB saves a copy of its system tables and upgrades them | Plants, comments and logins are untouched. Only MariaDB's own internal tables are updated |
+| 2 | Installer list, guide 21, "What gets installed" (English and Korean) | They named MariaDB 11 | Now MariaDB 13 | The guides match what is installed |
+| 3 | Workflows | They still listed the `enhancements` branch, which is retired | Only `main` and `fixes` | None for the program |
+
+Tested on a copy of the real garden data (the 2026-10-13 starter backup, 485 plants): restored into MariaDB 11.8.9, then started MariaDB 13.0.2 on the same files with the new setting. All 35 tables had the same row counts and checksums before and after, table checks were OK, the website served every page and the real plants from the upgraded database, writing worked, a brand-new install built all 36 tables, and the wiki database setup ran.

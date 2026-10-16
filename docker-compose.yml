@@ -29,7 +29,7 @@ name: junsgarden
 
 services:
   db:
-    image: mariadb:11
+    image: mariadb:13
     container_name: garden-db
     restart: unless-stopped
     environment:
@@ -39,6 +39,9 @@ services:
       MARIADB_DATABASE: juns_garden_db
       MARIADB_USER: dbadmin
       MARIADB_PASSWORD: ${DB_PASSWORD}
+      # When a newer MariaDB starts on files made by an older one, upgrade its own
+      # system tables (it saves a copy of them first). Your plant data is not changed.
+      MARIADB_AUTO_UPGRADE: "1"
       TZ: ${TZ:-America/New_York}
     volumes:
       # Where the database keeps its files. Never edit inside it by hand.
@@ -142,7 +145,7 @@ services:
   #    second each time the garden starts, then stops ("Exited (0)" is normal).
   wiki-db-init:
     profiles: ["wiki"]
-    image: mariadb:11
+    image: mariadb:13
     depends_on:
       db:
         condition: service_healthy

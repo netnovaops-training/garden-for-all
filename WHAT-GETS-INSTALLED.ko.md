@@ -40,7 +40,7 @@
 | OpenSSH 서버 | 집에 있는 다른 컴퓨터에서 이 컴퓨터의 터미널을 쓸 수 있게 해 줘요 | 노트북 뚜껑을 닫은 채로 관리할 수 있어요 | Ubuntu, 포트 22, 집 네트워크에서만 | <https://ubuntu.com/server/docs/openssh-server> |
 | ufw 방화벽 | 어떤 연결이 들어와도 되는지 정해요 | 집에서 오는 SSH와 나중에 80, 443 말고는 모두 막아요 | Ubuntu | <https://ubuntu.com/server/docs/how-to/security/firewalls/> |
 | Docker Engine과 Compose | 각 프로그램을 자기만의 밀봉된 상자("컨테이너")에서 실행해요 | 프로그램이 Ubuntu나 서로를 망가뜨릴 수 없어요. 같은 설정이 어느 컴퓨터에서나 작동해요. | Ubuntu | <https://docs.docker.com/engine/install/ubuntu/> |
-| MariaDB 11 | 데이터베이스예요. MySQL과 같은 언어를 써요. | 식물, 댓글, 로그인, 위키 페이지를 보관해요 | Docker, 안쪽에서만(포트 없음) | <https://mariadb.com/kb/en/documentation/> |
+| MariaDB 13 | 데이터베이스예요. MySQL과 같은 언어를 써요. | 식물, 댓글, 로그인, 위키 페이지를 보관해요 | Docker, 안쪽에서만(포트 없음) | <https://mariadb.com/kb/en/documentation/> |
 | Jun's Garden 웹사이트 | Rust로 만든 내 사이트. `rust/`로 내 컴퓨터에서 만들어요 | 이것이 내 정원이에요: 식물 목록, 갤러리, 블로그, 데이터, 방명록, 식물 관리, 휴대폰 앱의 서버 | Docker, `127.0.0.1:8030` | <https://www.rust-lang.org/learn>, `docs/rust-port/CODE-TOUR.md` |
 | 도구 상자(Toolbox) | 데이터베이스와 압축 도구가 들어 있는 아주 작은 Alpine Linux 컨테이너 | 백업, 복원, 비밀번호 정하기가 Ubuntu와 Windows에서 똑같이 작동해요 | Docker, 작업하는 동안에만 | <https://alpinelinux.org/about/> |
 | 백업 일정 | 내 cron(Ubuntu의 알람 시계)에 있는 한 줄 | 한 시간마다 바뀐 것을 세어요: 바쁠 때는 한 시간마다, 수정이 조금 있으면 6시간 안에, 조용하면 적어도 일주일에 한 번 전체 백업. 약 8 GB로 솎아 내요(원하면 매일 밤 새벽 2시 30분에 하나) | Ubuntu | <https://manpages.ubuntu.com/manpages/noble/man5/crontab.5.html> |

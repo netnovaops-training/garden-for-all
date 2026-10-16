@@ -6,7 +6,7 @@
 # refresh for local commits, but not for commits made on github.com (merging a Dependabot
 # pull request, a code-scanning autofix, an edit in the web editor).
 #
-#   push to main, fixes, enhancements  ->  job `refresh` makes the list again and, only if it
+#   push to main or fixes  ->  job `refresh` makes the list again and, only if it
 #                                          changed, commits it as github-actions[bot].
 #   pull request into main             ->  job `fingerprints-in-sync` only CHECKS (no write).
 #   workflow_dispatch                  ->  same as a push, for the branch it is run on.
@@ -19,7 +19,7 @@ name: code-fingerprints
 
 on:
   push:
-    branches: [main, fixes, enhancements]
+    branches: [main, fixes]
     paths-ignore:
       - CODE-FINGERPRINTS.txt
   pull_request:

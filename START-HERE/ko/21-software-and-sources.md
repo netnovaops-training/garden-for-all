@@ -17,7 +17,7 @@
 
 ---
 
-**버전 읽는 법.** `mariadb:11`은 "가장 새로운 MariaDB 11"이라는 뜻이에요. 메뉴가
+**버전 읽는 법.** `mariadb:13`은 "가장 새로운 MariaDB 13"이라는 뜻이에요. 메뉴가
 프로그램을 업데이트할 때(그 버전의 가장 새로운 이미지를 내려받아요) 같은 버전 안에서만
 바뀌어요. 그래서 여기 있는 문서 링크가 계속 맞아요.
 
@@ -38,7 +38,7 @@
 
 | 프로그램 | 버전 | 이유 | 공식 문서 |
 |---|---|---|---|
-| **MariaDB**(데이터베이스. **MySQL**과 같은 언어를 써요) | `mariadb:11` | 내 식물, 댓글, 로그인 정보를 담아요. MariaDB는 MySQL을 처음 만든 사람들이 시작했고, 같은 방식으로 작동해요 | <https://mariadb.com/kb/en/documentation/> 그리고 이미지: <https://hub.docker.com/_/mariadb> |
+| **MariaDB**(데이터베이스. **MySQL**과 같은 언어를 써요) | `mariadb:13` | 내 식물, 댓글, 로그인 정보를 담아요. MariaDB는 MySQL을 처음 만든 사람들이 시작했고, 같은 방식으로 작동해요 | <https://mariadb.com/kb/en/documentation/> 그리고 이미지: <https://hub.docker.com/_/mariadb> |
 | **Your website**(내 웹사이트. 내 컴퓨터에서 `rust/`로 만들어요) | Rust 1.95, Debian 12 "bookworm" 위에서 | 정원 웹사이트 그 자체예요. 내려받지 않고, 여기 있는 코드로 만들어요 | <https://www.rust-lang.org/learn>, <https://hub.docker.com/_/rust>, <https://hub.docker.com/_/debian> |
 | **The toolbox**(도구 상자. 여기서 만들어요) | Alpine Linux 3.20 | 백업, 복원, 비밀번호. 어느 컴퓨터에서나 똑같아요 | <https://alpinelinux.org/about/>, <https://hub.docker.com/_/alpine> |
 

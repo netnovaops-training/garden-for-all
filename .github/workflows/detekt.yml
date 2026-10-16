@@ -12,7 +12,7 @@ name: detekt
 
 on:
   push:
-    branches: [enhancements, fixes]
+    branches: [main, fixes]
     paths:
       - "android-app/**"
       - ".github/workflows/detekt.yml"

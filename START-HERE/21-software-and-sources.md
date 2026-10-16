@@ -15,7 +15,7 @@
 
 ---
 
-**How to read the versions.** `mariadb:11` means "the newest MariaDB 11". When
+**How to read the versions.** `mariadb:13` means "the newest MariaDB 13". When
 the menu updates a program (it downloads the newest image for that version), it
 stays within that version, so the documents linked here keep matching.
 
@@ -36,7 +36,7 @@ stays within that version, so the documents linked here keep matching.
 
 | Program | Version | Why | Official documents |
 |---|---|---|---|
-| **MariaDB** (the database; speaks the same language as **MySQL**) | `mariadb:11` | Holds your plants, comments and logins. MariaDB was started by MySQL's original makers and works the same way | <https://mariadb.com/kb/en/documentation/> and the image: <https://hub.docker.com/_/mariadb> |
+| **MariaDB** (the database; speaks the same language as **MySQL**) | `mariadb:13` | Holds your plants, comments and logins. MariaDB was started by MySQL's original makers and works the same way | <https://mariadb.com/kb/en/documentation/> and the image: <https://hub.docker.com/_/mariadb> |
 | **Your website** (built on your computer from `rust/`) | Rust 1.95, on Debian 12 "bookworm" | The garden website itself. Built from its code here, not downloaded | <https://www.rust-lang.org/learn>, <https://hub.docker.com/_/rust>, <https://hub.docker.com/_/debian> |
 | **The toolbox** (built here) | Alpine Linux 3.20 | Backups, restores and passwords, the same on every computer | <https://alpinelinux.org/about/>, <https://hub.docker.com/_/alpine> |
 

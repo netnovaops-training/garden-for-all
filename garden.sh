@@ -752,7 +752,7 @@ do_helpme() {
 # why. Shown BEFORE anything is downloaded. "Official Image" means Docker and
 # the program's own makers maintain it.  part|image|what|why|page
 IMAGES_LIST=(
-    "core|mariadb:11|MariaDB database (Docker Official Image)|stores plants, logins, wiki pages|https://hub.docker.com/_/mariadb"
+    "core|mariadb:13|MariaDB database (Docker Official Image)|stores plants, logins, wiki pages|https://hub.docker.com/_/mariadb"
     "core|rust:1.95-slim-bookworm|Rust compiler (Docker Official Image), used only while building|turns the website's code in rust/ into a program|https://hub.docker.com/_/rust"
     "core|debian:bookworm-slim|Debian Linux, small (Docker Official Image)|the base the finished website runs on|https://hub.docker.com/_/debian"
     "core|alpine:3.20|Alpine Linux, tiny (Docker Official Image)|the base of the toolbox (backup, restore, passwords)|https://hub.docker.com/_/alpine"
