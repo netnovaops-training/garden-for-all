@@ -1,7 +1,7 @@
 # Starts the deep scans after a burst of work, so they are not needed on every push.
 #
 # Every day at 04:07 UTC (and by hand): count the commits of the last 3 days on main, fixes and
-# enhancements (each commit once, even if it is on two branches; the github-actions[bot] commits
+# (each commit once, even if it is on both branches; the github-actions[bot] commits
 # that only refresh CODE-FINGERPRINTS.txt are not counted). THRESHOLD or more commits start
 # deep-scans.yml; fewer end here with a one-line summary.
 #
@@ -42,7 +42,7 @@ jobs:
           set -eu
           since=$(date -u -d "$DAYS days ago" +%Y-%m-%dT%H:%M:%SZ)
           : > shas.txt
-          for branch in main fixes enhancements; do
+          for branch in main fixes; do
             # a branch that does not exist (yet) counts as zero commits
             gh api "repos/$REPO/commits?sha=$branch&since=$since&per_page=100" --paginate \
               --jq '.[] | select(.author.login != "github-actions[bot]") | .sha' >> shas.txt || echo "no branch $branch (or not readable)"
@@ -50,7 +50,7 @@ jobs:
           sort -u shas.txt -o shas.txt
           n=$(wc -l < shas.txt)
           echo "n=$n" >> "$GITHUB_OUTPUT"
-          echo "$n commits in the last $DAYS days on main, fixes and enhancements (threshold $THRESHOLD)"
+          echo "$n commits in the last $DAYS days on main and fixes (threshold $THRESHOLD)"
       - name: Start the deep scans, or say why not
         env:
           N: ${{ steps.count.outputs.n }}
