@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:CatalogScreen.kt$last != null &amp;&amp; hasMore &amp;&amp; !loading &amp;&amp; last &gt;= plants.size - 3 &amp;&amp; plants.isNotEmpty()</ID>
+    <ID>CyclomaticComplexMethod:GardenCamera.kt$GardenCamera$suspend fun readTag(context: Context, photos: List&lt;Uri&gt;): Reading</ID>
+    <ID>CyclomaticComplexMethod:GardenThemes.kt$fun schemeFor(theme: GardenTheme, dark: Boolean): ColorScheme</ID>
+    <ID>FunctionNaming:GardenThemes.kt$fun Appearance.State( theme: GardenTheme, mode: ThemeMode, change: (GardenTheme?, ThemeMode?) -&gt; Unit, )</ID>
+    <ID>ImplicitDefaultLocale:PlantSections.kt$String.format("%.2f", n)</ID>
+    <ID>LongMethod:GardenCamera.kt$GardenCamera$suspend fun readTag(context: Context, photos: List&lt;Uri&gt;): Reading</ID>
+    <ID>LongParameterList:GardenThemes.kt$( dark: Boolean, ground: Color, raised: Color, accent: Color, onAccent: Color, ink: Color, accentSoft: Color, onAccentSoft: Color, )</ID>
+    <ID>TooManyFunctions:GardenCamera.kt$GardenCamera</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -89,6 +89,25 @@ is made by its own hook). A pull request's merge button on GitHub is therefore s
 ever made required, or pull requests become mandatory for `main`, the ruleset needs a bypass for the GitHub Actions app (Settings, Rules, the ruleset,
 Bypass list, add "GitHub Actions"), otherwise the bot's push is refused and `main` is stale again. Do not make `refresh` itself a required check.
 
+## detekt: Kotlin checks for the Android app
+
+`.github/workflows/detekt.yml` runs [detekt](https://detekt.dev) on the Kotlin code in `android-app/` (on pull requests into `main`, on pushes to
+`enhancements` and `fixes`, and every Tuesday). It reads the source text only (no Gradle build) and looks for likely mistakes: empty or swallowed
+exceptions, risky casts, code that is too complex. Its settings are `android-app/config/detekt/detekt.yml` (on top of detekt's defaults; the noisy
+"style" rules are off). Only NEW findings count: `android-app/config/detekt/baseline.xml` lists what was already there and is ignored. A new finding
+becomes an alert in the Security tab (Code scanning, category `detekt`) and a line in the run's summary; it never turns the run red. The run is red
+only if detekt itself breaks (download or checksum fails, detekt crashes, no report). The full result is an artifact for 14 days.
+
+- **Update the baseline** (after fixing old findings, or to accept the current ones as known). From the repository root, with Java 17:
+  `java -jar detekt-cli.jar --input android-app --config android-app/config/detekt/detekt.yml --build-upon-default-config --baseline android-app/config/detekt/baseline.xml --create-baseline`
+  then commit `baseline.xml`. (Without Java: `docker run --rm -v "$PWD":/repo -w /repo eclipse-temurin:17-jre java -jar /path/to/detekt-cli.jar ...` with the same arguments.)
+- **Bump detekt:** pick the new release on https://github.com/detekt/detekt/releases (the 1.x line; 2.x is still alpha), then take the SHA-256 of
+  `detekt-cli-<version>-all.jar` from Maven Central, the file next to the jar:
+  `https://repo1.maven.org/maven2/io/gitlab/arturbosch/detekt/detekt-cli/<version>/detekt-cli-<version>-all.jar.sha256`.
+  Put the version into `DETEKT_VERSION` and that SHA-256 into `DETEKT_SHA256` at the top of the workflow. The download step stops if they do not match.
+  (GitHub's release page shows no digest for the 1.23 files, and its copy of the jar is not byte-identical to Maven Central's, so the workflow uses Maven Central.)
+  Then run the update-the-baseline command above with the new jar, since a new version can add rules.
+
 ## Where the data download and the Drive files came from
 
 | Script | What it does |
