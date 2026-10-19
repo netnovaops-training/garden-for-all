@@ -39,7 +39,7 @@ time = { version = "0.3", features = ["formatting", "macros", "local-offset"] }
 # Password hashing for the two logins (accounts.rs). Argon2 is deliberately
 # slow and memory-hard, so every guess costs real time and RAM; the database
 # holds only the hash, never the password.
-argon2 = "0.5"
+argon2 = "0.6"
 # Reset links are stored as a SHA-256 of the code, never the code itself.
 sha2 = "0.11"
 # Session tokens (the visitor cookie id). OsRng is the operating system's own CSPRNG --
