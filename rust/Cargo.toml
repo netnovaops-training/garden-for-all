@@ -56,7 +56,7 @@ lettre = { version = "0.11", default-features = false, features = ["smtp-transpo
 # disk instead of compiling every decoder the crate supports.
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
 webp = "0.3"
-md5 = "0.7"
+md5 = "0.8"
 multer = "3"
 futures-util = "0.3"
 
