@@ -1,0 +1,6 @@
+# bandit for the deep-scans workflow. bandit.txt is this plus every dependency, each pinned to an
+# exact version and checksum. Rebuild it after editing (Python 3.12, like the workflow):
+#   docker run --rm -v "$PWD":/w -w /w python:3.12-slim sh -c \
+#     "pip install -q pip-tools && pip-compile --generate-hashes --allow-unsafe --strip-extras -o bandit.txt bandit.in"
+# (--allow-unsafe also pins pip/setuptools: with checksums, pip refuses anything left unpinned)
+bandit[sarif]==1.9.4

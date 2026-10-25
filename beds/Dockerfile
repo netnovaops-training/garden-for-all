@@ -7,14 +7,13 @@
 # pins the exact image (Dependabot's docker updates keep it current).
 FROM python:3.14-slim@sha256:35caba83af2fe6da9a5d922f9b0156f21d1246a48278c58a08bd253303ba42e8
 
-# The only libraries this service needs from outside Python itself:
-#   pymysql  talks to the MariaDB database
-#   ddgs     DuckDuckGo web search (no key needed) for plant facts
-#   Pillow   opens, turns and shrinks tag photos before saving them
-RUN pip install --no-cache-dir --root-user-action=ignore \
-    pymysql==1.1.1 \
-    ddgs \
-    Pillow==12.3.0
+# The libraries this service needs from outside Python itself are listed in requirements.in
+# (pymysql for the database, ddgs for web search, Pillow for photos). requirements.txt pins each
+# one, and everything they need, to an exact version AND checksum: --require-hashes makes pip
+# refuse any download that doesn't match, so a tampered package can't get in.
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --root-user-action=ignore --require-hashes -r /tmp/requirements.txt \
+    && rm /tmp/requirements.txt
 
 # A normal (non-root) user to run as. uid/gid 1000 is the first user on
 # most Ubuntu laptops, so photos it saves into /photos belong to that user.
