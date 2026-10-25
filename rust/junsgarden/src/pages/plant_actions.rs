@@ -1,7 +1,7 @@
 //! `plant_actions.php` — the small endpoint the catalog's plant window and
 //! the Tags view call.
 //!
-//! Public: the QR-code and barcode PNGs stored in the database (the QR tags
+//! Public: the QR-code and barcode PNG images stored in the database (the QR tags
 //! printed in the garden point at them). Signed in: saved preferences, the
 //! done list, photo position, approve, mark done, default photo, save or
 //! promote a wish-list plant, and the barcode lookup. Same order of checks
@@ -200,16 +200,25 @@ async fn lookup_barcode(state: &AppState, data: &Value) -> Response {
         return ok(json!({ "error": "plant_name required" }));
     }
 
-    // 2. Load the cache file, or start a new empty cache if it is missing.
+    // 2. Load the cache file, or start a new empty cache if it is missing (or damaged: it
+    // is only a cache, so starting over is fine).
     let path = barcode_cache_path(state);
-    let mut cache: Value = std::fs::read(&path)
-        .ok()
-        .and_then(|b| serde_json::from_slice(&b).ok())
-        .unwrap_or_else(|| json!({ "lookups": {} }));
-    // 3. Make the cache key, a small closure to save the cache, and a timestamp.
+    let p = path.clone();
+    let loaded = crate::guard::off_thread(move || crate::store::read_json(&p).ok()).await;
+    let mut cache: Value = loaded.map(Value::Object).unwrap_or_else(|| json!({ "lookups": {} }));
+    // 3. Make the cache key, a small helper to save the cache (whole file at once, off the
+    // async threads), and a timestamp.
     let key = cache_key(&plant_name, &company);
     let save_cache = |cache: &Value| {
-        let _ = std::fs::write(&path, serde_json::to_string_pretty(cache).unwrap_or_default());
+        let (p, body) = (path.clone(), serde_json::to_vec_pretty(cache).unwrap_or_default());
+        async move {
+            crate::guard::off_thread(move || {
+                if let Err(e) = crate::store::write_atomic(&p, &body) {
+                    tracing::error!("barcode cache not saved: {e}");
+                }
+            })
+            .await
+        }
     };
     let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
@@ -247,7 +256,7 @@ async fn lookup_barcode(state: &AppState, data: &Value) -> Response {
     // right away, and reply "not_found".
     let Some(api) = body else {
         cache["lookups"][&key] = json!({ "not_found": true, "looked_up": now });
-        save_cache(&cache);
+        save_cache(&cache).await;
         return ok(json!({ "status": "not_found" }));
     };
     // 8. Pick the best product: first one whose title contains the plant name,
@@ -280,7 +289,7 @@ async fn lookup_barcode(state: &AppState, data: &Value) -> Response {
     // 9. Store a found number in the cache and in the plant row, then reply.
     if !upc.is_empty() {
         cache["lookups"][&key] = json!({ "upc": upc, "title": title, "looked_up": now });
-        save_cache(&cache);
+        save_cache(&cache).await;
         if pid != 0 {
             let _ = sqlx::query(&format!("UPDATE `{table}` SET barcode = ? WHERE id = ?")).bind(&upc).bind(pid).execute(&state.db).await;
         }
@@ -288,7 +297,7 @@ async fn lookup_barcode(state: &AppState, data: &Value) -> Response {
     // Nothing found: remember that and reply "not_found".
     } else {
         cache["lookups"][&key] = json!({ "not_found": true, "looked_up": now });
-        save_cache(&cache);
+        save_cache(&cache).await;
         ok(json!({ "status": "not_found" }))
     }
 }
@@ -559,11 +568,26 @@ pub async fn plant_actions(
         for (_, v) in &pairs {
             qy = bind_json(qy, v);
         }
-        let new_id = match qy.execute(&state.db).await {
-            Ok(r) => r.last_insert_id() as i64,
+        // Add the garden row, move the plant's barcodes to it, remove the wish-list row: all
+        // or none (a transaction). The PHP left the barcodes pointing at the deleted wish-list
+        // row; this moves them, as the catalogue's own promote always did.
+        let promoted: Result<i64, sqlx::Error> = async {
+            let mut tx = state.db.begin().await?;
+            let new_id = qy.execute(&mut *tx).await?.last_insert_id() as i64;
+            sqlx::query("UPDATE `plant_barcodes` SET plant_id = ?, source_table = 'data_source' WHERE plant_id = ? AND source_table = 'future_plants'")
+                .bind(new_id)
+                .bind(fp_id)
+                .execute(&mut *tx)
+                .await?;
+            sqlx::query("DELETE FROM `future_plants` WHERE id = ?").bind(fp_id).execute(&mut *tx).await?;
+            tx.commit().await?;
+            Ok(new_id)
+        }
+        .await;
+        let new_id = match promoted {
+            Ok(id) => id,
             Err(e) => return db_error(e),
         };
-        let _ = sqlx::query("DELETE FROM `future_plants` WHERE id = ?").bind(fp_id).execute(&state.db).await;
         state.invalidate_widget_cache();
         let name = pairs.iter().find(|(k, _)| k == "plant_name").and_then(|(_, v)| v.as_str()).unwrap_or("");
         return ok(json!({ "status": "ok", "message": "Plant promoted to garden!", "new_id": new_id, "plant_name": name }));

@@ -50,6 +50,7 @@
 mod accounts;
 mod brain;
 mod formdata;
+mod guard;
 mod guides;
 mod images;
 mod layout;
@@ -59,6 +60,7 @@ mod pages;
 mod php;
 mod rowjson;
 mod session;
+mod store;
 
 // `use` brings a name into scope so it can be written short. `use std::path::PathBuf;`
 // lets the code say `PathBuf` instead of `std::path::PathBuf`.
@@ -121,6 +123,12 @@ pub struct AppState {
     /// The guides folder (START-HERE: the .md files, ko/, images/, help-ids.tsv),
     /// read by the /help pages. Read-only.
     pub guides: PathBuf,
+    /// The page frame's files (hero photos, facts, versions), re-read every 10 s (layout.rs).
+    pub frame: layout::FrameCache,
+    /// Guestbook lines and plant comments anybody may write: per visitor address.
+    pub write_limit: guard::RateLimit,
+    /// The gallery's photo list (tags_cache.csv), parsed once until the file changes.
+    pub gallery: store::Parsed<Vec<serde_json::Value>>,
 }
 
 /// Methods that belong to `AppState`. `&self` means a method only reads the value.
@@ -239,39 +247,6 @@ async fn only_servable(req: Request, next: Next) -> Response {
     }
 }
 
-/// The headers the PHP site sends on every page it renders. Copied from the
-/// live responses: the Content-Security-Policy and the frame, sniffing and
-/// referrer protections are part of the site's security, not decoration, and
-/// the no-cache set stops a stale copy of a page being shown after an edit.
-/// Left out on purpose: `X-Powered-By: PHP/8.3.x`, which only told strangers
-/// which PHP version to look up exploits for.
-// Takes the finished response, adds the headers below, and gives it back.
-async fn page_headers(mut res: Response) -> Response {
-    use axum::http::{header::HeaderName, HeaderValue};
-    let h = res.headers_mut();
-    for (name, value) in [
-        ("cache-control", "no-cache, must-revalidate"),
-        ("expires", "Thu, 19 Nov 1981 08:52:00 GMT"),
-        ("pragma", "no-cache"),
-        (
-            "content-security-policy",
-            "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://cdnjs.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
-        ),
-        ("referrer-policy", "strict-origin-when-cross-origin"),
-        ("x-content-type-options", "nosniff"),
-        ("x-frame-options", "DENY"),
-    ] {
-        // A handler that chose its own Cache-Control (the comments API, the
-        // QR images) keeps it, as in PHP where header() runs after the
-        // session's default.
-        if name == "cache-control" && h.contains_key(name) {
-            continue;
-        }
-        h.insert(HeaderName::from_static(name), HeaderValue::from_static(value));
-    }
-    res
-}
-
 /// Cache rules for the site's files, as the live site serves them: HTML is
 /// always revalidated; everything else is cached for a year, which is safe
 /// because the pages add `?v=<file modified time>` to every stylesheet and
@@ -370,6 +345,10 @@ async fn run() -> anyhow::Result<()> {
         forecast_file: PathBuf::from(common::env_or("JUNSGARDEN_FORECAST_FILE", "/var/www/html/data/latest_prediction.json")),
         weather_latest: PathBuf::from(common::env_or("JUNSGARDEN_WEATHER_LATEST", "/var/www/html/data/weather_latest.json")),
         guides: PathBuf::from(common::env_or("JUNSGARDEN_GUIDES_DIR", "/guides")),
+        frame: layout::FrameCache::default(),
+        // 5 guestbook lines or comments per visitor address per 10 minutes.
+        write_limit: guard::RateLimit::new(5, std::time::Duration::from_secs(600)),
+        gallery: Default::default(),
     });
 
     // The router for static files (CSS, scripts, photos). `ServeDir` hands out files from
@@ -379,8 +358,11 @@ async fn run() -> anyhow::Result<()> {
 
     // `use pages::*;` brings every page module (index, blog, catalog, ...) into scope.
     use pages::*;
+    // How much a request may send. Ordinary forms are small; only the addresses that take
+    // photos get the big allowance, so nobody can make every page hold 64 MB in memory.
+    let uploads = DefaultBodyLimit::max(64 * 1024 * 1024);
     // One handler pair reused for several addresses: GET shows the home page, POST handles forms.
-    let home = get(index::home).post(index::home_post);
+    let home = get(index::home).post(index::home_post).layer(uploads);
     // The main router. Each `.route(address, handler)` says which function answers which
     // address. `get(...)` answers GET requests; `.post(...)` adds POST for the same address.
     let app = Router::new()
@@ -395,28 +377,30 @@ async fn run() -> anyhow::Result<()> {
         .route("/sso-login/{*rest}", home)
         .route("/blog.php", get(blog::blog).post(blog::blog_post))
         .route("/plant_listing.php", get(plant_listing::plant_listing))
-        .route("/catalog.php", get(catalog::catalog_get).post(catalog::catalog_post))
+        .route("/catalog.php", get(catalog::catalog_get).post(catalog::catalog_post).layer(uploads))
         .route("/gallery.php", get(gallery::gallery))
         .route("/comments.php", get(comments::comments).post(comments::comments))
         .route("/plant_actions.php", get(plant_actions::plant_actions).post(plant_actions::plant_actions))
         .route("/data.php", get(data::data_get).post(data::data_get))
         .route("/widget_data.php", get(data::widget_data))
-        .route("/app_api.php", get(app_api::app_api).post(app_api::app_api).options(app_api::app_api))
+        .route("/app_api.php", get(app_api::app_api).post(app_api::app_api).options(app_api::app_api).layer(uploads))
         // The plant admin, converted from the Streamlit app (orchestrator/).
-        .route("/streamlit/", get(orchestrator::page).post(orchestrator::action))
+        .route("/streamlit/", get(orchestrator::page).post(orchestrator::action).layer(uploads))
         .route("/streamlit", get(|| async { axum::response::Redirect::permanent("/streamlit/") }))
         .route("/streamlit/st.css", get(orchestrator::css))
         .route("/streamlit/st.js", get(orchestrator::js))
         // The app's camera tools, for people logged in (garden_camera.rs).
-        .route("/app/garden/{action}", axum::routing::post(garden_camera::garden_camera))
+        .route("/app/garden/{action}", axum::routing::post(garden_camera::garden_camera).layer(uploads))
         // The guides, for people logged in (help.rs): /help, /help/images/...
         .merge(help::routes())
-        // Layers wrap every route above them. First, work out who the visitor is (session.rs).
-        // Then add the security headers to every response.
+        // Layers wrap every route above them; the LAST one added is the OUTERMOST. So, in
+        // order: refuse a post another website sent, work out who the visitor is (session.rs),
+        // run the page; and every answer, a refusal included, gets the security headers.
         .layer(middleware::from_fn_with_state(state.clone(), session::with_visitor))
-        .layer(middleware::map_response(page_headers))
-        // Photo uploads: several full-size photos in one go.
-        .layer(DefaultBodyLimit::max(64 * 1024 * 1024))
+        .layer(middleware::from_fn(guard::same_site_posts))
+        .layer(middleware::map_response(guard::security_headers))
+        // Every other address: 2 MB is plenty for any form without photos.
+        .layer(DefaultBodyLimit::max(2 * 1024 * 1024))
         // The cards endpoint never loaded connection.php in the PHP, so it has
         // its own cache rule and none of the page headers: added AFTER the layer.
         .route("/sections/cards/index.php", get(index::cards))

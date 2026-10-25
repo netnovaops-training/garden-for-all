@@ -55,6 +55,13 @@ const AI_ENABLED: bool = true;
 /// Takes any JSON value (`Value` is serde_json's type for "any JSON") and gives back an HTTP
 /// `Response` with the JSON content type. If the value cannot be turned into text it sends `{}`.
 /// Every `?something` call on this page ends here.
+/// The text an answer shows for a database failure: never the database's own message (it
+/// names tables and columns); that goes to the log.
+fn hide(e: impl std::fmt::Display) -> &'static str {
+    tracing::error!("data: {e}");
+    "The garden data could not be read just now."
+}
+
 fn json_response(body: Value) -> Response {
     (
         [(header::CONTENT_TYPE, "application/json")],
@@ -515,7 +522,8 @@ async fn cross_tab(state: &AppState, q: &HashMap<String, String>, with_ai: bool)
                 ELSE 5 END, cnt DESC"
                 .to_string()
         } else {
-            "cnt DESC".to_string()
+            // Ties in name order: without it MariaDB returns equal counts in no fixed order.
+            "cnt DESC, lbl".to_string()
         };
         let sql = format!(
             "SELECT {} AS lbl, COUNT(*) AS cnt FROM data_source WHERE {} IS NOT NULL AND TRIM({}) != ''{filter_where} GROUP BY lbl ORDER BY {order_by} LIMIT 500",
@@ -528,7 +536,7 @@ async fn cross_tab(state: &AppState, q: &HashMap<String, String>, with_ai: bool)
         }
         let rows = match qy.fetch_all(&state.db).await {
             Ok(r) => r,
-            Err(e) => return json!({ "error": e.to_string() }),
+            Err(e) => return json!({ "error": hide(e) }),
         };
         // Clean each label with `garden_normalise`, merge labels that become the same, and keep at
         // most 20.
@@ -582,7 +590,7 @@ async fn cross_tab(state: &AppState, q: &HashMap<String, String>, with_ai: bool)
     let sql = format!(
         "SELECT {} AS dim_a, {} AS dim_b, {} AS raw_a, {} AS raw_b, COUNT(*) AS cnt FROM data_source
          WHERE ({} IS NOT NULL AND TRIM({}) != '') AND ({} IS NOT NULL AND TRIM({}) != ''){filter_where}
-         GROUP BY dim_a, dim_b ORDER BY cnt DESC",
+         GROUP BY dim_a, dim_b ORDER BY cnt DESC, dim_a, dim_b",
         da.col, db_.col, da.raw, db_.raw, da.raw, da.raw, db_.raw, db_.raw
     );
     let mut qy = sqlx::query(&sql);
@@ -591,7 +599,7 @@ async fn cross_tab(state: &AppState, q: &HashMap<String, String>, with_ai: bool)
     }
     let rows = match qy.fetch_all(&state.db).await {
         Ok(r) => r,
-        Err(e) => return json!({ "error": e.to_string() }),
+        Err(e) => return json!({ "error": hide(e) }),
     };
 
     // Expand comma-separated fields, normalise, and count every (a, b).
@@ -633,9 +641,11 @@ async fn cross_tab(state: &AppState, q: &HashMap<String, String>, with_ai: bool)
         // krsort: reverse by key. Years are numeric strings; compare as such.
         row_set.sort_by(|a, b| b.0.parse::<i64>().unwrap_or(0).cmp(&a.0.parse::<i64>().unwrap_or(0)).then_with(|| b.0.cmp(&a.0)));
     } else {
-        row_set.sort_by(|a, b| b.1.cmp(&a.1));
+        row_set.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
     }
-    col_set.sort_by(|a, b| b.1.cmp(&a.1));
+    // Biggest first; equal counts in name order, so the grid is the same on every load (the
+    // PHP's order for ties depended on how the database happened to group the rows).
+    col_set.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
     // 7. Keep the 15 biggest rows and columns and fill the grid; a pair that never appeared is 0.
     let row_labels: Vec<String> = row_set.iter().take(15).map(|(l, _)| l.clone()).collect();
     let col_labels: Vec<String> = col_set.iter().take(15).map(|(l, _)| l.clone()).collect();
@@ -1206,7 +1216,7 @@ async fn render_page(state: &AppState, visitor: &Visitor) -> Response {
     }
     .render()
     .unwrap_or_default();
-    Html(layout::render(state, page, visitor)).into_response()
+    Html(layout::render(state, page, visitor).await).into_response()
 }
 
 /// Route handler for `GET /data.php`.
@@ -1231,7 +1241,7 @@ pub async fn data_get(
         }
         let row = sqlx::query("SELECT * FROM data_source WHERE id = ?").bind(pid).fetch_optional(&state.db).await;
         return match row {
-            Err(e) => json_response(json!({ "error": e.to_string() })),
+            Err(e) => json_response(json!({ "error": hide(e) })),
             Ok(None) => json_response(json!({ "error": "Plant not found" })),
             Ok(Some(r)) => {
                 let m = match row_to_json(&r) {

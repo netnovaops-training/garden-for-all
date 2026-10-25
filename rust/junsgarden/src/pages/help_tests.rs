@@ -58,6 +58,9 @@ fn state(guides: PathBuf) -> Arc<AppState> {
         forecast_file: PathBuf::new(),
         weather_latest: PathBuf::new(),
         guides,
+        frame: Default::default(),
+        write_limit: crate::guard::RateLimit::new(5, std::time::Duration::from_secs(600)),
+        gallery: Default::default(),
     })
 }
 

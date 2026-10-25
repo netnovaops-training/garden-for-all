@@ -40,6 +40,7 @@ use sqlx::mysql::MySqlRow;
 use sqlx::Row;
 
 use crate::formdata::{self, FormData};
+use crate::guard::off_thread;
 use crate::images;
 use crate::layout::{self, Page};
 use crate::php::{date_ymd, filemtime, php_int, preg_quote, search_norm};
@@ -77,6 +78,14 @@ fn json_response(body: Value) -> Response {
         serde_json::to_string(&body).unwrap_or_else(|_| "[]".to_string()),
     )
         .into_response()
+}
+
+/// A database failure, answered the way the PHP did (`{"error": ...}`) but without the
+/// database's own message: that text names tables and columns, which is nobody's business.
+/// The full message goes to the log.
+fn db_error(e: sqlx::Error) -> Response {
+    tracing::error!("catalog: {e}");
+    json_response(json!({ "error": "The catalogue could not be read just now. Please try again." }))
 }
 
 /// Send the browser back to `catalog.php` with a 302 "Found" redirect.
@@ -199,8 +208,8 @@ fn plant_json(row: &MySqlRow, favs: &[(i64, String)], likes: &[(i64, String)], m
 /// mobile), and special search words like `edible:full`, `view:jun_done`, `^A-B` (the A-Z bar) and
 /// the Favs buttons.
 async fn ajax_load(state: &AppState, q: &HashMap<String, String>, me: &str) -> Response {
-    // A small helper: turn a database error into a JSON error answer, as the PHP did.
-    let err = |e: sqlx::Error| json_response(json!({ "error": e.to_string() }));
+    // A database error becomes a JSON error answer, as in the PHP (minus the database's text).
+    let err = db_error;
 
     // 1. Direct lookup by id (QR-code links, the plant modal). `source=future` picks the wish-list
     // table. Only two fixed table names can reach the SQL.
@@ -454,23 +463,26 @@ async fn autocomplete(state: &AppState, q: &HashMap<String, String>) -> Response
 
 /// `?letter_counts`: how many living plants start with each letter A to Z, as JSON. The A-Z bar
 /// uses it to show counts and grey out empty letters.
+///
+/// One query (the PHP asked 26 times), with the very same test per letter: `plant_name LIKE
+/// 'A%'`, which follows the database's collation (any case, and accented "Á" counts as A).
 async fn letter_counts(state: &AppState) -> Response {
-    let mut m = Map::new();
-    // One count query per letter. `'A'..='Z'` loops over every letter.
-    for letter in 'A'..='Z' {
-        let n = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM `data_source` WHERE plant_name LIKE ? AND died = 0 AND flower_bed NOT LIKE '%Dead%'",
-        )
-        .bind(format!("{letter}%"))
-        .fetch_one(&state.db)
-        .await;
-        match n {
-            Ok(n) => {
-                m.insert(letter.to_string(), json!(n));
-            }
-            Err(e) => return json_response(json!({ "error": e.to_string() })),
-        }
-    }
+    let letters: Vec<char> = ('A'..='Z').collect();
+    let sums = letters.iter().map(|l| format!("CAST(COALESCE(SUM(plant_name LIKE '{l}%'), 0) AS SIGNED)")).collect::<Vec<_>>();
+    // The letters are this function's own A-Z, never visitor text, so they may be in the SQL.
+    let sql = format!(
+        "SELECT {} FROM `data_source` WHERE died = 0 AND flower_bed NOT LIKE '%Dead%'",
+        sums.join(", ")
+    );
+    let row = match sqlx::query(&sql).fetch_one(&state.db).await {
+        Ok(r) => r,
+        Err(e) => return db_error(e),
+    };
+    let m: Map<String, Value> = letters
+        .iter()
+        .enumerate()
+        .map(|(i, l)| (l.to_string(), json!(row.try_get::<i64, _>(i).unwrap_or(0))))
+        .collect();
     json_response(Value::Object(m))
 }
 
@@ -495,7 +507,7 @@ async fn qr_tags(state: &AppState) -> Response {
     .await;
     match r {
         Ok(rows) => json_response(json!({ "tags": rows.iter().map(row_to_json).collect::<Vec<_>>() })),
-        Err(e) => json_response(json!({ "error": e.to_string() })),
+        Err(e) => db_error(e),
     }
 }
 
@@ -561,7 +573,7 @@ async fn rotate_image(state: &AppState, q: &HashMap<String, String>) -> Response
     if !path.is_file() {
         return json_response(json!({ "status": "error", "message": "File not found." }));
     }
-    if images::rotate_clockwise_in_place(&path) {
+    if off_thread(move || images::rotate_clockwise_in_place(&path)).await {
         json_response(json!({ "status": "success", "rotated": safe }))
     } else {
         json_response(json!({ "status": "error", "message": "Failed to process image." }))
@@ -602,6 +614,21 @@ async fn delete_image(state: &AppState, q: &HashMap<String, String>) -> Response
     }
 }
 
+/// Resize and save the photos posted under `field`, named from the plant's name and family
+/// (`images::process_and_save_image`), on a helper thread. Gives the saved file names, in the
+/// order they were sent; a photo that cannot be read is skipped.
+async fn save_photos(state: &AppState, f: &FormData, field: &str, name: String, family: String) -> Vec<String> {
+    let dir = upload_dir(state);
+    let files: Vec<(Vec<u8>, String)> = f.files_for(field).iter().map(|u| (u.bytes.clone(), u.filename.clone())).collect();
+    off_thread(move || {
+        files
+            .iter()
+            .filter_map(|(bytes, filename)| images::process_and_save_image(bytes, filename, &dir, &name, &family))
+            .collect()
+    })
+    .await
+}
+
 /// Upload gallery photos for a plant (POST `?upload_gallery=1`, admin only).
 ///
 /// Each file is resized and saved by `images::process_and_save_image`, named from the plant's name
@@ -622,13 +649,8 @@ async fn upload_gallery(state: &AppState, visitor: &Visitor, f: &FormData) -> Re
         Some((n, fam)) => (n.unwrap_or_else(|| "Unknown".into()), fam.unwrap_or_else(|| "Unknown".into())),
         None => ("Unknown".to_string(), "Unknown".to_string()),
     };
-    // 2. Process and save each uploaded file. `filter_map` keeps only the ones that worked.
-    let dir = upload_dir(state);
-    let uploaded: Vec<String> = f
-        .files_for("gallery_images[]")
-        .iter()
-        .filter_map(|u| images::process_and_save_image(&u.bytes, &u.filename, &dir, &p_name, &p_fam))
-        .collect();
+    // 2. Process and save each uploaded file (on a helper thread: resizing is slow).
+    let uploaded = save_photos(state, f, "gallery_images[]", p_name, p_fam).await;
     if uploaded.is_empty() {
         return json_response(json!({ "status": "error", "message": "No files moved. Check folder permissions." }));
     }
@@ -719,20 +741,12 @@ async fn save_plant(state: &AppState, visitor: &Visitor, f: &FormData) -> Respon
 
     // 2. Save uploaded photos (only if this person may upload). The first becomes the main picture,
     // the rest go to the gallery.
-    let mut picture: Option<String> = None;
-    let mut additional: Vec<String> = Vec::new();
-    if visitor.can_upload(state) {
-        let dir = upload_dir(state);
-        for u in f.files_for("plant_image[]") {
-            if let Some(n) = images::process_and_save_image(&u.bytes, &u.filename, &dir, &p_name, "General") {
-                if picture.is_none() {
-                    picture = Some(n);
-                } else {
-                    additional.push(n);
-                }
-            }
-        }
-    }
+    let mut additional: Vec<String> = if visitor.can_upload(state) {
+        save_photos(state, f, "plant_image[]", p_name.clone(), "General".to_string()).await
+    } else {
+        Vec::new()
+    };
+    let picture: Option<String> = if additional.is_empty() { None } else { Some(additional.remove(0)) };
 
     // 3. Do the database work inside one `async { ... }` block so the `?` operator can be used on
     // each step. The block's result is checked after it.
@@ -782,7 +796,8 @@ async fn save_plant(state: &AppState, visitor: &Visitor, f: &FormData) -> Respon
                     set("died", json!(0));
 
                     // Build `INSERT INTO data_source (cols) VALUES (?,?,...)` from the list and
-                    // bind each value.
+                    // bind each value. The column names come from the database's own list
+                    // (`ds_cols`), never from the form.
                     let cols = ins.iter().map(|(c, _)| format!("`{c}`")).collect::<Vec<_>>().join(",");
                     let ph = vec!["?"; ins.len()].join(",");
                     let ins_sql = format!("INSERT INTO `data_source` ({cols}) VALUES ({ph})");
@@ -790,14 +805,18 @@ async fn save_plant(state: &AppState, visitor: &Visitor, f: &FormData) -> Respon
                     for (_, v) in &ins {
                         q = bind_value(q, v);
                     }
-                    // Point any barcode at the new garden row, then remove the wish-list row.
-                    let new_id = q.execute(&state.db).await?.last_insert_id() as i64;
+                    // Add the garden row, point any barcode at it, remove the wish-list row: all
+                    // three or none (a transaction), so a failure halfway cannot leave the plant
+                    // in both lists.
+                    let mut tx = state.db.begin().await?;
+                    let new_id = q.execute(&mut *tx).await?.last_insert_id() as i64;
                     sqlx::query("UPDATE `plant_barcodes` SET plant_id = ?, source_table = 'data_source' WHERE plant_id = ? AND source_table = 'future_plants'")
                         .bind(new_id)
                         .bind(id)
-                        .execute(&state.db)
+                        .execute(&mut *tx)
                         .await?;
-                    sqlx::query("DELETE FROM `future_plants` WHERE id = ?").bind(id).execute(&state.db).await?;
+                    sqlx::query("DELETE FROM `future_plants` WHERE id = ?").bind(id).execute(&mut *tx).await?;
+                    tx.commit().await?;
                 }
             // Bed is still "Want": only update name, quantity and year in the wish list.
             // `COALESCE(NULLIF(?,''), plant_name)` keeps the old name if the new one is empty.
@@ -913,7 +932,9 @@ async fn log_qty_event_catalog(state: &AppState, visitor: &Visitor, f: &FormData
     let recorded = if visitor.username.is_empty() { "catalog".to_string() } else { visitor.username.clone() };
     let delta = if event_type == "purchased" { qty_amt } else { -qty_amt };
 
+    // The log row and the quantity change go together or not at all (a transaction).
     let r: Result<(), sqlx::Error> = async {
+        let mut tx = state.db.begin().await?;
         sqlx::query(
             "INSERT INTO plant_quantity_log (plant_id, event_type, quantity, event_date, event_week, event_month, event_year, notes, recorded_by)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -927,27 +948,30 @@ async fn log_qty_event_catalog(state: &AppState, visitor: &Visitor, f: &FormData
         .bind(year)
         .bind(&notes)
         .bind(&recorded)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await?;
-        sqlx::query("UPDATE `data_source` SET qty = GREATEST(0, qty + ?) WHERE id = ?").bind(delta).bind(plant_id).execute(&state.db).await?;
+        sqlx::query("UPDATE `data_source` SET qty = GREATEST(0, qty + ?) WHERE id = ?").bind(delta).bind(plant_id).execute(&mut *tx).await?;
         if event_type == "died" || event_type == "removed" {
             let current: i64 = sqlx::query_scalar::<_, Option<i64>>("SELECT CAST(qty AS SIGNED) FROM `data_source` WHERE id=?")
                 .bind(plant_id)
-                .fetch_optional(&state.db)
+                .fetch_optional(&mut *tx)
                 .await?
                 .flatten()
                 .unwrap_or(1);
             if current == 0 {
-                sqlx::query("UPDATE `data_source` SET died=1 WHERE id=?").bind(plant_id).execute(&state.db).await?;
+                sqlx::query("UPDATE `data_source` SET died=1 WHERE id=?").bind(plant_id).execute(&mut *tx).await?;
             }
         }
-        Ok(())
+        tx.commit().await
     }
     .await;
     state.invalidate_widget_cache();
     match r {
         Ok(()) => json_response(json!({ "status": "ok", "delta": delta })),
-        Err(e) => json_response(json!({ "status": "error", "message": e.to_string() })),
+        Err(e) => {
+            tracing::error!("catalog quantity log: {e}");
+            json_response(json!({ "status": "error", "message": "The change could not be saved." }))
+        }
     }
 }
 
@@ -984,7 +1008,9 @@ async fn log_qty_event(state: &AppState, visitor: &Visitor, f: &FormData) -> Res
     if plant_id == 0 || quantity == 0 {
         return json_response(json!({ "status": "error", "message": "plant_id and quantity required" }));
     }
+    // The log row and the quantity change go together or not at all (a transaction).
     let r: Result<i64, sqlx::Error> = async {
+        let mut tx = state.db.begin().await?;
         sqlx::query(
             "INSERT INTO plant_quantity_log (plant_id, event_type, quantity, event_date, event_week, event_month, event_year, notes, recorded_by)
              VALUES (?,?,?,?,?,?,?,?,?)",
@@ -998,26 +1024,30 @@ async fn log_qty_event(state: &AppState, visitor: &Visitor, f: &FormData) -> Res
         .bind(year)
         .bind(if notes.is_empty() { None } else { Some(notes.clone()) })
         .bind(&by)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await?;
         let delta = if event_type == "purchased" { quantity.abs() } else { -quantity.abs() };
-        sqlx::query("UPDATE `data_source` SET qty = GREATEST(0, qty + ?) WHERE id = ?").bind(delta).bind(plant_id).execute(&state.db).await?;
+        sqlx::query("UPDATE `data_source` SET qty = GREATEST(0, qty + ?) WHERE id = ?").bind(delta).bind(plant_id).execute(&mut *tx).await?;
         let current: i64 = sqlx::query_scalar::<_, Option<i64>>("SELECT CAST(qty AS SIGNED) FROM `data_source` WHERE id = ?")
             .bind(plant_id)
-            .fetch_optional(&state.db)
+            .fetch_optional(&mut *tx)
             .await?
             .flatten()
             .unwrap_or(0);
         if current == 0 && (event_type == "died" || event_type == "removed") {
-            sqlx::query("UPDATE `data_source` SET died = 1 WHERE id = ?").bind(plant_id).execute(&state.db).await?;
+            sqlx::query("UPDATE `data_source` SET died = 1 WHERE id = ?").bind(plant_id).execute(&mut *tx).await?;
         }
+        tx.commit().await?;
         Ok(current)
     }
     .await;
     state.invalidate_widget_cache();
     match r {
         Ok(current) => json_response(json!({ "status": "ok", "new_qty": current, "week_of": event_date })),
-        Err(e) => json_response(json!({ "status": "error", "message": e.to_string() })),
+        Err(e) => {
+            tracing::error!("catalog quantity log: {e}");
+            json_response(json!({ "status": "error", "message": "The change could not be saved." }))
+        }
     }
 }
 
@@ -1094,7 +1124,7 @@ async fn render_page(state: &AppState, visitor: &Visitor) -> Response {
          <script src=\"https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js\" defer></script>\n\
          <link rel=\"stylesheet\" href=\"user-notes.css?v={now}\">\n"
     );
-    Html(layout::render(state, page, visitor)).into_response()
+    Html(layout::render(state, page, visitor).await).into_response()
 }
 
 /// Every GET, in the PHP's order.
@@ -1233,7 +1263,10 @@ pub async fn catalog_post(
         .await;
         return match r {
             Ok(_) => json_response(json!({ "status": "saved" })),
-            Err(e) => json_response(json!({ "status": "error", "message": e.to_string() })),
+            Err(e) => {
+                tracing::error!("catalog note: {e}");
+                json_response(json!({ "status": "error", "message": "The note could not be saved." }))
+            }
         };
     }
     if f.has("delete_note") {

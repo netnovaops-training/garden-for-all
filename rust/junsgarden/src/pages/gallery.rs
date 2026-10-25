@@ -182,12 +182,18 @@ fn load_photos(www: &std::path::Path) -> Vec<Value> {
 
 /// Handler for `GET /gallery.php`. Takes the shared state and the visitor.
 /// Gives back the finished HTML page.
-/// Steps: load the photos, shuffle them (a new order on every visit, as the PHP
-/// did), render the template with the count and the JSON, then wrap it in the
-/// page frame. `include_str!` pastes a file's text into the program when it is
-/// built; here it is the page's style and script block.
+/// Steps: load the photos (the CSV is parsed once and kept until it changes, see
+/// `store::Parsed`), shuffle them (a new order on every visit, as the PHP did), render the
+/// template with the count and the JSON, then wrap it in the page frame. `include_str!`
+/// pastes a file's text into the program when it is built; here it is the page's style and
+/// script block.
 pub async fn gallery(State(state): State<Arc<AppState>>, Extension(visitor): Extension<Visitor>) -> Html<String> {
-    let mut photos = load_photos(&state.www);
+    let st = state.clone();
+    let mut photos: Vec<Value> = crate::guard::off_thread(move || {
+        let www = st.www.clone();
+        st.gallery.get(&www.join("images/Gallery/tags_cache.csv"), |_| load_photos(&www)).as_ref().clone()
+    })
+    .await;
     photos.shuffle(&mut rand::rng());
     let body = GalleryBody {
         total: photos.len(),
@@ -200,7 +206,7 @@ pub async fn gallery(State(state): State<Arc<AppState>>, Extension(visitor): Ext
     page.title = "Gallery | Jun's and Kona's Garden".to_string();
     page.show_hero = false;
     page.extra_head = include_str!("../../templates/gallery_head.html").to_string();
-    Html(layout::render(&state, page, &visitor))
+    Html(layout::render(&state, page, &visitor).await)
 }
 
 // Tests run only with `cargo test`.

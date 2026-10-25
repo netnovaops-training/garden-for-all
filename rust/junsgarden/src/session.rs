@@ -171,19 +171,30 @@ fn header_str<'a>(req: &'a Request, name: &str) -> &'a str {
     req.headers().get(name).and_then(|v| v.to_str().ok()).unwrap_or("")
 }
 
-/// Looks up a session id (or app key) in the database. Returns the username and email
-/// stored for it, or `None` if there is no such row or it has expired.
-async fn load_session(state: &AppState, sid: &str) -> Option<(String, String)> {
-    sqlx::query_as::<_, (String, String)>(
+/// A live session row: who it is, and whether its expiry is due for renewal.
+struct Session {
+    username: String,
+    email: String,
+    /// The row was last renewed more than an hour ago (less than 23 hours left).
+    renew: bool,
+}
+
+/// Looks up a session id (or app key) in the database. Returns who it belongs to, or
+/// `None` if there is no such row or it has expired.
+async fn load_session(state: &AppState, sid: &str) -> Option<Session> {
+    let (username, email, renew) = sqlx::query_as::<_, (String, String, i64)>(
         // `?` in the SQL marks a value filled in safely by `.bind` (it is never pasted in).
-        "SELECT username, sso_email FROM `garden_sessions` WHERE sid = ? AND expires_at > NOW()",
+        // The comparison gives 1 or 0 (MariaDB has no separate true/false type).
+        "SELECT username, sso_email, CAST(expires_at < NOW() + INTERVAL 23 HOUR AS SIGNED)
+         FROM `garden_sessions` WHERE sid = ? AND expires_at > NOW()",
     )
     .bind(sid)
     .fetch_optional(&state.db)
     .await
     // A database error is treated like "no session": the person is just a visitor.
     .ok()
-    .flatten()
+    .flatten()?;
+    Some(Session { username, email, renew: renew != 0 })
 }
 
 /// Writes (or renews) a session row that lasts `days` days from now. Errors are logged
@@ -293,10 +304,10 @@ pub async fn with_visitor(State(state): State<Arc<AppState>>, mut req: Request, 
         // `..Default::default()` fills all other fields with empty values.
         let mut visitor = Visitor { sid: token.clone(), ..Default::default() };
         // Only a key found in the database (and not expired) makes this a logged-in visitor.
-        if let Some((name, email)) = load_session(&state, &token).await {
-            if still_a_user(&state, &name) {
-                visitor.username = name;
-                visitor.email = email;
+        if let Some(s) = load_session(&state, &token).await {
+            if still_a_user(&state, &s.username) {
+                visitor.username = s.username;
+                visitor.email = s.email;
                 visitor.app_token = Some(token);
             }
         }
@@ -316,14 +327,17 @@ pub async fn with_visitor(State(state): State<Arc<AppState>>, mut req: Request, 
     // covers them.
     let from_elsewhere = matches!(header_str(&req, "sec-fetch-site"), "cross-site" | "same-site");
     // A known, unexpired session: this visitor is logged in.
-    if let Some((name, email)) = if from_elsewhere { None } else { load_session(&state, &sid).await } {
+    if let Some(s) = if from_elsewhere { None } else { load_session(&state, &sid).await } {
         // Only while the person is still on the user list (GARDEN_USERS).
-        if still_a_user(&state, &name) {
-            // Keep the session alive for another day from this click, as PHP's
-            // session files are.
-            save_session(&state, &sid, &name, &email, 1).await;
-            visitor.username = name;
-            visitor.email = email;
+        if still_a_user(&state, &s.username) {
+            // Keep the session alive for a day from this click, as PHP's session files are.
+            // Written at most once an hour, not on every click: the day is "a day give or
+            // take an hour", and the database is spared a write per page view.
+            if s.renew {
+                save_session(&state, &sid, &s.username, &s.email, 1).await;
+            }
+            visitor.username = s.username;
+            visitor.email = s.email;
         }
     }
     // Now and then, clean out old rows.

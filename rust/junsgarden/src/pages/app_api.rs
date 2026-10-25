@@ -35,8 +35,8 @@ use sqlx::Row;
 
 use crate::formdata::{self, FormData};
 use crate::images;
-use crate::pages::comments::{append_comment, comment_stamp, read_json, substr};
-use crate::php::{date_c, he, php_int};
+use crate::pages::comments::{self, Kind};
+use crate::php::{date_c, php_int};
 use crate::rowjson::row_to_json;
 use crate::session::Visitor;
 use crate::AppState;
@@ -68,6 +68,13 @@ fn reply(status: StatusCode, body: Value) -> Response {
     h.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, HeaderValue::from_static("*"));
     h.insert(header::ACCESS_CONTROL_ALLOW_METHODS, HeaderValue::from_static("GET, OPTIONS"));
     res
+}
+
+/// The text an answer shows for a database failure: never the database's own message (it
+/// names tables and columns); that goes to the log.
+fn hide(e: impl std::fmt::Display) -> &'static str {
+    tracing::error!("app_api: {e}");
+    "The garden could not answer just now. Please try again."
 }
 
 /// Shorthand for a successful `reply` with status 200. Most actions end with `ok(json!({...}))`;
@@ -245,37 +252,27 @@ pub async fn app_api(
         "catalog_signature" => catalog_signature(&state).await,
         "bed_counts" => bed_counts(&state).await,
         "update_plant" => update_plant(&state, &visitor, &f, &q).await,
-        "like" | "favorite" => like_or_favorite(&state, &action, &f, &q).await,
+        "like" | "favorite" => like_or_favorite(&state, &visitor, &action, &f, &q).await,
         // Read comments for a plant from the JSON file on disk: newest first, at most 50. (Comments
         // are kept in a file, not the database, as in the PHP.)
         "comments" => {
             let pid = q.get("plant_id").map(|p| php_int(p)).unwrap_or(0);
-            let all = read_json(&state.data.join("plant_comments.json"));
-            let rows: Vec<Value> = all
-                .get(&pid.to_string())
-                .and_then(Value::as_array)
-                .map(|a| a.iter().rev().take(50).cloned().collect())
-                .unwrap_or_default();
-            ok(json!({ "comments": rows }))
+            ok(json!({ "comments": comments::latest(&state, Kind::Plant, &pid.to_string()).await }))
         }
-        // Add a comment. Text is HTML-escaped (`he`) and cut to 30 characters for the name and 200
-        // for the message, so nobody can put markup in the page.
+        // Add a comment: the same rules as the website's (comments.rs): escaped, cut to 30 and
+        // 200, at most 5 per address per 10 minutes for somebody not logged in.
         "comment" => {
             let pid = php_int(pick(&f, &q, "plant_id"));
-            let name = {
-                let n = substr(&he(pick(&f, &q, "name").trim()), 30);
-                if n.is_empty() { "Guest".to_string() } else { n }
-            };
-            let name = if f.has("name") || q.contains_key("name") { name } else { "Guest".to_string() };
-            let msg = substr(&he(pick(&f, &q, "message").trim()), 200);
-            if pid <= 0 || msg.is_empty() {
+            let entry = if pid > 0 { comments::new_entry(pick(&f, &q, "name"), pick(&f, &q, "message")) } else { None };
+            let Some(entry) = entry else {
                 return ok(json!({ "ok": false, "error": "A message is required." }));
+            };
+            if !visitor.is_admin() && !state.write_limit.allow(&crate::accounts::client_ip(&headers)) {
+                return ok(json!({ "ok": false, "error": "Too many comments at once. Please wait a few minutes." }));
             }
-            // Stamp the time, build the comment, append it to the file, and send it back so the app
-            // can show it.
-            let (date, ts) = comment_stamp();
-            let entry = json!({ "name": name, "message": msg, "date": date, "ts": ts });
-            append_comment(&state, &state.data.join("plant_comments.json"), &pid.to_string(), entry.clone()).await;
+            if !comments::add(&state, Kind::Plant, &pid.to_string(), entry.clone()).await {
+                return ok(json!({ "ok": false, "error": "The comment could not be saved." }));
+            }
             ok(json!({ "ok": true, "entry": entry }))
         }
         "autocomplete" => autocomplete(&state, &q).await,
@@ -390,7 +387,7 @@ async fn add_plant(state: &AppState, visitor: &Visitor, f: &FormData, q: &HashMa
     .await;
     let new_id = match r {
         Ok(r) => r.last_insert_id() as i64,
-        Err(e) => return reply(StatusCode::INTERNAL_SERVER_ERROR, json!({ "error": e.to_string() })),
+        Err(e) => return reply(StatusCode::INTERNAL_SERVER_ERROR, json!({ "error": hide(e) })),
     };
     // 5. Remember the barcode in its own table too, so scanning finds this plant later.
     if !barcode.is_empty() {
@@ -559,7 +556,7 @@ async fn future_promote(state: &AppState, visitor: &Visitor, f: &FormData, q: &H
     match result {
         Ok(Some(id)) => ok(json!({ "ok": true, "id": id })),
         Ok(None) => ok(json!({ "ok": false, "error": "Future plant not found" })),
-        Err(e) => ok(json!({ "ok": false, "error": e.to_string() })),
+        Err(e) => ok(json!({ "ok": false, "error": hide(e) })),
     }
 }
 
@@ -706,7 +703,7 @@ async fn add_barcode(state: &AppState, visitor: &Visitor, f: &FormData, q: &Hash
             if dup {
                 ok(json!({ "ok": false, "error": "That barcode is already assigned to a plant." }))
             } else {
-                ok(json!({ "ok": false, "error": e.to_string() }))
+                ok(json!({ "ok": false, "error": hide(e) }))
             }
         }
     }
@@ -723,7 +720,7 @@ async fn delete_barcode(state: &AppState, visitor: &Visitor, f: &FormData, q: &H
     }
     match sqlx::query("DELETE FROM `plant_barcodes` WHERE id = ?").bind(bid).execute(&state.db).await {
         Ok(_) => ok(json!({ "ok": true })),
-        Err(e) => ok(json!({ "ok": false, "error": e.to_string() })),
+        Err(e) => ok(json!({ "ok": false, "error": hide(e) })),
     }
 }
 
@@ -750,7 +747,7 @@ async fn set_barcode(state: &AppState, visitor: &Visitor, f: &FormData, q: &Hash
         .await
     {
         Ok(_) => ok(json!({ "ok": true })),
-        Err(e) => ok(json!({ "ok": false, "error": e.to_string() })),
+        Err(e) => ok(json!({ "ok": false, "error": hide(e) })),
     }
 }
 
@@ -904,7 +901,7 @@ async fn update_plant(state: &AppState, visitor: &Visitor, f: &FormData, q: &Has
         up = up.bind(p.clone());
     }
     if let Err(e) = up.bind(id).execute(&state.db).await {
-        return reply(StatusCode::INTERNAL_SERVER_ERROR, json!({ "error": e.to_string() }));
+        return reply(StatusCode::INTERNAL_SERVER_ERROR, json!({ "error": hide(e) }));
     }
     // Log the quantity change. `iso_week` is the ISO week number, as the PHP's `W`.
     if let Some(qv) = qty {
@@ -928,16 +925,18 @@ async fn update_plant(state: &AppState, visitor: &Visitor, f: &FormData, q: &Has
     ok(json!({ "ok": true }))
 }
 
-/// `?action=like` / `?action=favorite`: toggle a mark for the named user on a plant. If it exists
-/// it is removed; if not it is added. Gives `{ok, active, count}`.
+/// `?action=like` / `?action=favorite`: toggle the CALLER's mark on a plant. If it exists it is
+/// removed; if not it is added. Gives `{ok, active, count}`.
 ///
-/// The user name comes from the request and needs no sign-in, as in the PHP. This only changes a
-/// like or favorite, never a plant.
-async fn like_or_favorite(state: &AppState, action: &str, f: &FormData, q: &HashMap<String, String>) -> Response {
+/// Whose mark it is comes from who is asking (the app's key, or the visitor's own guest name),
+/// never from the request: the PHP took a `username=` field, so anybody could add or remove
+/// plants in Jun's favourites (which feed the catalogue's "Jun's Favs"). A `username` sent by
+/// an old app is ignored.
+async fn like_or_favorite(state: &AppState, visitor: &Visitor, action: &str, f: &FormData, q: &HashMap<String, String>) -> Response {
     let table = if action == "like" { "user_likes" } else { "user_favorites" };
-    let user = pick(f, q, "username").trim().to_string();
+    let user = visitor.db_name();
     let pid = php_int(pick(f, q, "plant_id"));
-    if user.is_empty() || pid <= 0 {
+    if pid <= 0 {
         return ok(json!({ "ok": false, "error": "Missing user or plant." }));
     }
     let exists = sqlx::query(&format!("SELECT id FROM `{table}` WHERE username = ? AND plant_id = ?"))
@@ -1121,7 +1120,7 @@ async fn list(state: &AppState, q: &HashMap<String, String>) -> Response {
     // 4. Run it. On error send a 500 with the message.
     let mut rows = match qy.fetch_all(&state.db).await {
         Ok(r) => r,
-        Err(e) => return reply(StatusCode::INTERNAL_SERVER_ERROR, json!({ "error": e.to_string() })),
+        Err(e) => return reply(StatusCode::INTERNAL_SERVER_ERROR, json!({ "error": hide(e) })),
     };
     // If the extra row came back there is a next page; remove that row.
     let has_more = rows.len() as i64 > PAGE_SIZE;

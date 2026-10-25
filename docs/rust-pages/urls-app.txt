@@ -1,0 +1,31 @@
+# Every request the Android app (JunsGardenApp 3.1, code 17) makes to the garden site, as the
+# app makes it (GardenApi.kt, GardenLogin.kt, GardenCamera.kt, Updater.kt). "@app" = logged in
+# with the app's own key (Authorization: Bearer), exactly like the phone.
+
+# Browsing (no account needed)
+app_api.php?action=list&page=1
+app_api.php?action=list&page=2
+app_api.php?action=list&page=1&search=hosta
+app_api.php?action=list&page=1&bed=Korea
+app_api.php?action=detail&id=276
+app_api.php?action=detail&id=1
+expect: maybe: the like count follows from the earlier like test (likes are the caller's own now)
+app_api.php?action=bed_counts
+app_api.php?action=barcode_lookup&code=034221582229
+app_api.php?action=barcode_lookup&code=nope
+apps/version.json
+images/Database/
+# Logging in, the way GardenLogin.kt does
+POST app_api.php?action=login | username=Tester&password=wrong | X-Forwarded-For: 10.0.0.7
+app_api.php?action=whoami
+@app app_api.php?action=whoami
+@app app_api.php?action=list&page=1
+@app app_api.php?action=detail&id=276
+# The camera tools (GardenCamera.kt). The lab has no garden-ingest, so both sides answer with
+# the "could not reach" error; what is compared is the guard in front (login, action allowlist).
+POST app/garden/identify | x=1
+@app POST app/garden/identify | x=1
+@app POST app/garden/not-an-action | x=1
+login.php?forgot=1
+@app POST app_api.php?action=logout | x=1
+@app app_api.php?action=whoami

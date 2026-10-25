@@ -161,7 +161,7 @@ pub async fn plant_listing(
         filemtime(&state.www, "js/plant-listing.js")
     );
     page.after_header = "\n<div class=\"qs-search-bar\">\n    <input type=\"text\" id=\"list-search-box\" class=\"qs-search-input\" placeholder=\"Quick search plants...\" autofocus>\n</div>".to_string();
-    Html(layout::render(&state, page, &visitor)).into_response()
+    Html(layout::render(&state, page, &visitor).await).into_response()
 }
 
 // Tests run only with `cargo test`; they are not part of the live site.

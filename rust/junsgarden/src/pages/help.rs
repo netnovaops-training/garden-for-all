@@ -123,7 +123,7 @@ fn framed(state: &AppState, visitor: &Visitor, title: &str, body: String) -> Htm
     p.title = format!("{title} — {}", layout::DEFAULT_TITLE);
     p.show_hero = false;
     p.extra_head = STYLE.to_string();
-    let page = layout::render(state, p, visitor);
+    let page = layout::render_now(state, p, visitor);
     // The frame's own links are relative to the site's top level; make them
     // absolute so a page below /help/ finds its stylesheet, scripts and menu.
     let mut page = page;

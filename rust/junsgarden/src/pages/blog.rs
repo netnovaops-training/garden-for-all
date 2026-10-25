@@ -142,7 +142,7 @@ async fn render(state: &AppState, visitor: &Visitor) -> Html<String> {
     let mut page = Page::new(body);
     page.title = "Garden Archives — Jun's & Kona's Garden".to_string();
     page.show_hero = false;
-    Html(layout::render(state, page, visitor))
+    Html(layout::render(state, page, visitor).await)
 }
 
 /// Handler for `GET /blog.php`. Takes the state and visitor (both supplied by

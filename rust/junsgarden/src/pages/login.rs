@@ -75,12 +75,12 @@ fn redirect(to: &str) -> Response {
 /// Takes the app state, who is asking and the filled-in template.
 /// `unwrap_or_default()` means: if rendering fails, use an empty page body
 /// instead of crashing (a template error would be a bug found at compile time).
-fn page(state: &AppState, visitor: &Visitor, t: LoginTemplate) -> Response {
+async fn page(state: &AppState, visitor: &Visitor, t: LoginTemplate) -> Response {
     let body = t.render().unwrap_or_default();
     let mut p = Page::new(body);
     p.title = "Login — Jun's and Kona's Garden".to_string();
     p.show_hero = false;
-    Html(layout::render(state, p, visitor)).into_response()
+    Html(layout::render(state, p, visitor).await).into_response()
 }
 
 /// Handler for `GET /login.php`. Chooses which box to show from the address.
@@ -142,7 +142,7 @@ pub async fn login_get(
         t.notice = format!("You are logged in as {}.", visitor.username);
     }
     // 7. Render the page. (No `;` at the end: this value is the function's result.)
-    page(&state, &visitor, t)
+    page(&state, &visitor, t).await
 }
 
 /// Handler for `POST /login.php`. Handles four buttons, tested in this order:
@@ -204,30 +204,27 @@ pub async fn login_post(
     if f.has("set_password") {
         let name = f.str("u").to_string();
         let code = f.str("reset").to_string();
-        // `again` is a closure: a small function stored in a variable. It shows the
-        // "choose a password" box again with an error message.
-        let again = |e: &str| {
-            let t = LoginTemplate {
-                mode: "reset".into(),
-                error: e.to_string(),
-                notice: String::new(),
-                back: "/".into(),
-                reset_user: accounts::find(&state, &name).map(|a| a.name.clone()).unwrap_or_default(),
-                reset_code: code.clone(),
-            };
-            page(&state, &visitor, t)
+        // The two typed passwords must match; then try to save the new one. A message
+        // starting "That link" means the code expired, so start over; any other message
+        // is shown in the "choose a password" box again.
+        let problem = if f.str("password") != f.str("password2") {
+            "The two passwords are not the same."
+        } else {
+            match accounts::finish_reset(&state, &name, &code, f.str("password")).await {
+                Ok(_) => return redirect("/login.php?msg=set"),
+                Err(e) if e.starts_with("That link") => return redirect("/login.php?reset=expired&u=x"),
+                Err(e) => e,
+            }
         };
-        // The two typed passwords must match.
-        if f.str("password") != f.str("password2") {
-            return again("The two passwords are not the same.");
-        }
-        // Try to save the new password. A message starting "That link" means the code
-        // expired, so start over; any other message is shown to the person.
-        return match accounts::finish_reset(&state, &name, &code, f.str("password")).await {
-            Ok(_) => redirect("/login.php?msg=set"),
-            Err(e) if e.starts_with("That link") => redirect("/login.php?reset=expired&u=x"),
-            Err(e) => again(e),
+        let t = LoginTemplate {
+            mode: "reset".into(),
+            error: problem.to_string(),
+            notice: String::new(),
+            back: "/".into(),
+            reset_user: accounts::find(&state, &name).map(|a| a.name.clone()).unwrap_or_default(),
+            reset_code: code,
         };
+        return page(&state, &visitor, t).await;
     }
 
     // 5. Nothing matched: go to the login page.

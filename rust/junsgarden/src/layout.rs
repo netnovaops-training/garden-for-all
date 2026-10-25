@@ -5,11 +5,18 @@
 //! body and a few settings; everything around it is identical to the PHP.
 //!
 //! HOW TO READ THIS FILE. A handler builds a `Page` (title, body and options) and calls
-//! `render`. `render` collects the extra values the frame needs (file versions, hero
-//! images, facts, the user) into `LayoutTemplate` and fills the `layout.html` template.
+//! `render(...).await`. `render` collects the extra values the frame needs (file versions,
+//! hero images, facts, the user) into `LayoutTemplate` and fills the `layout.html` template.
+//!
+//! The files the frame reads (the hero folder, facts.txt, apps/version.json and four file
+//! times) are the same for every page, so `FrameCache` reads them at most every
+//! `FRAME_TTL` seconds, on a helper thread, instead of seven disk reads on every page view.
+//! A new hero photo or an edited stylesheet therefore shows up within 10 seconds.
 
 // `use` brings names into scope. `Path` is a borrowed file-system path.
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 // askama turns an HTML template file into Rust code at build time.
 use askama::Template;
@@ -19,6 +26,71 @@ use rand::seq::SliceRandom;
 use crate::php::{filemtime, json_string_list};
 use crate::session::Visitor;
 use crate::AppState;
+
+/// How long the frame's files are reused before they are read again.
+const FRAME_TTL: Duration = Duration::from_secs(10);
+
+/// What the frame reads from disk, read once and shared by every page for `FRAME_TTL`.
+#[derive(Default)]
+struct FrameFiles {
+    /// The hero photos, sorted (each page shuffles its own copy).
+    hero: Vec<String>,
+    facts_json: String,
+    app_version: String,
+    style_v: u64,
+    site_theme_v: u64,
+    hero_v: u64,
+    acc_v: u64,
+}
+
+impl FrameFiles {
+    fn read(www: &Path) -> Self {
+        FrameFiles {
+            hero: hero_images(www),
+            facts_json: facts_json(www),
+            app_version: app_version(www),
+            style_v: filemtime(www, "style.css"),
+            site_theme_v: filemtime(www, "js/site-theme.js"),
+            hero_v: filemtime(www, "js/hero.js"),
+            acc_v: filemtime(www, "js/accessibility.js"),
+        }
+    }
+}
+
+/// The shared copy of `FrameFiles` and when it was read. Lives in `AppState`.
+#[derive(Default)]
+pub struct FrameCache(Mutex<Option<(Instant, Arc<FrameFiles>)>>);
+
+impl FrameCache {
+    /// The current files: the cached copy while it is fresh, else a new read (off the
+    /// async threads). Two pages asking at the same moment may both read; that is harmless.
+    async fn get(&self, www: &Path) -> Arc<FrameFiles> {
+        if let Some(files) = self.fresh() {
+            return files;
+        }
+        let www = www.to_path_buf();
+        self.store(crate::guard::off_thread(move || FrameFiles::read(&www)).await)
+    }
+
+    /// The same for code that cannot wait (the help pages): a stale copy is re-read in place.
+    fn get_now(&self, www: &Path) -> Arc<FrameFiles> {
+        self.fresh().unwrap_or_else(|| self.store(FrameFiles::read(www)))
+    }
+
+    fn fresh(&self) -> Option<Arc<FrameFiles>> {
+        let guard = self.0.lock().ok()?;
+        let (at, files) = guard.as_ref()?;
+        (at.elapsed() < FRAME_TTL).then(|| files.clone())
+    }
+
+    fn store(&self, files: FrameFiles) -> Arc<FrameFiles> {
+        let files = Arc::new(files);
+        if let Ok(mut guard) = self.0.lock() {
+            *guard = Some((Instant::now(), files.clone()));
+        }
+        files
+    }
+}
 
 /// The description used in the page head when a page does not give its own.
 const DEFAULT_DESC: &str =
@@ -123,9 +195,8 @@ fn hero_images(www: &Path) -> Vec<String> {
     if found.is_empty() {
         return vec!["https://images.unsplash.com/photo-1466692476868-aef1dfb1e735".to_string()];
     }
-    // Sort first so the order is predictable, then shuffle for a random order each load.
+    // Sorted here; `render` shuffles each page's own copy, so every load is a new order.
     found.sort();
-    found.shuffle(&mut rand::rng());
     found
 }
 
@@ -174,10 +245,21 @@ fn body_class(is_admin: bool, own: &str) -> String {
 }
 
 /// Wrap a page body in the shared frame and return the full HTML.
-pub fn render(state: &AppState, page: Page, visitor: &Visitor) -> String {
-    let www = &state.www;
-    // The hero images only matter when the page shows the banner.
-    let mut images = if page.show_hero { hero_images(www) } else { Vec::new() };
+pub async fn render(state: &AppState, page: Page, visitor: &Visitor) -> String {
+    let files = state.frame.get(&state.www).await;
+    fill(state, page, visitor, &files)
+}
+
+/// `render` for code that is not async (the help pages).
+pub fn render_now(state: &AppState, page: Page, visitor: &Visitor) -> String {
+    let files = state.frame.get_now(&state.www);
+    fill(state, page, visitor, &files)
+}
+
+fn fill(state: &AppState, page: Page, visitor: &Visitor, files: &FrameFiles) -> String {
+    // The hero images only matter when the page shows the banner; a new random order each load.
+    let mut images = if page.show_hero { files.hero.clone() } else { Vec::new() };
+    images.shuffle(&mut rand::rng());
     // The first 3 images load right away; the rest are "deferred" and loaded later by the
     // script. `split_off(3)` removes items from position 3 onward and returns them.
     let deferred = if images.len() > 3 { images.split_off(3) } else { Vec::new() };
@@ -189,17 +271,17 @@ pub fn render(state: &AppState, page: Page, visitor: &Visitor) -> String {
         meta_desc: page.meta_desc,
         show_hero: page.show_hero,
         hero_initial: images,
-        style_v: filemtime(www, "style.css"),
-        site_theme_v: filemtime(www, "js/site-theme.js"),
-        hero_v: filemtime(www, "js/hero.js"),
-        acc_v: filemtime(www, "js/accessibility.js"),
+        style_v: files.style_v,
+        site_theme_v: files.site_theme_v,
+        hero_v: files.hero_v,
+        acc_v: files.acc_v,
         extra_head: page.extra_head,
         body_class: body_class(is_admin, &page.body_class),
         after_header: page.after_header,
         is_admin,
         plan_ok: visitor.plan_ok(state),
-        app_version: app_version(www),
-        facts_json: facts_json(www),
+        app_version: files.app_version.clone(),
+        facts_json: files.facts_json.clone(),
         deferred_json: json_string_list(&deferred),
         current_user: visitor.username.clone(),
         year: common::current_year(),
