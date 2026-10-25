@@ -29,10 +29,15 @@ A lab on any Linux machine with Docker (`GARDEN_LAB=user@host sh docs/rust-pages
 | Check | Result |
 |---|---|
 | round: urls-port / extra / app / post | PASS / PASS / PASS / PASS (all differences are listed fixes) |
-| unit tests | 93 pass |
+| unit tests | 97 pass |
 | screenshots | 30/36 identical; the other 6 are gallery (photo wall drifts with time) and data.php (random demo weather): both proven by the exact HTML comparison instead |
 | fmt, clippy -D warnings, cargo audit | PASS (Rust 1.99) |
 | dependencies | sqlx 0.9, reqwest 0.13, all crates latest; Rust 1.99 + Debian 13; Python locks refreshed; compose images by digest |
+| address (`lab.sh address`) | 14/14: folder and no folder, `/q` `/b` codes, renamed bed, signed config, old QR after a name change |
+| front door (`tools/release/tests/test-caddy-address.sh`) | 14/14: garden.sh's own Caddyfile validated and run; old name forwards pages (no double folder) and answers phone addresses |
+| installer from scratch (`docs/rust-pages/wizard_test.sh`) | throwaway Ubuntu 24.04, the wizard's exact settings, nothing typed: see the language rows in the report |
+| Windows wizard (`tools/release/tests/test-wizard-flow.ps1`) | 62/62 (real window, nothing installed), including the folder and its Korean label; PSScriptAnalyzer count unchanged |
+| app | builds, lint, 4 unit tests (signature pinned to the Rust side) |
 
 ## Changes so far
 - `guard.rs` (new): security headers (+ Permissions-Policy, COOP, CORP); POSTs started by another
@@ -52,6 +57,16 @@ A lab on any Linux machine with Docker (`GARDEN_LAB=user@host sh docs/rust-pages
 - `app_api.rs`: like/favourite marks belong to whoever asks (anyone could edit Jun's favourites
   through `username=`); database error text no longer shown.
 - `data.rs`: cross-table ties sorted by name (were random); error text no longer shown.
+- `address.rs` (new): the garden's own address (`PUBLIC_URL`, optional folder); `/q/<id>`, `/b/<id>`
+  label codes; `/labels`; `/app/setup` (EN + KO) and the Ed25519-signed `/app/config.json`.
+- App: `GardenAddress` (set by the setup QR, follows only a signed move); updater checks sha256.
+- `garden.sh`: `labels`, `app`, `folder` (menu More 19-21), web-name swap keeps the old name
+  (pages forward, phones answered). Installer fixes found by the from-scratch test: a step failed
+  in "both languages" mode when its last line had no Korean (the firewall step); `USER` unset
+  outside a login; "Scheduled" printed with no cron (now installs cron, or stops).
+- Windows wizard: folder field, phone-app and labels buttons (Korean from the same `lang/ko.tsv`).
+- `code-fingerprints.yml`: the robot proposes a pull request instead of pushing to main.
+- `pi-arm64.yml` (new): every image built on GitHub's arm64 machine; every pinned image has arm64.
 
 ## Pages
 | Address | Rust file | Status |

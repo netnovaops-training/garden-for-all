@@ -38,6 +38,8 @@
 # If someone typed "sh garden.sh", start again with bash (this file needs bash).
 if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 set -uo pipefail
+# A login sets USER; cron, systemd and "docker exec" do not. Fill it in so the install works there too.
+: "${USER:=$(id -un)}"; export USER
 
 HERE=$(cd "$(dirname "$(readlink -f "$0")")" && pwd)
 cd "$HERE" || exit 1
@@ -104,9 +106,13 @@ L() {
     lead=${s%%[! ]*}; core=${s#"$lead"}; k=; [ -n "$core" ] && k=${KO[$core]:-}
     case "$LANG_MODE" in
         ko)   printf '%s%s\n' "$lead" "${k:-$core}" ;;
-        both) printf '%s\n' "$s"; [ -n "$k" ] && printf '%s\033[2m%s\033[0m\n' "$lead" "$k" ;;
+        both) printf '%s\n' "$s"; if [ -n "$k" ]; then printf '%s\033[2m%s\033[0m\n' "$lead" "$k"; fi ;;
         *)    printf '%s\n' "$s" ;;
     esac
+    # Always "done": a line with no Korean yet is not a failure. (It used to end on the test
+    # above, so in "both" mode a step whose last line had no translation counted as failed,
+    # for example the firewall step printing ufw's own "Status: active".)
+    return 0
 }
 # Lblock: print every line of a block of text (a "here document") with L.
 Lblock() { local line; while IFS= read -r line; do L "$line"; done; }
@@ -1038,7 +1044,14 @@ backup_schedule() {
         "Backups you never have to remember, more often when it matters. See the line: crontab -l" \
         "https://manpages.ubuntu.com/manpages/noble/man5/crontab.5.html"
     local line; line=$(backup_cron_line)
-    ( crontab -l 2>/dev/null | grep -v -e 'garden.sh backup' -e 'docker/backup.sh'; echo "$line" ) | crontab -
+    # Ubuntu Desktop has cron; a minimal Ubuntu may not. Install it rather than skip the backups.
+    if ! command -v crontab >/dev/null; then
+        run sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=900 install -y -qq cron >/dev/null || { fail "cron did not install"; return 1; }
+        run sudo systemctl enable --now cron >/dev/null 2>&1 || true
+    fi
+    # Only say "Scheduled" when the line really went in (it used to say so even without cron).
+    ( crontab -l 2>/dev/null | grep -v -e 'garden.sh backup' -e 'docker/backup.sh'; echo "$line" ) | crontab - \
+        || { fail "the backup schedule was not saved"; return 1; }
     note "Scheduled: $line"
 }
 
@@ -1919,11 +1932,20 @@ $wiki {
 # Web names the garden had before (OLD_NAMES): each forwards every address to the current
 # one, path and all, so labels printed for an old name and phones set up with it keep working.
 old_name_blocks() {
-    local old url
+    local old url folder inner strip=""
     url=$(env_get PUBLIC_URL || true)
+    folder=$(env_get PUBLIC_PATH || true)
+    # The phone app's addresses are SERVED at the old name, not forwarded: Android does not
+    # repeat a login (a POST) after a forward, and drops the login key on a forward to another
+    # name, so an app not yet updated would be logged out. Everything else is forwarded.
+    inner=$(printf '\t@phone path /app_api.php /app/* /apps/*\n\thandle @phone {\n\t\treverse_proxy 127.0.0.1:8030 {\n\t\t\timport appproxy\n\t\t}\n\t}\n\thandle {\n\t\tredir %s{uri} 308\n\t}' "$url")
+    # PUBLIC_URL already ends in the folder: an old address that had the folder too
+    # (old.org/garden/q/1) must not become new.org/garden/garden/q/1, so drop it first.
+    [ -n "$folder" ] && strip=$(printf '\thandle_path %s/* {\n%s\n\t}\n' "$folder" "$(printf '%s' "$inner" | sed 's/^/\t/')")$'\n'
     for old in $(env_get OLD_NAMES | tr ',' ' '); do
         [ -n "$old" ] && [ "$old" != "$(env_get PUBLIC_NAME)" ] || continue
-        printf '\n# --- An old web name: forwards to the current address ---\n%s {\n\tredir %s{uri} 308\n}\n' "$old" "$url"
+        printf '\n# --- An old web name: phones are answered here, everything else forwards to the current address ---\n%s {\n%s\thandle {\n%s\n\t}\n}\n' \
+            "$old" "$strip" "$(printf '%s' "$inner" | sed 's/^/\t/')"
     done
 }
 
