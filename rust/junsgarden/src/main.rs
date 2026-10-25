@@ -389,6 +389,13 @@ async fn run() -> anyhow::Result<()> {
         "JUNSGARDEN_AI_CACHE_DIR",
         &format!("{}/cashe/AI", www.display()),
     ));
+    // Made once here; the AI pages only ever use files inside it (brain::cache_file).
+    if let Err(e) = std::fs::create_dir_all(&ai_cache_dir) {
+        tracing::warn!(
+            "AI cache folder {} not usable ({e}): AI answers will not be cached",
+            ai_cache_dir.display()
+        );
+    }
     tracing::info!("serving site files from {}", www.display());
 
     // Build the shared state. `Arc::new` wraps it so all handlers can share it.

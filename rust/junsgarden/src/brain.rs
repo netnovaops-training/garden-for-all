@@ -79,10 +79,9 @@ fn write_json_file(p: &SafePath, v: &Value) {
     let _ = std::fs::write(p.as_path(), serde_json::to_string(v).unwrap_or_default());
 }
 
-/// One of the AI cache files, `name` inside `ai_cache_dir` (made first if needed), checked
-/// by `store::file_in`. `None` if the folder cannot be used: then nothing is cached.
+/// One of the AI cache files, `name` inside `ai_cache_dir` (made at startup), checked by
+/// `store::file_in`. `None` if the folder cannot be used: then nothing is cached.
 fn cache_file(state: &AppState, name: &str) -> Option<SafePath> {
-    let _ = std::fs::create_dir_all(&state.ai_cache_dir);
     crate::store::file_in(&state.ai_cache_dir, name).ok()
 }
 
