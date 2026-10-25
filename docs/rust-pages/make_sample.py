@@ -10,6 +10,7 @@ tags_cache.csv) and OUT_DIR/data/ (facts, guestbook, comment files). Same output
 import json
 import os
 import random
+import re
 import struct
 import sys
 import zlib
@@ -67,10 +68,27 @@ def q(v):
     return "'" + str(v).replace("\\", "\\\\").replace("'", "''") + "'"
 
 
+def name(n):
+    """A table or column name, checked: only letters, digits and _ (so it can never carry SQL)."""
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", n):
+        raise ValueError(f"not a plain SQL name: {n!r}")
+    return n
+
+
+# The two statement builders put SQL together from parts: fixed keywords, names checked by
+# name(), values written by q() and ids made ints. Nothing else ever reaches the SQL text.
 def insert(table, rows):
     cols = list(rows[0].keys())
     vals = ",\n".join("(" + ",".join(q(r[c]) for c in cols) + ")" for r in rows)
-    return f"INSERT INTO `{table}` ({','.join('`'+c+'`' for c in cols)}) VALUES\n{vals};\n"
+    col_list = ",".join("`" + name(c) + "`" for c in cols)
+    return "".join(["INSERT INTO `", name(table), "` (", col_list, ") VALUES\n", vals, ";\n"])
+
+
+def update(table, values, ids):
+    """UPDATE table SET col = value, ... WHERE id IN (ids)."""
+    sets = ", ".join(name(c) + " = " + q(v) for c, v in values.items())
+    id_list = ", ".join(str(int(i)) for i in ids)
+    return "".join(["UPDATE ", name(table), " SET ", sets, " WHERE id IN (", id_list, ");\n"])
 
 
 def plant(i, future=False):
@@ -108,14 +126,14 @@ def main():
                (3, "Joshua", "Tomatoes", "Staked the test tomatoes.", "https://images.unsplash.com/photo-1", "2026-06-01 18:00:00"),
                (4, "Jun", "Fall cleanup", "Cut back the sample perennials.", None, "2026-10-01 12:00:00")]]),
            insert("user_favorites", [{"username": u, "plant_id": p} for u, p in
-                                     [("Joshua", 2), ("Joshua", 5), ("Jason", 3), ("Kona", 4), ("Guest_abc", 6), ("Someone", 2)]]),
+                                     [("Joshua", 2), ("Joshua", 5), ("Mina", 3), ("Kona", 4), ("Guest_abc", 6), ("Someone", 2)]]),
            insert("user_likes", [{"username": u, "plant_id": p} for u, p in [("Joshua", 1), ("Guest_x", 1), ("Kona", 9)]]),
            insert("plant_quantity_log", [{"plant_id": 1, "event_type": "purchased", "quantity": 2, "event_date": "2026-04-06",
                                           "event_week": 15, "event_month": 4, "event_year": 2026, "notes": None, "recorded_by": "Jun"}]),
            insert("plant_barcodes", [{"plant_id": 7, "source_table": "data_source", "size_label": "1 gal",
                                       "barcode": "000000000007", "barcode_image": png((0, 0, 0))}]),
            insert("flower_bed_qr", [{"bed_name": "Korea Bed", "qr_code": png((20, 20, 20))}]),
-           "UPDATE data_source SET qr_code = " + q(png((10, 10, 10))) + " WHERE id IN (1, 2);\n"]
+           update("data_source", {"qr_code": png((10, 10, 10))}, [1, 2])]
     save(f"{OUT}/sample-data.sql", "".join(sql))
 
     pics = {"HeroBanner": [f"hero-{n}.png" for n in range(5)], "Database": [f"plant-{n}.png" for n in range(6)],

@@ -22,7 +22,6 @@
 //! and each photo or plant keeps its newest `KEEP_PER_KEY` comments.
 
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::sync::Arc;
 
 use axum::{
@@ -63,11 +62,12 @@ impl Kind {
         }
     }
 
-    fn file(self, state: &AppState) -> PathBuf {
-        state.data.join(match self {
+    fn file(self, state: &AppState) -> Result<store::SafePath, store::StoreError> {
+        let name = match self {
             Kind::Gallery => "gallery_comments.json",
             Kind::Plant => "plant_comments.json",
-        })
+        };
+        store::file_in(&state.data, name).map_err(store::StoreError::Io)
     }
 }
 
@@ -110,7 +110,7 @@ pub fn new_entry(name: &str, message: &str) -> Option<Value> {
 /// shows no comments (and is logged) rather than an error.
 pub async fn latest(state: &AppState, kind: Kind, key: &str) -> Vec<Value> {
     let (path, key) = (kind.file(state), key.to_string());
-    off_thread(move || match store::read_json(&path) {
+    off_thread(move || match path.and_then(|p| store::read_json(&p)) {
         Ok(all) => all
             .get(&key)
             .and_then(Value::as_array)
@@ -144,25 +144,25 @@ fn valid_key(state: &AppState, kind: Kind, key: &str) -> bool {
 /// flag. Returns false (and logs why) when it could not be saved.
 pub async fn add(state: &Arc<AppState>, kind: Kind, key: &str, entry: Value) -> bool {
     let _one_at_a_time = state.comments_lock.lock().await;
-    let (path, key, flag) = (
-        kind.file(state),
-        key.to_string(),
-        state.data.join("comment_notify.txt"),
-    );
+    let (path, key, flag) = (kind.file(state), key.to_string(), notify_file(state));
     off_thread(move || {
-        let saved = store::update_json(&path, |all| {
-            let list = all.entry(key).or_insert_with(|| json!([]));
-            let Value::Array(a) = list else { return None };
-            a.push(entry);
-            if a.len() > KEEP_PER_KEY {
-                a.drain(..a.len() - KEEP_PER_KEY);
-            }
-            Some(())
+        let saved = path.and_then(|path| {
+            store::update_json(&path, |all| {
+                let list = all.entry(key).or_insert_with(|| json!([]));
+                let Value::Array(a) = list else { return None };
+                a.push(entry);
+                if a.len() > KEEP_PER_KEY {
+                    a.drain(..a.len() - KEEP_PER_KEY);
+                }
+                Some(())
+            })
         });
         match saved {
             Ok(Some(())) => {
                 // A failed flag only means the bell stays dark; not worth failing the comment.
-                let _ = store::write_atomic(&flag, b"1");
+                if let Ok(flag) = flag {
+                    let _ = store::write_atomic(&flag, b"1");
+                }
                 true
             }
             Ok(None) => false,
@@ -173,6 +173,11 @@ pub async fn add(state: &Arc<AppState>, kind: Kind, key: &str, entry: Value) -> 
         }
     })
     .await
+}
+
+/// The admin's "someone commented" flag file.
+fn notify_file(state: &AppState) -> std::io::Result<store::SafePath> {
+    store::file_in(&state.data, "comment_notify.txt")
 }
 
 /// A JSON answer that is never cached by the browser (an old comment list must not show).
@@ -205,7 +210,7 @@ pub async fn comments(
     let get = method == Method::GET;
     let post = method == Method::POST;
     let query = |k: &str| q.get(k).map(String::as_str).unwrap_or("");
-    let notify_file = state.data.join("comment_notify.txt");
+    let notify_file = notify_file(&state);
 
     // Load the comments for one photo or plant.
     if get && q.contains_key("get_comments") {
@@ -220,9 +225,13 @@ pub async fn comments(
     // The admin's bell. Guests always get "false", so they cannot tell whether anyone commented.
     if get && q.contains_key("check_notify") {
         let on = is_admin
-            && off_thread(move || store::read_text(&notify_file).unwrap_or_default())
-                .await
-                .trim()
+            && off_thread(move || {
+                notify_file
+                    .and_then(|p| store::read_text(&p))
+                    .unwrap_or_default()
+            })
+            .await
+            .trim()
                 == "1";
         return json_reply(json!({ "notify": on }));
     }
@@ -231,7 +240,7 @@ pub async fn comments(
             return json_reply(json!({ "status": "denied" }));
         }
         off_thread(move || {
-            if let Err(e) = store::write_atomic(&notify_file, b"0") {
+            if let Err(e) = notify_file.and_then(|p| store::write_atomic(&p, b"0")) {
                 tracing::error!("could not clear the comment bell: {e}");
             }
         })
@@ -270,7 +279,8 @@ pub async fn comments(
     // The admin's review tools: every comment of a kind, or delete one by position.
     if get && q.contains_key("admin_dump") && is_admin {
         let path = Kind::from(q.get("type").map(String::as_str).unwrap_or("plant")).file(&state);
-        let all = off_thread(move || store::read_json(&path).unwrap_or_default()).await;
+        let all =
+            off_thread(move || path.and_then(|p| store::read_json(&p)).unwrap_or_default()).await;
         return json_reply(Value::Object(all));
     }
     if post && f.has("delete_comment") && is_admin {
@@ -280,16 +290,18 @@ pub async fn comments(
         let index = f.get("index").map(php_int).unwrap_or(-1);
         let _one_at_a_time = state.comments_lock.lock().await;
         let removed = off_thread(move || {
-            store::update_json(&path, |all| {
-                let Some(Value::Array(a)) = all.get_mut(&key) else {
-                    return None;
-                };
-                let i = usize::try_from(index).ok().filter(|i| *i < a.len())?;
-                a.remove(i);
-                if a.is_empty() {
-                    all.remove(&key);
-                }
-                Some(())
+            path.and_then(|path| {
+                store::update_json(&path, |all| {
+                    let Some(Value::Array(a)) = all.get_mut(&key) else {
+                        return None;
+                    };
+                    let i = usize::try_from(index).ok().filter(|i| *i < a.len())?;
+                    a.remove(i);
+                    if a.is_empty() {
+                        all.remove(&key);
+                    }
+                    Some(())
+                })
             })
             .map_err(|e| tracing::error!("could not delete a comment: {e}"))
             .ok()

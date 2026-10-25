@@ -14,6 +14,7 @@ app_api.php?action=bed_counts
 app_api.php?action=barcode_lookup&code=034221582229
 app_api.php?action=barcode_lookup&code=nope
 apps/version.json
+expect: the update file also gives the APK's sha256 (apps 3.2+ check it; older ones still read md5)
 images/Database/
 # Logging in, the way GardenLogin.kt does
 POST app_api.php?action=login | username=Tester&password=wrong | X-Forwarded-For: 10.0.0.7

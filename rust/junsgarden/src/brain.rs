@@ -23,13 +23,13 @@
 //! `&str` is borrowed text, `String` is owned text.
 
 // `use` brings names into scope so they can be written short.
-use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 // `serde_json` handles JSON. `Value` is any JSON value; `Map` is a JSON object.
 use serde_json::{json, Map, Value};
 
 // `crate::` means "from this same program".
+use crate::store::SafePath;
 use crate::AppState;
 
 /// The five water-need levels the model must choose from, from driest to wettest.
@@ -56,8 +56,8 @@ fn host(url: &str) -> String {
 
 /// How many seconds ago a file was last changed. `None` if the file is missing or its
 /// time cannot be read. Used to decide whether a cached answer is still fresh.
-fn file_age_secs(p: &Path) -> Option<u64> {
-    std::fs::metadata(p)
+fn file_age_secs(p: &SafePath) -> Option<u64> {
+    std::fs::metadata(p.as_path())
         .ok()?
         .modified()
         .ok()?
@@ -67,19 +67,23 @@ fn file_age_secs(p: &Path) -> Option<u64> {
 }
 
 /// Reads a file and parses it as JSON. Returns `None` if it is missing or not valid JSON.
-fn read_json_file(p: &Path) -> Option<Value> {
-    std::fs::read(p)
+fn read_json_file(p: &SafePath) -> Option<Value> {
+    std::fs::read(p.as_path())
         .ok()
         .and_then(|b| serde_json::from_slice(&b).ok())
 }
 
-/// Writes JSON to a file, making the folder first if needed. Errors are ignored on
-/// purpose (`let _ =`): a cache that cannot be saved should not break the page.
-fn write_json_file(p: &Path, v: &Value) {
-    if let Some(parent) = p.parent() {
-        let _ = std::fs::create_dir_all(parent);
-    }
-    let _ = std::fs::write(p, serde_json::to_string(v).unwrap_or_default());
+/// Writes JSON to a file. Errors are ignored on purpose (`let _ =`): a cache that cannot be
+/// saved should not break the page.
+fn write_json_file(p: &SafePath, v: &Value) {
+    let _ = std::fs::write(p.as_path(), serde_json::to_string(v).unwrap_or_default());
+}
+
+/// One of the AI cache files, `name` inside `ai_cache_dir` (made first if needed), checked
+/// by `store::file_in`. `None` if the folder cannot be used: then nothing is cached.
+fn cache_file(state: &AppState, name: &str) -> Option<SafePath> {
+    let _ = std::fs::create_dir_all(&state.ai_cache_dir);
+    crate::store::file_in(&state.ai_cache_dir, name).ok()
 }
 
 /// One JSON round trip to the model. None on any failure.
@@ -129,10 +133,14 @@ pub async fn generate(
 /// a minute so a page load does not pay a connect timeout every time.
 pub async fn available(state: &AppState) -> bool {
     // A small file remembers the last answer so the model is not asked on every page load.
-    let cache = state.ai_cache_dir.join("health.json");
+    let cache = cache_file(state, "health.json");
     // If that answer is less than 60 seconds old, use it.
-    if file_age_secs(&cache).is_some_and(|a| a < 60) {
-        if let Some(v) = read_json_file(&cache) {
+    if cache
+        .as_ref()
+        .and_then(file_age_secs)
+        .is_some_and(|a| a < 60)
+    {
+        if let Some(v) = cache.as_ref().and_then(read_json_file) {
             return v.get("ok").and_then(Value::as_bool).unwrap_or(false);
         }
     }
@@ -169,10 +177,12 @@ pub async fn available(state: &AppState) -> bool {
         _ => false,
     };
     // Save the answer, with the time, for the next minute.
-    write_json_file(
-        &cache,
-        &json!({ "ok": ok, "at": common::now_local().unix_timestamp() }),
-    );
+    if let Some(cache) = &cache {
+        write_json_file(
+            cache,
+            &json!({ "ok": ok, "at": common::now_local().unix_timestamp() }),
+        );
+    }
     ok
 }
 
@@ -302,14 +312,19 @@ pub async fn insights(
     // The cache file name is an MD5 hash of the context, so the same context finds the same file.
     let mut hasher = md5::Context::new();
     hasher.consume(serde_json::to_string(context).unwrap_or_default());
-    let key: PathBuf = state
-        .ai_cache_dir
-        .join(format!("insights_{:x}.json", hasher.finalize()));
+    let key = cache_file(state, &format!("insights_{:x}.json", hasher.finalize()));
 
     // The cached reading, if it exists and is a JSON object.
-    let cached = read_json_file(&key).filter(Value::is_object);
+    let cached = key
+        .as_ref()
+        .and_then(read_json_file)
+        .filter(Value::is_object);
     // Fresh means younger than BRAIN_TTL_SECS.
-    let fresh = cached.is_some() && file_age_secs(&key).is_some_and(|a| a < BRAIN_TTL_SECS);
+    let fresh = cached.is_some()
+        && key
+            .as_ref()
+            .and_then(file_age_secs)
+            .is_some_and(|a| a < BRAIN_TTL_SECS);
     // Use the cache if it is fresh. Page loads (`allow_slow` false) also accept an old one,
     // marked stale, because they must never wait for the model.
     if fresh || (!allow_slow && cached.is_some()) {
@@ -348,7 +363,9 @@ pub async fn insights(
         "model": state.ollama_model,
     });
     // Save for next time and return it.
-    write_json_file(&key, &result);
+    if let Some(key) = &key {
+        write_json_file(key, &result);
+    }
     Some(result)
 }
 
@@ -727,10 +744,17 @@ async fn disc_judge(
 /// fresh judgement.
 pub async fn disc_run(state: &AppState, allow_slow: bool) -> Value {
     // Cached answer in a file.
-    let cache = state.ai_cache_dir.join("discover.json");
-    let cached = read_json_file(&cache).filter(Value::is_object);
+    let cache = cache_file(state, "discover.json");
+    let cached = cache
+        .as_ref()
+        .and_then(read_json_file)
+        .filter(Value::is_object);
     // Fresh means less than 3600 seconds (one hour) old.
-    let fresh = cached.is_some() && file_age_secs(&cache).is_some_and(|a| a < 3600);
+    let fresh = cached.is_some()
+        && cache
+            .as_ref()
+            .and_then(file_age_secs)
+            .is_some_and(|a| a < 3600);
     // Same rule as insights: page loads accept a stale cache and never wait for the model.
     if fresh || (!allow_slow && cached.is_some()) {
         let mut c = cached.unwrap();
@@ -788,7 +812,9 @@ pub async fn disc_run(state: &AppState, allow_slow: bool) -> Value {
             .unwrap_or(Value::Null);
     }
     // Save for the next page loads.
-    write_json_file(&cache, &result);
+    if let Some(cache) = &cache {
+        write_json_file(cache, &result);
+    }
     result
 }
 

@@ -15,10 +15,56 @@
 //! `crate::guard::off_thread`, so it never holds up the async server.
 
 use std::io::{ErrorKind, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 use serde_json::{Map, Value};
+
+/// A data file's path that has been checked to be a plain file directly inside its folder.
+/// Only [`file_in`] makes one, and every read and write below takes one, so no path built
+/// from outside input can reach the disk without that check.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SafePath(PathBuf);
+
+impl SafePath {
+    pub fn as_path(&self) -> &Path {
+        &self.0
+    }
+}
+
+/// Is `name` a plain file name: 1 to 128 of `A-Z a-z 0-9 _ . -`, starting with a letter or
+/// digit, and no `..`? (So never a folder, a hidden file, or a step outside the folder.)
+fn plain_name(name: &str) -> bool {
+    let b = name.as_bytes();
+    (1..=128).contains(&b.len())
+        && b[0].is_ascii_alphanumeric()
+        && b.iter()
+            .all(|&c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'.' | b'-'))
+        && !name.contains("..")
+}
+
+/// The file `name` inside the folder `dir`, checked: `name` must be a plain file name, and
+/// the real path (links followed, folder resolved) must still start with the real `dir`.
+/// Anything else is refused with `InvalidInput`. The folder must exist.
+pub fn file_in(dir: &Path, name: &str) -> std::io::Result<SafePath> {
+    let refuse = || std::io::Error::new(ErrorKind::InvalidInput, "not a plain file in its folder");
+    if !plain_name(name) {
+        return Err(refuse());
+    }
+    let base = dir.canonicalize()?;
+    let joined = base.join(name);
+    // A file that is already there may be a link: follow it, it must stay inside `dir`.
+    let real = match joined.canonicalize() {
+        Ok(p) => p,
+        Err(e) if e.kind() == ErrorKind::NotFound => joined,
+        Err(e) => return Err(e),
+    };
+    if real.starts_with(&base) && real.parent() == Some(base.as_path()) {
+        Ok(SafePath(real))
+    } else {
+        Err(refuse())
+    }
+}
 
 /// Why a data file could not be used.
 #[derive(Debug)]
@@ -39,8 +85,8 @@ impl std::fmt::Display for StoreError {
 }
 
 /// The text of a file; a file that does not exist yet reads as "".
-pub fn read_text(path: &Path) -> std::io::Result<String> {
-    match std::fs::read_to_string(path) {
+pub fn read_text(path: &SafePath) -> std::io::Result<String> {
+    match std::fs::read_to_string(path.as_path()) {
         Err(e) if e.kind() == ErrorKind::NotFound => Ok(String::new()),
         other => other,
     }
@@ -48,8 +94,8 @@ pub fn read_text(path: &Path) -> std::io::Result<String> {
 
 /// A JSON file's top-level object. Missing file: an empty object (the first comment ever
 /// must work). A file that is there but not a JSON object: `Damaged`.
-pub fn read_json(path: &Path) -> Result<Map<String, Value>, StoreError> {
-    let bytes = match std::fs::read(path) {
+pub fn read_json(path: &SafePath) -> Result<Map<String, Value>, StoreError> {
+    let bytes = match std::fs::read(path.as_path()) {
         Ok(b) => b,
         Err(e) if e.kind() == ErrorKind::NotFound => return Ok(Map::new()),
         Err(e) => return Err(StoreError::Io(e)),
@@ -58,9 +104,12 @@ pub fn read_json(path: &Path) -> Result<Map<String, Value>, StoreError> {
         Ok(Value::Object(m)) => Ok(m),
         Ok(_) => Err(StoreError::Damaged(format!(
             "{} is not a JSON object",
-            path.display()
+            path.as_path().display()
         ))),
-        Err(e) => Err(StoreError::Damaged(format!("{}: {e}", path.display()))),
+        Err(e) => Err(StoreError::Damaged(format!(
+            "{}: {e}",
+            path.as_path().display()
+        ))),
     }
 }
 
@@ -70,10 +119,11 @@ pub fn read_json(path: &Path) -> Result<Map<String, Value>, StoreError> {
 ///
 /// A folder the site may not create files in (only change the existing ones) falls back to
 /// writing the file in place, as the PHP always did.
-pub fn write_atomic(path: &Path, contents: &[u8]) -> std::io::Result<()> {
+pub fn write_atomic(path: &SafePath, contents: &[u8]) -> std::io::Result<()> {
+    let path = path.as_path();
     let mut tmp = path.as_os_str().to_owned();
     tmp.push(".tmp");
-    let tmp = std::path::PathBuf::from(tmp);
+    let tmp = PathBuf::from(tmp);
     let mut f = match std::fs::File::create(&tmp) {
         Ok(f) => f,
         Err(e) if e.kind() == ErrorKind::PermissionDenied => return std::fs::write(path, contents),
@@ -99,7 +149,7 @@ pub fn pretty_json(data: &Map<String, Value>) -> Vec<u8> {
 /// `None` to mean "nothing to save" (the file is left alone) or `Some(answer)`.
 /// The caller must hold the lock for this file (`AppState::comments_lock`).
 pub fn update_json<R>(
-    path: &Path,
+    path: &SafePath,
     change: impl FnOnce(&mut Map<String, Value>) -> Option<R>,
 ) -> Result<Option<R>, StoreError> {
     let mut data = read_json(path)?;
@@ -168,41 +218,92 @@ mod tests {
     #[test]
     fn missing_files_read_as_empty() {
         let dir = scratch("missing");
-        assert_eq!(read_text(&dir.join("none.txt")).unwrap(), "");
-        assert!(read_json(&dir.join("none.json")).unwrap().is_empty());
+        assert_eq!(read_text(&file_in(&dir, "none.txt").unwrap()).unwrap(), "");
+        assert!(read_json(&file_in(&dir, "none.json").unwrap())
+            .unwrap()
+            .is_empty());
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn only_plain_files_inside_the_folder_are_allowed() {
+        let dir = scratch("confined");
+        std::fs::create_dir_all(dir.join("sub")).unwrap();
+        for bad in [
+            "../outside.json",
+            "..",
+            "a/../../x",
+            "sub/x.json",
+            "/etc/passwd",
+            "..\\x",
+            ".hidden",
+            "",
+            "a\0b",
+            "x..json",
+            &"a".repeat(129),
+        ] {
+            let e = file_in(&dir, bad).unwrap_err();
+            assert_eq!(e.kind(), ErrorKind::InvalidInput, "{bad:?} was let through");
+        }
+        let ok = file_in(&dir, "plant_comments.json").unwrap();
+        assert_eq!(
+            ok.as_path().parent(),
+            Some(dir.canonicalize().unwrap().as_path())
+        );
+        assert!(file_in(&dir, "insights_0123456789abcdef0123456789abcdef.json").is_ok());
+        // A folder that is not there: an error, never a path somewhere else.
+        assert!(file_in(&dir.join("missing"), "a.json").is_err());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_link_out_of_the_folder_is_refused() {
+        let dir = scratch("link");
+        let outside = scratch("link-outside");
+        std::fs::write(outside.join("secret.txt"), "x").unwrap();
+        std::os::unix::fs::symlink(outside.join("secret.txt"), dir.join("comments.txt")).unwrap();
+        assert_eq!(
+            file_in(&dir, "comments.txt").unwrap_err().kind(),
+            ErrorKind::InvalidInput
+        );
+        let _ = std::fs::remove_dir_all(&dir);
+        let _ = std::fs::remove_dir_all(&outside);
     }
 
     #[test]
     fn a_damaged_file_is_never_overwritten() {
         let dir = scratch("damaged");
-        let p = dir.join("c.json");
-        std::fs::write(&p, b"{\"276\": [half a file").unwrap();
+        let p = file_in(&dir, "c.json").unwrap();
+        std::fs::write(p.as_path(), b"{\"276\": [half a file").unwrap();
         let r = update_json(&p, |m| {
             m.insert("1".into(), json!([]));
             Some(())
         });
         assert!(matches!(r, Err(StoreError::Damaged(_))));
-        assert_eq!(std::fs::read(&p).unwrap(), b"{\"276\": [half a file");
+        assert_eq!(
+            std::fs::read(p.as_path()).unwrap(),
+            b"{\"276\": [half a file"
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn update_writes_four_space_json_and_leaves_no_temp_file() {
         let dir = scratch("update");
-        let p = dir.join("c.json");
+        let p = file_in(&dir, "c.json").unwrap();
         update_json(&p, |m| {
             m.insert("k".into(), json!([{"a": 1}]));
             Some(())
         })
         .unwrap();
-        let s = std::fs::read_to_string(&p).unwrap();
+        let s = std::fs::read_to_string(p.as_path()).unwrap();
         assert!(s.contains("\n    \"k\": ["), "{s}");
         assert!(!dir.join("c.json.tmp").exists());
         // "nothing to save" leaves the file exactly as it was
-        let before = std::fs::read(&p).unwrap();
+        let before = std::fs::read(p.as_path()).unwrap();
         assert_eq!(update_json(&p, |_| None::<()>).unwrap(), None);
-        assert_eq!(std::fs::read(&p).unwrap(), before);
+        assert_eq!(std::fs::read(p.as_path()).unwrap(), before);
         let _ = std::fs::remove_dir_all(&dir);
     }
 

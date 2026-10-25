@@ -181,8 +181,8 @@ fn bind_json<'q>(
 /// data folder instead, which only this program writes and which is never
 /// served to browsers. Same contents, same behaviour.
 /// Takes the app state. Gives back the path of the cache file in the data folder.
-fn barcode_cache_path(state: &AppState) -> std::path::PathBuf {
-    state.data.join("barcode_cache.json")
+fn barcode_cache_path(state: &AppState) -> std::io::Result<crate::store::SafePath> {
+    crate::store::file_in(&state.data, "barcode_cache.json")
 }
 
 /// Make the cache key for a plant: name and company, lower-case, letters and
@@ -237,9 +237,11 @@ async fn lookup_barcode(state: &AppState, data: &Value) -> Response {
 
     // 2. Load the cache file, or start a new empty cache if it is missing (or damaged: it
     // is only a cache, so starting over is fine).
-    let path = barcode_cache_path(state);
+    // (A data folder that cannot be used means no cache: the lookup still works.)
+    let path = barcode_cache_path(state).ok();
     let p = path.clone();
-    let loaded = crate::guard::off_thread(move || crate::store::read_json(&p).ok()).await;
+    let loaded =
+        crate::guard::off_thread(move || p.and_then(|p| crate::store::read_json(&p).ok())).await;
     let mut cache: Value = loaded
         .map(Value::Object)
         .unwrap_or_else(|| json!({ "lookups": {} }));
@@ -253,6 +255,7 @@ async fn lookup_barcode(state: &AppState, data: &Value) -> Response {
         );
         async move {
             crate::guard::off_thread(move || {
+                let Some(p) = p else { return };
                 if let Err(e) = crate::store::write_atomic(&p, &body) {
                     tracing::error!("barcode cache not saved: {e}");
                 }

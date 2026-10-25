@@ -143,11 +143,16 @@ fn guestbook_lines(text: &str) -> Vec<&str> {
     text.lines().filter(|l| !l.trim().is_empty()).collect()
 }
 
+/// The guestbook file (checked to be a plain file in the data folder).
+fn guestbook_file(state: &AppState) -> std::io::Result<store::SafePath> {
+    store::file_in(&state.data, "comments.txt")
+}
+
 /// The newest 20 guestbook lines, for the page.
 async fn read_comments(state: &AppState) -> Vec<String> {
-    let path = state.data.join("comments.txt");
+    let path = guestbook_file(state);
     off_thread(move || {
-        let text = store::read_text(&path).unwrap_or_default();
+        let text = path.and_then(|p| store::read_text(&p)).unwrap_or_default();
         guestbook_lines(&text)
             .into_iter()
             .take(20)
@@ -159,7 +164,7 @@ async fn read_comments(state: &AppState) -> Vec<String> {
 
 /// Rewrite the guestbook as `lines` (newest first), keeping the newest `GUESTBOOK_KEEP`.
 /// The caller holds `comments_lock`.
-fn write_guestbook(path: &std::path::Path, lines: &[&str]) {
+fn write_guestbook(path: &store::SafePath, lines: &[&str]) {
     let lines = &lines[..lines.len().min(GUESTBOOK_KEEP)];
     let out = if lines.is_empty() {
         String::new()
@@ -167,7 +172,10 @@ fn write_guestbook(path: &std::path::Path, lines: &[&str]) {
         format!("{}\n", lines.join("\n"))
     };
     if let Err(e) = store::write_atomic(path, out.as_bytes()) {
-        tracing::error!("could not save the guestbook {}: {e}", path.display());
+        tracing::error!(
+            "could not save the guestbook {}: {e}",
+            path.as_path().display()
+        );
     }
 }
 
@@ -197,15 +205,24 @@ async fn add_comment(state: &AppState, name: &str, message: &str) {
 
     // One writer at a time, so two visitors posting at once cannot lose a line.
     let _one_at_a_time = state.comments_lock.lock().await;
-    let path = state.data.join("comments.txt");
-    off_thread(move || match store::read_text(&path) {
-        Ok(old) => {
-            let mut lines = guestbook_lines(&old);
-            lines.insert(0, &entry);
-            write_guestbook(&path, &lines);
+    let path = guestbook_file(state);
+    off_thread(move || {
+        let path = match path {
+            Ok(p) => p,
+            Err(e) => return tracing::error!("guestbook not saved: {e}"),
+        };
+        match store::read_text(&path) {
+            Ok(old) => {
+                let mut lines = guestbook_lines(&old);
+                lines.insert(0, &entry);
+                write_guestbook(&path, &lines);
+            }
+            // Unreadable (not just missing): leave it alone rather than replace it.
+            Err(e) => tracing::error!(
+                "guestbook not saved, {} is unreadable: {e}",
+                path.as_path().display()
+            ),
         }
-        // Unreadable (not just missing): leave it alone rather than replace it.
-        Err(e) => tracing::error!("guestbook not saved, {} is unreadable: {e}", path.display()),
     })
     .await
 }
@@ -213,8 +230,9 @@ async fn add_comment(state: &AppState, name: &str, message: &str) {
 /// The admin's delete button: remove line `index` (0 = the newest).
 async fn delete_comment(state: &AppState, index: i64) {
     let _one_at_a_time = state.comments_lock.lock().await;
-    let path = state.data.join("comments.txt");
+    let path = guestbook_file(state);
     off_thread(move || {
+        let Ok(path) = path else { return };
         let Ok(text) = store::read_text(&path) else {
             return;
         };

@@ -113,9 +113,9 @@ app_api.php?action=list&search=rose
 app_api.php?action=list&search=R
 app_api.php?action=list&search=hosta&bed=Korea
 app_api.php?action=list&sort=bed
-app_api.php?action=list&user=Jason
+app_api.php?action=list&user=Mina
 app_api.php?action=detail&id=1
-app_api.php?action=detail&id=276&user=Jason
+app_api.php?action=detail&id=276&user=Mina
 app_api.php?action=detail&id=99999999
 app_api.php?action=detail
 app_api.php?action=autocomplete&q=ro
