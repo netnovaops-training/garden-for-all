@@ -57,6 +57,7 @@ macro_rules! sql_text {
 // `mod name;` tells Rust that a file with that name (name.rs, or a folder name/)
 // is part of this program. Without a `mod` line the file is ignored.
 mod accounts;
+mod address;
 mod brain;
 mod formdata;
 mod guard;
@@ -142,6 +143,8 @@ pub struct AppState {
     pub ai_recompute: guard::RateLimit,
     /// AI questions on the data page: 20 per visitor address per 10 minutes.
     pub ai_per_visitor: guard::RateLimit,
+    /// The garden's address (domain and optional folder) and signing key (address.rs).
+    pub address: address::SiteAddress,
 }
 
 /// Methods that belong to `AppState`. `&self` means a method only reads the value.
@@ -428,6 +431,12 @@ async fn run() -> anyhow::Result<()> {
         gallery: Default::default(),
         ai_recompute: guard::RateLimit::new(1, std::time::Duration::from_secs(600)),
         ai_per_visitor: guard::RateLimit::new(20, std::time::Duration::from_secs(600)),
+        // The wizard writes both: the address, and a signing key so the phone app can trust
+        // an address change (address.rs). Without a key, the app's address is not followed.
+        address: address::SiteAddress::new(
+            &common::env_or("JUNSGARDEN_PUBLIC_URL", "https://junsgarden.zapto.org"),
+            &common::env_or("JUNSGARDEN_SIGNING_KEY", ""),
+        ),
     });
 
     // The router for static files (CSS, scripts, photos). `ServeDir` hands out files from
@@ -500,6 +509,8 @@ async fn run() -> anyhow::Result<()> {
         )
         // The guides, for people logged in (help.rs): /help, /help/images/...
         .merge(help::routes())
+        // Labels, short QR paths, and the app's address and setup page (address.rs).
+        .merge(address::routes())
         // Layers wrap every route above them; the LAST one added is the OUTERMOST. So, in
         // order: refuse a post another website sent, work out who the visitor is (session.rs),
         // run the page; and every answer, a refusal included, gets the security headers.
@@ -514,8 +525,11 @@ async fn run() -> anyhow::Result<()> {
         // The cards endpoint never loaded connection.php in the PHP, so it has
         // its own cache rule and none of the page headers: added AFTER the layer.
         .route("/sections/cards/index.php", get(index::cards))
-        .with_state(state)
-        .fallback_service(assets);
+        .with_state(state.clone())
+        .fallback_service(assets)
+        // Outermost, around pages AND files: a garden living in a folder (example.com/garden)
+        // gets that folder added to its own links (address.rs). No folder: nothing changes.
+        .layer(middleware::from_fn_with_state(state, address::under_prefix));
 
     // Start listening on the port (APP_PORT, default 8021) and handle requests.
     common::serve(app, common::env_u16("APP_PORT", 8021)).await

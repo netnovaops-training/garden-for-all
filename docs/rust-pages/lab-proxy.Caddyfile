@@ -1,0 +1,22 @@
+# The lab's reverse proxy for the address tests (lab.sh address). Two sites:
+#   :18103  the garden in a folder, /garden (as Caddy would serve example.com/garden)
+#   :18104  an OLD address that forwards every path to the new one (as the wizard sets up
+#           after a domain change), so labels printed for the old address keep working.
+{
+	auto_https off
+	admin off
+}
+
+:18103 {
+	redir /garden /garden/ 308
+	handle_path /garden/* {
+		reverse_proxy gp-sub:8030 {
+			header_up X-Forwarded-Proto http
+		}
+	}
+	respond 404
+}
+
+:18104 {
+	redir http://127.0.0.1:18103/garden{uri} 308
+}

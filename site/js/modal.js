@@ -774,7 +774,7 @@ export function openModal(p) {
 
                     <div id="qr-block-${p.id}" style="display:flex; flex-direction:column; align-items:center; gap:6px;">
                         <span style="font-size:0.75rem; font-weight:700; color:#666; text-transform:uppercase; letter-spacing:0.6px;">QR Code</span>
-                        <img src="plant_actions.php?action=qr_code&plant_id=${p.id}"
+                        <img src="qr/plant/${p.id}.png"
                              alt="QR Code"
                              style="max-width:140px; height:auto; border-radius:8px; border:1px solid rgba(0,0,0,0.08); background:#fff; padding:6px;"
                              onerror="document.getElementById('qr-block-${p.id}').style.display='none'; window._checkScanSection(${p.id});">

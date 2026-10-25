@@ -72,14 +72,28 @@ A lab on any Linux machine with Docker (`GARDEN_LAB=user@host sh docs/rust-pages
 
 `same*` = identical except the listed fixes.
 
+## Open TODO items for Jun's project (triage 2026-10-25)
+| Item | Verdict |
+|---|---|
+| Plant admin (Streamlit) to Rust; its basic-auth | Done (Rust, behind the garden login, since 2026-10-07) |
+| Retire `garden-users.env` | Done: nothing reads it (a test only proves it is never served) |
+| Credentials in tracked files / private history | Repo scans clean (gitleaks, trufflehog); old private copies are being archived |
+| Keep public pages public | True (tested: catalogue, gallery, blog need no login) |
+| Tag photo / barcode / identify from the app | Done in app 3.1+ camera tools (`/app/garden/{action}`) |
+| Household chat buttons, Hermes vocabulary, moderation chat | Not Jun's garden (household stack); removed from the app |
+| Soil / attracts / fruit_color clean-up mappings | Needs the author's review of the proposed mappings (data change) |
+| Jun accepts invites; locked old account removal | Needs Jun / the author (live accounts) |
+| Rotate credentials that leaked into a transcript | Needs the author (passwords) |
+
 ## Remaining, in order
 1. Screenshots on sample data: every page 0.000% (gallery and random parts pinned).
 2. Review and lean-up: data.rs/widgets.rs, app_api.rs, garden_camera.rs, orchestrator/, php.rs
    (-> plain Rust helpers), brain.rs, images.rs; fmt + clippy clean; cargo audit.
 3. Dependencies to latest stable (Cargo, Python in beds/, Docker images by digest, Actions by SHA).
-4. Plant admin vs the original Streamlit app; list the features that were hard to match.
-5. Android app: dead code from the household version removed on a local branch; build + tests.
-6. Open TODO items for Jun's project (broken first).
+4. Done: plant admin = the 2026-10-07 Rust port (0 missing lines vs the original Streamlit) =
+   this branch (all 14 tabs identical side by side). Hard-to-match features: DEVIATIONS.md S-1..S-14.
+5. Done: the current app is `android-app/` (3.2, code 18); it builds, unit tests and lint pass.
+6. Done: TODO triage above.
 7. The garden's own address, end to end (each option in all THREE places: the QR/label script,
    the GUI wizard and the bash wizard `garden.sh` menu + subcommands; every screen, prompt and
    guide in English AND Korean):

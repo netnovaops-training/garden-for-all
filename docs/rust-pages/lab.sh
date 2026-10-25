@@ -113,6 +113,32 @@ shots)
                python3 shots.py pages-visual.txt shots; chown -R "$OWNER" shots' > shots.log 2>&1
     echo "shots: $(grep -ac ' 0\.000%' shots.log) identical, $(grep -aE '^ *[0-9]+ +[0-9]+ ' shots.log | grep -avc ' 0\.000%') not"
     ;;
+address)
+    # The garden's own address, end to end (addr_test.py): the new code living in a folder
+    # (/garden) behind Caddy on 127.0.0.1:18103, an old address on :18104 that forwards to it,
+    # a fresh signing key, and a bed that gets renamed. Uses cand_db and the cand files.
+    docker rm -f gp-sub gp-proxy >/dev/null 2>&1 || true
+    sql cand_db -e "INSERT IGNORE INTO garden_bed (name, shape) VALUES ('Lab Bed', '')"
+    bed=$(sql cand_db -N -e "SELECT id FROM garden_bed WHERE name IN ('Lab Bed','Lab Bed Renamed') LIMIT 1")
+    sql cand_db -e "UPDATE garden_bed SET name='Lab Bed Renamed' WHERE id=$bed"
+    docker run -d --name gp-sub --network $NET \
+        -e JUNSGARDEN_DATABASE_URL="mysql://root:$(dbpw)@$DB:3306/cand_db" -e APP_PORT=8030 -e TZ=America/New_York \
+        -e JUNSGARDEN_WWW_DIR=/www -e JUNSGARDEN_DATA_DIR=/data -e JUNSGARDEN_AI_CACHE_DIR=/ai-cache \
+        -e JUNSGARDEN_USERS="$USERS" -e JUNSGARDEN_PUBLIC_URL="http://127.0.0.1:18103/garden" \
+        -e JUNSGARDEN_SIGNING_KEY="$(rnd 32)" \
+        -e JUNSGARDEN_INGEST_URL="http://127.0.0.1:9" -e OLLAMA_URL="http://127.0.0.1:9/api/generate" \
+        -v "$PWD/cand-www:/www" -v "$PWD/cand-data:/data" -v "$PWD/cand-ai-cache:/ai-cache" \
+        -v "$PWD/src-cand/START-HERE:/guides:ro" gardenlab/cand >/dev/null
+    docker create --name gp-proxy -p 127.0.0.1:18103:18103 -p 127.0.0.1:18104:18104 \
+        -v "$PWD/src-cand/docs/rust-pages/lab-proxy.Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine >/dev/null
+    docker network connect $NET gp-proxy && docker start gp-proxy >/dev/null
+    i=0; until curl -fs http://127.0.0.1:18103/garden/healthz >/dev/null 2>&1; do
+        i=$((i+1)); [ $i -lt 40 ] || { docker logs --tail 15 gp-sub; docker logs --tail 15 gp-proxy; exit 1; }; sleep 1; done
+    docker run --rm --network host -v "$PWD/src-cand/docs/rust-pages:/t:ro" python:3.14-slim \
+        sh -c "pip install -q cryptography >/dev/null 2>&1; python /t/addr_test.py $bed 'Lab Bed' 'Lab Bed Renamed'" > address.log 2>&1
+    grep -E "^(FAIL|[0-9]+/[0-9]+ passed)" address.log
+    docker rm -f gp-sub gp-proxy >/dev/null 2>&1 || true
+    ;;
 check)
     side=${2:-cand}
     docker run --rm -v "$PWD/src-$side/rust:/build" -w /build \

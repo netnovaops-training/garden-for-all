@@ -69,6 +69,7 @@ fn state(guides: PathBuf) -> Arc<AppState> {
         gallery: Default::default(),
         ai_recompute: crate::guard::RateLimit::new(1, std::time::Duration::from_secs(600)),
         ai_per_visitor: crate::guard::RateLimit::new(20, std::time::Duration::from_secs(600)),
+        address: crate::address::SiteAddress::new("http://localhost", ""),
     })
 }
 
