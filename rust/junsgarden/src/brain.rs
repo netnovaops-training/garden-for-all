@@ -252,7 +252,7 @@ pub async fn insights(state: &AppState, context: &[(String, Vec<String>)], allow
     // The cache file name is an MD5 hash of the context, so the same context finds the same file.
     let mut hasher = md5::Context::new();
     hasher.consume(serde_json::to_string(context).unwrap_or_default());
-    let key: PathBuf = state.ai_cache_dir.join(format!("insights_{:x}.json", hasher.compute()));
+    let key: PathBuf = state.ai_cache_dir.join(format!("insights_{:x}.json", hasher.finalize()));
 
     // The cached reading, if it exists and is a JSON object.
     let cached = read_json_file(&key).filter(Value::is_object);
