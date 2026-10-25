@@ -565,7 +565,7 @@ async fn future_promote(
         let cols = pairs.iter().map(|(k, _)| format!("`{k}`")).collect::<Vec<_>>().join(", ");
         let ph = vec!["?"; pairs.len()].join(", ");
         let ins_sql = format!("INSERT INTO `data_source` ({cols}) VALUES ({ph})");
-        let mut ins = sqlx::query(&ins_sql);
+        let mut ins = sqlx::query(sqlx::AssertSqlSafe(ins_sql.as_str()));
         for (_, v) in &pairs {
             ins = match v {
                 Value::Null => ins.bind(Option::<String>::None),
@@ -609,7 +609,7 @@ async fn future_promote(
         }
         if !set.is_empty() {
             let up_sql = format!("UPDATE `data_source` SET {} WHERE id=?", set.join(", "));
-            let mut up = sqlx::query(&up_sql);
+            let mut up = sqlx::query(sqlx::AssertSqlSafe(up_sql.as_str()));
             for p in &params {
                 up = up.bind(p);
             }
@@ -664,7 +664,7 @@ async fn barcode_lookup(state: &AppState, f: &FormData, q: &HashMap<String, Stri
         } else {
             "data_source"
         };
-        let name = sqlx::query_scalar::<_, Option<String>>(&format!(
+        let name = sqlx::query_scalar::<_, Option<String>>(sql_text!(
             "SELECT plant_name FROM `{tbl}` WHERE id = ? LIMIT 1"
         ))
         .bind(pid)
@@ -883,7 +883,7 @@ async fn set_barcode(
         return ok(json!({ "ok": false, "error": "Missing id" }));
     }
     let barcode = pick(f, q, "barcode").trim().to_string();
-    match sqlx::query(&format!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
+    match sqlx::query(sql_text!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
         .bind(if barcode.is_empty() {
             None
         } else {
@@ -914,7 +914,7 @@ async fn export(state: &AppState) -> Response {
                 .map(|c| format!("`{c}`"))
                 .collect::<Vec<_>>()
                 .join(", ");
-            sqlx::query(&format!("SELECT {list} FROM `{t}`"))
+            sqlx::query(sql_text!("SELECT {list} FROM `{t}`"))
                 .fetch_all(&state.db)
                 .await
                 .unwrap_or_default()
@@ -1067,7 +1067,7 @@ async fn update_plant(
         return ok(json!({ "ok": false, "error": "Nothing to update" }));
     }
     let up_sql = format!("UPDATE `data_source` SET {} WHERE id = ?", set.join(", "));
-    let mut up = sqlx::query(&up_sql);
+    let mut up = sqlx::query(sqlx::AssertSqlSafe(up_sql.as_str()));
     for p in &params {
         up = up.bind(p.clone());
     }
@@ -1123,7 +1123,7 @@ async fn like_or_favorite(
     if pid <= 0 {
         return ok(json!({ "ok": false, "error": "Missing user or plant." }));
     }
-    let exists = sqlx::query(&format!(
+    let exists = sqlx::query(sql_text!(
         "SELECT id FROM `{table}` WHERE username = ? AND plant_id = ?"
     ))
     .bind(&user)
@@ -1135,7 +1135,7 @@ async fn like_or_favorite(
     .is_some();
     // Toggle the mark, then count how many people now have it.
     let active = if exists {
-        let _ = sqlx::query(&format!(
+        let _ = sqlx::query(sql_text!(
             "DELETE FROM `{table}` WHERE username = ? AND plant_id = ?"
         ))
         .bind(&user)
@@ -1144,7 +1144,7 @@ async fn like_or_favorite(
         .await;
         false
     } else {
-        let _ = sqlx::query(&format!(
+        let _ = sqlx::query(sql_text!(
             "INSERT INTO `{table}` (username, plant_id) VALUES (?, ?)"
         ))
         .bind(&user)
@@ -1153,7 +1153,7 @@ async fn like_or_favorite(
         .await;
         true
     };
-    let count = sqlx::query_scalar::<_, i64>(&format!(
+    let count = sqlx::query_scalar::<_, i64>(sql_text!(
         "SELECT COUNT(*) FROM `{table}` WHERE plant_id = ?"
     ))
     .bind(pid)
@@ -1342,7 +1342,7 @@ async fn list(state: &AppState, q: &HashMap<String, String>) -> Response {
                 bloom_color, plant_type, native_status, zones, average_cost, qty
          FROM `data_source` WHERE {where_} ORDER BY {order_by} LIMIT {fetch} OFFSET {offset}"
     );
-    let mut qy = sqlx::query(&sql);
+    let mut qy = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
     for p in &params {
         qy = qy.bind(p);
     }
@@ -1434,7 +1434,7 @@ async fn list(state: &AppState, q: &HashMap<String, String>) -> Response {
                     native_status, zones, average_cost, qty
              FROM `future_plants` WHERE {fwhere} ORDER BY plant_name LIMIT 50"
         );
-        let mut fq = sqlx::query(&fq_sql);
+        let mut fq = sqlx::query(sqlx::AssertSqlSafe(fq_sql.as_str()));
         for p in &fparams {
             fq = fq.bind(p);
         }

@@ -822,7 +822,7 @@ pub async fn action(
                         .collect::<Vec<_>>()
                         .join(", ")
                 );
-                let mut q = sqlx::query(&sql);
+                let mut q = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
                 // Bind each value in order, using the type that matches the JSON value.
                 for (_, v) in &sets {
                     q = match v {

@@ -399,7 +399,7 @@ pub async fn commit(
             .collect::<Vec<_>>()
             .join(", ")
     );
-    let mut q = sqlx::query(&sql);
+    let mut q = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
     // Bind each value in order, using the type that matches the JSON value.
     for (_, v) in &clean {
         q = match v {

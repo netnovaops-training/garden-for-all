@@ -1163,7 +1163,7 @@ pub async fn save(state: &crate::AppState, f: &crate::formdata::FormData) -> Vec
     );
     // Bind each value in order. sqlx sends values apart from the SQL text,
     // so a value can never change the SQL.
-    let mut q = sqlx::query(&sql);
+    let mut q = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
     for (_, v) in &sets {
         q = q.bind(v.clone());
     }

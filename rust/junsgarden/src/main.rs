@@ -45,6 +45,15 @@
 //! it is the list of file types the site will hand out from the site folder;
 //! anything else is a 404, which keeps the code and backups private.
 
+/// SQL text put together while the program runs, for the few queries whose table or column
+/// NAME varies (`format!("SELECT ... FROM `{table}`")`). sqlx refuses such text unless it is
+/// marked as checked, which is what `AssertSqlSafe` says. The rule everywhere it is used: only
+/// names from this program's own fixed lists (or the database's own column list) go into the
+/// text; every value a visitor typed is a `?` filled by `.bind(...)`.
+macro_rules! sql_text {
+    ($($fmt:tt)*) => { sqlx::AssertSqlSafe(format!($($fmt)*)) };
+}
+
 // `mod name;` tells Rust that a file with that name (name.rs, or a folder name/)
 // is part of this program. Without a `mod` line the file is ignored.
 mod accounts;

@@ -385,7 +385,7 @@ pub async fn promote(state: &AppState, fp_id: i64, force: bool) -> Result<i64, S
     // back to the wishlist id. The wishlist row stays.
     let sql = format!("INSERT INTO data_source ({list}, flower_bed, garden_beds, future_plant_id) SELECT {list}, 'To Be Sorted', 'To Be Sorted', id FROM future_plants WHERE id = ?");
     // Run it. `?` returns an error message on failure.
-    let r = sqlx::query(&sql)
+    let r = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
         .bind(fp_id)
         .execute(&state.db)
         .await
@@ -448,7 +448,7 @@ pub async fn action(state: &AppState, act: &str, f: &crate::formdata::FormData) 
                     .join(", ")
             );
             // Bind each value in turn.
-            let mut q = sqlx::query(&sql);
+            let mut q = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
             for (_, v) in &sets {
                 q = q.bind(v.clone());
             }
@@ -811,7 +811,7 @@ pub async fn barcode_action(
         // allows only two values.
         "bc_single" => {
             let id = php_int(f.str("pid"));
-            let row: Option<(Option<String>, Option<String>)> = sqlx::query_as(&format!(
+            let row: Option<(Option<String>, Option<String>)> = sqlx::query_as(sql_text!(
                 "SELECT plant_name, company FROM `{table}` WHERE id = ?"
             ))
             .bind(id)
@@ -828,7 +828,7 @@ pub async fn barcode_action(
             // warning.
             match lookup(state, &mut cache, &name, company.as_deref().unwrap_or("")).await {
                 Upc::Found { upc, title, .. } => {
-                    let _ = sqlx::query(&format!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
+                    let _ = sqlx::query(sql_text!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
                         .bind(&upc)
                         .bind(id)
                         .execute(&state.db)
@@ -848,7 +848,7 @@ pub async fn barcode_action(
         "bc_batch" => {
             // Keep the limit between 5 and 90.
             let limit = php_int(f.str("limit")).clamp(5, 90);
-            let plants: Vec<(i64, Option<String>, Option<String>)> = sqlx::query_as(&format!("SELECT id, plant_name, company FROM `{table}` WHERE (barcode IS NULL OR barcode = '') ORDER BY plant_name LIMIT ?"))
+            let plants: Vec<(i64, Option<String>, Option<String>)> = sqlx::query_as(sql_text!("SELECT id, plant_name, company FROM `{table}` WHERE (barcode IS NULL OR barcode = '') ORDER BY plant_name LIMIT ?"))
                 .bind(limit).fetch_all(&state.db).await.unwrap_or_default();
             // Counters for the final message.
             let (mut found, mut nf, mut errors) = (0, 0, 0);
@@ -865,7 +865,7 @@ pub async fn barcode_action(
                     }
                     Upc::Found { upc, title, .. } => {
                         let _ =
-                            sqlx::query(&format!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
+                            sqlx::query(sql_text!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
                                 .bind(&upc)
                                 .bind(id)
                                 .execute(&state.db)

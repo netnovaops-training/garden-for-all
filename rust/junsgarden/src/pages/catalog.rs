@@ -102,7 +102,8 @@ fn redirect_catalog() -> Response {
 /// caller must write `.await` to run it and get its result. `Result<A, B>` means "either a good
 /// answer A or an error B". `&` means "borrow this, do not take it".
 async fn rows(state: &AppState, sql: &str, binds: &[String]) -> Result<Vec<MySqlRow>, sqlx::Error> {
-    let mut q = sqlx::query(sql);
+    // `sql` is one of this file's own query texts (see the callers); values are bound below.
+    let mut q = sqlx::query(sqlx::AssertSqlSafe(sql));
     for b in binds {
         q = q.bind(b);
     }
@@ -120,7 +121,7 @@ async fn rows(state: &AppState, sql: &str, binds: &[String]) -> Result<Vec<MySql
 /// caller". `.map(|row| ...)` runs a small unnamed function (a closure) on every row. Reading a
 /// column by position (0, 1) avoids sqlx's strict type checks.
 async fn user_map(state: &AppState, table: &str) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let r = sqlx::query(&format!("SELECT plant_id, username FROM {table}"))
+    let r = sqlx::query(sql_text!("SELECT plant_id, username FROM {table}"))
         .fetch_all(&state.db)
         .await?;
     Ok(r.iter()
@@ -240,7 +241,7 @@ async fn ajax_load(state: &AppState, q: &HashMap<String, String>, me: &str) -> R
         } else {
             "data_source"
         };
-        let found = sqlx::query(&format!("SELECT * FROM `{table}` WHERE id = ?"))
+        let found = sqlx::query(sql_text!("SELECT * FROM `{table}` WHERE id = ?"))
             .bind(pid)
             .fetch_optional(&state.db)
             .await;
@@ -534,7 +535,10 @@ async fn letter_counts(state: &AppState) -> Response {
         "SELECT {} FROM `data_source` WHERE died = 0 AND flower_bed NOT LIKE '%Dead%'",
         sums.join(", ")
     );
-    let row = match sqlx::query(&sql).fetch_one(&state.db).await {
+    let row = match sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
+        .fetch_one(&state.db)
+        .await
+    {
         Ok(r) => r,
         Err(e) => return db_error(e),
     };
@@ -577,7 +581,7 @@ async fn qr_tags(state: &AppState) -> Response {
 /// take it away if it is already there.
 async fn toggle(state: &AppState, table: &str, plant_id: i64, me: &str) -> Response {
     // 1. Does this person already have the mark on this plant?
-    let exists = sqlx::query(&format!(
+    let exists = sqlx::query(sql_text!(
         "SELECT id FROM {table} WHERE username = ? AND plant_id = ?"
     ))
     .bind(me)
@@ -587,7 +591,7 @@ async fn toggle(state: &AppState, table: &str, plant_id: i64, me: &str) -> Respo
     // 2. Yes: remove it. No: add it. A database error is logged and gives a 500 answer.
     let status = match exists {
         Ok(Some(_)) => {
-            let _ = sqlx::query(&format!(
+            let _ = sqlx::query(sql_text!(
                 "DELETE FROM {table} WHERE username = ? AND plant_id = ?"
             ))
             .bind(me)
@@ -597,7 +601,7 @@ async fn toggle(state: &AppState, table: &str, plant_id: i64, me: &str) -> Respo
             "removed"
         }
         Ok(None) => {
-            let _ = sqlx::query(&format!(
+            let _ = sqlx::query(sql_text!(
                 "INSERT INTO {table} (username, plant_id) VALUES (?, ?)"
             ))
             .bind(me)
@@ -823,7 +827,7 @@ async fn bulk_update_bed(state: &AppState, f: &FormData) -> Response {
         let ph = vec!["?"; ids.len()].join(",");
         let bulk_sql =
             format!("UPDATE `data_source` SET flower_bed = ? {qty_update} WHERE id IN ({ph})");
-        let mut q = sqlx::query(&bulk_sql).bind(&new_bed);
+        let mut q = sqlx::query(sqlx::AssertSqlSafe(bulk_sql.as_str())).bind(&new_bed);
         for id in &ids {
             q = q.bind(id);
         }
@@ -967,7 +971,7 @@ async fn save_plant(state: &AppState, visitor: &Visitor, f: &FormData) -> Respon
                     let cols = ins.iter().map(|(c, _)| format!("`{c}`")).collect::<Vec<_>>().join(",");
                     let ph = vec!["?"; ins.len()].join(",");
                     let ins_sql = format!("INSERT INTO `data_source` ({cols}) VALUES ({ph})");
-                    let mut q = sqlx::query(&ins_sql);
+                    let mut q = sqlx::query(sqlx::AssertSqlSafe(ins_sql.as_str()));
                     for (_, v) in &ins {
                         q = bind_value(q, v);
                     }
@@ -995,7 +999,7 @@ async fn save_plant(state: &AppState, visitor: &Visitor, f: &FormData) -> Respon
                     sql.push_str(", year_added=?");
                 }
                 sql.push_str(" WHERE id = ?");
-                let mut q = sqlx::query(&sql).bind(&p_name);
+                let mut q = sqlx::query(sqlx::AssertSqlSafe(sql.as_str())).bind(&p_name);
                 if let Some(n) = new_qty {
                     q = q.bind(n);
                 }
@@ -1045,7 +1049,7 @@ async fn save_plant(state: &AppState, visitor: &Visitor, f: &FormData) -> Respon
                 }
             }
             sql.push_str(" WHERE id=?");
-            let mut q = sqlx::query(&sql).bind(&bed_value).bind(&bed_value).bind(&p_name);
+            let mut q = sqlx::query(sqlx::AssertSqlSafe(sql.as_str())).bind(&bed_value).bind(&bed_value).bind(&p_name);
             for b in &extra_binds {
                 q = q.bind(b);
             }

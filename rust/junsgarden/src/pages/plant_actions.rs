@@ -88,7 +88,7 @@ enum BindValue {
 async fn blob(state: &AppState, sql: &str, bind: BindValue) -> Option<Vec<u8>> {
     // 1. Start the query. 2. `match` on which kind of value we got and bind it to
     // the `?` (binding keeps typed text from changing the meaning of the SQL).
-    let q = sqlx::query(sql);
+    let q = sqlx::query(sqlx::AssertSqlSafe(sql));
     let q = match bind {
         BindValue::Id(i) => q.bind(i),
         BindValue::Text(t) => q.bind(t),
@@ -271,7 +271,7 @@ async fn lookup_barcode(state: &AppState, data: &Value) -> Response {
             .filter(|u| !u.is_empty())
         {
             if pid != 0 {
-                let _ = sqlx::query(&format!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
+                let _ = sqlx::query(sql_text!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
                     .bind(upc)
                     .bind(pid)
                     .execute(&state.db)
@@ -361,7 +361,7 @@ async fn lookup_barcode(state: &AppState, data: &Value) -> Response {
         cache["lookups"][&key] = json!({ "upc": upc, "title": title, "looked_up": now });
         save_cache(&cache).await;
         if pid != 0 {
-            let _ = sqlx::query(&format!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
+            let _ = sqlx::query(sql_text!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
                 .bind(&upc)
                 .bind(pid)
                 .execute(&state.db)
@@ -701,7 +701,7 @@ pub async fn plant_actions(
             .collect::<Vec<_>>()
             .join(", ");
         let up_sql = format!("UPDATE `future_plants` SET {clause} WHERE id = ?");
-        let mut qy = sqlx::query(&up_sql);
+        let mut qy = sqlx::query(sqlx::AssertSqlSafe(up_sql.as_str()));
         for (_, v) in &sets {
             qy = bind_json(qy, v);
         }
@@ -747,7 +747,7 @@ pub async fn plant_actions(
             .join(", ");
         let ph = vec!["?"; pairs.len()].join(", ");
         let ins_sql = format!("INSERT INTO `data_source` ({cols}) VALUES ({ph})");
-        let mut qy = sqlx::query(&ins_sql);
+        let mut qy = sqlx::query(sqlx::AssertSqlSafe(ins_sql.as_str()));
         for (_, v) in &pairs {
             qy = bind_json(qy, v);
         }

@@ -165,7 +165,11 @@ impl Req {
 pub async fn rows(state: &AppState, sql: &str) -> Vec<Map<String, Value>> {
     // Send the query and wait (`.await`) for all rows. The result is either `Ok(rows)` or
     // `Err(error)`; `match` handles both.
-    match sqlx::query(sql).fetch_all(&state.db).await {
+    // Callers pass this program's own query texts; anything typed is bound, never pasted in.
+    match sqlx::query(sqlx::AssertSqlSafe(sql))
+        .fetch_all(&state.db)
+        .await
+    {
         // Turn each database row into JSON; keep it only if it came out as a JSON object
         // (`filter_map` drops the others). `collect()` gathers what is left into a Vec.
         Ok(rs) => rs

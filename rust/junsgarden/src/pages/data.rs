@@ -99,7 +99,11 @@ pub async fn weather_available(state: &AppState) -> bool {
 /// a database error it logs the first 200 characters of the SQL and gives an empty list, so the
 /// charts show nothing instead of crashing. `Vec` is a growable list; `Map` is a JSON object.
 pub async fn weather_query(state: &AppState, sql: &str) -> Vec<Map<String, Value>> {
-    match sqlx::query(sql).fetch_all(&state.db).await {
+    // Callers pass this program's own fixed weather queries (no visitor text in them).
+    match sqlx::query(sqlx::AssertSqlSafe(sql))
+        .fetch_all(&state.db)
+        .await
+    {
         Ok(rows) => rows
             .iter()
             .filter_map(|r| {
@@ -712,7 +716,7 @@ async fn cross_tab(state: &AppState, q: &HashMap<String, String>, with_ai: bool)
             da.col, da.raw, da.raw
         );
         // Run the query, binding each filter value to its `?`.
-        let mut qy = sqlx::query(&sql);
+        let mut qy = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
         for p in &filter_params {
             qy = qy.bind(p);
         }
@@ -751,7 +755,7 @@ async fn cross_tab(state: &AppState, q: &HashMap<String, String>, with_ai: bool)
     if q.contains_key("get_filter_values") && !dim_filter.is_empty() {
         if let Some(fd) = dim(dim_filter) {
             let sql = format!("SELECT DISTINCT {} AS val FROM data_source WHERE {} IS NOT NULL AND TRIM({}) != '' ORDER BY val", fd.col, fd.raw, fd.raw);
-            let vals: Vec<Value> = sqlx::query(&sql)
+            let vals: Vec<Value> = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .fetch_all(&state.db)
                 .await
                 .unwrap_or_default()
@@ -775,7 +779,7 @@ async fn cross_tab(state: &AppState, q: &HashMap<String, String>, with_ai: bool)
          GROUP BY dim_a, dim_b ORDER BY cnt DESC, dim_a, dim_b",
         da.col, db_.col, da.raw, db_.raw, da.raw, da.raw, db_.raw, db_.raw
     );
-    let mut qy = sqlx::query(&sql);
+    let mut qy = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
     for p in &filter_params {
         qy = qy.bind(p);
     }
