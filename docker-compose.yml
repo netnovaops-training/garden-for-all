@@ -77,6 +77,9 @@ services:
       # the switch in START-HERE/04b-take-over-junsgarden-zapto.md, then
       # https://junsgarden.zapto.org.
       JUNSGARDEN_PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8030}
+      # Signs the address the phone app reads (/app/config.json), so the app follows a
+      # domain change only from this garden. Made by garden.sh; never share it.
+      JUNSGARDEN_SIGNING_KEY: ${SIGNING_KEY:-}
       # Optional: email for "Forgot password" links (see guide 03, part C).
       JUNSGARDEN_SMTP_HOST: ${SMTP_HOST:-}
       JUNSGARDEN_SMTP_PORT: ${SMTP_PORT:-587}

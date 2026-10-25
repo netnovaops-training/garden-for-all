@@ -507,6 +507,12 @@ mod tests {
         let a = SiteAddress::new("https://example.com/garden", SEED);
         let c = a.config(1790000000);
         assert_eq!(c["base"], "https://example.com/garden");
+        // Pinned: the Android app's GardenAddressTest checks this exact signature, so the two
+        // sides can never drift apart on the signed text.
+        assert_eq!(
+            c["sig"],
+            "9932dc7d968058367785afbcff754936a057e9bbd672df8ae39afc7bb1614cac2417e53999c1ce944247ee699ac17be6b85282fc856456b3151ad13f003ba40b"
+        );
         assert_eq!(c["api"], "https://example.com/garden/app_api.php");
         let key =
             ed25519_dalek::VerifyingKey::from_bytes(&hex32(c["key"].as_str().unwrap()).unwrap())

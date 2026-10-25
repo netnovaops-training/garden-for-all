@@ -160,6 +160,16 @@ $red = [Drawing.Color]::DarkRed
 # Windows language setting.
 function Ko([int[]]$codes) { return -join ([char[]]$codes) }
 $KoWord = Ko @(0xD55C, 0xAD6D, 0xC5B4)                    # "Korean", in Korean
+# The Korean for a line, from lang/ko.tsv: the same file (and the same English keys) that
+# garden.sh uses, so both wizards say the same thing. Read as UTF-8; "" when not listed.
+$KoTsv = @{}
+try {
+    foreach ($l in (Get-Content (Join-Path $Root "lang\ko.tsv") -Encoding UTF8)) {
+        $f = $l.Split("`t")
+        if ($f.Count -ge 2 -and $f[0] -and -not $f[0].StartsWith("#")) { $KoTsv[$f[0]] = $f[1] }
+    }
+} catch { $KoTsv = @{} }   # no translations file: English only, as before
+function Both($en) { if ($KoTsv[$en]) { return "$en / $($KoTsv[$en])" } else { return $en } }
 $Tick = [string][char]0x2713; $Now = [string][char]0x25B6  # a tick, and an arrow for "you are here"
 
 # A message box, and a yes / no question (tests replace these two).
@@ -428,6 +438,9 @@ $tbWebName.add_TextChanged({ if ($tbWebName.Text) { $rbNewName.Checked = $true }
     "link. Change it later: menu, More, 17. Later, if you like: more free names from DuckDNS for other things " +
     "(Home Assistant panels, automations), each behind your sign-in page. Guide 04, 'Advanced'.") -Small)
 [void](P-Link $pYou "How to get a web name (guide 04, Part A)" "START-HERE/04-go-public-no-ip-caddy.md")
+# Optional: the garden in a folder of its web name (the same as garden.sh folder, menu More 21).
+$tbFolder = P-Field $pYou (Both "Folder (like /garden; empty = the top of the web name)") 260
+[void](P-Text $pYou (Both "Labels and phones keep working either way: the codes follow the address.") -Small)
 [void](P-Link $pYou "No-IP's free plan" "https://www.noip.com/free")
 
 
@@ -591,6 +604,13 @@ $btnOpen = Row-Button $rDone "Open my garden"; $btnOpen.Margin = Pad 0 0 0 0; $b
 $btnMenu = Row-Button $rDone "Open the menu"; $btnMenu.MinimumSize = New-Object Drawing.Size((Px 180), (Px 48))
 $btnOpen.add_Click({ Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$Menu`" -Action open-website" })
 $btnMenu.add_Click({ Start-Process (Join-Path $Root "Garden-Menu-Windows.cmd") })
+# The phone app and the labels: the same pages as garden.sh app / garden.sh labels.
+$rDone2 = P-Row $pDone
+$btnApp = Row-Button $rDone2 (Both "The phone app"); $btnApp.Margin = Pad 0 0 0 0; $btnApp.MinimumSize = New-Object Drawing.Size((Px 180), (Px 48))
+$btnLabels = Row-Button $rDone2 (Both "Labels: beds and plants"); $btnLabels.MinimumSize = New-Object Drawing.Size((Px 180), (Px 48))
+$btnApp.add_Click({ Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$Menu`" -Action open-app-setup" })
+$btnLabels.add_Click({ Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$Menu`" -Action open-labels" })
+[void](P-Text $pDone (Both "1. On the phone, open this page (or scan its codes from this screen):") -Small)
 $lbLater = P-Text $pDone ""
 
 # ---------- the help for each page: the guide, at that exact question ----------------------
@@ -925,6 +945,8 @@ function Install-Command($secrets) {
     $custom = $rbCustom.Checked
     $a = "-NoProfile -ExecutionPolicy Bypass -File `"$Menu`" -Action install -Wizard -Level $(if ($custom) { 'custom' } else { 'easy' }) -Lang $(Lang-Code)"
     $a += " -Name $($tbName.Text.Trim()) -Email $($tbEmail.Text.Trim()) -WebName $(Web-Name)"
+    $folder = $tbFolder.Text.Trim().TrimEnd('/')
+    if ($folder -cmatch '^/[a-z0-9][a-z0-9_-]*$') { $a += " -Folder $folder" }
     if ($custom) {
         $parts = @(Chosen $PartsNow | ForEach-Object { $_[0] } | Where-Object { $_ -in @("beds", "wiki", "n8n") })
         $a += " -Parts `"$($parts -join ',')`""

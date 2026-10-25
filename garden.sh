@@ -587,6 +587,14 @@ COMPOSE_PROFILES=
 # Where visitors find the site (the front door step fills these in).
 PUBLIC_URL=http://localhost:8030
 PUBLIC_NAME=
+# A folder after the web name, when the garden shares its name (for example /garden).
+PUBLIC_PATH=$(folder_in)
+# Web names the garden had before: they forward to the current address, so printed labels
+# and phones still set up for an old name keep working (comma list; garden.sh webname adds them).
+OLD_NAMES=
+# The garden's signing key: the phone app follows an address change only when it is signed
+# with this. Made once, here; never share it.
+SIGNING_KEY=$(openssl rand -hex 32)
 WIKI_NAME=
 SITE_PORT=8030
 # This laptop's reserved address on your home network (garden.sh network).
@@ -636,7 +644,8 @@ EOF
                     "BACKUP_NAS_HOST=" "NAS_FULL_COPY=" "CADDY_HTTP_PORT=" "CADDY_HTTPS_PORT=" \
                     "LITELLM_MASTER_KEY=sk-$(openssl rand -hex 24)" "LITELLM_BUDGET=" "LITELLM_PORT=4000" \
                     "WIKI_DB_PASSWORD=$(openssl rand -hex 24)" "AUTHELIA_JWT_SECRET=$(openssl rand -hex 32)" \
-                    "AUTHELIA_SESSION_SECRET=$(openssl rand -hex 32)" "AUTHELIA_STORAGE_KEY=$(openssl rand -hex 32)"; do
+                    "AUTHELIA_SESSION_SECRET=$(openssl rand -hex 32)" "AUTHELIA_STORAGE_KEY=$(openssl rand -hex 32)" \
+                    "PUBLIC_PATH=" "OLD_NAMES=" "SIGNING_KEY=$(openssl rand -hex 32)"; do
             key=${pair%%=*}
             grep -q "^$key=" .env || { echo "$pair" >> .env; note "added $key"; }
         done
@@ -1883,12 +1892,39 @@ $wiki {
 	}
 }"
     fi
-    awk -v n="$name" -v e="$email" -v lc="$local_certs" -v wb="$wiki_block" '
+    # The garden in a folder (PUBLIC_PATH=/garden): that folder serves the website, which adds
+    # the folder to its own links (the site's address.rs). Everything else stays where it was.
+    local folder folder_block=""
+    folder=$(env_get PUBLIC_PATH || true)
+    if [ -n "$folder" ]; then
+        folder_block="	# --- The garden in its folder ($folder) ---
+	redir $folder $folder/ 308
+	handle_path $folder/* {
+		request_header -X-Auth-Email
+		reverse_proxy 127.0.0.1:8030 {
+			import appproxy
+		}
+	}"
+    fi
+    awk -v n="$name" -v e="$email" -v lc="$local_certs" -v wb="$wiki_block" -v fb="$folder_block" '
         { gsub(/__NAME__/, n); gsub(/__EMAIL__/, e) }
         /^__LOCAL_CERTS__/ { sub(/^__LOCAL_CERTS__/, ""); printf "%s", lc }
         /^__WIKI_BLOCK__$/ { print wb; next }
+        /^__FOLDER_BLOCK__$/ { if (fb != "") print fb; next }
         { print }' docker/caddy/Caddyfile.template
     subdomain_blocks
+    old_name_blocks
+}
+
+# Web names the garden had before (OLD_NAMES): each forwards every address to the current
+# one, path and all, so labels printed for an old name and phones set up with it keep working.
+old_name_blocks() {
+    local old url
+    url=$(env_get PUBLIC_URL || true)
+    for old in $(env_get OLD_NAMES | tr ',' ' '); do
+        [ -n "$old" ] && [ "$old" != "$(env_get PUBLIC_NAME)" ] || continue
+        printf '\n# --- An old web name: forwards to the current address ---\n%s {\n\tredir %s{uri} 308\n}\n' "$old" "$url"
+    done
 }
 
 # Install Caddy (the HTTPS front door) from its official Ubuntu source.
@@ -4339,7 +4375,11 @@ do_webname() {   # do_webname [NEW-NAME]   (with a name: no questions)
     # Already installed? Then the settings and the running programs follow.
     if [ -f .env ]; then
         if [ "$(env_get PUBLIC_NAME)" = "$old" ]; then
-            env_set PUBLIC_NAME "$new"; env_set PUBLIC_URL "https://$new"
+            env_set PUBLIC_NAME "$new"; env_set PUBLIC_URL "https://$new$(env_get PUBLIC_PATH)"
+            # The old name keeps answering and forwards to the new one (old_name_blocks).
+            local olds; olds=$(env_get OLD_NAMES)
+            case ",$olds," in *",$old,"*) ;; *) env_set OLD_NAMES "${olds:+$olds,}$old" ;; esac
+            [ -n "$(env_get SIGNING_KEY)" ] || env_set SIGNING_KEY "$(openssl rand -hex 32)"
             note "Settings (.env): the web name is now $new."
             if systemctl is-active --quiet caddy 2>/dev/null; then apply_subdomains; fi
         fi
@@ -4354,10 +4394,67 @@ do_webname() {   # do_webname [NEW-NAME]   (with a name: no questions)
         git add -- "${changed[@]}" && git commit -q -m "Changed the web name from $old to $new (menu M, 16)" -- "${changed[@]}" \
             && note "Saved in your git history (git log shows it; git show shows every changed line)."
     fi
-    note "Phones that already have the app still look at $old for updates. Build the app"
-    note "again (android-app/README.md) and install it once on each phone; after that its"
-    note "updates come from $new."
+    L "   The old name forwards to the new one, so labels you printed keep working."
+    L "   Phones set up with the app's QR code follow the new name by themselves."
+    L "   Older phones (never set up with the QR code): open the app setup page and scan it once:"
+    printf '      %s/app/setup\n' "$(env_get PUBLIC_URL)"
+    L "   New labels (optional, the old ones still work): print the labels page:"
+    printf '      %s/labels\n' "$(env_get PUBLIC_URL)"
     note "The file check (menu M, 11) will list these files as changed: that is expected."
+}
+
+# The folder the Windows wizard chose (GARDEN_FOLDER), if it is a proper one; else nothing.
+folder_in() { [[ "${GARDEN_FOLDER:-}" =~ ^/[a-z0-9][a-z0-9_-]*$ ]] && printf '%s' "$GARDEN_FOLDER"; return 0; }
+
+# garden.sh folder [/garden | ""]: the garden lives in a folder of its web name, for example
+# name.zapto.org/garden, when the name is shared with something else. Empty = the top again.
+do_folder() {
+    local f=$1
+    say "$(Lt "The garden in a folder")"
+    L "   The garden can live at the top of its web name, or in a folder of it."
+    L "   Labels and phones keep working either way: the codes follow the address."
+    if [ "$f" = ask ]; then
+        f=$(ask "Folder (like /garden; empty = the top of the web name)" "$(env_get PUBLIC_PATH)")
+    fi
+    f=$(printf '%s' "$f" | tr -d '[:space:]'); f=${f%/}
+    [ -z "$f" ] || [[ "$f" =~ ^/[a-z0-9][a-z0-9_-]*$ ]] || { fail "a folder is / and then letters, numbers, - or _ (like /garden)"; return 1; }
+    env_set PUBLIC_PATH "$f"
+    local name; name=$(env_get PUBLIC_NAME)
+    if [ -n "$name" ]; then env_set PUBLIC_URL "https://$name$f"; fi
+    note "Settings (.env): the garden's address is now:"
+    printf '      %s\n' "$(env_get PUBLIC_URL)"
+    if systemctl is-active --quiet caddy 2>/dev/null; then apply_subdomains; fi
+    run dc up -d && wait_site
+}
+
+# garden.sh labels: the printable labels page (beds and plants, with QR codes that follow the
+# garden's address). Opens it in the browser when there is one.
+do_labels() {
+    local url; url="$(env_get PUBLIC_URL || echo "http://localhost:$(site_port)")/labels"
+    say "$(Lt "Labels: beds and plants")"
+    L "   Log in on the garden, then print this page. The codes keep working after a"
+    L "   change of web name and after a bed is renamed."
+    printf '      %s\n' "$url"
+    command -v xdg-open >/dev/null 2>&1 && xdg-open "$url" >/dev/null 2>&1 &
+    return 0
+}
+
+# garden.sh app: set up the phone app. Shows the page with the two QR codes (download, then
+# set up) and, when qrencode is installed, the setup code right here in the terminal.
+do_app_setup() {
+    local base; base="$(env_get PUBLIC_URL || echo "http://localhost:$(site_port)")"
+    say "$(Lt "The phone app")"
+    L "   1. On the phone, open this page (or scan its codes from this screen):"
+    printf '      %s/app/setup\n' "$base"
+    L "   2. Scan the first code to download the app, and install it."
+    L "   3. Scan the second code: the app learns your garden's address."
+    L "   4. In the app, log in with your garden name and password."
+    if command -v qrencode >/dev/null 2>&1; then
+        L "   The page itself, as a code:"
+        qrencode -t ANSIUTF8 "$base/app/setup"
+    fi
+    command -v xdg-open >/dev/null 2>&1 && xdg-open "$base/app/setup" >/dev/null 2>&1 &
+    return 0
 }
 
 # More 17: reach the garden computer from anywhere, privately, with Tailscale.
@@ -4606,6 +4703,9 @@ menu_more() {
   16) Website name swap: use another web name than junsgarden.zapto.org
   17) Reach the garden from anywhere, privately (Tailscale): on / off
   18) Rename or move a file or folder (every place that uses it follows)
+  19) Print labels: beds and plants, with QR codes
+  20) Set up the phone app (QR codes)
+  21) Put the garden in a folder of its web name (like name.zapto.org/garden)
 
    0) Back
 EOF
@@ -4620,6 +4720,8 @@ EOF
             13) do_subdomains ;;        14) do_power ;;
             15) do_llm ;;               16) do_webname ;;
             17) do_tailscale ;;         18) do_rename ;;
+            19) do_labels ;;            20) do_app_setup ;;
+            21) do_folder ;;
             0|b|B) return 0 ;;
             *) note "Please type one of the numbers shown." ;;
         esac
@@ -4667,7 +4769,10 @@ case "${1:-menu}" in
     language)   choose_language ;;
     users)      do_users ;;
     lockdown)   do_lockdown ;;
-    webname)    do_webname ;;
+    webname)    do_webname "${2:-}" ;;
+    labels)     do_labels ;;
+    app)        do_app_setup ;;
+    folder)     do_folder "${2-ask}" ;;
     tailscale)  do_tailscale ;;
     rename)     do_rename ;;
     renames)    show_renames ;;

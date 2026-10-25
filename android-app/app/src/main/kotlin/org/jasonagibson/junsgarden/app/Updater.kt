@@ -1,11 +1,10 @@
 // Updater.kt -- the in-app updater.
 //
-// Once per launch it reads https://junsgarden.zapto.org/apps/version.json.
-// If that file names a higher versionCode than the app that is running, it
-// offers the update, downloads the APK, checks the file arrived whole (md5),
+// Once per launch it reads <garden>/apps/version.json (the garden's CURRENT address,
+// GardenAddress.kt, so the updater follows a move too). If that file names a higher
+// versionCode than the app that is running, it offers the update, downloads the APK, checks
+// the file arrived whole (sha256; md5 only for an older version.json without sha256),
 // and hands it to Android's installer, which always asks the person first.
-// NOTE: the two web addresses at the bottom of this file are typed in here,
-// they do NOT follow GARDEN_BASE. If the website moves, change them too.
 
 package org.jasonagibson.junsgarden.app
 
@@ -16,6 +15,7 @@ import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jasonagibson.junsgarden.BuildConfig
+import org.jasonagibson.junsgarden.garden.GardenAddress
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
@@ -48,6 +48,7 @@ class Updater {
         val versionCode: Int,
         val versionName: String,
         val url: String,
+        val sha256: String,
         val md5: String,
         val notes: String,
     )
@@ -73,6 +74,7 @@ class Updater {
                 versionCode = code,
                 versionName = json.optString("versionName"),
                 url = json.optString("url").ifBlank { DEFAULT_APK },
+                sha256 = json.optString("sha256"),
                 md5 = json.optString("md5"),
                 notes = json.optString("notes"),
             )
@@ -115,7 +117,9 @@ class Updater {
                 throw IllegalStateException("The download failed (${conn.responseCode}).")
             }
             val total = conn.contentLengthLong
-            val digest = MessageDigest.getInstance("MD5")
+            // SHA-256 when the manifest has it; md5 only for a manifest from before it did.
+            val useSha = update.sha256.length == 64
+            val digest = MessageDigest.getInstance(if (useSha) "SHA-256" else "MD5")
 
             conn.inputStream.use { input ->
                 target.outputStream().use { out ->
@@ -132,7 +136,8 @@ class Updater {
             }
 
             val got = digest.digest().joinToString("") { "%02x".format(it) }
-            if (update.md5.isNotBlank() && !got.equals(update.md5, ignoreCase = true)) {
+            val want = if (useSha) update.sha256 else update.md5
+            if (want.isNotBlank() && !got.equals(want, ignoreCase = true)) {
                 target.delete()
                 throw IllegalStateException(
                     "The download did not arrive intact, so it was not installed. Try again."
@@ -157,7 +162,7 @@ class Updater {
     }
 
     companion object {
-        private const val MANIFEST = "https://junsgarden.zapto.org/apps/version.json"
-        private const val DEFAULT_APK = "https://junsgarden.zapto.org/apps/junsgarden.apk"
+        private val MANIFEST get() = GardenAddress.base + "/apps/version.json"
+        private val DEFAULT_APK get() = GardenAddress.base + "/apps/junsgarden.apk"
     }
 }

@@ -39,6 +39,7 @@ __LOCAL_CERTS__}
 
 __NAME__ {
 	encode zstd gzip
+__FOLDER_BLOCK__
 
 	# --- The sign-in page (Authelia) ------------------------------------
 	# One page where Jun signs in. Programs behind the gate ask it

@@ -549,7 +549,7 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
     }
 
     private companion object {
-        val BASE = org.jasonagibson.junsgarden.BuildConfig.GARDEN_BASE + "/app/garden"
+        val BASE get() = GardenAddress.base + "/app/garden"
         /** Plenty to read a tag by; far below what a camera produces. */
         const val MAX_EDGE = 1600
 

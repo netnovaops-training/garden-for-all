@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 import org.jasonagibson.junsgarden.app.Updater
+import org.jasonagibson.junsgarden.garden.GardenAddress
 import org.jasonagibson.junsgarden.garden.GardenCamera
 import org.jasonagibson.junsgarden.garden.GardenException
 import org.jasonagibson.junsgarden.garden.GardenLogin
@@ -60,6 +61,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Where the garden is (GardenAddress.kt); a setup QR that launched the app sets it.
+        GardenAddress.init(this)
+        setupLink(intent)
         // A share that LAUNCHED the app arrives here...
         Shared.offer(intent)
 
@@ -101,7 +105,19 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        setupLink(intent)
         Shared.offer(intent)
+    }
+
+    /** The wizard's setup QR (junsgarden://setup?base=...): save the garden's address. */
+    private fun setupLink(intent: Intent?) {
+        val link = intent?.dataString ?: return
+        val saved = GardenAddress.applySetupLink(this, link) ?: return
+        android.widget.Toast.makeText(
+            this,
+            "Your garden: $saved\n내 정원: $saved",
+            android.widget.Toast.LENGTH_LONG,
+        ).show()
     }
 }
 
@@ -143,6 +159,8 @@ private fun GardenApp() {
     var updateError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
+        // Has the garden moved? Followed only when signed with its key (GardenAddress.kt).
+        runCatching { GardenAddress.refresh(context) }
         if (who is Who.Checking) {
             // false = the site says the key is no good (changed password, or
             // logged out elsewhere). null = no signal: carry on as the saved
