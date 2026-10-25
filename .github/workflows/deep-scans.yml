@@ -183,15 +183,13 @@ jobs:
       - name: Audit the libraries that beds/Dockerfile installs
         run: |
           set -eu
-          # beds has no requirements file; its libraries are named in the Dockerfile's "pip install" line.
-          awk '/pip install/ {on=1; next} on {print} on && !/\\$/ {exit}' beds/Dockerfile \
-            | sed -E 's/\\$//; s/^[[:space:]]+//; s/[[:space:]]+$//' | grep -E '^[A-Za-z0-9_.-]+(==[0-9.]+)?$' > beds-requirements.txt
-          echo "Libraries:"; cat beds-requirements.txt
-          test -s beds-requirements.txt
+          # beds/requirements.txt pins every library (and its checksum) that beds/Dockerfile installs.
+          test -s beds/requirements.txt
           python -m venv venv
-          venv/bin/pip install --quiet pip-audit==2.10.1
+          # pip-audit itself, every dependency pinned by checksum (.github/requirements/pip-audit.in says how to update)
+          venv/bin/pip install --quiet --require-hashes -r .github/requirements/pip-audit.txt
           rc=0
-          venv/bin/pip-audit -r beds-requirements.txt 2>&1 | tee pip-audit.txt || rc=$?
+          venv/bin/pip-audit --require-hashes -r beds/requirements.txt 2>&1 | tee pip-audit.txt || rc=$?
           {
             echo "### pip-audit 2.10.1 on the beds libraries"
             echo "- exit code $rc (0 = nothing vulnerable)"
@@ -218,7 +216,8 @@ jobs:
         run: |
           set -u
           python -m venv venv
-          venv/bin/pip install --quiet "bandit[sarif]==1.9.4"
+          # bandit itself, every dependency pinned by checksum (.github/requirements/bandit.in says how to update)
+          venv/bin/pip install --quiet --require-hashes -r .github/requirements/bandit.txt
           rc=0
           # medium severity and medium confidence and up; low-level style notes (asserts, try/pass) would only be noise
           venv/bin/bandit -r beds --severity-level medium --confidence-level medium -f sarif -o bandit.sarif || rc=$?

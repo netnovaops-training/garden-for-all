@@ -1,0 +1,10 @@
+# The libraries the beds service needs from outside Python itself. Edit THIS file, then
+# rebuild requirements.txt (every library with its exact version and checksum) with:
+#   docker run --rm -v "$PWD":/w -w /w python:3.14-slim sh -c \
+#     "pip install -q pip-tools && pip-compile --generate-hashes --strip-extras -o requirements.txt requirements.in"
+#   pymysql  talks to the MariaDB database
+#   ddgs     DuckDuckGo web search (no key needed) for plant facts
+#   Pillow   opens, turns and shrinks tag photos before saving them
+pymysql==1.1.1
+ddgs
+Pillow==12.3.0

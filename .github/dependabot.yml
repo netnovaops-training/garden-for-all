@@ -6,14 +6,34 @@
 # list right when one of those is merged.)
 # Once a week, Monday 05:00 Pacific time. Minor and patch updates of one folder arrive together
 # in a single pull request; a major update is its own pull request.
-# beds/ has no requirements file (its libraries are named in beds/Dockerfile), so there is no pip
-# entry: the audit job in deep-scans.yml checks those libraries instead.
+# Python: beds/requirements.txt and .github/requirements/*.txt are pip-compile files (versions AND
+# checksums), made from the .in files next to them; Dependabot updates both together.
 version: 2
 
 updates:
+  - package-ecosystem: pip
+    directories: ["/beds", "/.github/requirements"]
+    target-branch: fixes
+    # wait a week after a version is published: brand-new releases are where bad packages hide
+    cooldown:
+      default-days: 7
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    labels: [dependencies, python]
+    groups:
+      pip-minor-and-patch:
+        update-types: [minor, patch]
+
   - package-ecosystem: cargo
     directory: /rust
     target-branch: fixes
+    # wait a week after a version is published: brand-new releases are where bad packages hide
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
       day: monday
@@ -28,6 +48,9 @@ updates:
   - package-ecosystem: gradle
     directory: /android-app
     target-branch: fixes
+    # wait a week after a version is published: brand-new releases are where bad packages hide
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
       day: monday
@@ -42,6 +65,9 @@ updates:
   - package-ecosystem: docker
     directory: /rust
     target-branch: fixes
+    # wait a week after a version is published: brand-new releases are where bad packages hide
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
       day: monday
@@ -56,6 +82,9 @@ updates:
   - package-ecosystem: docker
     directory: /beds
     target-branch: fixes
+    # wait a week after a version is published: brand-new releases are where bad packages hide
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
       day: monday
@@ -70,6 +99,9 @@ updates:
   - package-ecosystem: docker
     directory: /docker/tools
     target-branch: fixes
+    # wait a week after a version is published: brand-new releases are where bad packages hide
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
       day: monday
@@ -84,6 +116,9 @@ updates:
   - package-ecosystem: docker
     directory: /docker/wiki
     target-branch: fixes
+    # wait a week after a version is published: brand-new releases are where bad packages hide
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
       day: monday
@@ -98,6 +133,9 @@ updates:
   - package-ecosystem: docker-compose
     directory: /
     target-branch: fixes
+    # wait a week after a version is published: brand-new releases are where bad packages hide
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
       day: monday
@@ -112,6 +150,9 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     target-branch: fixes
+    # wait a week after a version is published: brand-new releases are where bad packages hide
+    cooldown:
+      default-days: 7
     schedule:
       interval: weekly
       day: monday
