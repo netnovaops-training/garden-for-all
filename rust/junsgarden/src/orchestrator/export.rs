@@ -33,7 +33,12 @@ fn safe(v: Option<&Value>) -> String {
     // Read the value as text and remove spaces at both ends.
     let s = text(v).trim().to_string();
     // Placeholders that mean "no data". `matches!` checks the lower-case text against the list.
-    if s.is_empty() || matches!(s.to_lowercase().as_str(), "none" | "null" | "[]" | "............" | "0" | "0.0" | "0.00") {
+    if s.is_empty()
+        || matches!(
+            s.to_lowercase().as_str(),
+            "none" | "null" | "[]" | "............" | "0" | "0.0" | "0.00"
+        )
+    {
         "—".into()
     } else {
         s
@@ -54,7 +59,11 @@ fn months_label(bitmap: &str) -> String {
         // MONTHS list.
         (Some(a), Some(b)) if a == b => opts::MONTHS[(*a - 1) as usize].into(),
         // Two different months: "first – last".
-        (Some(a), Some(b)) => format!("{} – {}", opts::MONTHS[(*a - 1) as usize], opts::MONTHS[(*b - 1) as usize]),
+        (Some(a), Some(b)) => format!(
+            "{} – {}",
+            opts::MONTHS[(*a - 1) as usize],
+            opts::MONTHS[(*b - 1) as usize]
+        ),
         // Cannot happen, but `match` must cover every case.
         _ => "—".into(),
     }
@@ -75,16 +84,31 @@ fn cost(v: Option<&Value>) -> String {
 /// `new_fields` the row is green with an "AI filled" badge. If it is in `changed` the row is amber
 /// and the badge shows the old value ("was: ..."), cut to 80 characters. Otherwise it is plain.
 /// `key` is empty for rows that are not database fields, like the AI notes.
-fn row(key: &str, label: &str, value: &str, new_fields: &[String], changed: &Map<String, Value>) -> String {
+fn row(
+    key: &str,
+    label: &str,
+    value: &str,
+    new_fields: &[String],
+    changed: &Map<String, Value>,
+) -> String {
     // Pick the CSS class and badge in one step: `if / else if / else` gives back a pair, which is
     // split into two variables.
     let (class, badge) = if !key.is_empty() && new_fields.iter().any(|f| f == key) {
-        ("row-new", " <span class=\"badge badge-new\">✨ AI filled</span>".to_string())
+        (
+            "row-new",
+            " <span class=\"badge badge-new\">✨ AI filled</span>".to_string(),
+        )
     // The field has an old value in `changed`. `filter` makes this ignore an empty key.
     } else if let Some(old) = changed.get(key).filter(|_| !key.is_empty()) {
         // The old value, as text, limited to its first 80 characters (`take(80)`).
         let o: String = text(Some(old)).chars().take(80).collect();
-        ("row-changed", format!(" <span class=\"badge badge-changed\">🔄 Changed &nbsp;·&nbsp; was: {}</span>", he(&o)))
+        (
+            "row-changed",
+            format!(
+                " <span class=\"badge badge-changed\">🔄 Changed &nbsp;·&nbsp; was: {}</span>",
+                he(&o)
+            ),
+        )
     } else {
         ("", String::new())
     };
@@ -146,7 +170,13 @@ const STYLE: &str = r#"
 /// for fields the AI may not touch (name, beds, quantity, years). `title_suffix` goes in the title
 /// line. `new_fields` are the fields the AI filled; `changed` maps field name to its old value.
 /// Returns the whole web page as one String.
-pub fn plant_html(d: &Map<String, Value>, o: &Map<String, Value>, title_suffix: &str, new_fields: &[String], changed: &Map<String, Value>) -> String {
+pub fn plant_html(
+    d: &Map<String, Value>,
+    o: &Map<String, Value>,
+    title_suffix: &str,
+    new_fields: &[String],
+    changed: &Map<String, Value>,
+) -> String {
     // Two small helper closures. `r` makes one row with the AI highlighting rules. `ds` reads a
     // field from the shown data and cleans it with `safe`.
     let r = |k: &str, l: &str, v: String| row(k, l, &v, new_fields, changed);
@@ -158,66 +188,194 @@ pub fn plant_html(d: &Map<String, Value>, o: &Map<String, Value>, title_suffix: 
     let now = {
         let n = common::now_local();
         // Convert the 24-hour clock to 12-hour: hour 0 becomes 12.
-        let h12 = match n.hour() % 12 { 0 => 12, h => h };
-        format!("{} {:02}, {}  {:02}:{:02} {}", n.month(), n.day(), n.year(), h12, n.minute(), if n.hour() < 12 { "AM" } else { "PM" })
+        let h12 = match n.hour() % 12 {
+            0 => 12,
+            h => h,
+        };
+        format!(
+            "{} {:02}, {}  {:02}:{:02} {}",
+            n.month(),
+            n.day(),
+            n.year(),
+            h12,
+            n.minute(),
+            if n.hour() < 12 { "AM" } else { "PM" }
+        )
     };
     // If any field was filled or changed, the sheet is an AI draft and gets a warning banner, a
     // colour legend and an AI metadata box.
     let has_ai = !new_fields.is_empty() || !changed.is_empty();
     // The 12 sections, in the same order as the editor. Each `r(key, label, value)` is one row.
     let sections = [
-        section("🧬 Section 1: Taxonomy &amp; Core Identity", vec![
-            r("plant_name", "Common Name", safe(o.get("plant_name"))), r("botanical_name", "Botanical Name", ds("botanical_name")),
-            r("family", "Family", ds("family")), r("genus", "Genus", ds("genus")), r("species", "Species", ds("species")),
-            r("plant_type", "Plant Type", ds("plant_type")), r("native_status", "Native Status", ds("native_status")), r("company", "Company / Brand", ds("company")),
-        ]),
-        section("📏 Section 2: Growth Metrics, Spacing &amp; Beds", vec![
-            r("plant_length", "Target Height / Length", ds("plant_length")), r("plant_width", "Target Width / Spread", ds("plant_width")),
-            r("spacing", "Spacing", ds("spacing")), r("zones", "Hardiness Zones", ds("zones")),
-            r("growth_rate", "Growth Rate", ds("growth_rate")), r("life_expectancy", "Life Expectancy", ds("life_expectancy")),
-        ]),
-        section("🌦️ Section 3: Microclimatic Profiles &amp; Soil Requirements", vec![
-            r("sun_exposure", "Sun Exposure", ds("sun_exposure")), r("water_needs", "Water Needs", ds("water_needs")),
-            r("soil_ph", "Soil pH", ds("soil_ph")), r("soil_type", "Soil Type", ds("soil_type")),
-            r("planting_depth", "Planting Depth", ds("planting_depth")), r("chilling_hours", "Chilling Hours", ds("chilling_hours")),
-        ]),
-        section("💵 Section 4: Investment &amp; Procurement", vec![
-            r("average_cost", "Avg. 1-Gallon Retail Cost", cost(d.get("average_cost"))),
-            r("quantity", "Quantity Planted", safe(o.get("quantity"))), r("year_added", "Year(s) Added", safe(o.get("year_added"))),
-        ]),
-        section("📍 Section 5: Garden Bed Location", vec![r("garden_beds", "Assigned Beds", safe(o.get("garden_beds")))]),
-        section("🌿 Section 6: Foliage &amp; Stem Morphologies", vec![
-            r("foliage_color", "Foliage Color", ds("foliage_color")), r("stem_color", "Stem Color", ds("stem_color")),
-            r("is_evergreen", "Foliage Retention", ds("is_evergreen")), r("leaf_shape", "Leaf Shape", ds("leaf_shape")),
-            r("leaf_type", "Leaf Type", ds("leaf_type")), r("leaf_margin", "Leaf Margin", ds("leaf_margin")),
-        ]),
-        section("🌸 Section 7: Flower, Scent &amp; Reproduction", vec![
-            r("bloom_color", "Bloom Color", ds("bloom_color")), r("aromatics", "Aromatics / Scent", ds("aromatics")),
-            r("flower_symmetry", "Flower Symmetry", ds("flower_symmetry")), r("flower_shape", "Flower Shape", ds("flower_shape")),
-            r("flower_size", "Flower Size", ds("flower_size")), r("reproduction_type", "Reproduction Type", ds("reproduction_type")),
-        ]),
-        section("🍒 Section 8: Fruit &amp; Berry Yields", vec![
-            r("fruit_type", "Fruit Type", ds("fruit_type")), r("fruit_shape", "Fruit Shape", ds("fruit_shape")),
-            r("fruit_color", "Fruit Color", ds("fruit_color")), r("fruit_size", "Fruit Size", ds("fruit_size")), r("fruit_edibility", "Edibility", ds("fruit_edibility")),
-        ]),
-        section("🪹 Section 9: Root Systems", vec![
-            r("root_system", "Root System", ds("root_system")), r("root_morphology", "Root Morphology", ds("root_morphology")), r("root_function", "Root Function", ds("root_function")),
-        ]),
-        section("🛡️ Section 10: Care, Hazards, Propagation &amp; Companions", vec![
-            r("attracts", "Attracts", ds("attracts")), r("deer_resistance", "Deer/Rabbit Resist.", ds("deer_resistance")),
-            r("toxicity", "Toxicity", ds("toxicity")), r("invasive_local", "Local Invasive Status", ds("invasive_local")),
-            r("propagation_method", "Propagation Method", ds("propagation_method")), r("cuttings", "Cuttings Notes", ds("cuttings")),
-            r("companion_plants", "Companion Plants", ds("companion_plants")), r("fertilizer", "Fertilizer Regimens", ds("fertilizer")),
-        ]),
-        section("📅 Section 11: Growth Calendars", vec![
-            r("grow_months", "Vegetative Growth Season", months_label(&text(d.get("grow_months")))),
-            r("bloom_months", "Bloom / Flower Season", months_label(&text(d.get("bloom_months")))),
-        ]),
-        section("📝 Section 12: Maintenance Journals", vec![
-            r("care_notes", "Seasonal Care & Watering", ds("care_notes")), r("maintenance_notes", "Pruning & Fertilizer", ds("maintenance_notes")),
-            r("cleanup_notes", "Winterization & Cleanup", ds("cleanup_notes")), r("disease_susceptibility", "Disease & Insect Vulns.", ds("disease_susceptibility")),
-            r("extra_details", "Extra / Culinary Details", ds("extra_details")),
-        ]),
+        section(
+            "🧬 Section 1: Taxonomy &amp; Core Identity",
+            vec![
+                r("plant_name", "Common Name", safe(o.get("plant_name"))),
+                r("botanical_name", "Botanical Name", ds("botanical_name")),
+                r("family", "Family", ds("family")),
+                r("genus", "Genus", ds("genus")),
+                r("species", "Species", ds("species")),
+                r("plant_type", "Plant Type", ds("plant_type")),
+                r("native_status", "Native Status", ds("native_status")),
+                r("company", "Company / Brand", ds("company")),
+            ],
+        ),
+        section(
+            "📏 Section 2: Growth Metrics, Spacing &amp; Beds",
+            vec![
+                r("plant_length", "Target Height / Length", ds("plant_length")),
+                r("plant_width", "Target Width / Spread", ds("plant_width")),
+                r("spacing", "Spacing", ds("spacing")),
+                r("zones", "Hardiness Zones", ds("zones")),
+                r("growth_rate", "Growth Rate", ds("growth_rate")),
+                r("life_expectancy", "Life Expectancy", ds("life_expectancy")),
+            ],
+        ),
+        section(
+            "🌦️ Section 3: Microclimatic Profiles &amp; Soil Requirements",
+            vec![
+                r("sun_exposure", "Sun Exposure", ds("sun_exposure")),
+                r("water_needs", "Water Needs", ds("water_needs")),
+                r("soil_ph", "Soil pH", ds("soil_ph")),
+                r("soil_type", "Soil Type", ds("soil_type")),
+                r("planting_depth", "Planting Depth", ds("planting_depth")),
+                r("chilling_hours", "Chilling Hours", ds("chilling_hours")),
+            ],
+        ),
+        section(
+            "💵 Section 4: Investment &amp; Procurement",
+            vec![
+                r(
+                    "average_cost",
+                    "Avg. 1-Gallon Retail Cost",
+                    cost(d.get("average_cost")),
+                ),
+                r("quantity", "Quantity Planted", safe(o.get("quantity"))),
+                r("year_added", "Year(s) Added", safe(o.get("year_added"))),
+            ],
+        ),
+        section(
+            "📍 Section 5: Garden Bed Location",
+            vec![r(
+                "garden_beds",
+                "Assigned Beds",
+                safe(o.get("garden_beds")),
+            )],
+        ),
+        section(
+            "🌿 Section 6: Foliage &amp; Stem Morphologies",
+            vec![
+                r("foliage_color", "Foliage Color", ds("foliage_color")),
+                r("stem_color", "Stem Color", ds("stem_color")),
+                r("is_evergreen", "Foliage Retention", ds("is_evergreen")),
+                r("leaf_shape", "Leaf Shape", ds("leaf_shape")),
+                r("leaf_type", "Leaf Type", ds("leaf_type")),
+                r("leaf_margin", "Leaf Margin", ds("leaf_margin")),
+            ],
+        ),
+        section(
+            "🌸 Section 7: Flower, Scent &amp; Reproduction",
+            vec![
+                r("bloom_color", "Bloom Color", ds("bloom_color")),
+                r("aromatics", "Aromatics / Scent", ds("aromatics")),
+                r("flower_symmetry", "Flower Symmetry", ds("flower_symmetry")),
+                r("flower_shape", "Flower Shape", ds("flower_shape")),
+                r("flower_size", "Flower Size", ds("flower_size")),
+                r(
+                    "reproduction_type",
+                    "Reproduction Type",
+                    ds("reproduction_type"),
+                ),
+            ],
+        ),
+        section(
+            "🍒 Section 8: Fruit &amp; Berry Yields",
+            vec![
+                r("fruit_type", "Fruit Type", ds("fruit_type")),
+                r("fruit_shape", "Fruit Shape", ds("fruit_shape")),
+                r("fruit_color", "Fruit Color", ds("fruit_color")),
+                r("fruit_size", "Fruit Size", ds("fruit_size")),
+                r("fruit_edibility", "Edibility", ds("fruit_edibility")),
+            ],
+        ),
+        section(
+            "🪹 Section 9: Root Systems",
+            vec![
+                r("root_system", "Root System", ds("root_system")),
+                r("root_morphology", "Root Morphology", ds("root_morphology")),
+                r("root_function", "Root Function", ds("root_function")),
+            ],
+        ),
+        section(
+            "🛡️ Section 10: Care, Hazards, Propagation &amp; Companions",
+            vec![
+                r("attracts", "Attracts", ds("attracts")),
+                r(
+                    "deer_resistance",
+                    "Deer/Rabbit Resist.",
+                    ds("deer_resistance"),
+                ),
+                r("toxicity", "Toxicity", ds("toxicity")),
+                r(
+                    "invasive_local",
+                    "Local Invasive Status",
+                    ds("invasive_local"),
+                ),
+                r(
+                    "propagation_method",
+                    "Propagation Method",
+                    ds("propagation_method"),
+                ),
+                r("cuttings", "Cuttings Notes", ds("cuttings")),
+                r(
+                    "companion_plants",
+                    "Companion Plants",
+                    ds("companion_plants"),
+                ),
+                r("fertilizer", "Fertilizer Regimens", ds("fertilizer")),
+            ],
+        ),
+        section(
+            "📅 Section 11: Growth Calendars",
+            vec![
+                r(
+                    "grow_months",
+                    "Vegetative Growth Season",
+                    months_label(&text(d.get("grow_months"))),
+                ),
+                r(
+                    "bloom_months",
+                    "Bloom / Flower Season",
+                    months_label(&text(d.get("bloom_months"))),
+                ),
+            ],
+        ),
+        section(
+            "📝 Section 12: Maintenance Journals",
+            vec![
+                r("care_notes", "Seasonal Care & Watering", ds("care_notes")),
+                r(
+                    "maintenance_notes",
+                    "Pruning & Fertilizer",
+                    ds("maintenance_notes"),
+                ),
+                r(
+                    "cleanup_notes",
+                    "Winterization & Cleanup",
+                    ds("cleanup_notes"),
+                ),
+                r(
+                    "disease_susceptibility",
+                    "Disease & Insect Vulns.",
+                    ds("disease_susceptibility"),
+                ),
+                r(
+                    "extra_details",
+                    "Extra / Culinary Details",
+                    ds("extra_details"),
+                ),
+            ],
+        ),
     ];
     // These stay empty for a plain export (no AI result).
     let mut ai_meta = String::new();
@@ -226,14 +384,53 @@ pub fn plant_html(d: &Map<String, Value>, o: &Map<String, Value>, title_suffix: 
     // image search term, and whether the plant is flagged), the colour legend and the draft banner.
     if has_ai {
         let none = Map::new();
-        let nl = if new_fields.is_empty() { "None".to_string() } else { new_fields.join(", ") };
-        let cl = if changed.is_empty() { "None".to_string() } else { changed.keys().cloned().collect::<Vec<_>>().join(", ") };
-        ai_meta = section("🤖 AI Session Metadata", vec![
-            row("", "Fields AI Filled (was blank)", &format!("{} — {nl}", new_fields.len()), &[], &none),
-            row("", "Fields AI Proposed Changes", &format!("{} — {cl}", changed.len()), &[], &none),
-            row("", "Image Search Term", &ds("image_search_term"), &[], &none),
-            row("", "Flagged for Review", if matches!(text(d.get("needs_review")).trim(), "1" | "true" | "True") { "Yes" } else { "No" }, &[], &none),
-        ]);
+        let nl = if new_fields.is_empty() {
+            "None".to_string()
+        } else {
+            new_fields.join(", ")
+        };
+        let cl = if changed.is_empty() {
+            "None".to_string()
+        } else {
+            changed.keys().cloned().collect::<Vec<_>>().join(", ")
+        };
+        ai_meta = section(
+            "🤖 AI Session Metadata",
+            vec![
+                row(
+                    "",
+                    "Fields AI Filled (was blank)",
+                    &format!("{} — {nl}", new_fields.len()),
+                    &[],
+                    &none,
+                ),
+                row(
+                    "",
+                    "Fields AI Proposed Changes",
+                    &format!("{} — {cl}", changed.len()),
+                    &[],
+                    &none,
+                ),
+                row(
+                    "",
+                    "Image Search Term",
+                    &ds("image_search_term"),
+                    &[],
+                    &none,
+                ),
+                row(
+                    "",
+                    "Flagged for Review",
+                    if matches!(text(d.get("needs_review")).trim(), "1" | "true" | "True") {
+                        "Yes"
+                    } else {
+                        "No"
+                    },
+                    &[],
+                    &none,
+                ),
+            ],
+        );
         legend = "\n        <div class=\"legend\">\n            <span class=\"leg-item leg-new\">✨ Green = AI filled blank field</span>\n            <span class=\"leg-item leg-changed\">🔄 Amber = AI proposed change to existing value</span>\n            <span class=\"leg-item leg-plain\">White = unchanged / pre-existing data</span>\n        </div>".into();
         draft = "\n        <div class=\"draft-banner\">\n            ⚠️  DRAFT — PENDING YOUR VERIFICATION<br>\n            <small>Verify all highlighted fields against an external source (Google, plant databases, etc.) before committing to the database.</small>\n        </div>".into();
     }
@@ -283,7 +480,10 @@ pub fn python_json(v: &Value) -> String {
 /// edited and brought back through the JSON Pipeline.
 pub fn missing_json(row: &Map<String, Value>) -> String {
     // The names of the missing fields, as JSON text values.
-    let missing: Vec<Value> = opts::missing_fields(row).into_iter().map(|f| Value::String(f.into())).collect();
+    let missing: Vec<Value> = opts::missing_fields(row)
+        .into_iter()
+        .map(|f| Value::String(f.into()))
+        .collect();
     // Build the output map in order: the two `_` keys first, then the plant's columns.
     let mut m = Map::new();
     m.insert("_missing_fields".into(), Value::Array(missing));
@@ -311,7 +511,10 @@ mod tests {
     #[test]
     fn python_style_json() {
         let v = serde_json::json!({"a": "Kona’s", "b": [1]});
-        assert_eq!(python_json(&v), "{\n  \"a\": \"Kona\\u2019s\",\n  \"b\": [\n    1\n  ]\n}");
+        assert_eq!(
+            python_json(&v),
+            "{\n  \"a\": \"Kona\\u2019s\",\n  \"b\": [\n    1\n  ]\n}"
+        );
     }
 
     /// Checks the month range text, including one month and none.

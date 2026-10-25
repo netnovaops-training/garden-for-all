@@ -1,0 +1,46 @@
+# Pages the first port's list (urls-port.txt) did not cover: the login page, the guides,
+# logged-in views, and the plant admin's 14 tabs. GET only; posts are in urls-post.txt.
+login.php
+login.php?forgot=1
+gallery.php
+plant_listing.php?ajax_list_search=1&term=rose
+plant_listing.php?ajax_list_search=1&term=Lil%27+Kim
+streamlit/
+help
+help/00-READ-ME-FIRST
+@login index.php
+@login blog.php
+@login catalog.php
+@login catalog.php?ajax_load=1&page=1
+@login gallery.php
+@login data.php
+expect: maybe: with no sensor readings the page draws random demo weather on each load
+@login plant_listing.php
+@login login.php
+@login help
+@login help/00-READ-ME-FIRST
+@login help/09-troubleshooting
+@login help/19-every-menu-option
+@login help/ko/00-READ-ME-FIRST
+@login help/id/1
+@login help/nope
+@login streamlit/?tab=1
+@login streamlit/?tab=2
+@login streamlit/?tab=3
+@login streamlit/?tab=4
+@login streamlit/?tab=5
+@login streamlit/?tab=6
+@login streamlit/?tab=7
+@login streamlit/?tab=8
+@login streamlit/?tab=9
+@login streamlit/?tab=10
+@login streamlit/?tab=11
+@login streamlit/?tab=12
+@login streamlit/?tab=13
+@login streamlit/?tab=14
+@login streamlit/?tab=1&p=276
+@login streamlit/?tab=2&p=276
+@login streamlit/st.css
+@login streamlit/st.js
+@login app_api.php?action=whoami
+@login plant_actions.php?action=list_favorites

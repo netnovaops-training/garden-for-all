@@ -276,7 +276,8 @@ after 4; see "Windows-only items" at the end. `0) Back` returns to the main menu
 - **What it does:** Changes the web name written in 12 files (share buttons, privacy page, the phone app's update check, the Android app's code) to the name you type. It shows the files first and asks.
 - **When to use it:** To run the garden under another name (the name must be in your own No-IP account too).
 - **What it installs or changes:** Those files (copies of the old ones go to `logs/web-name-change_DATE/`). If installed and online with the old name: `.env` and Caddy follow. Offers to rebuild the website, and saves the change in your git history.
-- **To undo it:** Run it again with the old name, or copy the old files back from `logs/web-name-change_DATE/`. Phones with the app keep checking the old name until you rebuild the app.
+- **To undo it:** Run it again with the old name, or copy the old files back from `logs/web-name-change_DATE/`.
+- **The old name keeps working** while it still points to your garden (keep it at No-IP): pages and printed labels forward to the new name, and phones keep talking to it. Apps set up with the setup QR (More 20) move to the new name by themselves; older apps keep using the old name until they update.
 - **Command:** `bash garden.sh webname`. Guide: `04-go-public-no-ip-caddy.md`.
 
 > **Why use the menu for this, not File Explorer?**
@@ -313,6 +314,30 @@ after 4; see "Windows-only items" at the end. `0) Back` returns to the main menu
 - **To undo it:** Choose it again and rename it back.
 - **Good to know:** The guides keep showing the names the garden came with.
 - **Command:** `bash garden.sh rename`. Guide: `26-rename-move-and-switch.md`.
+
+### 19) Print labels: beds and plants, with QR codes
+- **What it does:** Opens the labels page (`/labels` on your garden; log in first): one label per bed and one per plant, each with a QR code. Print it and cut the labels out. Every bed gets a number the first time, so the code holds the number, not the name.
+- **When to use it:** For new beds or plants, or to replace worn labels.
+- **What it installs or changes:** Nothing is installed. A bed that had no number yet gets one (in the garden's database).
+- **To undo it:** Nothing to undo.
+- **Good to know:** A code points to the garden's address and a short path (`/q/12`, `/b/3`). It keeps working when you rename a bed, and when you change the web name or put the garden in a folder (the old name forwards to the new one). Labels printed before still work too.
+- **Command:** `bash garden.sh labels`. On Windows: the setup wizard's last page, or the menu.
+
+### 20) Set up the phone app (QR codes)
+- **What it does:** Shows the app setup page (`/app/setup`): the first code downloads the app, the second tells the app where your garden is. Then log in in the app with your garden name and password.
+- **When to use it:** On a new phone, or once on a phone that had the app before this setup page existed.
+- **What it installs or changes:** Nothing on the garden. On the phone: the app, and your garden's address in it.
+- **To undo it:** Uninstall the app on the phone.
+- **Good to know:** After this, the app follows a change of web name by itself. It only follows an answer signed with your garden's own key (`SIGNING_KEY` in `.env`, made at install; never share it), so nobody else can send your phone somewhere else.
+- **Command:** `bash garden.sh app`.
+
+### 21) Put the garden in a folder of its web name (like name.zapto.org/garden)
+- **What it does:** Asks for a folder (like `/garden`, or empty for the top of the web name), saves it in `.env` (`PUBLIC_PATH`), writes the front door's settings again and restarts the site.
+- **When to use it:** When the web name is shared with something else, and the garden should live in one folder of it.
+- **What it installs or changes:** `PUBLIC_PATH` and `PUBLIC_URL` in `.env`, and Caddy's settings.
+- **To undo it:** Choose it again and leave the folder empty.
+- **Good to know:** Links, labels and the phone app follow the folder by themselves.
+- **Command:** `bash garden.sh folder /garden` (or `bash garden.sh folder ""` for the top).
 
 ## Backups (6)
 

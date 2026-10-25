@@ -71,6 +71,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- The wizard's setup QR: junsgarden://setup?base=...&key=... (GardenAddress.kt). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="junsgarden" android:host="setup" />
+            </intent-filter>
+
             <!--
               Puts this app in the phone's "Share" list for text and links
               (for example a YouTube link). Android offers every app that

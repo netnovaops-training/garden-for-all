@@ -1,0 +1,59 @@
+# The garden on a Raspberry Pi (arm64): does everything still build and exist for it?
+#
+# Runs on GitHub's own arm64 machine (no emulation), so it is the same CPU family as a Pi 4/5.
+#   1. Builds every image the garden makes itself (the website, garden tools, wiki setup,
+#      toolbox), exactly as garden.sh does with docker compose build.
+#   2. Checks that every image the garden downloads, pinned by digest in docker-compose.yml,
+#      has an arm64 version (a digest with no arm64 version would stop the install on a Pi).
+# Nothing is pushed or published; the images are thrown away with the machine.
+name: pi-arm64
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - rust/**
+      - beds/**
+      - docker/**
+      - docker-compose.yml
+      - .github/workflows/pi-arm64.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pi-arm64-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Every downloaded image has an arm64 version
+        run: |
+          set -u
+          bad=0
+          while read -r img; do
+            if docker buildx imagetools inspect --raw "$img" | grep -q '"architecture": *"arm64"'; then
+              echo "PASS arm64: $img"
+            else
+              echo "FAIL no arm64: $img"; bad=1
+            fi
+          done < <(grep -oE 'image: [^ ]+@sha256:[0-9a-f]{64}' docker-compose.yml | cut -d' ' -f2 | sort -u)
+          exit $bad
+
+      - name: Build the garden's own images for arm64
+        run: |
+          set -u
+          printf 'COMPOSE_PROFILES=beds,wiki,wiki-setup,tools\n' > .env
+          docker compose build --pull 2>&1 | tail -20
+          docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep junsgarden/
+          docker image inspect --format '{{.Architecture}}' junsgarden/rs:mine | grep -qx arm64
+          echo "PASS the website image is arm64" >> "$GITHUB_STEP_SUMMARY"

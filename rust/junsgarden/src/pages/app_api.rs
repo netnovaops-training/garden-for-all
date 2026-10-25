@@ -35,8 +35,8 @@ use sqlx::Row;
 
 use crate::formdata::{self, FormData};
 use crate::images;
-use crate::pages::comments::{append_comment, comment_stamp, read_json, substr};
-use crate::php::{date_c, he, php_int};
+use crate::pages::comments::{self, Kind};
+use crate::php::{date_c, php_int};
 use crate::rowjson::row_to_json;
 use crate::session::Visitor;
 use crate::AppState;
@@ -65,9 +65,22 @@ fn reply(status: StatusCode, body: Value) -> Response {
         .into_response();
     let h = res.headers_mut();
     h.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
-    h.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, HeaderValue::from_static("*"));
-    h.insert(header::ACCESS_CONTROL_ALLOW_METHODS, HeaderValue::from_static("GET, OPTIONS"));
+    h.insert(
+        header::ACCESS_CONTROL_ALLOW_ORIGIN,
+        HeaderValue::from_static("*"),
+    );
+    h.insert(
+        header::ACCESS_CONTROL_ALLOW_METHODS,
+        HeaderValue::from_static("GET, OPTIONS"),
+    );
     res
+}
+
+/// The text an answer shows for a database failure: never the database's own message (it
+/// names tables and columns); that goes to the log.
+fn hide(e: impl std::fmt::Display) -> &'static str {
+    tracing::error!("app_api: {e}");
+    "The garden could not answer just now. Please try again."
 }
 
 /// Shorthand for a successful `reply` with status 200. Most actions end with `ok(json!({...}))`;
@@ -81,16 +94,18 @@ fn ok(body: Value) -> Response {
 /// Takes the visitor. Gives back `Ok(username)` if signed in, or `Err(response)` holding the 401
 /// answer. Rust idea: `Result<A, B>` is "good answer A or error B"; each write action does `match`
 /// on it and returns the error response straight away, so a write can never run for a guest.
-fn require_actor(visitor: &Visitor) -> Result<String, Response> {
+/// (The response is boxed: a `Result` is as big as its biggest side, and a whole response is
+/// large next to a name.)
+fn require_actor(visitor: &Visitor) -> Result<String, Box<Response>> {
     if visitor.username.is_empty() {
-        return Err(reply(
+        return Err(Box::new(reply(
             StatusCode::UNAUTHORIZED,
             json!({
                 "ok": false,
                 "error": "Log in with a garden account to change the catalogue.",
                 "needs_sign_in": true,
             }),
-        ));
+        )));
     }
     Ok(visitor.username.clone())
 }
@@ -103,7 +118,11 @@ fn require_actor(visitor: &Visitor) -> Result<String, Response> {
 fn plant_image_urls(p: &Map<String, Value>) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     for col in ["picture", "additional_pictures"] {
-        if let Some(s) = p.get(col).and_then(Value::as_str).filter(|s| !s.is_empty() && *s != "0") {
+        if let Some(s) = p
+            .get(col)
+            .and_then(Value::as_str)
+            .filter(|s| !s.is_empty() && *s != "0")
+        {
             for name in s.split(',') {
                 let name = name.trim();
                 if !name.is_empty() && !out.iter().any(|o| o == &format!("{IMG_BASE}{name}")) {
@@ -130,7 +149,9 @@ fn clean_strings(row: &mut Map<String, Value>) {
 /// The app sometimes sends a value one way and sometimes the other, and the PHP accepted both. The
 /// `'a` marks tell Rust the answer lives as long as the inputs do.
 fn pick<'a>(f: &'a FormData, q: &'a HashMap<String, String>, k: &str) -> &'a str {
-    f.get(k).or_else(|| q.get(k).map(String::as_str)).unwrap_or("")
+    f.get(k)
+        .or_else(|| q.get(k).map(String::as_str))
+        .unwrap_or("")
 }
 
 /// True if the field was sent at all (form or address), even when empty. Used to tell "clear the
@@ -186,7 +207,11 @@ pub async fn app_api(
     // 2. Read the body as a form (works for normal and file-upload forms) and find which action was
     // asked for.
     let f = formdata::parse(&headers, body).await;
-    let action = q.get("action").map(String::as_str).unwrap_or("list").to_string();
+    let action = q
+        .get("action")
+        .map(String::as_str)
+        .unwrap_or("list")
+        .to_string();
 
     // 3. `match` picks the code for the action name. Each line below is `"name" => function`. The
     // `_` line at the end catches everything else.
@@ -199,10 +224,15 @@ pub async fn app_api(
         // `Authorization: Bearer <key>` from then on (see session.rs).
         "login" => {
             if method != Method::POST {
-                return reply(StatusCode::METHOD_NOT_ALLOWED, json!({ "ok": false, "error": "Use POST." }));
+                return reply(
+                    StatusCode::METHOD_NOT_ALLOWED,
+                    json!({ "ok": false, "error": "Use POST." }),
+                );
             }
             let ip = crate::accounts::client_ip(&headers);
-            match crate::accounts::check_password(&state, f.str("username"), f.str("password"), &ip).await {
+            match crate::accounts::check_password(&state, f.str("username"), f.str("password"), &ip)
+                .await
+            {
                 Ok(name) => {
                     let token = crate::session::issue_app_token(&state, &name).await;
                     ok(json!({ "ok": true, "username": name, "token": token }))
@@ -227,7 +257,10 @@ pub async fn app_api(
         // Who does this key belong to? Lets the app check its saved key at start.
         "whoami" => {
             if visitor.username.is_empty() {
-                reply(StatusCode::UNAUTHORIZED, json!({ "ok": false, "needs_sign_in": true }))
+                reply(
+                    StatusCode::UNAUTHORIZED,
+                    json!({ "ok": false, "needs_sign_in": true }),
+                )
             } else {
                 ok(json!({ "ok": true, "username": visitor.username }))
             }
@@ -245,37 +278,37 @@ pub async fn app_api(
         "catalog_signature" => catalog_signature(&state).await,
         "bed_counts" => bed_counts(&state).await,
         "update_plant" => update_plant(&state, &visitor, &f, &q).await,
-        "like" | "favorite" => like_or_favorite(&state, &action, &f, &q).await,
+        "like" | "favorite" => like_or_favorite(&state, &visitor, &action, &f, &q).await,
         // Read comments for a plant from the JSON file on disk: newest first, at most 50. (Comments
         // are kept in a file, not the database, as in the PHP.)
         "comments" => {
             let pid = q.get("plant_id").map(|p| php_int(p)).unwrap_or(0);
-            let all = read_json(&state.data.join("plant_comments.json"));
-            let rows: Vec<Value> = all
-                .get(&pid.to_string())
-                .and_then(Value::as_array)
-                .map(|a| a.iter().rev().take(50).cloned().collect())
-                .unwrap_or_default();
-            ok(json!({ "comments": rows }))
+            ok(json!({ "comments": comments::latest(&state, Kind::Plant, &pid.to_string()).await }))
         }
-        // Add a comment. Text is HTML-escaped (`he`) and cut to 30 characters for the name and 200
-        // for the message, so nobody can put markup in the page.
+        // Add a comment: the same rules as the website's (comments.rs): escaped, cut to 30 and
+        // 200, at most 5 per address per 10 minutes for somebody not logged in.
         "comment" => {
             let pid = php_int(pick(&f, &q, "plant_id"));
-            let name = {
-                let n = substr(&he(pick(&f, &q, "name").trim()), 30);
-                if n.is_empty() { "Guest".to_string() } else { n }
+            let entry = if pid > 0 {
+                comments::new_entry(pick(&f, &q, "name"), pick(&f, &q, "message"))
+            } else {
+                None
             };
-            let name = if f.has("name") || q.contains_key("name") { name } else { "Guest".to_string() };
-            let msg = substr(&he(pick(&f, &q, "message").trim()), 200);
-            if pid <= 0 || msg.is_empty() {
+            let Some(entry) = entry else {
                 return ok(json!({ "ok": false, "error": "A message is required." }));
+            };
+            if !visitor.is_admin()
+                && !state
+                    .write_limit
+                    .allow(&crate::accounts::client_ip(&headers))
+            {
+                return ok(
+                    json!({ "ok": false, "error": "Too many comments at once. Please wait a few minutes." }),
+                );
             }
-            // Stamp the time, build the comment, append it to the file, and send it back so the app
-            // can show it.
-            let (date, ts) = comment_stamp();
-            let entry = json!({ "name": name, "message": msg, "date": date, "ts": ts });
-            append_comment(&state, &state.data.join("plant_comments.json"), &pid.to_string(), entry.clone()).await;
+            if !comments::add(&state, Kind::Plant, &pid.to_string(), entry.clone()).await {
+                return ok(json!({ "ok": false, "error": "The comment could not be saved." }));
+            }
             ok(json!({ "ok": true, "entry": entry }))
         }
         "autocomplete" => autocomplete(&state, &q).await,
@@ -296,7 +329,11 @@ async fn thumb(state: &AppState, q: &HashMap<String, String>) -> Response {
     let img = img.rsplit(['/', '\\']).next().unwrap_or("").to_string();
     // Width defaults to 300 and is held between 40 and 1200 so nobody asks for a huge image. `as
     // u32` converts the number type.
-    let w = q.get("w").map(|w| php_int(w)).unwrap_or(300).clamp(40, 1200) as u32;
+    let w = q
+        .get("w")
+        .map(|w| php_int(w))
+        .unwrap_or(300)
+        .clamp(40, 1200) as u32;
     let src = state.www.join("images/Database").join(&img);
     if img.is_empty() || !src.is_file() {
         return StatusCode::NOT_FOUND.into_response();
@@ -307,11 +344,16 @@ async fn thumb(state: &AppState, q: &HashMap<String, String>) -> Response {
     let stem = img.rsplit_once('.').map(|(s, _)| s).unwrap_or(&img);
     let cache_file = cache_dir.join(format!("{stem}_w{w}.webp"));
     let src_m = std::fs::metadata(&src).and_then(|m| m.modified()).ok();
-    let cache_m = std::fs::metadata(&cache_file).and_then(|m| m.modified()).ok();
+    let cache_m = std::fs::metadata(&cache_file)
+        .and_then(|m| m.modified())
+        .ok();
     // A small helper that builds the image answer with a one-week browser cache.
     let image_reply = |bytes: Vec<u8>, ct: &'static str| {
         let mut res = (StatusCode::OK, [(header::CONTENT_TYPE, ct)], bytes).into_response();
-        res.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=604800"));
+        res.headers_mut().insert(
+            header::CACHE_CONTROL,
+            HeaderValue::from_static("public, max-age=604800"),
+        );
         res
     };
     // 3. A cached thumbnail at least as new as the original is reused.
@@ -323,7 +365,9 @@ async fn thumb(state: &AppState, q: &HashMap<String, String>) -> Response {
         }
     }
     // 4. Otherwise read the original and shrink it. `let ... else` returns 404 if the read fails.
-    let Ok(data) = std::fs::read(&src) else { return StatusCode::NOT_FOUND.into_response() };
+    let Ok(data) = std::fs::read(&src) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
     match images::thumbnail_webp(&data, w) {
         Some(out) => {
             let _ = std::fs::create_dir_all(&cache_dir);
@@ -340,11 +384,16 @@ async fn thumb(state: &AppState, q: &HashMap<String, String>) -> Response {
 /// Needs `plant_name`. If a living plant already has that name (ignoring case) it answers `exists:
 /// true` with the old id unless `force` is set. The new row is flagged `needs_review = 1` so Jun
 /// can finish the details. A barcode, if sent, is also saved in `plant_barcodes`. Gives `{ok, id}`.
-async fn add_plant(state: &AppState, visitor: &Visitor, f: &FormData, q: &HashMap<String, String>) -> Response {
+async fn add_plant(
+    state: &AppState,
+    visitor: &Visitor,
+    f: &FormData,
+    q: &HashMap<String, String>,
+) -> Response {
     // 1. Refuse guests. The `_` in `_user` means the name is not used here.
     let _user = match require_actor(visitor) {
         Ok(u) => u,
-        Err(r) => return r,
+        Err(r) => return *r,
     };
     // 2. Read the fields. `pick` looks in the form, then the address.
     let name = pick(f, q, "plant_name").trim().to_string();
@@ -353,25 +402,39 @@ async fn add_plant(state: &AppState, visitor: &Visitor, f: &FormData, q: &HashMa
     let year = pick(f, q, "year").trim().to_string();
     let barcode = pick(f, q, "barcode").trim().to_string();
     let qty_raw = pick(f, q, "qty");
-    let qty = if qty_raw.is_empty() { 1 } else { php_int(qty_raw).max(0) };
+    let qty = if qty_raw.is_empty() {
+        1
+    } else {
+        php_int(qty_raw).max(0)
+    };
     let force = !matches!(pick(f, q, "force"), "" | "0");
     if name.is_empty() {
         return ok(json!({ "ok": false, "error": "A common name is required." }));
     }
     // 3. Look for a living plant with the same name.
-    let existing = sqlx::query_scalar::<_, i64>("SELECT id FROM `data_source` WHERE LOWER(plant_name) = LOWER(?) AND died = 0 LIMIT 1")
-        .bind(&name)
-        .fetch_optional(&state.db)
-        .await
-        .ok()
-        .flatten();
+    let existing = sqlx::query_scalar::<_, i64>(
+        "SELECT id FROM `data_source` WHERE LOWER(plant_name) = LOWER(?) AND died = 0 LIMIT 1",
+    )
+    .bind(&name)
+    .fetch_optional(&state.db)
+    .await
+    .ok()
+    .flatten();
     if let Some(id) = existing {
         if !force {
-            return ok(json!({ "ok": false, "exists": true, "id": id, "error": "A plant with that name already exists." }));
+            return ok(
+                json!({ "ok": false, "exists": true, "id": id, "error": "A plant with that name already exists." }),
+            );
         }
     }
     // A small helper: an empty string becomes NULL (nothing) in the database.
-    let none_if_empty = |s: &str| if s.is_empty() { None } else { Some(s.to_string()) };
+    let none_if_empty = |s: &str| {
+        if s.is_empty() {
+            None
+        } else {
+            Some(s.to_string())
+        }
+    };
     // 4. Insert the plant. Bed and year are each saved twice because the table has two columns for
     // each (older and newer names).
     let r = sqlx::query(
@@ -390,7 +453,12 @@ async fn add_plant(state: &AppState, visitor: &Visitor, f: &FormData, q: &HashMa
     .await;
     let new_id = match r {
         Ok(r) => r.last_insert_id() as i64,
-        Err(e) => return reply(StatusCode::INTERNAL_SERVER_ERROR, json!({ "error": e.to_string() })),
+        Err(e) => {
+            return reply(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                json!({ "error": hide(e) }),
+            )
+        }
     };
     // 5. Remember the barcode in its own table too, so scanning finds this plant later.
     if !barcode.is_empty() {
@@ -433,7 +501,7 @@ async fn future_search(state: &AppState, q: &HashMap<String, String>) -> Respons
                 _ => Map::new(),
             };
             clean_strings(&mut m);
-            let non_empty = |k: &str| m.get(k).filter(|v| !v.is_null() && v.as_str().map_or(true, |s| !s.is_empty() && s != "0")).cloned();
+            let non_empty = |k: &str| m.get(k).filter(|v| !v.is_null() && v.as_str().is_none_or(|s| !s.is_empty() && s != "0")).cloned();
             json!({
                 "id": m.get("id").and_then(Value::as_i64).unwrap_or(0),
                 "plant_name": m.get("plant_name").cloned().unwrap_or(Value::Null),
@@ -452,9 +520,14 @@ async fn future_search(state: &AppState, q: &HashMap<String, String>) -> Respons
 /// Copies every column that both tables share into `data_source`, applies any new name, bed, year
 /// or quantity the app sent, points its barcodes at the new row, and deletes the wish-list row.
 /// This is done in one database transaction so it all happens or none of it does.
-async fn future_promote(state: &AppState, visitor: &Visitor, f: &FormData, q: &HashMap<String, String>) -> Response {
+async fn future_promote(
+    state: &AppState,
+    visitor: &Visitor,
+    f: &FormData,
+    q: &HashMap<String, String>,
+) -> Response {
     if let Err(r) = require_actor(visitor) {
-        return r;
+        return *r;
     }
     let fid = php_int(pick(f, q, "id"));
     if fid <= 0 {
@@ -492,7 +565,7 @@ async fn future_promote(state: &AppState, visitor: &Visitor, f: &FormData, q: &H
         let cols = pairs.iter().map(|(k, _)| format!("`{k}`")).collect::<Vec<_>>().join(", ");
         let ph = vec!["?"; pairs.len()].join(", ");
         let ins_sql = format!("INSERT INTO `data_source` ({cols}) VALUES ({ph})");
-        let mut ins = sqlx::query(&ins_sql);
+        let mut ins = sqlx::query(sqlx::AssertSqlSafe(ins_sql.as_str()));
         for (_, v) in &pairs {
             ins = match v {
                 Value::Null => ins.bind(Option::<String>::None),
@@ -536,7 +609,7 @@ async fn future_promote(state: &AppState, visitor: &Visitor, f: &FormData, q: &H
         }
         if !set.is_empty() {
             let up_sql = format!("UPDATE `data_source` SET {} WHERE id=?", set.join(", "));
-            let mut up = sqlx::query(&up_sql);
+            let mut up = sqlx::query(sqlx::AssertSqlSafe(up_sql.as_str()));
             for p in &params {
                 up = up.bind(p);
             }
@@ -559,7 +632,7 @@ async fn future_promote(state: &AppState, visitor: &Visitor, f: &FormData, q: &H
     match result {
         Ok(Some(id)) => ok(json!({ "ok": true, "id": id })),
         Ok(None) => ok(json!({ "ok": false, "error": "Future plant not found" })),
-        Err(e) => ok(json!({ "ok": false, "error": e.to_string() })),
+        Err(e) => ok(json!({ "ok": false, "error": hide(e) })),
     }
 }
 
@@ -569,39 +642,63 @@ async fn future_promote(state: &AppState, visitor: &Visitor, f: &FormData, q: &H
 /// Looks in `plant_barcodes` first, then the `barcode` column of the garden, then of the wish list.
 /// Gives `{found, id, plant_name, table, is_future}` or `{found: false}`.
 async fn barcode_lookup(state: &AppState, f: &FormData, q: &HashMap<String, String>) -> Response {
-    let code = q.get("code").map(String::as_str).or_else(|| f.get("code")).unwrap_or("").trim().to_string();
+    let code = q
+        .get("code")
+        .map(String::as_str)
+        .or_else(|| f.get("code"))
+        .unwrap_or("")
+        .trim()
+        .to_string();
     if code.is_empty() {
         return ok(json!({ "found": false }));
     }
-    if let Ok(Some((pid, table))) = sqlx::query_as::<_, (i64, String)>("SELECT plant_id, source_table FROM `plant_barcodes` WHERE barcode = ? LIMIT 1")
-        .bind(&code)
+    if let Ok(Some((pid, table))) = sqlx::query_as::<_, (i64, String)>(
+        "SELECT plant_id, source_table FROM `plant_barcodes` WHERE barcode = ? LIMIT 1",
+    )
+    .bind(&code)
+    .fetch_optional(&state.db)
+    .await
+    {
+        let tbl = if table == "future_plants" {
+            "future_plants"
+        } else {
+            "data_source"
+        };
+        let name = sqlx::query_scalar::<_, Option<String>>(sql_text!(
+            "SELECT plant_name FROM `{tbl}` WHERE id = ? LIMIT 1"
+        ))
+        .bind(pid)
         .fetch_optional(&state.db)
         .await
-    {
-        let tbl = if table == "future_plants" { "future_plants" } else { "data_source" };
-        let name = sqlx::query_scalar::<_, Option<String>>(&format!("SELECT plant_name FROM `{tbl}` WHERE id = ? LIMIT 1"))
-            .bind(pid)
-            .fetch_optional(&state.db)
-            .await
-            .ok()
-            .flatten()
-            .flatten()
-            .unwrap_or_default();
-        return ok(json!({ "found": true, "id": pid, "plant_name": name, "table": tbl, "is_future": tbl == "future_plants" }));
+        .ok()
+        .flatten()
+        .flatten()
+        .unwrap_or_default();
+        return ok(
+            json!({ "found": true, "id": pid, "plant_name": name, "table": tbl, "is_future": tbl == "future_plants" }),
+        );
     }
-    if let Ok(Some((id, name))) = sqlx::query_as::<_, (i64, Option<String>)>("SELECT id, plant_name FROM `data_source` WHERE barcode = ? AND died = 0 LIMIT 1")
-        .bind(&code)
-        .fetch_optional(&state.db)
-        .await
+    if let Ok(Some((id, name))) = sqlx::query_as::<_, (i64, Option<String>)>(
+        "SELECT id, plant_name FROM `data_source` WHERE barcode = ? AND died = 0 LIMIT 1",
+    )
+    .bind(&code)
+    .fetch_optional(&state.db)
+    .await
     {
-        return ok(json!({ "found": true, "id": id, "plant_name": name, "table": "data_source", "is_future": false }));
+        return ok(
+            json!({ "found": true, "id": id, "plant_name": name, "table": "data_source", "is_future": false }),
+        );
     }
-    if let Ok(Some((id, name))) = sqlx::query_as::<_, (i64, Option<String>)>("SELECT id, plant_name FROM `future_plants` WHERE barcode = ? LIMIT 1")
-        .bind(&code)
-        .fetch_optional(&state.db)
-        .await
+    if let Ok(Some((id, name))) = sqlx::query_as::<_, (i64, Option<String>)>(
+        "SELECT id, plant_name FROM `future_plants` WHERE barcode = ? LIMIT 1",
+    )
+    .bind(&code)
+    .fetch_optional(&state.db)
+    .await
     {
-        return ok(json!({ "found": true, "id": id, "plant_name": name, "table": "future_plants", "is_future": true }));
+        return ok(
+            json!({ "found": true, "id": id, "plant_name": name, "table": "future_plants", "is_future": true }),
+        );
     }
     ok(json!({ "found": false }))
 }
@@ -623,9 +720,15 @@ async fn barcodes(state: &AppState, f: &FormData, q: &HashMap<String, String>) -
     let id = php_int(pick(f, q, "id"));
     let table = {
         let t = pick(f, q, "table").trim();
-        if t.is_empty() { "data_source" } else { t }
+        if t.is_empty() {
+            "data_source"
+        } else {
+            t
+        }
     };
-    let Some(table) = valid_table(table) else { return ok(json!({ "barcodes": [] })) };
+    let Some(table) = valid_table(table) else {
+        return ok(json!({ "barcodes": [] }));
+    };
     if id <= 0 {
         return ok(json!({ "barcodes": [] }));
     }
@@ -656,18 +759,24 @@ async fn barcode_image(state: &AppState, f: &FormData, q: &HashMap<String, Strin
     if bid <= 0 {
         return StatusCode::NOT_FOUND.into_response();
     }
-    let img = sqlx::query_scalar::<_, Option<Vec<u8>>>("SELECT barcode_image FROM `plant_barcodes` WHERE id = ? LIMIT 1")
-        .bind(bid)
-        .fetch_optional(&state.db)
-        .await
-        .ok()
-        .flatten()
-        .flatten()
-        .filter(|b| !b.is_empty());
+    let img = sqlx::query_scalar::<_, Option<Vec<u8>>>(
+        "SELECT barcode_image FROM `plant_barcodes` WHERE id = ? LIMIT 1",
+    )
+    .bind(bid)
+    .fetch_optional(&state.db)
+    .await
+    .ok()
+    .flatten()
+    .flatten()
+    .filter(|b| !b.is_empty());
     match img {
         Some(b) => {
-            let mut res = (StatusCode::OK, [(header::CONTENT_TYPE, "image/png")], b).into_response();
-            res.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=86400"));
+            let mut res =
+                (StatusCode::OK, [(header::CONTENT_TYPE, "image/png")], b).into_response();
+            res.headers_mut().insert(
+                header::CACHE_CONTROL,
+                HeaderValue::from_static("public, max-age=86400"),
+            );
             res
         }
         None => StatusCode::NOT_FOUND.into_response(),
@@ -676,16 +785,27 @@ async fn barcode_image(state: &AppState, f: &FormData, q: &HashMap<String, Strin
 
 /// `?action=add_barcode` (needs sign-in): attach a barcode to a plant. A barcode may belong to only
 /// one plant; a duplicate gives a friendly error instead of a crash.
-async fn add_barcode(state: &AppState, visitor: &Visitor, f: &FormData, q: &HashMap<String, String>) -> Response {
+async fn add_barcode(
+    state: &AppState,
+    visitor: &Visitor,
+    f: &FormData,
+    q: &HashMap<String, String>,
+) -> Response {
     if let Err(r) = require_actor(visitor) {
-        return r;
+        return *r;
     }
     let id = php_int(pick(f, q, "id"));
     let table = {
         let t = pick(f, q, "table").trim();
-        if t.is_empty() { "data_source" } else { t }
+        if t.is_empty() {
+            "data_source"
+        } else {
+            t
+        }
     };
-    let Some(table) = valid_table(table) else { return ok(json!({ "ok": false, "error": "Invalid table" })) };
+    let Some(table) = valid_table(table) else {
+        return ok(json!({ "ok": false, "error": "Invalid table" }));
+    };
     let barcode = pick(f, q, "barcode").trim().to_string();
     let size = pick(f, q, "size_label").trim().to_string();
     if id <= 0 || barcode.is_empty() {
@@ -702,55 +822,79 @@ async fn add_barcode(state: &AppState, visitor: &Visitor, f: &FormData, q: &Hash
         Ok(r) => ok(json!({ "ok": true, "id": r.last_insert_id() as i64 })),
         Err(e) => {
             // MariaDB reports a duplicate with error code 23000 (a unique-key violation).
-            let dup = e.as_database_error().map_or(false, |d| d.code().as_deref() == Some("23000") || d.is_unique_violation());
+            let dup = e.as_database_error().is_some_and(|d| d.code().as_deref() == Some("23000") || d.is_unique_violation());
             if dup {
                 ok(json!({ "ok": false, "error": "That barcode is already assigned to a plant." }))
             } else {
-                ok(json!({ "ok": false, "error": e.to_string() }))
+                ok(json!({ "ok": false, "error": hide(e) }))
             }
         }
     }
 }
 
 /// `?action=delete_barcode` (needs sign-in): remove one barcode row by `barcode_id`.
-async fn delete_barcode(state: &AppState, visitor: &Visitor, f: &FormData, q: &HashMap<String, String>) -> Response {
+async fn delete_barcode(
+    state: &AppState,
+    visitor: &Visitor,
+    f: &FormData,
+    q: &HashMap<String, String>,
+) -> Response {
     if let Err(r) = require_actor(visitor) {
-        return r;
+        return *r;
     }
     let bid = php_int(pick(f, q, "barcode_id"));
     if bid <= 0 {
         return ok(json!({ "ok": false, "error": "Missing barcode_id" }));
     }
-    match sqlx::query("DELETE FROM `plant_barcodes` WHERE id = ?").bind(bid).execute(&state.db).await {
+    match sqlx::query("DELETE FROM `plant_barcodes` WHERE id = ?")
+        .bind(bid)
+        .execute(&state.db)
+        .await
+    {
         Ok(_) => ok(json!({ "ok": true })),
-        Err(e) => ok(json!({ "ok": false, "error": e.to_string() })),
+        Err(e) => ok(json!({ "ok": false, "error": hide(e) })),
     }
 }
 
 /// `?action=set_barcode` (needs sign-in): set or clear the single `barcode` column on a plant. An
 /// empty value clears it.
-async fn set_barcode(state: &AppState, visitor: &Visitor, f: &FormData, q: &HashMap<String, String>) -> Response {
+async fn set_barcode(
+    state: &AppState,
+    visitor: &Visitor,
+    f: &FormData,
+    q: &HashMap<String, String>,
+) -> Response {
     if let Err(r) = require_actor(visitor) {
-        return r;
+        return *r;
     }
     let id = php_int(pick(f, q, "id"));
     let table = {
         let t = pick(f, q, "table").trim();
-        if t.is_empty() { "data_source" } else { t }
+        if t.is_empty() {
+            "data_source"
+        } else {
+            t
+        }
     };
-    let Some(table) = valid_table(table) else { return ok(json!({ "ok": false, "error": "Invalid table" })) };
+    let Some(table) = valid_table(table) else {
+        return ok(json!({ "ok": false, "error": "Invalid table" }));
+    };
     if id <= 0 {
         return ok(json!({ "ok": false, "error": "Missing id" }));
     }
     let barcode = pick(f, q, "barcode").trim().to_string();
-    match sqlx::query(&format!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
-        .bind(if barcode.is_empty() { None } else { Some(barcode) })
+    match sqlx::query(sql_text!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
+        .bind(if barcode.is_empty() {
+            None
+        } else {
+            Some(barcode)
+        })
         .bind(id)
         .execute(&state.db)
         .await
     {
         Ok(_) => ok(json!({ "ok": true })),
-        Err(e) => ok(json!({ "ok": false, "error": e.to_string() })),
+        Err(e) => ok(json!({ "ok": false, "error": hide(e) })),
     }
 }
 
@@ -765,8 +909,12 @@ async fn export(state: &AppState) -> Response {
         let rows: Vec<Value> = if cols.is_empty() {
             Vec::new()
         } else {
-            let list = cols.iter().map(|c| format!("`{c}`")).collect::<Vec<_>>().join(", ");
-            sqlx::query(&format!("SELECT {list} FROM `{t}`"))
+            let list = cols
+                .iter()
+                .map(|c| format!("`{c}`"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            sqlx::query(sql_text!("SELECT {list} FROM `{t}`"))
                 .fetch_all(&state.db)
                 .await
                 .unwrap_or_default()
@@ -815,7 +963,11 @@ async fn catalog_signature(state: &AppState) -> Response {
         }
     }
     // PHP prints a float that is a whole number without a decimal point.
-    let text = if sig.fract() == 0.0 && sig.abs() < 1e15 { format!("{}", sig as i64) } else { format!("{sig}") };
+    let text = if sig.fract() == 0.0 && sig.abs() < 1e15 {
+        format!("{}", sig as i64)
+    } else {
+        format!("{sig}")
+    };
     ok(json!({ "signature": text }))
 }
 
@@ -845,9 +997,12 @@ async fn bed_counts(state: &AppState) -> Response {
         }
     }
     // ksort with SORT_FLAG_CASE | SORT_STRING: case-insensitive.
-    counts.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+    counts.sort_by_key(|a| a.0.to_lowercase());
     let total: i64 = counts.iter().map(|(_, c)| c).sum();
-    let beds: Vec<Value> = counts.iter().map(|(n, c)| json!({ "name": n, "count": c })).collect();
+    let beds: Vec<Value> = counts
+        .iter()
+        .map(|(n, c)| json!({ "name": n, "count": c }))
+        .collect();
     ok(json!({ "total": total, "beds": beds }))
 }
 
@@ -855,10 +1010,15 @@ async fn bed_counts(state: &AppState) -> Response {
 ///
 /// Only the fields sent are changed. Changing the quantity also writes a "correction" row to the
 /// quantity log, with the signed-in person's name and today's date.
-async fn update_plant(state: &AppState, visitor: &Visitor, f: &FormData, q: &HashMap<String, String>) -> Response {
+async fn update_plant(
+    state: &AppState,
+    visitor: &Visitor,
+    f: &FormData,
+    q: &HashMap<String, String>,
+) -> Response {
     let user = match require_actor(visitor) {
         Ok(u) => u,
-        Err(r) => return r,
+        Err(r) => return *r,
     };
     let id = php_int(pick(f, q, "id"));
     if id <= 0 {
@@ -867,7 +1027,11 @@ async fn update_plant(state: &AppState, visitor: &Visitor, f: &FormData, q: &Has
     let beds = pick(f, q, "beds").trim().to_string();
     let years = pick(f, q, "years").trim().to_string();
     let qty_raw = pick(f, q, "qty").to_string();
-    let qty: Option<i64> = if qty_raw.is_empty() { None } else { Some(php_int(&qty_raw).max(0)) };
+    let qty: Option<i64> = if qty_raw.is_empty() {
+        None
+    } else {
+        Some(php_int(&qty_raw).max(0))
+    };
     let barcode_set = is_set(f, q, "barcode");
     let barcode = pick(f, q, "barcode").trim().to_string();
 
@@ -893,18 +1057,25 @@ async fn update_plant(state: &AppState, visitor: &Visitor, f: &FormData, q: &Has
     }
     if barcode_set {
         set.push("barcode = ?");
-        params.push(if barcode.is_empty() { None } else { Some(barcode.clone()) });
+        params.push(if barcode.is_empty() {
+            None
+        } else {
+            Some(barcode.clone())
+        });
     }
     if set.is_empty() {
         return ok(json!({ "ok": false, "error": "Nothing to update" }));
     }
     let up_sql = format!("UPDATE `data_source` SET {} WHERE id = ?", set.join(", "));
-    let mut up = sqlx::query(&up_sql);
+    let mut up = sqlx::query(sqlx::AssertSqlSafe(up_sql.as_str()));
     for p in &params {
         up = up.bind(p.clone());
     }
     if let Err(e) = up.bind(id).execute(&state.db).await {
-        return reply(StatusCode::INTERNAL_SERVER_ERROR, json!({ "error": e.to_string() }));
+        return reply(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            json!({ "error": hide(e) }),
+        );
     }
     // Log the quantity change. `iso_week` is the ISO week number, as the PHP's `W`.
     if let Some(qv) = qty {
@@ -928,39 +1099,67 @@ async fn update_plant(state: &AppState, visitor: &Visitor, f: &FormData, q: &Has
     ok(json!({ "ok": true }))
 }
 
-/// `?action=like` / `?action=favorite`: toggle a mark for the named user on a plant. If it exists
-/// it is removed; if not it is added. Gives `{ok, active, count}`.
+/// `?action=like` / `?action=favorite`: toggle the CALLER's mark on a plant. If it exists it is
+/// removed; if not it is added. Gives `{ok, active, count}`.
 ///
-/// The user name comes from the request and needs no sign-in, as in the PHP. This only changes a
-/// like or favorite, never a plant.
-async fn like_or_favorite(state: &AppState, action: &str, f: &FormData, q: &HashMap<String, String>) -> Response {
-    let table = if action == "like" { "user_likes" } else { "user_favorites" };
-    let user = pick(f, q, "username").trim().to_string();
+/// Whose mark it is comes from who is asking (the app's key, or the visitor's own guest name),
+/// never from the request: the PHP took a `username=` field, so anybody could add or remove
+/// plants in Jun's favourites (which feed the catalogue's "Jun's Favs"). A `username` sent by
+/// an old app is ignored.
+async fn like_or_favorite(
+    state: &AppState,
+    visitor: &Visitor,
+    action: &str,
+    f: &FormData,
+    q: &HashMap<String, String>,
+) -> Response {
+    let table = if action == "like" {
+        "user_likes"
+    } else {
+        "user_favorites"
+    };
+    let user = visitor.db_name();
     let pid = php_int(pick(f, q, "plant_id"));
-    if user.is_empty() || pid <= 0 {
+    if pid <= 0 {
         return ok(json!({ "ok": false, "error": "Missing user or plant." }));
     }
-    let exists = sqlx::query(&format!("SELECT id FROM `{table}` WHERE username = ? AND plant_id = ?"))
-        .bind(&user)
-        .bind(pid)
-        .fetch_optional(&state.db)
-        .await
-        .ok()
-        .flatten()
-        .is_some();
+    let exists = sqlx::query(sql_text!(
+        "SELECT id FROM `{table}` WHERE username = ? AND plant_id = ?"
+    ))
+    .bind(&user)
+    .bind(pid)
+    .fetch_optional(&state.db)
+    .await
+    .ok()
+    .flatten()
+    .is_some();
     // Toggle the mark, then count how many people now have it.
     let active = if exists {
-        let _ = sqlx::query(&format!("DELETE FROM `{table}` WHERE username = ? AND plant_id = ?")).bind(&user).bind(pid).execute(&state.db).await;
+        let _ = sqlx::query(sql_text!(
+            "DELETE FROM `{table}` WHERE username = ? AND plant_id = ?"
+        ))
+        .bind(&user)
+        .bind(pid)
+        .execute(&state.db)
+        .await;
         false
     } else {
-        let _ = sqlx::query(&format!("INSERT INTO `{table}` (username, plant_id) VALUES (?, ?)")).bind(&user).bind(pid).execute(&state.db).await;
+        let _ = sqlx::query(sql_text!(
+            "INSERT INTO `{table}` (username, plant_id) VALUES (?, ?)"
+        ))
+        .bind(&user)
+        .bind(pid)
+        .execute(&state.db)
+        .await;
         true
     };
-    let count = sqlx::query_scalar::<_, i64>(&format!("SELECT COUNT(*) FROM `{table}` WHERE plant_id = ?"))
-        .bind(pid)
-        .fetch_one(&state.db)
-        .await
-        .unwrap_or(0);
+    let count = sqlx::query_scalar::<_, i64>(sql_text!(
+        "SELECT COUNT(*) FROM `{table}` WHERE plant_id = ?"
+    ))
+    .bind(pid)
+    .fetch_one(&state.db)
+    .await
+    .unwrap_or(0);
     ok(json!({ "ok": true, "active": active, "count": count }))
 }
 
@@ -1014,7 +1213,12 @@ async fn detail(state: &AppState, q: &HashMap<String, String>) -> Response {
     if id <= 0 {
         return ok(json!({ "error": "Missing id" }));
     }
-    let row = sqlx::query("SELECT * FROM `data_source` WHERE id = ?").bind(id).fetch_optional(&state.db).await.ok().flatten();
+    let row = sqlx::query("SELECT * FROM `data_source` WHERE id = ?")
+        .bind(id)
+        .fetch_optional(&state.db)
+        .await
+        .ok()
+        .flatten();
     let Some(row) = row else {
         return reply(StatusCode::NOT_FOUND, json!({ "error": "Plant not found" }));
     };
@@ -1027,7 +1231,13 @@ async fn detail(state: &AppState, q: &HashMap<String, String>) -> Response {
     let images = plant_image_urls(&p);
 
     // A helper that runs a "COUNT" query for this plant id and returns the number (0 on error).
-    let count = |sql: &'static str| async move { sqlx::query_scalar::<_, i64>(sql).bind(id).fetch_one(&state.db).await.unwrap_or(0) };
+    let count = |sql: &'static str| async move {
+        sqlx::query_scalar::<_, i64>(sql)
+            .bind(id)
+            .fetch_one(&state.db)
+            .await
+            .unwrap_or(0)
+    };
     let like_count = count("SELECT COUNT(*) FROM user_likes WHERE plant_id = ?").await;
     let fav_count = count("SELECT COUNT(*) FROM user_favorites WHERE plant_id = ?").await;
 
@@ -1035,31 +1245,34 @@ async fn detail(state: &AppState, q: &HashMap<String, String>) -> Response {
     let viewer = q.get("user").map(|s| s.trim()).unwrap_or("");
     let (mut is_liked, mut is_fav) = (false, false);
     if !viewer.is_empty() {
-        is_liked = sqlx::query("SELECT 1 FROM user_likes WHERE plant_id = ? AND username = ? LIMIT 1")
-            .bind(id)
-            .bind(viewer)
-            .fetch_optional(&state.db)
-            .await
-            .ok()
-            .flatten()
-            .is_some();
-        is_fav = sqlx::query("SELECT 1 FROM user_favorites WHERE plant_id = ? AND username = ? LIMIT 1")
-            .bind(id)
-            .bind(viewer)
-            .fetch_optional(&state.db)
-            .await
-            .ok()
-            .flatten()
-            .is_some();
+        is_liked =
+            sqlx::query("SELECT 1 FROM user_likes WHERE plant_id = ? AND username = ? LIMIT 1")
+                .bind(id)
+                .bind(viewer)
+                .fetch_optional(&state.db)
+                .await
+                .ok()
+                .flatten()
+                .is_some();
+        is_fav =
+            sqlx::query("SELECT 1 FROM user_favorites WHERE plant_id = ? AND username = ? LIMIT 1")
+                .bind(id)
+                .bind(viewer)
+                .fetch_optional(&state.db)
+                .await
+                .ok()
+                .flatten()
+                .is_some();
     }
     // The app wants one `images` list, so the two raw picture columns are removed.
     p.shift_remove("picture");
     p.shift_remove("additional_pictures");
-    let fav_by = sqlx::query_scalar::<_, String>("SELECT username FROM user_favorites WHERE plant_id = ?")
-        .bind(id)
-        .fetch_all(&state.db)
-        .await
-        .unwrap_or_default();
+    let fav_by =
+        sqlx::query_scalar::<_, String>("SELECT username FROM user_favorites WHERE plant_id = ?")
+            .bind(id)
+            .fetch_all(&state.db)
+            .await
+            .unwrap_or_default();
 
     p.insert("images".into(), json!(images));
     p.insert("like_count".into(), json!(like_count));
@@ -1081,13 +1294,24 @@ async fn list(state: &AppState, q: &HashMap<String, String>) -> Response {
     let page = q.get("page").map(|p| php_int(p)).unwrap_or(1).max(1);
     let offset = (page - 1) * PAGE_SIZE;
     let fetch = PAGE_SIZE + 1;
-    let search = q.get("search").map(|s| s.trim().to_string()).unwrap_or_default();
-    let bed = q.get("bed").map(|s| s.trim().to_string()).unwrap_or_default();
-    let viewer = q.get("user").map(|s| s.trim().to_string()).unwrap_or_default();
+    let search = q
+        .get("search")
+        .map(|s| s.trim().to_string())
+        .unwrap_or_default();
+    let bed = q
+        .get("bed")
+        .map(|s| s.trim().to_string())
+        .unwrap_or_default();
+    let viewer = q
+        .get("user")
+        .map(|s| s.trim().to_string())
+        .unwrap_or_default();
 
     // 2. Build the WHERE text and the list of values for its `?` placeholders. Only fixed pieces of
     // SQL are added; typed text is always a placeholder value.
-    let mut where_ = "died = 0 AND flower_bed NOT LIKE '%Dead%' AND picture IS NOT NULL AND TRIM(picture) <> ''".to_string();
+    let mut where_ =
+        "died = 0 AND flower_bed NOT LIKE '%Dead%' AND picture IS NOT NULL AND TRIM(picture) <> ''"
+            .to_string();
     let mut params: Vec<String> = Vec::new();
     let single_letter = search.len() == 1 && search.chars().all(|c| c.is_ascii_alphabetic());
     if !search.is_empty() {
@@ -1107,21 +1331,30 @@ async fn list(state: &AppState, q: &HashMap<String, String>) -> Response {
         params.push(format!("%{bed}%"));
     }
     // 3. Sort by bed when asked, otherwise by name. These are fixed words chosen by this code.
-    let order_by = if q.get("sort").map(String::as_str) == Some("bed") { "flower_bed, plant_name" } else { "plant_name ASC" };
+    let order_by = if q.get("sort").map(String::as_str) == Some("bed") {
+        "flower_bed, plant_name"
+    } else {
+        "plant_name ASC"
+    };
     let sql = format!(
         "SELECT id, plant_name, botanical_name, family, genus, flower_bed,
                 picture, sun_exposure, water_needs, fruit_edibility, toxicity,
                 bloom_color, plant_type, native_status, zones, average_cost, qty
          FROM `data_source` WHERE {where_} ORDER BY {order_by} LIMIT {fetch} OFFSET {offset}"
     );
-    let mut qy = sqlx::query(&sql);
+    let mut qy = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
     for p in &params {
         qy = qy.bind(p);
     }
     // 4. Run it. On error send a 500 with the message.
     let mut rows = match qy.fetch_all(&state.db).await {
         Ok(r) => r,
-        Err(e) => return reply(StatusCode::INTERNAL_SERVER_ERROR, json!({ "error": e.to_string() })),
+        Err(e) => {
+            return reply(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                json!({ "error": hide(e) }),
+            )
+        }
     };
     // If the extra row came back there is a next page; remove that row.
     let has_more = rows.len() as i64 > PAGE_SIZE;
@@ -1146,7 +1379,11 @@ async fn list(state: &AppState, q: &HashMap<String, String>) -> Response {
         clean_strings(&mut m);
         let imgs = plant_image_urls(&m);
         let id = m.get("id").and_then(Value::as_i64).unwrap_or(0);
-        let fav_by: Vec<&String> = favs.iter().filter(|(p, _)| *p == id).map(|(_, u)| u).collect();
+        let fav_by: Vec<&String> = favs
+            .iter()
+            .filter(|(p, _)| *p == id)
+            .map(|(_, u)| u)
+            .collect();
         results.push(json!({
             "id": id,
             "plant_name": get(&m, "plant_name"),
@@ -1197,7 +1434,7 @@ async fn list(state: &AppState, q: &HashMap<String, String>) -> Response {
                     native_status, zones, average_cost, qty
              FROM `future_plants` WHERE {fwhere} ORDER BY plant_name LIMIT 50"
         );
-        let mut fq = sqlx::query(&fq_sql);
+        let mut fq = sqlx::query(sqlx::AssertSqlSafe(fq_sql.as_str()));
         for p in &fparams {
             fq = fq.bind(p);
         }
@@ -1208,7 +1445,13 @@ async fn list(state: &AppState, q: &HashMap<String, String>) -> Response {
             };
             clean_strings(&mut m);
             // `non_empty` returns a field only when it is not NULL, blank or "0".
-            let non_empty = |k: &str| m.get(k).filter(|v| !v.is_null() && v.as_str().map_or(true, |s| !s.is_empty() && s != "0")).cloned();
+            let non_empty = |k: &str| {
+                m.get(k)
+                    .filter(|v| {
+                        !v.is_null() && v.as_str().is_none_or(|s| !s.is_empty() && s != "0")
+                    })
+                    .cloned()
+            };
             results.push(json!({
                 // The id is made negative on purpose (see the doc comment on this function).
                 "id": -m.get("id").and_then(Value::as_i64).unwrap_or(0),
@@ -1249,7 +1492,14 @@ mod tests {
         let mut m = Map::new();
         m.insert("picture".into(), json!("a.webp, b.webp"));
         m.insert("additional_pictures".into(), json!("b.webp,,c.webp"));
-        assert_eq!(plant_image_urls(&m), vec!["/images/Database/a.webp", "/images/Database/b.webp", "/images/Database/c.webp"]);
+        assert_eq!(
+            plant_image_urls(&m),
+            vec![
+                "/images/Database/a.webp",
+                "/images/Database/b.webp",
+                "/images/Database/c.webp"
+            ]
+        );
     }
 
     #[test]

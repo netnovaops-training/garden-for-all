@@ -1008,3 +1008,25 @@ PDF guides	PDF 안내서
 Nothing to fetch.	가져올 것이 없어요.
 Nothing was written for the set that failed. Try again later.	실패한 묶음은 아무것도 쓰지 않았어요. 나중에 다시 해 보세요.
 P) PDF guides: get or refresh them (English / Korean)	P) PDF 안내서: 받기 또는 새로 고치기 (영어 / 한국어)
+19) Print labels: beds and plants, with QR codes	19) 이름표 인쇄: 화단과 식물, QR 코드와 함께
+20) Set up the phone app (QR codes)	20) 휴대폰 앱 설정 (QR 코드)
+21) Put the garden in a folder of its web name (like name.zapto.org/garden)	21) 정원을 웹 이름의 폴더에 두기 (예: name.zapto.org/garden)
+Labels: beds and plants	이름표: 화단과 식물
+Log in on the garden, then print this page. The codes keep working after a	정원에 로그인한 다음 이 페이지를 인쇄하세요. 코드는 웹 이름을 바꾸거나
+change of web name and after a bed is renamed.	화단 이름을 바꿔도 계속 작동해요.
+The phone app	휴대폰 앱
+1. On the phone, open this page (or scan its codes from this screen):	1. 휴대폰에서 이 페이지를 여세요 (또는 이 화면에서 코드를 찍으세요):
+2. Scan the first code to download the app, and install it.	2. 첫 번째 코드를 찍어서 앱을 내려받고 설치하세요.
+3. Scan the second code: the app learns your garden's address.	3. 두 번째 코드를 찍으세요. 앱이 내 정원의 주소를 알게 돼요.
+4. In the app, log in with your garden name and password.	4. 앱에서 정원 이름과 비밀번호로 로그인하세요.
+The page itself, as a code:	페이지 자체를 코드로:
+The garden in a folder	폴더 안의 정원
+The garden can live at the top of its web name, or in a folder of it.	정원은 웹 이름의 맨 위에 있을 수도 있고, 그 안의 폴더에 있을 수도 있어요.
+Labels and phones keep working either way: the codes follow the address.	어느 쪽이든 이름표와 휴대폰은 계속 작동해요. 코드가 주소를 따라가요.
+Folder (like /garden; empty = the top of the web name)	폴더 (예: /garden, 비워 두면 웹 이름의 맨 위)
+a folder is / and then letters, numbers, - or _ (like /garden)	폴더는 / 다음에 글자, 숫자, - 또는 _ 로 써요 (예: /garden)
+Settings (.env): the garden's address is now:	설정(.env): 정원의 주소는 이제 이거예요:
+The old name forwards to the new one, so labels you printed keep working.	예전 이름은 새 이름으로 넘겨주니까, 인쇄한 이름표는 계속 작동해요.
+Phones set up with the app's QR code follow the new name by themselves.	앱 QR 코드로 설정한 휴대폰은 새 이름을 스스로 따라가요.
+Older phones (never set up with the QR code): open the app setup page and scan it once:	예전 휴대폰(QR 코드로 설정한 적 없는 것): 앱 설정 페이지를 열고 한 번 찍으세요:
+New labels (optional, the old ones still work): print the labels page:	새 이름표(선택, 예전 것도 계속 작동해요): 이름표 페이지를 인쇄하세요:

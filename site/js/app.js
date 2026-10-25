@@ -1238,7 +1238,7 @@ window.openTagGuide = function (p) {
                         row('Toxicity', p.toxicity) +
                         row('Edibility', p.fruit_edibility))}
                     ${config.isAdmin ? `<div style="text-align:center;margin-top:14px;padding:10px 0;border-top:1px solid rgba(0,0,0,.08);">
-                        <img src="plant_actions.php?action=qr_code&plant_id=${p.id}" alt="QR Code" style="width:120px;height:120px;image-rendering:pixelated;" onerror="this.parentElement.style.display='none';">
+                        <img src="qr/plant/${p.id}.png" alt="QR Code" style="width:120px;height:120px;image-rendering:pixelated;" onerror="this.parentElement.style.display='none';">
                         <div style="font-size:.75rem;color:var(--svd-row-label,#558b2f);margin-top:4px;">Scan to open this plant</div>
                     </div>` : ''}
                 </div>
@@ -2407,7 +2407,7 @@ if (trigger) {
                         imgHtml += `<img src="plant_actions.php?action=barcode&plant_id=${t.id}" alt="Barcode for ${t.plant_name}" loading="lazy" class="tag-barcode-img">`;
                     }
                     if (hasQr) {
-                        imgHtml += `<img src="plant_actions.php?action=qr_code&plant_id=${t.id}" alt="QR for ${t.plant_name}" loading="lazy" width="120" height="120" style="display:block;margin:6px auto 0;">`;
+                        imgHtml += `<img src="qr/plant/${t.id}.png" alt="QR for ${t.plant_name}" loading="lazy" width="120" height="120" style="display:block;margin:6px auto 0;">`;
                     }
                     const upcLabel = t.barcode ? `<div class="qr-tag-upc">${t.barcode}</div>` : '';
                     html += `<div class="qr-tag-card" data-id="${t.id}">` +

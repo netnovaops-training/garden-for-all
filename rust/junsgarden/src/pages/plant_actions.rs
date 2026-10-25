@@ -1,7 +1,7 @@
 //! `plant_actions.php` — the small endpoint the catalog's plant window and
 //! the Tags view call.
 //!
-//! Public: the QR-code and barcode PNGs stored in the database (the QR tags
+//! Public: the QR-code and barcode PNG images stored in the database (the QR tags
 //! printed in the garden point at them). Signed in: saved preferences, the
 //! done list, photo position, approve, mark done, default photo, save or
 //! promote a wish-list plant, and the barcode lookup. Same order of checks
@@ -68,8 +68,10 @@ fn ok(body: Value) -> Response {
 /// cached by browsers for a day (86400 seconds) because QR codes rarely change.
 fn png(bytes: Vec<u8>) -> Response {
     let mut res = (StatusCode::OK, [(header::CONTENT_TYPE, "image/png")], bytes).into_response();
-    res.headers_mut()
-        .insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=86400"));
+    res.headers_mut().insert(
+        header::CACHE_CONTROL,
+        HeaderValue::from_static("public, max-age=86400"),
+    );
     res
 }
 
@@ -86,7 +88,7 @@ enum BindValue {
 async fn blob(state: &AppState, sql: &str, bind: BindValue) -> Option<Vec<u8>> {
     // 1. Start the query. 2. `match` on which kind of value we got and bind it to
     // the `?` (binding keeps typed text from changing the meaning of the SQL).
-    let q = sqlx::query(sql);
+    let q = sqlx::query(sqlx::AssertSqlSafe(sql));
     let q = match bind {
         BindValue::Id(i) => q.bind(i),
         BindValue::Text(t) => q.bind(t),
@@ -96,7 +98,10 @@ async fn blob(state: &AppState, sql: &str, bind: BindValue) -> Option<Vec<u8>> {
     // returns early with `None`).
     let row = q.fetch_optional(&state.db).await.ok()??;
     // 4. Read column 0 as raw bytes (the picture). A NULL or empty value gives `None`.
-    row.try_get_unchecked::<Option<Vec<u8>>, _>(0).ok().flatten().filter(|b| !b.is_empty())
+    row.try_get_unchecked::<Option<Vec<u8>>, _>(0)
+        .ok()
+        .flatten()
+        .filter(|b| !b.is_empty())
 }
 
 /// PHP's `empty()` for a request value.
@@ -111,13 +116,11 @@ fn empty(s: &str) -> bool {
 fn merged_images(picture: &Option<String>, additional: &Option<String>) -> Vec<String> {
     // `Vec` is a growable list. `&Option<String>` is a borrowed "maybe text".
     let mut out: Vec<String> = Vec::new();
-    for col in [picture, additional] {
-        if let Some(s) = col {
-            for f in s.split(',') {
-                let f = f.trim();
-                if !f.is_empty() && !out.iter().any(|x| x == f) {
-                    out.push(f.to_string());
-                }
+    for s in [picture, additional].into_iter().flatten() {
+        for f in s.split(',') {
+            let f = f.trim();
+            if !f.is_empty() && !out.iter().any(|x| x == f) {
+                out.push(f.to_string());
             }
         }
     }
@@ -146,7 +149,10 @@ fn safe_column(c: &str) -> bool {
 /// database type. Takes the query so far and the value; gives back the query.
 /// Null and empty text become SQL NULL (the PHP did the same). `'q` is a
 /// lifetime name: it says the borrowed value must live as long as the query.
-fn bind_json<'q>(q: sqlx::query::Query<'q, sqlx::MySql, sqlx::mysql::MySqlArguments>, v: &'q Value) -> sqlx::query::Query<'q, sqlx::MySql, sqlx::mysql::MySqlArguments> {
+fn bind_json<'q>(
+    q: sqlx::query::Query<'q, sqlx::MySql, sqlx::mysql::MySqlArguments>,
+    v: &'q Value,
+) -> sqlx::query::Query<'q, sqlx::MySql, sqlx::mysql::MySqlArguments> {
     // Choose the database type from the JSON type. Booleans become 0 or 1.
     // Whole numbers stay integers; other numbers become floating point.
     match v {
@@ -158,7 +164,11 @@ fn bind_json<'q>(q: sqlx::query::Query<'q, sqlx::MySql, sqlx::mysql::MySqlArgume
         },
         Value::String(s) => {
             // The PHP turns '' into NULL for these updates.
-            if s.is_empty() { q.bind(Option::<String>::None) } else { q.bind(s.as_str()) }
+            if s.is_empty() {
+                q.bind(Option::<String>::None)
+            } else {
+                q.bind(s.as_str())
+            }
         }
         // Anything else (a list or object) is stored as its JSON text.
         other => q.bind(other.to_string()),
@@ -171,15 +181,20 @@ fn bind_json<'q>(q: sqlx::query::Query<'q, sqlx::MySql, sqlx::mysql::MySqlArgume
 /// data folder instead, which only this program writes and which is never
 /// served to browsers. Same contents, same behaviour.
 /// Takes the app state. Gives back the path of the cache file in the data folder.
-fn barcode_cache_path(state: &AppState) -> std::path::PathBuf {
-    state.data.join("barcode_cache.json")
+fn barcode_cache_path(state: &AppState) -> std::io::Result<crate::store::SafePath> {
+    crate::store::file_in(&state.data, "barcode_cache.json")
 }
 
 /// Make the cache key for a plant: name and company, lower-case, letters and
 /// digits only, joined with `|`. "Lil' Kim" by "Proven Winners" gives
 /// "lilkim|provenwinners". The closure `clean` does the cleaning for both.
 fn cache_key(plant_name: &str, company: &str) -> String {
-    let clean = |s: &str| s.to_lowercase().chars().filter(|c| c.is_ascii_alphanumeric()).collect::<String>();
+    let clean = |s: &str| {
+        s.to_lowercase()
+            .chars()
+            .filter(|c| c.is_ascii_alphanumeric())
+            .collect::<String>()
+    };
     format!("{}|{}", clean(plant_name), clean(company))
 }
 
@@ -191,36 +206,83 @@ fn cache_key(plant_name: &str, company: &str) -> String {
 async fn lookup_barcode(state: &AppState, data: &Value) -> Response {
     // 1. Read the request. Only the two known tables are allowed (never a table name
     // taken from the user). `pid` is the plant's row id, 0 if none was given.
-    let plant_name = data.get("plant_name").and_then(Value::as_str).unwrap_or("").trim().to_string();
-    let company = data.get("company").and_then(Value::as_str).unwrap_or("").trim().to_string();
-    let table = if data.get("table").and_then(Value::as_str) == Some("future_plants") { "future_plants" } else { "data_source" };
-    let pid = data.get("id").map(|v| v.as_i64().unwrap_or_else(|| php_int(v.as_str().unwrap_or("")))).unwrap_or(0);
+    let plant_name = data
+        .get("plant_name")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .trim()
+        .to_string();
+    let company = data
+        .get("company")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .trim()
+        .to_string();
+    let table = if data.get("table").and_then(Value::as_str) == Some("future_plants") {
+        "future_plants"
+    } else {
+        "data_source"
+    };
+    let pid = data
+        .get("id")
+        .map(|v| {
+            v.as_i64()
+                .unwrap_or_else(|| php_int(v.as_str().unwrap_or("")))
+        })
+        .unwrap_or(0);
     // A plant name is required.
     if plant_name.is_empty() {
         return ok(json!({ "error": "plant_name required" }));
     }
 
-    // 2. Load the cache file, or start a new empty cache if it is missing.
-    let path = barcode_cache_path(state);
-    let mut cache: Value = std::fs::read(&path)
-        .ok()
-        .and_then(|b| serde_json::from_slice(&b).ok())
+    // 2. Load the cache file, or start a new empty cache if it is missing (or damaged: it
+    // is only a cache, so starting over is fine).
+    // (A data folder that cannot be used means no cache: the lookup still works.)
+    let path = barcode_cache_path(state).ok();
+    let p = path.clone();
+    let loaded =
+        crate::guard::off_thread(move || p.and_then(|p| crate::store::read_json(&p).ok())).await;
+    let mut cache: Value = loaded
+        .map(Value::Object)
         .unwrap_or_else(|| json!({ "lookups": {} }));
-    // 3. Make the cache key, a small closure to save the cache, and a timestamp.
+    // 3. Make the cache key, a small helper to save the cache (whole file at once, off the
+    // async threads), and a timestamp.
     let key = cache_key(&plant_name, &company);
     let save_cache = |cache: &Value| {
-        let _ = std::fs::write(&path, serde_json::to_string_pretty(cache).unwrap_or_default());
+        let (p, body) = (
+            path.clone(),
+            serde_json::to_vec_pretty(cache).unwrap_or_default(),
+        );
+        async move {
+            crate::guard::off_thread(move || {
+                let Some(p) = p else { return };
+                if let Err(e) = crate::store::write_atomic(&p, &body) {
+                    tracing::error!("barcode cache not saved: {e}");
+                }
+            })
+            .await
+        }
     };
     let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
     // 4. Cache hit: reuse the stored number, write it to the plant row, and reply
     // "cached". `if let Some(x) = ...` runs only when the value exists.
     if let Some(hit) = cache.get("lookups").and_then(|l| l.get(&key)) {
-        if let Some(upc) = hit.get("upc").and_then(Value::as_str).filter(|u| !u.is_empty()) {
+        if let Some(upc) = hit
+            .get("upc")
+            .and_then(Value::as_str)
+            .filter(|u| !u.is_empty())
+        {
             if pid != 0 {
-                let _ = sqlx::query(&format!("UPDATE `{table}` SET barcode = ? WHERE id = ?")).bind(upc).bind(pid).execute(&state.db).await;
+                let _ = sqlx::query(sql_text!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
+                    .bind(upc)
+                    .bind(pid)
+                    .execute(&state.db)
+                    .await;
             }
-            return ok(json!({ "status": "cached", "upc": upc, "title": hit.get("title").and_then(Value::as_str).unwrap_or("") }));
+            return ok(
+                json!({ "status": "cached", "upc": upc, "title": hit.get("title").and_then(Value::as_str).unwrap_or("") }),
+            );
         }
     }
 
@@ -228,7 +290,11 @@ async fn lookup_barcode(state: &AppState, data: &Value) -> Response {
     let url = format!(
         "https://api.upcitemdb.com/prod/trial/search?s={}{}&match_mode=0&type=product",
         crate::php::urlencode(&plant_name),
-        if company.is_empty() { String::new() } else { format!("&brand={}", crate::php::urlencode(&company)) }
+        if company.is_empty() {
+            String::new()
+        } else {
+            format!("&brand={}", crate::php::urlencode(&company))
+        }
     );
     // 6. Ask the service, waiting at most 10 seconds. `r.json().await.ok()` turns the
     // answer into JSON, or `None` if it is not valid JSON.
@@ -247,18 +313,30 @@ async fn lookup_barcode(state: &AppState, data: &Value) -> Response {
     // right away, and reply "not_found".
     let Some(api) = body else {
         cache["lookups"][&key] = json!({ "not_found": true, "looked_up": now });
-        save_cache(&cache);
+        save_cache(&cache).await;
         return ok(json!({ "status": "not_found" }));
     };
     // 8. Pick the best product: first one whose title contains the plant name,
     // otherwise the first one in the list. A barcode is its EAN, else its UPC.
-    let items = api.get("items").and_then(Value::as_array).cloned().unwrap_or_default();
+    let items = api
+        .get("items")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
     let first_code = |item: &Value| -> String {
-        let ean = item.get("ean").and_then(|e| e.get(0)).and_then(Value::as_str).unwrap_or("");
+        let ean = item
+            .get("ean")
+            .and_then(|e| e.get(0))
+            .and_then(Value::as_str)
+            .unwrap_or("");
         if !ean.is_empty() {
             return ean.to_string();
         }
-        item.get("upc").and_then(|e| e.get(0)).and_then(Value::as_str).unwrap_or("").to_string()
+        item.get("upc")
+            .and_then(|e| e.get(0))
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string()
     };
     let mut upc = String::new();
     let mut title = String::new();
@@ -274,21 +352,29 @@ async fn lookup_barcode(state: &AppState, data: &Value) -> Response {
     if upc.is_empty() {
         if let Some(item) = items.first() {
             upc = first_code(item);
-            title = item.get("title").and_then(Value::as_str).unwrap_or("").to_string();
+            title = item
+                .get("title")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_string();
         }
     }
     // 9. Store a found number in the cache and in the plant row, then reply.
     if !upc.is_empty() {
         cache["lookups"][&key] = json!({ "upc": upc, "title": title, "looked_up": now });
-        save_cache(&cache);
+        save_cache(&cache).await;
         if pid != 0 {
-            let _ = sqlx::query(&format!("UPDATE `{table}` SET barcode = ? WHERE id = ?")).bind(&upc).bind(pid).execute(&state.db).await;
+            let _ = sqlx::query(sql_text!("UPDATE `{table}` SET barcode = ? WHERE id = ?"))
+                .bind(&upc)
+                .bind(pid)
+                .execute(&state.db)
+                .await;
         }
         ok(json!({ "status": "found", "upc": upc, "title": title }))
     // Nothing found: remember that and reply "not_found".
     } else {
         cache["lookups"][&key] = json!({ "not_found": true, "looked_up": now });
-        save_cache(&cache);
+        save_cache(&cache).await;
         ok(json!({ "status": "not_found" }))
     }
 }
@@ -312,7 +398,13 @@ pub async fn plant_actions(
         f.get(k)
             .map(str::to_string)
             .or_else(|| q.get(k).cloned())
-            .or_else(|| json_body.as_ref().and_then(|j| j.get(k)).map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())))
+            .or_else(|| {
+                json_body.as_ref().and_then(|j| j.get(k)).map(|v| {
+                    v.as_str()
+                        .map(str::to_string)
+                        .unwrap_or_else(|| v.to_string())
+                })
+            })
             .unwrap_or_default()
     };
     // 2. The three values almost every action needs.
@@ -325,16 +417,34 @@ pub async fn plant_actions(
     if action == "bed_qr_code" {
         let bed = pick("bed").trim().to_string();
         if !bed.is_empty() {
-            if let Some(b) = blob(&state, "SELECT qr_code FROM `flower_bed_qr` WHERE bed_name = ?", BindValue::Text(bed)).await {
+            if let Some(b) = blob(
+                &state,
+                "SELECT qr_code FROM `flower_bed_qr` WHERE bed_name = ?",
+                BindValue::Text(bed),
+            )
+            .await
+            {
                 return png(b);
             }
         }
-        return json_status(StatusCode::NOT_FOUND, json!({ "error": "No QR code for this bed" }));
+        return json_status(
+            StatusCode::NOT_FOUND,
+            json!({ "error": "No QR code for this bed" }),
+        );
     }
     if action == "qr_code" && plant_id > 0 {
-        return match blob(&state, "SELECT qr_code FROM `data_source` WHERE id = ?", BindValue::Id(plant_id)).await {
+        return match blob(
+            &state,
+            "SELECT qr_code FROM `data_source` WHERE id = ?",
+            BindValue::Id(plant_id),
+        )
+        .await
+        {
             Some(b) => png(b),
-            None => json_status(StatusCode::NOT_FOUND, json!({ "error": "No QR code generated for this plant" })),
+            None => json_status(
+                StatusCode::NOT_FOUND,
+                json!({ "error": "No QR code generated for this plant" }),
+            ),
         };
     }
     if action == "barcode" && plant_id > 0 {
@@ -348,7 +458,10 @@ pub async fn plant_actions(
         .await
         {
             Some(b) => png(b),
-            None => json_status(StatusCode::NOT_FOUND, json!({ "error": "No barcode for this plant" })),
+            None => json_status(
+                StatusCode::NOT_FOUND,
+                json!({ "error": "No barcode for this plant" }),
+            ),
         };
     }
 
@@ -374,11 +487,13 @@ pub async fn plant_actions(
     }
     // `load_prefs` returns all of this user's saved settings as one JSON object.
     if action == "load_prefs" && !user.is_empty() {
-        let rows = sqlx::query_as::<_, (String, String)>("SELECT pref_key, pref_value FROM `user_prefs` WHERE username = ?")
-            .bind(&user)
-            .fetch_all(&state.db)
-            .await
-            .unwrap_or_default();
+        let rows = sqlx::query_as::<_, (String, String)>(
+            "SELECT pref_key, pref_value FROM `user_prefs` WHERE username = ?",
+        )
+        .bind(&user)
+        .fetch_all(&state.db)
+        .await
+        .unwrap_or_default();
         let mut prefs = serde_json::Map::new();
         for (k, v) in rows {
             prefs.insert(k, json!(v));
@@ -395,19 +510,32 @@ pub async fn plant_actions(
     // below calls it so errors are logged in one place.
     let db_error = |e: sqlx::Error| {
         tracing::error!("plant_actions: {e}");
-        json_status(StatusCode::INTERNAL_SERVER_ERROR, json!({ "error": "Database error" }))
+        json_status(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            json!({ "error": "Database error" }),
+        )
     };
 
     // 6. list_done: which plants this person has marked done (default: the caller).
     if action == "list_done" {
         let who = {
             let w = pick("user").trim().to_string();
-            if w.is_empty() { user.clone() } else { w }
+            if w.is_empty() {
+                user.clone()
+            } else {
+                w
+            }
         };
         if who.is_empty() {
             return ok(json!({ "done": [] }));
         }
-        return match sqlx::query_scalar::<_, i64>("SELECT plant_id FROM `user_done` WHERE username = ?").bind(&who).fetch_all(&state.db).await {
+        return match sqlx::query_scalar::<_, i64>(
+            "SELECT plant_id FROM `user_done` WHERE username = ?",
+        )
+        .bind(&who)
+        .fetch_all(&state.db)
+        .await
+        {
             Ok(ids) => ok(json!({ "user": who, "done": ids })),
             Err(e) => db_error(e),
         };
@@ -422,20 +550,37 @@ pub async fn plant_actions(
     // whether it is flipped. The check accepts exactly two values like `12.5%` with
     // at most 3 digits before the point, so odd text never reaches the database.
     if action == "save_photo_position" {
-        let pos = f.get("position").map(str::trim).filter(|s| !s.is_empty()).unwrap_or("50% 50%").to_string();
+        let pos = f
+            .get("position")
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("50% 50%")
+            .to_string();
         let flip = if php_int(f.str("flip")) != 0 { 1 } else { 0 };
         let valid = {
             let parts: Vec<&str> = pos.split_whitespace().collect();
             parts.len() == 2
                 && parts.iter().all(|p| {
                     let num = p.strip_suffix('%').unwrap_or("");
-                    !num.is_empty() && num.parse::<f64>().is_ok() && num.split('.').next().map_or(false, |d| d.len() <= 3 && d.chars().all(|c| c.is_ascii_digit()))
+                    !num.is_empty()
+                        && num.parse::<f64>().is_ok()
+                        && num
+                            .split('.')
+                            .next()
+                            .is_some_and(|d| d.len() <= 3 && d.chars().all(|c| c.is_ascii_digit()))
                 })
         };
         if !valid {
             return ok(json!({ "error": "Invalid position format" }));
         }
-        if let Err(e) = sqlx::query("UPDATE `data_source` SET photo_position = ?, photo_flip = ? WHERE id = ?").bind(&pos).bind(flip).bind(plant_id).execute(&state.db).await {
+        if let Err(e) =
+            sqlx::query("UPDATE `data_source` SET photo_position = ?, photo_flip = ? WHERE id = ?")
+                .bind(&pos)
+                .bind(flip)
+                .bind(plant_id)
+                .execute(&state.db)
+                .await
+        {
             return db_error(e);
         }
         // Clear the cached widget data so the change shows up at once.
@@ -445,8 +590,17 @@ pub async fn plant_actions(
 
     // 9. toggle_image_approved: mark the plant's photo approved or not (1 or 0).
     if action == "toggle_image_approved" {
-        let approved = if php_int(f.str("approved")) != 0 { 1 } else { 0 };
-        if let Err(e) = sqlx::query("UPDATE `data_source` SET image_approved = ? WHERE id = ?").bind(approved).bind(plant_id).execute(&state.db).await {
+        let approved = if php_int(f.str("approved")) != 0 {
+            1
+        } else {
+            0
+        };
+        if let Err(e) = sqlx::query("UPDATE `data_source` SET image_approved = ? WHERE id = ?")
+            .bind(approved)
+            .bind(plant_id)
+            .execute(&state.db)
+            .await
+        {
             return db_error(e);
         }
         state.invalidate_widget_cache();
@@ -456,11 +610,19 @@ pub async fn plant_actions(
     // 10. toggle_done: add or remove this person from the plant's done list.
     // `INSERT IGNORE` does nothing if the row exists already.
     if action == "toggle_done" {
-        let done = f.get("done").map_or(false, |d| !empty(d));
+        let done = f.get("done").is_some_and(|d| !empty(d));
         let r = if done {
-            sqlx::query("INSERT IGNORE INTO `user_done` (plant_id, username) VALUES (?, ?)").bind(plant_id).bind(&user).execute(&state.db).await
+            sqlx::query("INSERT IGNORE INTO `user_done` (plant_id, username) VALUES (?, ?)")
+                .bind(plant_id)
+                .bind(&user)
+                .execute(&state.db)
+                .await
         } else {
-            sqlx::query("DELETE FROM `user_done` WHERE plant_id = ? AND username = ?").bind(plant_id).bind(&user).execute(&state.db).await
+            sqlx::query("DELETE FROM `user_done` WHERE plant_id = ? AND username = ?")
+                .bind(plant_id)
+                .bind(&user)
+                .execute(&state.db)
+                .await
         };
         return match r {
             Ok(_) => ok(json!({ "status": "ok", "done": done as i64 })),
@@ -476,10 +638,12 @@ pub async fn plant_actions(
         if filename.is_empty() {
             return ok(json!({ "error": "Missing filename" }));
         }
-        let row = sqlx::query_as::<_, (Option<String>, Option<String>)>("SELECT picture, additional_pictures FROM `data_source` WHERE id = ?")
-            .bind(plant_id)
-            .fetch_optional(&state.db)
-            .await;
+        let row = sqlx::query_as::<_, (Option<String>, Option<String>)>(
+            "SELECT picture, additional_pictures FROM `data_source` WHERE id = ?",
+        )
+        .bind(plant_id)
+        .fetch_optional(&state.db)
+        .await;
         // Read the row: `None` means no such plant. The odd-looking `let ... else`
         // returns the "Plant not found" reply when the row is missing.
         let Some((picture, additional)) = (match row {
@@ -490,22 +654,26 @@ pub async fn plant_actions(
         };
         let imgs = merged_images(&picture, &additional);
         // The chosen file must already belong to this plant.
-        if !imgs.iter().any(|i| *i == filename) {
+        if !imgs.contains(&filename) {
             return ok(json!({ "error": "That image is not part of this plant" }));
         }
         let rest: Vec<String> = imgs.into_iter().filter(|i| *i != filename).collect();
         let new_additional = rest.join(",");
-        if let Err(e) = sqlx::query("UPDATE `data_source` SET picture = ?, additional_pictures = ? WHERE id = ?")
-            .bind(&filename)
-            .bind(&new_additional)
-            .bind(plant_id)
-            .execute(&state.db)
-            .await
+        if let Err(e) = sqlx::query(
+            "UPDATE `data_source` SET picture = ?, additional_pictures = ? WHERE id = ?",
+        )
+        .bind(&filename)
+        .bind(&new_additional)
+        .bind(plant_id)
+        .execute(&state.db)
+        .await
         {
             return db_error(e);
         }
         state.invalidate_widget_cache();
-        return ok(json!({ "status": "ok", "picture": filename, "additional_pictures": new_additional }));
+        return ok(
+            json!({ "status": "ok", "picture": filename, "additional_pictures": new_additional }),
+        );
     }
 
     // 12. save_future: update a wish-list plant from the JSON body. Only fields that
@@ -515,15 +683,28 @@ pub async fn plant_actions(
         let Some(data) = json_body.as_ref().filter(|d| d.get("id").is_some()) else {
             return ok(json!({ "error": "Missing plant data" }));
         };
-        let fp_id = data.get("id").map(|v| v.as_i64().unwrap_or_else(|| php_int(v.as_str().unwrap_or("")))).unwrap_or(0);
+        let fp_id = data
+            .get("id")
+            .map(|v| {
+                v.as_i64()
+                    .unwrap_or_else(|| php_int(v.as_str().unwrap_or("")))
+            })
+            .unwrap_or(0);
         let skip = ["id", "action", "source_table", "date_added"];
-        let sets: Vec<(String, Value)> = json_pairs(data).into_iter().filter(|(k, _)| !skip.contains(&k.as_str()) && safe_column(k)).collect();
+        let sets: Vec<(String, Value)> = json_pairs(data)
+            .into_iter()
+            .filter(|(k, _)| !skip.contains(&k.as_str()) && safe_column(k))
+            .collect();
         if sets.is_empty() {
             return ok(json!({ "error": "No fields to update" }));
         }
-        let clause = sets.iter().map(|(k, _)| format!("`{k}` = ?")).collect::<Vec<_>>().join(", ");
+        let clause = sets
+            .iter()
+            .map(|(k, _)| format!("`{k}` = ?"))
+            .collect::<Vec<_>>()
+            .join(", ");
         let up_sql = format!("UPDATE `future_plants` SET {clause} WHERE id = ?");
-        let mut qy = sqlx::query(&up_sql);
+        let mut qy = sqlx::query(sqlx::AssertSqlSafe(up_sql.as_str()));
         for (_, v) in &sets {
             qy = bind_json(qy, v);
         }
@@ -539,34 +720,69 @@ pub async fn plant_actions(
         let fp_id = json_body
             .as_ref()
             .and_then(|d| d.get("id"))
-            .map(|v| v.as_i64().unwrap_or_else(|| php_int(v.as_str().unwrap_or(""))))
+            .map(|v| {
+                v.as_i64()
+                    .unwrap_or_else(|| php_int(v.as_str().unwrap_or("")))
+            })
             .unwrap_or(plant_id);
         if fp_id <= 0 {
             return ok(json!({ "error": "Missing future plant ID" }));
         }
-        let row = match sqlx::query("SELECT * FROM `future_plants` WHERE id = ?").bind(fp_id).fetch_optional(&state.db).await {
+        let row = match sqlx::query("SELECT * FROM `future_plants` WHERE id = ?")
+            .bind(fp_id)
+            .fetch_optional(&state.db)
+            .await
+        {
             Ok(r) => r,
             Err(e) => return db_error(e),
         };
         let Some(row) = row else {
             return ok(json!({ "error": "Future plant not found" }));
         };
-        let pairs: Vec<(String, Value)> = json_pairs(&row_to_json(&row)).into_iter().filter(|(k, _)| k != "id" && k != "date_added").collect();
-        let cols = pairs.iter().map(|(k, _)| format!("`{k}`")).collect::<Vec<_>>().join(", ");
+        let pairs: Vec<(String, Value)> = json_pairs(&row_to_json(&row))
+            .into_iter()
+            .filter(|(k, _)| k != "id" && k != "date_added")
+            .collect();
+        let cols = pairs
+            .iter()
+            .map(|(k, _)| format!("`{k}`"))
+            .collect::<Vec<_>>()
+            .join(", ");
         let ph = vec!["?"; pairs.len()].join(", ");
         let ins_sql = format!("INSERT INTO `data_source` ({cols}) VALUES ({ph})");
-        let mut qy = sqlx::query(&ins_sql);
+        let mut qy = sqlx::query(sqlx::AssertSqlSafe(ins_sql.as_str()));
         for (_, v) in &pairs {
             qy = bind_json(qy, v);
         }
-        let new_id = match qy.execute(&state.db).await {
-            Ok(r) => r.last_insert_id() as i64,
+        // Add the garden row, move the plant's barcodes to it, remove the wish-list row: all
+        // or none (a transaction). The PHP left the barcodes pointing at the deleted wish-list
+        // row; this moves them, as the catalogue's own promote always did.
+        let promoted: Result<i64, sqlx::Error> = async {
+            let mut tx = state.db.begin().await?;
+            let new_id = qy.execute(&mut *tx).await?.last_insert_id() as i64;
+            sqlx::query("UPDATE `plant_barcodes` SET plant_id = ?, source_table = 'data_source' WHERE plant_id = ? AND source_table = 'future_plants'")
+                .bind(new_id)
+                .bind(fp_id)
+                .execute(&mut *tx)
+                .await?;
+            sqlx::query("DELETE FROM `future_plants` WHERE id = ?").bind(fp_id).execute(&mut *tx).await?;
+            tx.commit().await?;
+            Ok(new_id)
+        }
+        .await;
+        let new_id = match promoted {
+            Ok(id) => id,
             Err(e) => return db_error(e),
         };
-        let _ = sqlx::query("DELETE FROM `future_plants` WHERE id = ?").bind(fp_id).execute(&state.db).await;
         state.invalidate_widget_cache();
-        let name = pairs.iter().find(|(k, _)| k == "plant_name").and_then(|(_, v)| v.as_str()).unwrap_or("");
-        return ok(json!({ "status": "ok", "message": "Plant promoted to garden!", "new_id": new_id, "plant_name": name }));
+        let name = pairs
+            .iter()
+            .find(|(k, _)| k == "plant_name")
+            .and_then(|(_, v)| v.as_str())
+            .unwrap_or("");
+        return ok(
+            json!({ "status": "ok", "message": "Plant promoted to garden!", "new_id": new_id, "plant_name": name }),
+        );
     }
 
     // 14. lookup_barcode: ask the online service (see `lookup_barcode` above).
@@ -587,14 +803,20 @@ mod tests {
     // Checks that two comma lists merge with each name once, in order.
     #[test]
     fn merged_images_dedupes_in_order() {
-        let got = merged_images(&Some("a.webp, b.webp".into()), &Some("b.webp,c.webp".into()));
+        let got = merged_images(
+            &Some("a.webp, b.webp".into()),
+            &Some("b.webp,c.webp".into()),
+        );
         assert_eq!(got, vec!["a.webp", "b.webp", "c.webp"]);
     }
 
     // Checks that punctuation and case are dropped from the cache key.
     #[test]
     fn cache_keys_strip_punctuation() {
-        assert_eq!(cache_key("Lil' Kim", "Proven Winners"), "lilkim|provenwinners");
+        assert_eq!(
+            cache_key("Lil' Kim", "Proven Winners"),
+            "lilkim|provenwinners"
+        );
     }
 
     // Checks that a name with a quote or `;--` is refused, because it could be SQL.

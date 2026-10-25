@@ -1,0 +1,75 @@
+# Form posts and app actions, run in this order on both sides (each side has its own copy of
+# the database and data folder, so both start equal and stay comparable).
+# "expect:" marks a request where the NEW side is meant to differ: it names the fix.
+
+# --- comments.php ---------------------------------------------------------------------------
+POST comments.php | post_comment=1&type=plant&key=2&name=Kona&message=Lovely+hostas
+comments.php?get_comments=1&type=plant&key=2
+POST comments.php | post_comment=1&type=gallery&key=garden-1.png&name=&message=<b>nice</b>
+comments.php?get_comments=1&type=gallery&key=garden-1.png
+POST comments.php | post_comment=1&type=plant&key=&message=x
+POST comments.php | post_comment=1&type=plant&key=2&message=0
+POST comments.php | post_comment=1&type=plant&key=not-a-plant&message=spam | X-Forwarded-For: 10.0.0.2
+expect: a plant key must be a plant number (made-up keys refused)
+POST comments.php | post_comment=1&type=gallery&key=no-such-photo.jpg&message=spam | X-Forwarded-For: 10.0.0.2
+expect: a gallery key must be a photo that exists
+POST comments.php | post_comment=1&type=plant&key=1&message=a | X-Forwarded-For: 10.0.0.3
+POST comments.php | post_comment=1&type=plant&key=1&message=b | X-Forwarded-For: 10.0.0.3
+POST comments.php | post_comment=1&type=plant&key=1&message=c | X-Forwarded-For: 10.0.0.3
+POST comments.php | post_comment=1&type=plant&key=1&message=d | X-Forwarded-For: 10.0.0.3
+POST comments.php | post_comment=1&type=plant&key=1&message=e | X-Forwarded-For: 10.0.0.3
+POST comments.php | post_comment=1&type=plant&key=1&message=f | X-Forwarded-For: 10.0.0.3
+expect: 6th comment from one address in 10 minutes is refused (rate limit)
+POST comments.php | post_comment=1&type=plant&key=2&message=from+elsewhere | Origin: https://evil.example
+expect: a post another website sent is refused (403)
+POST comments.php | post_comment=1&type=plant&key=2&message=from+elsewhere | Sec-Fetch-Site: cross-site
+expect: a post another website sent is refused (403)
+comments.php?check_notify=1
+@login comments.php?check_notify=1
+POST comments.php | dismiss_notify=1
+@login POST comments.php | dismiss_notify=1
+@login comments.php?check_notify=1
+@login comments.php?admin_dump=1&type=plant
+expect: follows from the refusals above (no made-up key, no 6th comment, no cross-site comments)
+@login comments.php?admin_dump=1&type=gallery
+expect: follows from the refusals above (no comment on a photo that does not exist)
+POST comments.php | delete_comment=1&type=plant&key=2&index=0
+@login POST comments.php | delete_comment=1&type=plant&key=2&index=0
+@login POST comments.php | delete_comment=1&type=plant&key=2&index=99999
+comments.php?get_comments=1&type=plant&key=2
+expect: follows from the refused cross-site comments (2 fewer on plant 2)
+comments.php?nothing=1
+
+# --- the app's comments (app_api.php) -------------------------------------------------------
+app_api.php?action=comments&plant_id=2
+expect: follows from the refused cross-site comments (2 fewer on plant 2)
+POST app_api.php?action=comment | plant_id=2&name=App&message=From+the+phone | X-Forwarded-For: 10.0.0.4
+POST app_api.php?action=comment | plant_id=0&message=x | X-Forwarded-For: 10.0.0.4
+app_api.php?action=comments&plant_id=2
+expect: follows from the refused cross-site comments (2 fewer on plant 2)
+
+# --- the guestbook (index.php) --------------------------------------------------------------
+POST index.php | user_name=Kona&user_message=Hello+garden | X-Forwarded-For: 10.0.0.5
+expect: a guestbook post answers with a redirect back (303) instead of the page, so refresh cannot post twice
+index.php
+POST index.php | user_name=<i>x</i>&user_message=<script>bad</script>tags | X-Forwarded-For: 10.0.0.5
+expect: redirect after posting (303)
+index.php
+POST index.php | user_name=a&user_message=0
+@login POST index.php | delete_comment=1&comment_index=0
+@login index.php
+
+# --- login.php ------------------------------------------------------------------------------
+POST login.php | admin_user=Tester&admin_password=wrong&admin_login=&back=/catalog.php | X-Forwarded-For: 10.0.0.6
+POST login.php | admin_user=Tester&admin_password=wrong&admin_login=&back=//evil.example | X-Forwarded-For: 10.0.0.6
+POST login.php | forgot=1&who=nobody@example.test
+POST login.php | set_password=1&u=Tester&reset=bad&password=abcdefghijk&password2=different
+POST login.php | anything=1
+POST login.php | admin_user=Tester&admin_password=x&admin_login= | Origin: https://evil.example
+expect: a login form posted from another website is refused (403; login CSRF)
+
+# --- favourites through the app API: the mark belongs to whoever asks -----------------------
+POST app_api.php?action=favorite | username=Joshua&plant_id=5
+expect: the favourite is the caller's own, not Joshua's
+catalog.php?ajax_load=1&page=1&search=%E2%AD%90+Jun%27s+Favs
+expect: a stranger can no longer add plants to Jun's favourites (username= is ignored)

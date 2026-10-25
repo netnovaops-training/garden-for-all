@@ -212,14 +212,16 @@ Official page: <https://developer.android.com/studio/publish/app-signing>
      "versionName": "3.2",
      "url": "https://junsgarden.zapto.org/apps/junsgarden.apk",
      "md5": "the fingerprint of the new APK (md5sum)",
+     "sha256": "its stronger fingerprint (sha256sum)",
      "notes": "What is new, in one or two sentences."
    }
    ```
 
 3. If `versionCode` there is **bigger** than the app's own `versionCode`, the
    app shows "Update available" with the `notes`.
-4. On **Update**, it downloads the APK from `url`, checks the `md5`
-   fingerprint (so a broken download is never installed), and hands it to
+4. On **Update**, it downloads the APK from `url`, checks the `sha256`
+   fingerprint (apps before 3.2 check `md5`; keep both, so every phone can
+   update), so a broken download is never installed, and hands it to
    Android. Android always asks the person to confirm. The first time, the
    phone asks to allow "install unknown apps" for Jun's Garden.
 
@@ -246,17 +248,18 @@ updates").
    Android says the app cannot be installed or "conflicts with an existing
    package", the key is not the same one. Stop and read "Signing and
    updates" again.
-4. **Get its md5 fingerprint.** Android Studio tells you where it saved the
+4. **Get its two fingerprints.** Android Studio tells you where it saved the
    APK (usually `app\release\app-release.apk`). In PowerShell, in that folder:
 
    ```
    (Get-FileHash -Algorithm MD5 .\app-release.apk).Hash.ToLower()
+   (Get-FileHash -Algorithm SHA256 .\app-release.apk).Hash.ToLower()
    ```
 
 5. **Copy the APK** to your website as `site/apps/junsgarden.apk` (replace
    the old one; keep a copy of the old one in your backups).
 6. **Edit `site/apps/version.json`**: the new `versionCode`, `versionName`,
-   `md5`, and new `notes`. Save it. Check it is still valid JSON (commas,
+   `md5`, `sha256`, and new `notes`. Save it. Check it is still valid JSON (commas,
    quotes) by opening `https://junsgarden.zapto.org/apps/version.json` in a
    browser.
 7. **Check** on a phone with the old version: start the app. It should offer

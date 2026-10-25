@@ -68,7 +68,13 @@ pub fn post_images(picture: &Option<String>) -> Vec<String> {
     match picture.as_deref().filter(|p| !p.is_empty()) {
         Some(p) => p
             .split(',')
-            .map(|img| if img.starts_with("http") { img.trim().to_string() } else { format!("{IMG_BASE}{}", img.trim()) })
+            .map(|img| {
+                if img.starts_with("http") {
+                    img.trim().to_string()
+                } else {
+                    format!("{IMG_BASE}{}", img.trim())
+                }
+            })
             .collect(),
         None => vec![NO_PICTURE.to_string()],
     }
@@ -133,21 +139,32 @@ async fn render(state: &AppState, visitor: &Visitor) -> Html<String> {
             // Escape the HTML first (`he`), then turn line breaks into `<br>` (`nl2br`).
             content_html: nl2br(&he(&p.content)),
             share_url: urlencode("https://junsgarden.zapto.org/"),
-            share_text: urlencode(&format!("Check out this update from Jun's Garden: {}", p.title)),
+            share_text: urlencode(&format!(
+                "Check out this update from Jun's Garden: {}",
+                p.title
+            )),
         })
         .collect();
 
     // 3. Render the template, then wrap it in the shared page frame.
-    let body = BlogBody { posts, is_admin: visitor.is_admin() }.render().unwrap_or_default();
+    let body = BlogBody {
+        posts,
+        is_admin: visitor.is_admin(),
+    }
+    .render()
+    .unwrap_or_default();
     let mut page = Page::new(body);
     page.title = "Garden Archives — Jun's & Kona's Garden".to_string();
     page.show_hero = false;
-    Html(layout::render(state, page, visitor))
+    Html(layout::render(state, page, visitor).await)
 }
 
 /// Handler for `GET /blog.php`. Takes the state and visitor (both supplied by
 /// axum). Gives back the page. All the work is in `render`.
-pub async fn blog(State(state): State<Arc<AppState>>, Extension(visitor): Extension<Visitor>) -> Html<String> {
+pub async fn blog(
+    State(state): State<Arc<AppState>>,
+    Extension(visitor): Extension<Visitor>,
+) -> Html<String> {
     render(&state, &visitor).await
 }
 
@@ -174,7 +191,10 @@ pub async fn blog_post(
     if visitor.is_admin() && f.has("delete_blog") {
         let id = php_int(f.str("blog_id"));
         if id != 0 {
-            let _ = sqlx::query("DELETE FROM garden_blog WHERE id = ?").bind(id).execute(&state.db).await;
+            let _ = sqlx::query("DELETE FROM garden_blog WHERE id = ?")
+                .bind(id)
+                .execute(&state.db)
+                .await;
         }
         // Go back to the blog page so a refresh does not repeat the delete.
         return (StatusCode::FOUND, [(header::LOCATION, "blog.php")]).into_response();

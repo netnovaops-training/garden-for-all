@@ -141,9 +141,9 @@ class GardenLogin(context: Context) {
     companion object {
         private const val TOKEN = "token"
         private const val NAME = "name"
-        private val API = org.jasonagibson.junsgarden.BuildConfig.GARDEN_BASE + "/app_api.php"
+        private val API get() = GardenAddress.base + "/app_api.php"
 
         /** Where "Forgot password? / First time?" sends people: the site's page. */
-        val forgotPasswordUrl = org.jasonagibson.junsgarden.BuildConfig.GARDEN_BASE + "/login.php?forgot=1"
+        val forgotPasswordUrl get() = GardenAddress.base + "/login.php?forgot=1"
     }
 }

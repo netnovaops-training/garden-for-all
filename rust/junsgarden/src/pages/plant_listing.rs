@@ -17,10 +17,10 @@ use std::sync::Arc;
 
 use askama::Template;
 use axum::{
-    Extension,
     extract::{Query, State},
     http::header,
     response::{Html, IntoResponse, Response},
+    Extension,
 };
 use serde_json::{json, Value};
 use sqlx::mysql::MySqlRow;
@@ -50,9 +50,18 @@ struct ListingBody;
 fn normalise(raw: &str) -> String {
     let spaced: String = raw
         .chars()
-        .map(|c| if c.is_ascii_alphanumeric() || c.is_ascii_whitespace() { c } else { ' ' })
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c.is_ascii_whitespace() {
+                c
+            } else {
+                ' '
+            }
+        })
         .collect();
-    spaced.split_ascii_whitespace().collect::<Vec<_>>().join(" ")
+    spaced
+        .split_ascii_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 /// Search the plant tables and build the JSON the search box needs.
@@ -161,7 +170,7 @@ pub async fn plant_listing(
         filemtime(&state.www, "js/plant-listing.js")
     );
     page.after_header = "\n<div class=\"qs-search-bar\">\n    <input type=\"text\" id=\"list-search-box\" class=\"qs-search-input\" placeholder=\"Quick search plants...\" autofocus>\n</div>".to_string();
-    Html(layout::render(&state, page, &visitor)).into_response()
+    Html(layout::render(&state, page, &visitor).await).into_response()
 }
 
 // Tests run only with `cargo test`; they are not part of the live site.

@@ -19,9 +19,9 @@
 // `use` lines bring names into scope. `Arc` is a shared pointer to one value.
 use std::sync::Arc;
 
+use crate::session::Visitor;
 use askama::Template;
 use axum::{extract::State, response::Html, Extension};
-use crate::session::Visitor;
 use rand::seq::SliceRandom;
 use serde_json::{json, Value};
 
@@ -49,7 +49,9 @@ fn rawurlencode(s: &str) -> String {
     let mut out = String::with_capacity(s.len() * 2);
     for b in s.bytes() {
         match b {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => out.push(b as char),
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(b as char)
+            }
             _ => out.push_str(&format!("%{b:02X}")),
         }
     }
@@ -115,7 +117,10 @@ fn load_photos(www: &std::path::Path) -> Vec<Value> {
     let text = match std::fs::read_to_string(&path) {
         Ok(t) => t,
         Err(e) => {
-            tracing::error!("gallery: cannot read {}: {e}. Run build_gallery_cache.py", path.display());
+            tracing::error!(
+                "gallery: cannot read {}: {e}. Run build_gallery_cache.py",
+                path.display()
+            );
             return Vec::new();
         }
     };
@@ -125,7 +130,10 @@ fn load_photos(www: &std::path::Path) -> Vec<Value> {
     match rows.next() {
         Some(h) if h.len() >= 9 => {}
         _ => {
-            tracing::error!("gallery: {} has no width/height columns. Run build_gallery_cache.py", path.display());
+            tracing::error!(
+                "gallery: {} has no width/height columns. Run build_gallery_cache.py",
+                path.display()
+            );
             return Vec::new();
         }
     }
@@ -139,9 +147,13 @@ fn load_photos(www: &std::path::Path) -> Vec<Value> {
         }
         // `get` reads a column by number, giving "" when it is absent.
         let get = |i: usize| row.get(i).cloned().unwrap_or_default();
-        let (fn_, name, t_web, t_tab, t_mob, dl, tag_str) = (get(0), get(1), get(2), get(3), get(4), get(5), get(6));
+        let (fn_, name, t_web, t_tab, t_mob, dl, tag_str) =
+            (get(0), get(1), get(2), get(3), get(4), get(5), get(6));
         // The type comes from the file extension: video, gif, or image.
-        let ext = fn_.rsplit_once('.').map(|(_, e)| e.to_ascii_lowercase()).unwrap_or_default();
+        let ext = fn_
+            .rsplit_once('.')
+            .map(|(_, e)| e.to_ascii_lowercase())
+            .unwrap_or_default();
         let kind = if ["mp4", "mov", "webm", "m4v"].contains(&ext.as_str()) {
             "video"
         } else if ext == "gif" {
@@ -151,16 +163,33 @@ fn load_photos(www: &std::path::Path) -> Vec<Value> {
         };
         // `php_int` here reads a number from a column, 0 when empty or not a number.
         // Size 0 would break the layout, so use a default (video 16:9, photo 4:3).
-        let php_int = |i: usize| row.get(i).and_then(|s| s.trim().parse::<i64>().ok()).unwrap_or(0);
+        let php_int = |i: usize| {
+            row.get(i)
+                .and_then(|s| s.trim().parse::<i64>().ok())
+                .unwrap_or(0)
+        };
         let (mut w, mut h) = (php_int(7), php_int(8));
         if w == 0 || h == 0 {
-            (w, h) = if kind == "video" { (1920, 1080) } else { (800, 600) };
+            (w, h) = if kind == "video" {
+                (1920, 1080)
+            } else {
+                (800, 600)
+            };
         }
         // Build the web address of the photo, then the tag list (dropping empty and "0").
         let src = format!("{WEB_BASE}{}", rawurlencode(&fn_));
         // A thumbnail value of "" or "0" means "none"; JSON then carries `null`.
-        let non_empty = |s: String| if s.is_empty() || s == "0" { None } else { Some(s) };
-        let tags: Vec<&str> = tag_str.split('|').filter(|t| !t.is_empty() && *t != "0").collect();
+        let non_empty = |s: String| {
+            if s.is_empty() || s == "0" {
+                None
+            } else {
+                Some(s)
+            }
+        };
+        let tags: Vec<&str> = tag_str
+            .split('|')
+            .filter(|t| !t.is_empty() && *t != "0")
+            .collect();
         // 4. Build the JSON object the gallery script reads. Key names are the ones the
         // page's JavaScript expects, so they must not change.
         photos.push(json!({
@@ -182,12 +211,26 @@ fn load_photos(www: &std::path::Path) -> Vec<Value> {
 
 /// Handler for `GET /gallery.php`. Takes the shared state and the visitor.
 /// Gives back the finished HTML page.
-/// Steps: load the photos, shuffle them (a new order on every visit, as the PHP
-/// did), render the template with the count and the JSON, then wrap it in the
-/// page frame. `include_str!` pastes a file's text into the program when it is
-/// built; here it is the page's style and script block.
-pub async fn gallery(State(state): State<Arc<AppState>>, Extension(visitor): Extension<Visitor>) -> Html<String> {
-    let mut photos = load_photos(&state.www);
+/// Steps: load the photos (the CSV is parsed once and kept until it changes, see
+/// `store::Parsed`), shuffle them (a new order on every visit, as the PHP did), render the
+/// template with the count and the JSON, then wrap it in the page frame. `include_str!`
+/// pastes a file's text into the program when it is built; here it is the page's style and
+/// script block.
+pub async fn gallery(
+    State(state): State<Arc<AppState>>,
+    Extension(visitor): Extension<Visitor>,
+) -> Html<String> {
+    let st = state.clone();
+    let mut photos: Vec<Value> = crate::guard::off_thread(move || {
+        let www = st.www.clone();
+        st.gallery
+            .get(&www.join("images/Gallery/tags_cache.csv"), |_| {
+                load_photos(&www)
+            })
+            .as_ref()
+            .clone()
+    })
+    .await;
     photos.shuffle(&mut rand::rng());
     let body = GalleryBody {
         total: photos.len(),
@@ -200,7 +243,7 @@ pub async fn gallery(State(state): State<Arc<AppState>>, Extension(visitor): Ext
     page.title = "Gallery | Jun's and Kona's Garden".to_string();
     page.show_hero = false;
     page.extra_head = include_str!("../../templates/gallery_head.html").to_string();
-    Html(layout::render(&state, page, &visitor))
+    Html(layout::render(&state, page, &visitor).await)
 }
 
 // Tests run only with `cargo test`.

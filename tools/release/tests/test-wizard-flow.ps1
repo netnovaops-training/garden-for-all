@@ -19,6 +19,7 @@ $tmp = Join-Path $env:TEMP ("wizard-flow-" + [guid]::NewGuid())
 New-Item -ItemType Directory -Force (Join-Path $tmp "site\apps") | Out-Null
 Copy-Item -Recurse (Join-Path $pkg "windows") $tmp
 Copy-Item -Recurse (Join-Path $pkg "START-HERE") $tmp
+Copy-Item -Recurse (Join-Path $pkg "lang") $tmp   # the Korean lines, shared with garden.sh
 Copy-Item (Join-Path $pkg "site\apps\version.json") (Join-Path $tmp "site\apps\")
 # The handbook, built into the copy, so the Help anchors can be checked.
 $env:PYTHONIOENCODING = "utf-8"
@@ -109,7 +110,7 @@ Harness "custom" @'
     Show-Page "level"; $rbCustom.Checked = $true; [Windows.Forms.Application]::DoEvents()
     Check-It "CUSTOM adds the optional-software and passwords pages, no visitors page" ((Get-Path) -contains "parts" -and (Get-Path) -contains "passwords" -and -not ((Get-Path) -contains "community"))
     Go-Next; $rbRemote.Checked = $true; $tbIp.Text = "192.168.1.50"; $tbUser.Text = "jun"
-    Go-Next; $tbName.Text = "Jun"; $tbEmail.Text = "jun@example.com"; $tbWebName.Text = "HTTPS://www.Moms.Example.org/x"
+    Go-Next; $tbName.Text = "Jun"; $tbEmail.Text = "jun@example.com"; $tbWebName.Text = "HTTPS://www.Moms.Example.org/x"; $tbFolder.Text = "/garden/"
     Go-Next; Check-It "the optional software page" ($script:page -eq "parts" -and $tbWebName.Text -eq "moms.example.org" -and $rbNewName.Checked)
     Check-It "the router step can be ticked for another computer" ($PartBoxes["network"].Enabled)
     foreach ($k in "wiki", "email", "keys", "plantdata", "network", "frontdoor", "tailscale") { $PartBoxes[$k].Checked = $true }
@@ -156,6 +157,11 @@ Harness "custom" @'
     $c = $script:launched
     Check-It "the command: CUSTOM, the new web name, the parts, Gmail, the router, another computer, no visitors" ($c -match '-Level custom' -and $c -match '-Parts "beds,wiki"' -and $c -match '-WebName moms\.example\.org' -and $c -match '-SmtpUser jun@example\.com' -and $c -match '-ReserveIp' -and $c -notmatch '-Signups|-AgeCheck' -and $c -match '-Mode remote -RemoteHost 192\.168\.1\.50 -RemoteUser jun')
     Check-It "the command carries the PDF choice (-Pdfs both)" ($c -match '-Pdfs both')
+    Check-It "the command carries the folder, without its last slash (-Folder /garden)" ($c -match '-Folder /garden(\s|$)')
+    try { $lbl = Both "Folder (like /garden; empty = the top of the web name)" } catch { $lbl = "error: $_" }
+    # Hangul syllables, by code (this file is read as ANSI by Windows PowerShell: keep it ASCII).
+    $hangul = "[$([char]0xAC00)-$([char]0xD7A3)]"
+    Check-It "the folder field is labelled in English and Korean ($($KoTsv.Count) Korean lines)" ($lbl -match " / .*$hangul")
     Check-It "no password or key on the command line" (-not ($c.Contains("THEPW") -or $c.Contains("KGEMINI") -or $c.Contains("KWIKI")))
     $sf = $(if ($c -match '-SecretsFile "([^"]+)"') { $Matches[1] } else { "" })
     Check-It "a private file is handed over" ($sf -and (Test-Path $sf))

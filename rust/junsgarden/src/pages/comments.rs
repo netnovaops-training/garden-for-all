@@ -1,28 +1,27 @@
-//! `comments.php` — the comment API behind the gallery lightbox and the
-//! plant window.
+//! `comments.php` — the comment API behind the gallery lightbox and the plant window.
 //!
-//! Comments live in two JSON files in the data folder (gallery comments keyed
-//! by file name, plant comments keyed by plant id), plus a one-character
-//! "someone commented" flag file the admin's bell reads. These are the same
-//! files and the same shapes the PHP wrote, so either site can read the
-//! other's data.
-//! URLs: `/comments.php` only. It answers GET and POST and chooses what to do
-//! from the query string or form fields (see the numbered blocks in `comments`):
-//!   GET  ?get_comments=1&type=..&key=..  list comments (newest first, max 50)
+//! Comments live in two JSON files in the data folder (gallery comments keyed by photo
+//! file name, plant comments keyed by plant number), plus a one-character "someone
+//! commented" flag file the admin's bell reads. Same files and shapes as the PHP wrote.
+//!
+//! URL: `/comments.php`, GET and POST; what it does depends on the field that is present:
+//!   GET  ?get_comments=1&type=..&key=..  list comments (newest first, at most 50)
 //!   GET  ?check_notify=1                 does the admin bell have news?
 //!   POST dismiss_notify                  admin clears the bell
 //!   POST post_comment                    add a comment (anyone, including guests)
 //!   GET  ?admin_dump=1                   admin: all comments of one kind
 //!   POST delete_comment                  admin: remove one comment
-//! The gallery lightbox and the plant window's JavaScript call these.
 //!
-//! HOW TO READ THIS FILE. Small helpers first (read/write the JSON files, cut
-//! text, stamp the date), then `append_comment`, then the big `comments` handler,
-//! then tests. Other files (such as the Android API) reuse `append_comment`.
+//! HOW TO READ THIS FILE (for Jun). `Kind` says which file; `latest`, `new_entry` and
+//! `add` are the three things both this page and the app API (`app_api.rs`) need; the
+//! handler `comments` at the bottom picks the action. File safety (no half-written files,
+//! a damaged file is never overwritten) is in `store.rs`.
+//!
+//! Guards on posting (new in the Rust site): at most 5 comments per visitor address per
+//! 10 minutes, a plant key must be a plant number and a gallery key a photo that exists,
+//! and each photo or plant keeps its newest `KEEP_PER_KEY` comments.
 
-// `use` lines bring names into scope. `Arc` is a shared pointer to one value.
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::sync::Arc;
 
 use axum::{
@@ -32,128 +31,172 @@ use axum::{
     response::{IntoResponse, Response},
     Extension,
 };
-use serde::Serialize;
-use serde_json::{json, Map, Value};
+use serde_json::{json, Value};
 
 use crate::formdata;
+use crate::guard::off_thread;
 use crate::php::{he, php_int};
 use crate::session::Visitor;
+use crate::store;
 use crate::AppState;
 
-/// Pick the JSON file for a kind of comment: "gallery" or anything else (plants).
-/// Takes the app state (it knows the data folder) and the kind as text.
-/// Gives back a `PathBuf`, an owned file path.
-fn file_for(state: &AppState, kind: &str) -> PathBuf {
-    state.data.join(if kind == "gallery" { "gallery_comments.json" } else { "plant_comments.json" })
+/// How many comments are shown, newest first.
+const SHOWN: usize = 50;
+/// How many comments one photo or plant keeps; the oldest beyond this are dropped.
+const KEEP_PER_KEY: usize = 500;
+
+/// Which comments file: the gallery's or the plants'. Anything but "gallery" means plants,
+/// as in the PHP.
+#[derive(Clone, Copy, PartialEq)]
+pub enum Kind {
+    Gallery,
+    Plant,
 }
 
-/// Read a JSON file and return its top-level object as a map.
-/// Gives an empty map if the file is missing, unreadable or not an object.
-/// That is on purpose: a first-ever comment must work before the file exists.
-/// `.ok()` turns a Result into an Option (drops the error); `.and_then` chains a
-/// step that runs only if the previous one gave a value; `unwrap_or_default`
-/// supplies an empty map for "nothing". `&b` borrows the bytes without copying.
-pub fn read_json(path: &std::path::Path) -> Map<String, Value> {
-    std::fs::read(path)
-        .ok()
-        .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
-        .and_then(|v| if let Value::Object(m) = v { Some(m) } else { None })
-        .unwrap_or_default()
-}
-
-/// Write the map back to disk as pretty JSON.
-/// Takes the file path and the map. Gives back `io::Result<()>`: `Ok` or an
-/// I/O error. The `?` on the serialize line returns early with the error if
-/// that step fails, so the next line only runs on success.
-/// `json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)`: four
-/// spaces of indent, as PHP writes it.
-pub fn write_json(path: &std::path::Path, data: &Map<String, Value>) -> std::io::Result<()> {
-    let mut buf = Vec::new();
-    let fmt = serde_json::ser::PrettyFormatter::with_indent(b"    ");
-    let mut ser = serde_json::Serializer::with_formatter(&mut buf, fmt);
-    data.serialize(&mut ser).map_err(std::io::Error::other)?;
-    std::fs::write(path, buf)
-}
-
-/// Cut `s` to at most `n` bytes without splitting a multi-byte character.
-/// Takes text and a byte limit. Gives back a new `String`. Plain `s[..n]`
-/// would crash on a letter such as "e with accent" that takes two bytes, so we
-/// step back to the nearest character boundary first.
-/// `substr($s, 0, $n)`, but never cutting a character in half.
-pub fn substr(s: &str, n: usize) -> String {
-    if s.len() <= n {
-        return s.to_string();
+impl Kind {
+    fn from(s: &str) -> Kind {
+        if s == "gallery" {
+            Kind::Gallery
+        } else {
+            Kind::Plant
+        }
     }
-    let mut end = n;
+
+    fn file(self, state: &AppState) -> Result<store::SafePath, store::StoreError> {
+        let name = match self {
+            Kind::Gallery => "gallery_comments.json",
+            Kind::Plant => "plant_comments.json",
+        };
+        store::file_in(&state.data, name).map_err(store::StoreError::Io)
+    }
+}
+
+/// Cut `s` to at most `n` bytes without splitting a character (`substr($s, 0, $n)`).
+pub fn substr(s: &str, n: usize) -> String {
+    let mut end = s.len().min(n);
     while !s.is_char_boundary(end) {
         end -= 1;
     }
     s[..end].to_string()
 }
 
-/// Gives true for "" and "0", which PHP's `empty()` also treats as empty.
-/// Kept so the Rust site accepts and rejects the same input as the PHP did.
-/// PHP's `empty()` for a string.
+/// PHP's `empty()` for a string: nothing, or exactly "0".
 fn empty(s: &str) -> bool {
     s.is_empty() || s == "0"
 }
 
-/// Turn a JSON value into an HTTP reply. Sets `Cache-Control: no-store` so the
-/// browser never shows an old comment list from its cache.
-/// Falls back to `{}` if the value cannot be written as text (it always can).
+/// A new comment as it is stored: name and message escaped (so no markup ever reaches a
+/// page) and cut to 30 and 200 bytes, the date as "Oct 5, 2026" and the Unix time.
+/// `None` when the message is empty.
+pub fn new_entry(name: &str, message: &str) -> Option<Value> {
+    let name = he(name.trim());
+    let msg = he(message.trim());
+    if empty(&msg) {
+        return None;
+    }
+    let name = substr(if empty(&name) { "Guest" } else { &name }, 30);
+    let now = common::now_local();
+    let date = now
+        .format(&time::macros::format_description!(
+            "[month repr:short] [day padding:none], [year]"
+        ))
+        .unwrap_or_default();
+    Some(
+        json!({ "name": name, "message": substr(&msg, 200), "date": date, "ts": now.unix_timestamp() }),
+    )
+}
+
+/// The newest comments for one photo or plant (at most 50, newest first). A damaged file
+/// shows no comments (and is logged) rather than an error.
+pub async fn latest(state: &AppState, kind: Kind, key: &str) -> Vec<Value> {
+    let (path, key) = (kind.file(state), key.to_string());
+    off_thread(move || match path.and_then(|p| store::read_json(&p)) {
+        Ok(all) => all
+            .get(&key)
+            .and_then(Value::as_array)
+            .map(|a| a.iter().rev().take(SHOWN).cloned().collect())
+            .unwrap_or_default(),
+        Err(e) => {
+            tracing::error!("comments: {e}");
+            Vec::new()
+        }
+    })
+    .await
+}
+
+/// Is `key` something that can be commented on? A plant number, or the file name of a
+/// photo that is in the gallery folder. Stops anybody filling the file with made-up keys.
+fn valid_key(state: &AppState, kind: Kind, key: &str) -> bool {
+    match kind {
+        Kind::Plant => {
+            !key.is_empty() && key.len() <= 10 && key.bytes().all(|b| b.is_ascii_digit())
+        }
+        Kind::Gallery => {
+            key.len() <= 255
+                && !key.starts_with('.')
+                && !key.contains(['/', '\\', '\0'])
+                && state.www.join("images/Gallery").join(key).is_file()
+        }
+    }
+}
+
+/// Append one comment under `key`, keep the newest `KEEP_PER_KEY`, raise the admin's
+/// flag. Returns false (and logs why) when it could not be saved.
+pub async fn add(state: &Arc<AppState>, kind: Kind, key: &str, entry: Value) -> bool {
+    let _one_at_a_time = state.comments_lock.lock().await;
+    let (path, key, flag) = (kind.file(state), key.to_string(), notify_file(state));
+    off_thread(move || {
+        let saved = path.and_then(|path| {
+            store::update_json(&path, |all| {
+                let list = all.entry(key).or_insert_with(|| json!([]));
+                let Value::Array(a) = list else { return None };
+                a.push(entry);
+                if a.len() > KEEP_PER_KEY {
+                    a.drain(..a.len() - KEEP_PER_KEY);
+                }
+                Some(())
+            })
+        });
+        match saved {
+            Ok(Some(())) => {
+                // A failed flag only means the bell stays dark; not worth failing the comment.
+                if let Ok(flag) = flag {
+                    let _ = store::write_atomic(&flag, b"1");
+                }
+                true
+            }
+            Ok(None) => false,
+            Err(e) => {
+                tracing::error!("could not save a comment: {e}");
+                false
+            }
+        }
+    })
+    .await
+}
+
+/// The admin's "someone commented" flag file.
+fn notify_file(state: &AppState) -> std::io::Result<store::SafePath> {
+    store::file_in(&state.data, "comment_notify.txt")
+}
+
+/// A JSON answer that is never cached by the browser (an old comment list must not show).
 fn json_reply(body: Value) -> Response {
     let mut res = (
         [(header::CONTENT_TYPE, "application/json")],
-        serde_json::to_string(&body).unwrap_or_else(|_| "{}".into()),
+        body.to_string(),
     )
         .into_response();
-    res.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+    res.headers_mut()
+        .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
     res
 }
 
-/// Make the date text and the Unix timestamp stored with a new comment.
-/// Takes nothing. Gives back a pair: (for example "Oct 5, 2026", seconds count).
-/// The format string is the Rust form of PHP's `date('M j, Y')`.
-/// `date('M j, Y')` and `time()` for a new comment.
-pub fn comment_stamp() -> (String, i64) {
-    let now = common::now_local();
-    let date = now
-        .format(&time::macros::format_description!("[month repr:short] [day padding:none], [year]"))
-        .unwrap_or_default();
-    (date, now.unix_timestamp())
+fn error(message: &str) -> Response {
+    json_reply(json!({ "status": "error", "message": message }))
 }
 
-/// Takes: app state, the JSON file's path, the key (photo name or plant id) and
-/// the comment as JSON. Gives back nothing. Steps: wait for the lock so two
-/// people posting at once cannot overwrite each other, read the file, push the
-/// comment onto that key's list, write the file, raise the bell flag.
-/// `.lock().await` waits for our turn; the lock is released when `_guard`
-/// goes out of scope at the end of the function.
-/// Append one comment under `key` and raise the admin's flag.
-pub async fn append_comment(state: &AppState, path: &std::path::Path, key: &str, entry: Value) {
-    // 1. Take the lock. Only one task at a time may edit the comment files.
-    let _guard = state.comments_lock.lock().await;
-    // 2. Read the whole file (it is small).
-    let mut all = read_json(path);
-    // 3. Find this key's list, creating an empty one when the key is new.
-    let list = all.entry(key.to_string()).or_insert_with(|| json!([]));
-    // 4. `if let` runs its block only when the value has that shape (an array).
-    if let Value::Array(a) = list {
-        a.push(entry);
-    }
-    // 5. Write the file. On failure log it; the visitor still gets an answer.
-    if let Err(e) = write_json(path, &all) {
-        tracing::error!("could not save comment to {}: {e}", path.display());
-    }
-    // 6. Write "1" into the flag file so the admin's bell lights up.
-    // `let _ =` deliberately ignores the result: a failed flag is not worth an error.
-    let _ = std::fs::write(state.data.join("comment_notify.txt"), "1");
-}
-
-/// The route handler for `/comments.php`. One function serves every comment
-/// action; it tests the HTTP method and which field is present, in order.
-/// Takes: state, the visitor (admin or guest), the HTTP method, the query
-/// string as a map, the headers and the raw body. Gives back a JSON reply.
+/// The handler for `/comments.php`: tests the method and which field is present, in order.
 pub async fn comments(
     State(state): State<Arc<AppState>>,
     Extension(visitor): Extension<Visitor>,
@@ -162,115 +205,124 @@ pub async fn comments(
     headers: HeaderMap,
     body: Bytes,
 ) -> Response {
-    // Read the form fields from the body (form posts or file posts alike).
     let f = formdata::parse(&headers, body).await;
     let is_admin = visitor.is_admin();
-    let notify_file = state.data.join("comment_notify.txt");
+    let get = method == Method::GET;
+    let post = method == Method::POST;
+    let query = |k: &str| q.get(k).map(String::as_str).unwrap_or("");
+    let notify_file = notify_file(&state);
 
-    // 1. GET ?get_comments: load comments for one photo or plant.
-    // `Option` means maybe-nothing; `unwrap_or("plant")` supplies the default.
-    // Load the comments for one photo or plant: newest first, at most 50.
-    if method == Method::GET && q.contains_key("get_comments") {
-        let kind = q.get("type").map(String::as_str).unwrap_or("plant");
-        let key = q.get("key").map(|k| k.trim()).unwrap_or("");
+    // Load the comments for one photo or plant.
+    if get && q.contains_key("get_comments") {
+        let key = query("key").trim();
         if empty(key) {
             return json_reply(json!({ "comments": [] }));
         }
-        let all = read_json(&file_for(&state, kind));
-        // `.rev()` newest first, `.take(50)` at most 50, `.cloned()` copies each one.
-        let rows: Vec<Value> = all
-            .get(key)
-            .and_then(Value::as_array)
-            .map(|a| a.iter().rev().take(50).cloned().collect())
-            .unwrap_or_default();
-        return json_reply(json!({ "comments": rows }));
+        let kind = Kind::from(q.get("type").map(String::as_str).unwrap_or("plant"));
+        return json_reply(json!({ "comments": latest(&state, kind, key).await }));
     }
 
-    // 2. GET ?check_notify: the admin's bell. Guests always get "false" so they
-    // cannot learn whether anyone has commented.
-    // The admin's bell.
-    if method == Method::GET && q.contains_key("check_notify") {
-        if !is_admin {
-            return json_reply(json!({ "notify": false }));
-        }
-        let flag = std::fs::read_to_string(&notify_file).map(|s| s.trim().to_string()).unwrap_or_else(|_| "0".into());
-        return json_reply(json!({ "notify": flag == "1" }));
+    // The admin's bell. Guests always get "false", so they cannot tell whether anyone commented.
+    if get && q.contains_key("check_notify") {
+        let on = is_admin
+            && off_thread(move || {
+                notify_file
+                    .and_then(|p| store::read_text(&p))
+                    .unwrap_or_default()
+            })
+            .await
+            .trim()
+                == "1";
+        return json_reply(json!({ "notify": on }));
     }
-    // 3. POST dismiss_notify: switch the bell off. Admin only.
-    if method == Method::POST && f.has("dismiss_notify") {
+    if post && f.has("dismiss_notify") {
         if !is_admin {
             return json_reply(json!({ "status": "denied" }));
         }
-        let _ = std::fs::write(&notify_file, "0");
+        off_thread(move || {
+            if let Err(e) = notify_file.and_then(|p| store::write_atomic(&p, b"0")) {
+                tracing::error!("could not clear the comment bell: {e}");
+            }
+        })
+        .await;
         return json_reply(json!({ "status": "ok" }));
     }
 
-    // 4. POST post_comment: anyone may comment, but the text is escaped with `he`
-    // (like PHP's htmlspecialchars) so a comment cannot inject HTML. Names are
-    // cut to 30 bytes and messages to 200, as in the PHP.
-    // Add a comment.
-    if method == Method::POST && f.has("post_comment") {
-        let kind = f.get("type").unwrap_or("plant").to_string();
-        let key = f.str("key").trim().to_string();
-        let name = he(f.get("name").map(str::trim).unwrap_or("Guest"));
-        let msg = he(f.str("message").trim());
-        if empty(&key) || empty(&msg) {
-            return json_reply(json!({ "status": "error", "message": "key and message required" }));
+    // Add a comment. Anyone may; the text is escaped and cut in `new_entry`.
+    if post && f.has("post_comment") {
+        let kind = Kind::from(f.get("type").unwrap_or("plant"));
+        let key = f.str("key").trim();
+        let entry = if empty(key) {
+            None
+        } else {
+            new_entry(f.get("name").unwrap_or("Guest"), f.str("message"))
+        };
+        let Some(entry) = entry else {
+            return error("key and message required");
+        };
+        if !valid_key(&state, kind, key) {
+            return error("Unknown photo or plant");
         }
-        let name = substr(if empty(&name) { "Guest" } else { &name }, 30);
-        let msg = substr(&msg, 200);
-        let (date, ts) = comment_stamp();
-        let entry = json!({ "name": name, "message": msg, "date": date, "ts": ts });
-        append_comment(&state, &file_for(&state, &kind), &key, entry.clone()).await;
+        if !is_admin
+            && !state
+                .write_limit
+                .allow(&crate::accounts::client_ip(&headers))
+        {
+            return error("Too many comments at once. Please wait a few minutes.");
+        }
+        if !add(&state, kind, key, entry.clone()).await {
+            return error("The comment could not be saved");
+        }
         return json_reply(json!({ "status": "ok", "entry": entry }));
     }
 
-    // 5. Admin tools: dump every comment of a kind, or delete one by position.
-    // The admin's review tools.
-    if method == Method::GET && q.contains_key("admin_dump") && is_admin {
-        let kind = q.get("type").map(String::as_str).unwrap_or("plant");
-        return json_reply(Value::Object(read_json(&file_for(&state, kind))));
+    // The admin's review tools: every comment of a kind, or delete one by position.
+    if get && q.contains_key("admin_dump") && is_admin {
+        let path = Kind::from(q.get("type").map(String::as_str).unwrap_or("plant")).file(&state);
+        let all =
+            off_thread(move || path.and_then(|p| store::read_json(&p)).unwrap_or_default()).await;
+        return json_reply(Value::Object(all));
     }
-    if method == Method::POST && f.has("delete_comment") && is_admin {
-        let kind = f.get("type").unwrap_or("plant").to_string();
+    if post && f.has("delete_comment") && is_admin {
+        let path = Kind::from(f.get("type").unwrap_or("plant")).file(&state);
         let key = f.str("key").trim().to_string();
-        // `index` is the position in the list; -1 means "not given" and is rejected.
+        // -1 means "not given" and matches nothing.
         let index = f.get("index").map(php_int).unwrap_or(-1);
-        let path = file_for(&state, &kind);
-        // Take the lock before reading so the delete cannot collide with a new post.
-        let _guard = state.comments_lock.lock().await;
-        let mut all = read_json(&path);
-        // Remove the comment, and the whole key when its list becomes empty.
-        // `Some(Value::Array(a)) if ...` matches only when the key holds a list and
-        // the index is inside it; `_` catches everything else.
-        let found = match all.get_mut(&key) {
-            Some(Value::Array(a)) if index >= 0 && (index as usize) < a.len() => {
-                a.remove(index as usize);
-                if a.is_empty() {
-                    all.remove(&key);
-                }
-                true
-            }
-            _ => false,
+        let _one_at_a_time = state.comments_lock.lock().await;
+        let removed = off_thread(move || {
+            path.and_then(|path| {
+                store::update_json(&path, |all| {
+                    let Some(Value::Array(a)) = all.get_mut(&key) else {
+                        return None;
+                    };
+                    let i = usize::try_from(index).ok().filter(|i| *i < a.len())?;
+                    a.remove(i);
+                    if a.is_empty() {
+                        all.remove(&key);
+                    }
+                    Some(())
+                })
+            })
+            .map_err(|e| tracing::error!("could not delete a comment: {e}"))
+            .ok()
+            .flatten()
+            .is_some()
+        })
+        .await;
+        return if removed {
+            json_reply(json!({ "status": "ok" }))
+        } else {
+            error("Not found")
         };
-        if found {
-            let _ = write_json(&path, &all);
-            return json_reply(json!({ "status": "ok" }));
-        }
-        return json_reply(json!({ "status": "error", "message": "Not found" }));
     }
 
-    // 6. Nothing matched: tell the caller the request was not understood.
-    json_reply(json!({ "status": "error", "message": "Unknown request" }))
+    error("Unknown request")
 }
 
-// Tests run only with `cargo test`.
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    // Checks that cutting text never splits a character: "e with accent" takes two
-    // bytes, so asking for 2 bytes of "a" plus it must give just "a".
     #[test]
     fn substr_never_splits_a_character() {
         assert_eq!(substr("abcdef", 3), "abc");
@@ -278,17 +330,21 @@ mod tests {
         assert_eq!(substr("short", 30), "short");
     }
 
-    // Writes a small file to a scratch folder and checks the 4-space indent.
     #[test]
-    fn written_json_uses_four_space_indent() {
-        let dir = std::env::temp_dir().join(format!("jg-test-{}", std::process::id())); // nosemgrep: rust.lang.security.temp-dir.temp-dir -- unit-test scratch folder, never runs on the server
-        std::fs::create_dir_all(&dir).unwrap();
-        let p = dir.join("c.json");
-        let mut m = Map::new();
-        m.insert("k".into(), json!([{"a": 1}]));
-        write_json(&p, &m).unwrap();
-        let s = std::fs::read_to_string(&p).unwrap();
-        assert!(s.contains("\n    \"k\": ["), "{s}");
-        let _ = std::fs::remove_dir_all(&dir);
+    fn entries_are_escaped_cut_and_need_a_message() {
+        let e = new_entry("<b>Kona</b>", " hi <script> ").unwrap();
+        assert_eq!(e["name"], "&lt;b&gt;Kona&lt;/b&gt;");
+        assert_eq!(e["message"], "hi &lt;script&gt;");
+        assert_eq!(new_entry("", "x").unwrap()["name"], "Guest");
+        assert_eq!(new_entry("0", "x").unwrap()["name"], "Guest");
+        assert!(new_entry("Kona", "  ").is_none());
+        assert!(new_entry("Kona", "0").is_none());
+        assert_eq!(
+            new_entry(&"n".repeat(99), &"m".repeat(999)).unwrap()["message"]
+                .as_str()
+                .unwrap()
+                .len(),
+            200
+        );
     }
 }

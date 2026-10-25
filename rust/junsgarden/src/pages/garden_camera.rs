@@ -40,14 +40,26 @@ use crate::AppState;
 /// purchase, diagnose records a check-up, lookup only reads.
 /// `[&str; 6]` is an array of exactly six text slices (`&str` is borrowed text,
 /// unlike `String`, which owns its text). `const` means fixed at compile time.
-const ACTIONS: [&str; 6] = ["identify", "diagnose", "tag", "receipt", "lookup", "tag-queue"];
+const ACTIONS: [&str; 6] = [
+    "identify",
+    "diagnose",
+    "tag",
+    "receipt",
+    "lookup",
+    "tag-queue",
+];
 
 /// Build a JSON reply with the given HTTP status code.
 /// Takes the status (for example 401) and a `serde_json::Value` (a JSON tree).
 /// Gives back an axum `Response`. Every early exit in this file uses it so
 /// that all errors look the same to the phone app: `{"error": "..."}`.
 fn reply(status: StatusCode, body: serde_json::Value) -> Response {
-    (status, [(header::CONTENT_TYPE, "application/json")], body.to_string()).into_response()
+    (
+        status,
+        [(header::CONTENT_TYPE, "application/json")],
+        body.to_string(),
+    )
+        .into_response()
 }
 
 /// The route handler for `/app/garden/{action}`. The app sends a photo (the
@@ -74,13 +86,20 @@ pub async fn garden_camera(
     // 2. Only the six allowed actions pass (see ACTIONS above). Anything else is 404.
     // `.contains(&action.as_str())` asks the array whether it holds that text.
     if !ACTIONS.contains(&action.as_str()) {
-        return reply(StatusCode::NOT_FOUND, json!({ "error": "No such garden action." }));
+        return reply(
+            StatusCode::NOT_FOUND,
+            json!({ "error": "No such garden action." }),
+        );
     }
     // 3. Find this person's email address. `let ... else` runs the else block
     // (return an error) when the value is `None`, which is Rust's "maybe nothing".
     // garden-ingest needs the email because it decides who you are from it.
-    let Some(email) = crate::accounts::find(&state, &visitor.username).map(|a| a.email.clone()) else {
-        return reply(StatusCode::FORBIDDEN, json!({ "error": "Not a garden account." }));
+    let Some(email) = crate::accounts::find(&state, &visitor.username).map(|a| a.email.clone())
+    else {
+        return reply(
+            StatusCode::FORBIDDEN,
+            json!({ "error": "Not a garden account." }),
+        );
     };
 
     // 4. Build the address of the matching garden-ingest route. `trim_end_matches`
@@ -106,17 +125,24 @@ pub async fn garden_camera(
         Ok(r) => {
             // Convert the status number between the two HTTP libraries' types. If that
             // fails, say 502 (bad gateway: the thing behind us misbehaved).
-            let status = StatusCode::from_u16(r.status().as_u16()).unwrap_or(StatusCode::BAD_GATEWAY);
+            let status =
+                StatusCode::from_u16(r.status().as_u16()).unwrap_or(StatusCode::BAD_GATEWAY);
             match r.bytes().await {
                 Ok(b) => (status, [(header::CONTENT_TYPE, "application/json")], b).into_response(),
-                Err(_) => reply(StatusCode::BAD_GATEWAY, json!({ "error": "The garden sent no answer." })),
+                Err(_) => reply(
+                    StatusCode::BAD_GATEWAY,
+                    json!({ "error": "The garden sent no answer." }),
+                ),
             }
         }
         // The call itself failed (garden-ingest is down or timed out). Log the real
         // error for the author, and give the phone a plain message without details.
         Err(e) => {
             tracing::error!("/app/garden/{action}: {e}");
-            reply(StatusCode::BAD_GATEWAY, json!({ "error": "The garden's reader did not answer. Try again in a minute." }))
+            reply(
+                StatusCode::BAD_GATEWAY,
+                json!({ "error": "The garden's reader did not answer. Try again in a minute." }),
+            )
         }
     }
 }

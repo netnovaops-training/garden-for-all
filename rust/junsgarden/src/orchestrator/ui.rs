@@ -22,19 +22,33 @@
 use crate::php::he;
 
 /// `st.title`: the big page title. Returns an `<h1>` tag.
-pub fn h1(s: &str) -> String { format!("<h1>{}</h1>", he(s)) }
+pub fn h1(s: &str) -> String {
+    format!("<h1>{}</h1>", he(s))
+}
 /// `st.header`: a section heading (`<h2>`).
-pub fn header(s: &str) -> String { format!("<h2 class=\"st-h2\">{}</h2>", he(s)) }
+pub fn header(s: &str) -> String {
+    format!("<h2 class=\"st-h2\">{}</h2>", he(s))
+}
 /// `st.subheader`: a smaller heading (`<h3>`).
-pub fn subheader(s: &str) -> String { format!("<h3 class=\"st-h3\">{}</h3>", he(s)) }
+pub fn subheader(s: &str) -> String {
+    format!("<h3 class=\"st-h3\">{}</h3>", he(s))
+}
 /// `st.markdown("#### …")`.
-pub fn h4(s: &str) -> String { format!("<h4 class=\"st-h4\">{}</h4>", he(s)) }
+pub fn h4(s: &str) -> String {
+    format!("<h4 class=\"st-h4\">{}</h4>", he(s))
+}
 /// `st.text`: a plain paragraph. The text is escaped, so no HTML or Markdown marks work in it.
-pub fn text(s: &str) -> String { format!("<p class=\"st-text\">{}</p>", he(s)) }
+pub fn text(s: &str) -> String {
+    format!("<p class=\"st-text\">{}</p>", he(s))
+}
 /// `st.caption`: small grey text. It may hold the little Markdown that `md` understands.
-pub fn caption(s: &str) -> String { format!("<p class=\"st-caption\">{}</p>", md(s)) }
+pub fn caption(s: &str) -> String {
+    format!("<p class=\"st-caption\">{}</p>", md(s))
+}
 /// `st.divider`: a horizontal line. `.into()` turns the fixed text into a String.
-pub fn divider() -> String { "<hr class=\"st-hr\">".into() }
+pub fn divider() -> String {
+    "<hr class=\"st-hr\">".into()
+}
 
 /// The little bit of Markdown the Streamlit app used inline: **bold**,
 /// _italic_ and `code`. The text is escaped first, so this can only ever
@@ -151,20 +165,30 @@ pub fn file_uploader(name: &str, label: &str, types: &[&str], multiple: bool) ->
 
 /// Markdown paragraph (`st.markdown("**x** …")`).
 /// `st.markdown`: a paragraph that understands the bold, italic and code marks.
-pub fn markdown(s: &str) -> String { format!("<p class=\"st-text\">{}</p>", md(s)) }
+pub fn markdown(s: &str) -> String {
+    format!("<p class=\"st-text\">{}</p>", md(s))
+}
 
 /// A coloured message box. `kind` is the CSS class suffix: success, info, warning or error.
 fn alert(kind: &str, s: &str) -> String {
     format!("<div class=\"st-alert st-{kind}\">{}</div>", md(s))
 }
 /// `st.success`: green box.
-pub fn success(s: &str) -> String { alert("success", s) }
+pub fn success(s: &str) -> String {
+    alert("success", s)
+}
 /// `st.info`: blue box.
-pub fn info(s: &str) -> String { alert("info", s) }
+pub fn info(s: &str) -> String {
+    alert("info", s)
+}
 /// `st.warning`: yellow box.
-pub fn warning(s: &str) -> String { alert("warning", s) }
+pub fn warning(s: &str) -> String {
+    alert("warning", s)
+}
 /// `st.error`: red box.
-pub fn error(s: &str) -> String { alert("error", s) }
+pub fn error(s: &str) -> String {
+    alert("error", s)
+}
 
 /// A row of columns (`st.columns(n)` or weighted `st.columns([2,1])`).
 /// The CSS grid is told the width ratio of each column (`2fr 1fr` means the first is twice as
@@ -173,7 +197,10 @@ pub fn error(s: &str) -> String { alert("error", s) }
 pub fn columns(weights: &[u32], cells: Vec<String>) -> String {
     // Turn each weight into a CSS size like "2fr".
     let tmpl: Vec<String> = weights.iter().map(|w| format!("{w}fr")).collect();
-    let mut s = format!("<div class=\"st-cols\" style=\"grid-template-columns:{}\">", tmpl.join(" "));
+    let mut s = format!(
+        "<div class=\"st-cols\" style=\"grid-template-columns:{}\">",
+        tmpl.join(" ")
+    );
     // Wrap each cell's HTML in its own column box.
     for c in cells {
         s.push_str("<div class=\"st-col\">");
@@ -190,44 +217,76 @@ pub fn columns(weights: &[u32], cells: Vec<String>) -> String {
 fn field(label: &str, inner: String, help: Option<&str>) -> String {
     // `help` is an Option. `map` runs only when there is text; `unwrap_or_default` gives an empty
     // String when there is not.
-    let h = help.map(|h| format!(" <span class=\"st-help\" title=\"{}\">?</span>", he(h))).unwrap_or_default();
-    format!("<label class=\"st-field\"><span class=\"st-label\">{}{h}</span>{inner}</label>", he(label))
+    let h = help
+        .map(|h| format!(" <span class=\"st-help\" title=\"{}\">?</span>", he(h)))
+        .unwrap_or_default();
+    format!(
+        "<label class=\"st-field\"><span class=\"st-label\">{}{h}</span>{inner}</label>",
+        he(label)
+    )
 }
 
 /// `st.text_input`: a one-line text box. `name` is the form field name (the database column),
 /// `value` what it starts with.
 pub fn text_input(name: &str, label: &str, value: &str, placeholder: &str) -> String {
-    field(label, format!(
-        "<input class=\"st-input\" type=\"text\" name=\"{}\" value=\"{}\" placeholder=\"{}\">",
-        he(name), he(value), he(placeholder)), None)
+    field(
+        label,
+        format!(
+            "<input class=\"st-input\" type=\"text\" name=\"{}\" value=\"{}\" placeholder=\"{}\">",
+            he(name),
+            he(value),
+            he(placeholder)
+        ),
+        None,
+    )
 }
 
 /// `st.text_area`: a multi-line box of `height` pixels.
 pub fn text_area(name: &str, label: &str, value: &str, height: u32) -> String {
-    field(label, format!(
-        "<textarea class=\"st-input\" name=\"{}\" style=\"height:{height}px\">{}</textarea>",
-        he(name), he(value)), None)
+    field(
+        label,
+        format!(
+            "<textarea class=\"st-input\" name=\"{}\" style=\"height:{height}px\">{}</textarea>",
+            he(name),
+            he(value)
+        ),
+        None,
+    )
 }
 
 /// `st.number_input`: a number box. `min` is the smallest allowed (or none), `step` the size of
 /// each arrow click. `value` is kept as text, so the box can show what the database holds.
 pub fn number_input(name: &str, label: &str, value: &str, min: Option<i64>, step: &str) -> String {
     let m = min.map(|m| format!(" min=\"{m}\"")).unwrap_or_default();
-    field(label, format!(
+    field(
+        label,
+        format!(
         "<input class=\"st-input\" type=\"number\" step=\"{step}\" name=\"{}\" value=\"{}\"{m}>",
-        he(name), he(value)), None)
+        he(name), he(value)),
+        None,
+    )
 }
 
 /// `st.selectbox`. `options` are (value, shown text). With `autosubmit`,
 /// choosing an option reloads the page with it, the way Streamlit reruns.
 /// The `autosubmit` flag adds a small script (`onchange`) that sends the form as soon as a choice
 /// is made.
-pub fn selectbox(name: &str, label: &str, options: &[(String, String)], selected: &str, autosubmit: bool) -> String {
+pub fn selectbox(
+    name: &str,
+    label: &str,
+    options: &[(String, String)],
+    selected: &str,
+    autosubmit: bool,
+) -> String {
     // Start the `<select>` tag.
     let mut s = format!(
         "<select class=\"st-select\" name=\"{}\"{}>",
         he(name),
-        if autosubmit { " onchange=\"this.form.submit()\"" } else { "" }
+        if autosubmit {
+            " onchange=\"this.form.submit()\""
+        } else {
+            ""
+        }
     );
     // One `<option>` per choice. The chosen one gets `selected`.
     for (v, t) in options {
@@ -256,12 +315,19 @@ pub fn select_plain(name: &str, label: &str, options: &[String], selected: &str)
 pub fn multiselect(name: &str, label: &str, options: &[String], selected: &[String]) -> String {
     // `multiple` allows several picks; `data-ms` tells st.js to draw the chip box on top. The form
     // sends one value per picked option.
-    let mut s = format!("<select class=\"st-multi\" multiple data-ms name=\"{}\">", he(name));
+    let mut s = format!(
+        "<select class=\"st-multi\" multiple data-ms name=\"{}\">",
+        he(name)
+    );
     for o in options {
         s.push_str(&format!(
             "<option value=\"{}\"{}>{}</option>",
             he(o),
-            if selected.contains(o) { " selected" } else { "" },
+            if selected.contains(o) {
+                " selected"
+            } else {
+                ""
+            },
             he(o)
         ));
     }
@@ -272,7 +338,9 @@ pub fn multiselect(name: &str, label: &str, options: &[String], selected: &[Stri
 /// `st.checkbox`. The value sent when ticked is "1"; when it is not ticked, browsers send nothing
 /// at all. `on` is whether it starts ticked.
 pub fn checkbox(name: &str, label: &str, on: bool, help: Option<&str>) -> String {
-    let h = help.map(|h| format!(" <span class=\"st-help\" title=\"{}\">?</span>", he(h))).unwrap_or_default();
+    let h = help
+        .map(|h| format!(" <span class=\"st-help\" title=\"{}\">?</span>", he(h)))
+        .unwrap_or_default();
     format!(
         "<label class=\"st-check\"><input type=\"checkbox\" name=\"{}\" value=\"1\"{}> {}{h}</label>",
         he(name), if on { " checked" } else { "" }, md(label)
@@ -281,7 +349,9 @@ pub fn checkbox(name: &str, label: &str, on: bool, help: Option<&str>) -> String
 
 /// `st.toggle`: a checkbox drawn as a switch.
 pub fn toggle(name: &str, label: &str, on: bool, help: Option<&str>) -> String {
-    let h = help.map(|h| format!(" <span class=\"st-help\" title=\"{}\">?</span>", he(h))).unwrap_or_default();
+    let h = help
+        .map(|h| format!(" <span class=\"st-help\" title=\"{}\">?</span>", he(h)))
+        .unwrap_or_default();
     format!(
         "<label class=\"st-toggle\"><input type=\"checkbox\" name=\"{}\" value=\"1\"{}><span class=\"st-switch\"></span> {}{h}</label>",
         he(name), if on { " checked" } else { "" }, he(label)
@@ -290,21 +360,39 @@ pub fn toggle(name: &str, label: &str, on: bool, help: Option<&str>) -> String {
 
 /// `st.radio`: a set of round buttons where one choice is picked. `horizontal` lays them in a row;
 /// `autosubmit` sends the form when the choice changes.
-pub fn radio(name: &str, label: &str, options: &[&str], selected: &str, horizontal: bool, autosubmit: bool) -> String {
+pub fn radio(
+    name: &str,
+    label: &str,
+    options: &[&str],
+    selected: &str,
+    horizontal: bool,
+    autosubmit: bool,
+) -> String {
     // Start the group.
-    let mut s = format!("<div class=\"st-radio{}\">", if horizontal { " st-radio-h" } else { "" });
+    let mut s = format!(
+        "<div class=\"st-radio{}\">",
+        if horizontal { " st-radio-h" } else { "" }
+    );
     // One radio button per option. `*o == selected` compares the option text with the chosen one.
     for o in options {
         s.push_str(&format!(
             "<label><input type=\"radio\" name=\"{}\" value=\"{}\"{}{}> {}</label>",
-            he(name), he(o),
+            he(name),
+            he(o),
             if *o == selected { " checked" } else { "" },
-            if autosubmit { " onchange=\"this.form.submit()\"" } else { "" },
+            if autosubmit {
+                " onchange=\"this.form.submit()\""
+            } else {
+                ""
+            },
             he(o)
         ));
     }
     s.push_str("</div>");
-    format!("<div class=\"st-field\"><span class=\"st-label\">{}</span>{s}</div>", he(label))
+    format!(
+        "<div class=\"st-field\"><span class=\"st-label\">{}</span>{s}</div>",
+        he(label)
+    )
 }
 
 /// A submit button. `primary` is Streamlit's red button; `name`/`value`
@@ -314,13 +402,19 @@ pub fn button(name: &str, value: &str, label: &str, primary: bool, full_width: b
         "<button type=\"submit\" class=\"st-btn{}{}\" name=\"{}\" value=\"{}\">{}</button>",
         if primary { " st-primary" } else { "" },
         if full_width { " st-full" } else { "" },
-        he(name), he(value), md(label)
+        he(name),
+        he(value),
+        md(label)
     )
 }
 
 /// `st.download_button` / `st.link_button`: a link that looks like a button.
 pub fn link_button(href: &str, label: &str) -> String {
-    format!("<a class=\"st-btn\" href=\"{}\">{}</a>", he(href), md(label))
+    format!(
+        "<a class=\"st-btn\" href=\"{}\">{}</a>",
+        he(href),
+        md(label)
+    )
 }
 
 /// `st.expander`: a box that opens and closes, built from the browser's own `<details>` tag. `open`
@@ -386,7 +480,10 @@ pub fn path_url(f: &str) -> String {
     // Split the path at "/", percent-encode each part by itself, turn "+" into "%20" (PHP's
     // urlencode writes spaces as "+", which is wrong inside a path), then join the parts with "/"
     // again.
-    f.split('/').map(|part| crate::php::urlencode(part).replace('+', "%20")).collect::<Vec<_>>().join("/")
+    f.split('/')
+        .map(|part| crate::php::urlencode(part).replace('+', "%20"))
+        .collect::<Vec<_>>()
+        .join("/")
 }
 
 /// The 80px thumbnail Streamlit's tables showed, from the site's own
@@ -394,7 +491,10 @@ pub fn path_url(f: &str) -> String {
 pub fn thumb(picture: &str) -> String {
     // Take the first picture in the comma list: trim spaces, skip empty items and the words none,
     // null and "[]".
-    let first = picture.split(',').map(str::trim).find(|s| !s.is_empty() && !matches!(s.to_lowercase().as_str(), "none" | "null" | "[]"));
+    let first = picture
+        .split(',')
+        .map(str::trim)
+        .find(|s| !s.is_empty() && !matches!(s.to_lowercase().as_str(), "none" | "null" | "[]"));
     // Three cases: a photo in a sub-folder, a plain file name, or no photo at all.
     match first {
         // The resizer reads only a file name, so a photo in a sub-folder
@@ -417,9 +517,15 @@ mod tests {
     /// lone star stays.
     #[test]
     fn markdown_is_escaped_then_formatted() {
-        assert_eq!(md("**a** <b> `c**d`"), "<strong>a</strong> &lt;b&gt; <code>c**d</code>");
+        assert_eq!(
+            md("**a** <b> `c**d`"),
+            "<strong>a</strong> &lt;b&gt; <code>c**d</code>"
+        );
         assert_eq!(md("no marks"), "no marks");
-        assert_eq!(md("🗑 *Wipe File from Vol*"), "🗑 <em>Wipe File from Vol</em>");
+        assert_eq!(
+            md("🗑 *Wipe File from Vol*"),
+            "🗑 <em>Wipe File from Vol</em>"
+        );
         assert_eq!(md("a * b"), "a * b");
     }
 }

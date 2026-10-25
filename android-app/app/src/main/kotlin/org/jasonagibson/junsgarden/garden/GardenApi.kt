@@ -39,10 +39,10 @@ import java.net.URLEncoder
  */
 object GardenApi {
 
-    // Set at build time (app/build.gradle.kts): the live site unless a test
-    // build asked for the test site.
-    private val BASE = org.jasonagibson.junsgarden.BuildConfig.GARDEN_BASE
-    private val API = "$BASE/app_api.php"
+    // The garden's current address (GardenAddress.kt): the built-in one until the setup
+    // QR or a signed move says otherwise. Read on every call, so a move takes effect at once.
+    private val BASE get() = GardenAddress.base
+    private val API get() = "$BASE/app_api.php"
     private const val TIMEOUT_MS = 20_000
 
     private fun enc(s: String) = URLEncoder.encode(s, "UTF-8")
