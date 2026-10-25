@@ -34,7 +34,13 @@ use crate::AppState;
 
 /// The five water-need levels the model must choose from, from driest to wettest.
 /// `[&str; 5]` is a fixed list of five pieces of text.
-pub const WATER_CLASSES: [&str; 5] = ["Low", "Low to Average", "Average", "Average to High", "High"];
+pub const WATER_CLASSES: [&str; 5] = [
+    "Low",
+    "Low to Average",
+    "Average",
+    "Average to High",
+    "High",
+];
 /// How long a cached insights reading counts as fresh: 3600 seconds, one hour.
 const BRAIN_TTL_SECS: u64 = 3600;
 
@@ -51,12 +57,20 @@ fn host(url: &str) -> String {
 /// How many seconds ago a file was last changed. `None` if the file is missing or its
 /// time cannot be read. Used to decide whether a cached answer is still fresh.
 fn file_age_secs(p: &Path) -> Option<u64> {
-    std::fs::metadata(p).ok()?.modified().ok()?.elapsed().ok().map(|d| d.as_secs())
+    std::fs::metadata(p)
+        .ok()?
+        .modified()
+        .ok()?
+        .elapsed()
+        .ok()
+        .map(|d| d.as_secs())
 }
 
 /// Reads a file and parses it as JSON. Returns `None` if it is missing or not valid JSON.
 fn read_json_file(p: &Path) -> Option<Value> {
-    std::fs::read(p).ok().and_then(|b| serde_json::from_slice(&b).ok())
+    std::fs::read(p)
+        .ok()
+        .and_then(|b| serde_json::from_slice(&b).ok())
 }
 
 /// Writes JSON to a file, making the folder first if needed. Errors are ignored on
@@ -71,7 +85,13 @@ fn write_json_file(p: &Path, v: &Value) {
 /// One JSON round trip to the model. None on any failure.
 // Inputs: the shared state, the prompt text, how many seconds to wait, how random the
 // answer may be (0 = least), and the most pieces of output text to allow (`num_predict`).
-pub async fn generate(state: &AppState, prompt: &str, timeout_secs: u64, temperature: f64, num_predict: u32) -> Option<Value> {
+pub async fn generate(
+    state: &AppState,
+    prompt: &str,
+    timeout_secs: u64,
+    temperature: f64,
+    num_predict: u32,
+) -> Option<Value> {
     // The request body for Ollama. `stream: false` asks for one complete answer.
     let body = json!({
         "model": state.ollama_model,
@@ -111,7 +131,7 @@ pub async fn available(state: &AppState) -> bool {
     // A small file remembers the last answer so the model is not asked on every page load.
     let cache = state.ai_cache_dir.join("health.json");
     // If that answer is less than 60 seconds old, use it.
-    if file_age_secs(&cache).map_or(false, |a| a < 60) {
+    if file_age_secs(&cache).is_some_and(|a| a < 60) {
         if let Some(v) = read_json_file(&cache) {
             return v.get("ok").and_then(Value::as_bool).unwrap_or(false);
         }
@@ -130,11 +150,18 @@ pub async fn available(state: &AppState) -> bool {
             let names: Vec<&str> = tags
                 .get("models")
                 .and_then(Value::as_array)
-                .map(|a| a.iter().filter_map(|m| m.get("name").and_then(Value::as_str)).collect())
+                .map(|a| {
+                    a.iter()
+                        .filter_map(|m| m.get("name").and_then(Value::as_str))
+                        .collect()
+                })
                 .unwrap_or_default();
             let installed = names.contains(&state.ollama_model.as_str());
             if !installed {
-                tracing::warn!("brain: ollama is up but {} is not installed", state.ollama_model);
+                tracing::warn!(
+                    "brain: ollama is up but {} is not installed",
+                    state.ollama_model
+                );
             }
             installed
         }
@@ -142,7 +169,10 @@ pub async fn available(state: &AppState) -> bool {
         _ => false,
     };
     // Save the answer, with the time, for the next minute.
-    write_json_file(&cache, &json!({ "ok": ok, "at": common::now_local().unix_timestamp() }));
+    write_json_file(
+        &cache,
+        &json!({ "ok": ok, "at": common::now_local().unix_timestamp() }),
+    );
     ok
 }
 
@@ -165,7 +195,14 @@ pub async fn predict(state: &AppState, plant: &Map<String, Value>) -> Option<Val
         ("care_notes", "Care notes"),
     ] {
         // Read the value as text. Numbers are turned into text. A missing column gives "".
-        let v = plant.get(col).map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())).unwrap_or_default();
+        let v = plant
+            .get(col)
+            .map(|v| {
+                v.as_str()
+                    .map(str::to_string)
+                    .unwrap_or_else(|| v.to_string())
+            })
+            .unwrap_or_default();
         let v = v.trim();
         // Skip empty values and the word "null".
         if !v.is_empty() && v != "null" {
@@ -195,7 +232,16 @@ pub async fn predict(state: &AppState, plant: &Map<String, Value>) -> Option<Val
     // Read the model's score for each level (missing or negative becomes 0), in a fixed order.
     let mut scores: Vec<(String, f64)> = WATER_CLASSES
         .iter()
-        .map(|c| (c.to_string(), out.get("scores").and_then(|s| s.get(*c)).and_then(Value::as_f64).unwrap_or(0.0).max(0.0)))
+        .map(|c| {
+            (
+                c.to_string(),
+                out.get("scores")
+                    .and_then(|s| s.get(*c))
+                    .and_then(Value::as_f64)
+                    .unwrap_or(0.0)
+                    .max(0.0),
+            )
+        })
         .collect();
     // Add the scores so they can be scaled to sum to 1.
     let mut total: f64 = scores.iter().map(|(_, v)| v).sum();
@@ -248,16 +294,22 @@ fn str_list(v: Option<&Value>, cap: usize) -> Vec<String> {
 /// A written reading of the garden for the Garden Intelligence widget.
 /// Served from the cache whether or not it has expired; only the warmer
 /// (`allow_slow`) may regenerate it.
-pub async fn insights(state: &AppState, context: &[(String, Vec<String>)], allow_slow: bool) -> Option<Value> {
+pub async fn insights(
+    state: &AppState,
+    context: &[(String, Vec<String>)],
+    allow_slow: bool,
+) -> Option<Value> {
     // The cache file name is an MD5 hash of the context, so the same context finds the same file.
     let mut hasher = md5::Context::new();
     hasher.consume(serde_json::to_string(context).unwrap_or_default());
-    let key: PathBuf = state.ai_cache_dir.join(format!("insights_{:x}.json", hasher.finalize()));
+    let key: PathBuf = state
+        .ai_cache_dir
+        .join(format!("insights_{:x}.json", hasher.finalize()));
 
     // The cached reading, if it exists and is a JSON object.
     let cached = read_json_file(&key).filter(Value::is_object);
     // Fresh means younger than BRAIN_TTL_SECS.
-    let fresh = cached.is_some() && file_age_secs(&key).map_or(false, |a| a < BRAIN_TTL_SECS);
+    let fresh = cached.is_some() && file_age_secs(&key).is_some_and(|a| a < BRAIN_TTL_SECS);
     // Use the cache if it is fresh. Page loads (`allow_slow` false) also accept an old one,
     // marked stale, because they must never wait for the model.
     if fresh || (!allow_slow && cached.is_some()) {
@@ -333,14 +385,21 @@ pub fn scenario_label(temp: Option<&str>, rain: Option<&str>) -> Option<String> 
     if let Some(t) = temp.filter(|t| temp_scenario(t).is_some()) {
         // Make the first letter a capital: take the first character, upper-case it, add the rest.
         let mut c = t.chars();
-        let cap = c.next().map(|f| f.to_uppercase().collect::<String>() + c.as_str()).unwrap_or_default();
+        let cap = c
+            .next()
+            .map(|f| f.to_uppercase().collect::<String>() + c.as_str())
+            .unwrap_or_default();
         bits.push(format!("{cap} year"));
     }
     if let Some(r) = rain.filter(|r| rain_scenario(r).is_some()) {
         bits.push(format!("{r} rainfall"));
     }
     // Join the pieces with " + ", or give `None` if there are none.
-    if bits.is_empty() { None } else { Some(bits.join(" + ")) }
+    if bits.is_empty() {
+        None
+    } else {
+        Some(bits.join(" + "))
+    }
 }
 
 /// The cross-tab as the compact text the model reads.
@@ -357,15 +416,25 @@ fn table_text(ct: &Value, max_rows: usize, max_cells: usize) -> String {
             .enumerate()
             .filter_map(|(ci, c)| {
                 let v = ct["matrix"][ri][ci].as_i64().unwrap_or(0);
-                (v > 0).then(|| (c.as_str().map(str::to_string).unwrap_or_else(|| c.to_string()), v))
+                (v > 0).then(|| {
+                    (
+                        c.as_str()
+                            .map(str::to_string)
+                            .unwrap_or_else(|| c.to_string()),
+                        v,
+                    )
+                })
             })
             .collect();
         // Largest counts first, then keep at most `max_cells` of them.
-        cells.sort_by(|a, b| b.1.cmp(&a.1));
+        cells.sort_by_key(|e| std::cmp::Reverse(e.1));
         cells.truncate(max_cells);
         // One line per row: label, its total, and the biggest cells.
         let parts: Vec<String> = cells.iter().map(|(c, v)| format!("{c}: {v}")).collect();
-        let label = r.as_str().map(str::to_string).unwrap_or_else(|| r.to_string());
+        let label = r
+            .as_str()
+            .map(str::to_string)
+            .unwrap_or_else(|| r.to_string());
         let total = ct["rowTotals"][ri].as_i64().unwrap_or(0);
         lines.push(format!("- {label} (total {total}) -> {}", parts.join(", ")));
     }
@@ -375,7 +444,13 @@ fn table_text(ct: &Value, max_rows: usize, max_cells: usize) -> String {
 /// Asks the model for a short reading of a cross-tab, under a chosen weather scenario.
 /// Takes the cross-tab, the temperature and rain scenario names (either may be missing)
 /// and a text describing any filter. Returns the reading as JSON, or `None` on failure.
-pub async fn fuse_ask(state: &AppState, ct: &Value, temp: Option<&str>, rain: Option<&str>, filter_label: Option<&str>) -> Option<Value> {
+pub async fn fuse_ask(
+    state: &AppState,
+    ct: &Value,
+    temp: Option<&str>,
+    rain: Option<&str>,
+    filter_label: Option<&str>,
+) -> Option<Value> {
     // Describe each chosen weather scenario in words for the prompt.
     let mut scenario_lines = Vec::new();
     if let Some((avg, min, max, frost)) = temp.and_then(temp_scenario) {
@@ -385,7 +460,10 @@ pub async fn fuse_ask(state: &AppState, ct: &Value, temp: Option<&str>, rain: Op
         ));
     }
     if let Some((total, hum)) = rain.and_then(rain_scenario) {
-        scenario_lines.push(format!("Rainfall: {} — {total} inches for the year, average humidity {hum}%.", rain.unwrap()));
+        scenario_lines.push(format!(
+            "Rainfall: {} — {total} inches for the year, average humidity {hum}%.",
+            rain.unwrap()
+        ));
     }
     // Join the descriptions, or say no scenario was chosen.
     let scenario_text = if scenario_lines.is_empty() {
@@ -394,7 +472,9 @@ pub async fn fuse_ask(state: &AppState, ct: &Value, temp: Option<&str>, rain: Op
         scenario_lines.join("\n")
     };
     // An optional line telling the model the table is filtered.
-    let filter_text = filter_label.map(|f| format!("Only plants where {f}.\n")).unwrap_or_default();
+    let filter_text = filter_label
+        .map(|f| format!("Only plants where {f}.\n"))
+        .unwrap_or_default();
     // The prompt gives the real counts and forbids inventing numbers; it asks for JSON only.
     let prompt = format!(
         "You are reading one cross-tabulation from a home garden database in USDA zone 6a\nin western New York. Every number below is a real count of plants, already\ncounted from the database. Do not invent, adjust or recompute any number.\n\nRows are {}. Columns are {}.\n{filter_text}\n{}\n\nWeather scenario to reason about:\n{scenario_text}\n\nWrite a short, practical reading of this table for the gardener. Be concrete and\nrefer to the actual row and column names above. Say what the shape of the table\nimplies for watering and plant care under that scenario. If the table shows\nnothing interesting, say so plainly rather than inventing significance.\n\nReply with JSON only, in exactly this shape:\n{{\n  \"headline\": \"one sentence, under 20 words\",\n  \"findings\": [\"three to five short observations, each under 25 words\"],\n  \"scenario_effect\": \"two or three sentences on what the weather scenario means for these plants\",\n  \"watch\": [\"one to three specific row or column names most at risk, with a few words why\"]\n}}",
@@ -440,8 +520,6 @@ fn disc_clean(v: Option<&str>) -> Option<String> {
         Some(v.to_string())
     }
 }
-
-
 
 // Input: one JSON object per plant. Output: (findings, number of pairs tested, number of
 // plants). A finding records how strongly two columns are linked.
@@ -497,12 +575,15 @@ pub fn disc_scan(rows: &[Map<String, Value>]) -> (Vec<Value>, usize, usize) {
             // `ca` and `cb` count each value of the two columns; `joint` counts each combination.
             let mut ca: Vec<(String, i64)> = Vec::new();
             let mut cb: Vec<(String, i64)> = Vec::new();
-            let mut joint: std::collections::HashMap<(String, String), i64> = std::collections::HashMap::new();
+            let mut joint: std::collections::HashMap<(String, String), i64> =
+                std::collections::HashMap::new();
             let mut m = 0i64;
             // Go through the plants that have both columns filled in.
             for k in 0..n {
                 // `let (..) = .. else { continue }` skips plants where either value is missing.
-                let (Some(x), Some(y)) = (&va[k], &vb[k]) else { continue };
+                let (Some(x), Some(y)) = (&va[k], &vb[k]) else {
+                    continue;
+                };
                 m += 1;
                 bump(&mut ca, x);
                 bump(&mut cb, y);
@@ -543,15 +624,29 @@ pub fn disc_scan(rows: &[Map<String, Value>]) -> (Vec<Value>, usize, usize) {
             // `k` is the smaller number of values of the two columns.
             let k = ca.len().min(cb.len());
             // Cramer's V = square root of chi2 / (plants x (k - 1)).
-            let v = if k > 1 { (chi2 / ((m as f64) * ((k - 1) as f64))).sqrt() } else { 0.0 };
+            let v = if k > 1 {
+                (chi2 / ((m as f64) * ((k - 1) as f64))).sqrt()
+            } else {
+                0.0
+            };
             // Keep the two strongest combinations (largest lift first).
-            cells.sort_by(|p, q| q["lift"].as_f64().partial_cmp(&p["lift"].as_f64()).unwrap_or(std::cmp::Ordering::Equal));
+            cells.sort_by(|p, q| {
+                q["lift"]
+                    .as_f64()
+                    .partial_cmp(&p["lift"].as_f64())
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
             cells.truncate(2);
             findings.push(json!({ "a": a, "b": b, "strength": crate::php::php_round(v, 2), "plants": m, "cells": cells }));
         }
     }
     // Strongest column pairs first.
-    findings.sort_by(|p, q| q["strength"].as_f64().partial_cmp(&p["strength"].as_f64()).unwrap_or(std::cmp::Ordering::Equal));
+    findings.sort_by(|p, q| {
+        q["strength"]
+            .as_f64()
+            .partial_cmp(&p["strength"].as_f64())
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     (findings, pairs, n)
 }
 
@@ -565,7 +660,12 @@ fn bump(counts: &mut Vec<(String, i64)>, key: &str) {
 }
 
 /// Ask the model which three findings are worth a gardener's attention.
-async fn disc_judge(state: &AppState, findings: &[Value], tested: usize, plants: usize) -> Option<Value> {
+async fn disc_judge(
+    state: &AppState,
+    findings: &[Value],
+    tested: usize,
+    plants: usize,
+) -> Option<Value> {
     // One line per notable combination for the model to read, using the real numbers.
     let mut lines = Vec::new();
     // At most 22 findings are shown to the model.
@@ -598,7 +698,17 @@ async fn disc_judge(state: &AppState, findings: &[Value], tested: usize, plants:
     let out = generate(state, &prompt, 150, 0.1, 600).await?;
     let found = out.get("findings")?.as_array()?;
     // A small helper closure: read field `k` of a JSON object as trimmed text.
-    let s = |f: &Value, k: &str| f.get(k).map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())).unwrap_or_default().trim().to_string();
+    let s = |f: &Value, k: &str| {
+        f.get(k)
+            .map(|v| {
+                v.as_str()
+                    .map(str::to_string)
+                    .unwrap_or_else(|| v.to_string())
+            })
+            .unwrap_or_default()
+            .trim()
+            .to_string()
+    };
     // Keep at most 3 findings, each of which must be an object.
     let clean: Vec<Value> = found
         .iter()
@@ -620,7 +730,7 @@ pub async fn disc_run(state: &AppState, allow_slow: bool) -> Value {
     let cache = state.ai_cache_dir.join("discover.json");
     let cached = read_json_file(&cache).filter(Value::is_object);
     // Fresh means less than 3600 seconds (one hour) old.
-    let fresh = cached.is_some() && file_age_secs(&cache).map_or(false, |a| a < 3600);
+    let fresh = cached.is_some() && file_age_secs(&cache).is_some_and(|a| a < 3600);
     // Same rule as insights: page loads accept a stale cache and never wait for the model.
     if fresh || (!allow_slow && cached.is_some()) {
         let mut c = cached.unwrap();
@@ -649,7 +759,13 @@ pub async fn disc_run(state: &AppState, allow_slow: bool) -> Value {
     .await
     .unwrap_or_default()
     .iter()
-    .filter_map(|r| if let Value::Object(m) = crate::rowjson::row_to_json(r) { Some(m) } else { None })
+    .filter_map(|r| {
+        if let Value::Object(m) = crate::rowjson::row_to_json(r) {
+            Some(m)
+        } else {
+            None
+        }
+    })
     .collect();
     // The numeric scan; no AI is involved here.
     let (findings, pairs, plants) = disc_scan(&rows);
@@ -667,7 +783,9 @@ pub async fn disc_run(state: &AppState, allow_slow: bool) -> Value {
     }
     // Only the warmer gets here. If the model is up, ask it to pick the best findings.
     if available(state).await {
-        result["ai"] = disc_judge(state, &findings, pairs, plants).await.unwrap_or(Value::Null);
+        result["ai"] = disc_judge(state, &findings, pairs, plants)
+            .await
+            .unwrap_or(Value::Null);
     }
     // Save for the next page loads.
     write_json_file(&cache, &result);
@@ -681,7 +799,10 @@ mod tests {
 
     #[test]
     fn scenario_labels() {
-        assert_eq!(scenario_label(Some("cold"), Some("wet")).as_deref(), Some("Cold year + wet rainfall"));
+        assert_eq!(
+            scenario_label(Some("cold"), Some("wet")).as_deref(),
+            Some("Cold year + wet rainfall")
+        );
         assert_eq!(scenario_label(None, None), None);
         assert_eq!(scenario_label(Some("bogus"), None), None);
     }

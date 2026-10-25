@@ -56,7 +56,10 @@ pub fn read_json(path: &Path) -> Result<Map<String, Value>, StoreError> {
     };
     match serde_json::from_slice::<Value>(&bytes) {
         Ok(Value::Object(m)) => Ok(m),
-        Ok(_) => Err(StoreError::Damaged(format!("{} is not a JSON object", path.display()))),
+        Ok(_) => Err(StoreError::Damaged(format!(
+            "{} is not a JSON object",
+            path.display()
+        ))),
         Err(e) => Err(StoreError::Damaged(format!("{}: {e}", path.display()))),
     }
 }
@@ -95,9 +98,14 @@ pub fn pretty_json(data: &Map<String, Value>) -> Vec<u8> {
 /// Read a JSON file, let `change` edit it, write it back atomically. `change` returns
 /// `None` to mean "nothing to save" (the file is left alone) or `Some(answer)`.
 /// The caller must hold the lock for this file (`AppState::comments_lock`).
-pub fn update_json<R>(path: &Path, change: impl FnOnce(&mut Map<String, Value>) -> Option<R>) -> Result<Option<R>, StoreError> {
+pub fn update_json<R>(
+    path: &Path,
+    change: impl FnOnce(&mut Map<String, Value>) -> Option<R>,
+) -> Result<Option<R>, StoreError> {
     let mut data = read_json(path)?;
-    let Some(answer) = change(&mut data) else { return Ok(None) };
+    let Some(answer) = change(&mut data) else {
+        return Ok(None);
+    };
     write_atomic(path, &pretty_json(&data)).map_err(StoreError::Io)?;
     Ok(Some(answer))
 }
@@ -105,12 +113,17 @@ pub fn update_json<R>(path: &Path, change: impl FnOnce(&mut Map<String, Value>) 
 /// A file read and parsed once, then reused until the file changes (its modified time or
 /// size). For files the pages read on every visit but that change rarely (the gallery list).
 pub struct Parsed<T> {
-    slot: std::sync::Mutex<Option<(Option<std::time::SystemTime>, u64, std::sync::Arc<T>)>>,
+    slot: std::sync::Mutex<Option<Stamped<T>>>,
 }
+
+/// A parsed file with the modified time and size it had when it was read.
+type Stamped<T> = (Option<std::time::SystemTime>, u64, std::sync::Arc<T>);
 
 impl<T> Default for Parsed<T> {
     fn default() -> Self {
-        Parsed { slot: std::sync::Mutex::new(None) }
+        Parsed {
+            slot: std::sync::Mutex::new(None),
+        }
     }
 }
 
@@ -119,7 +132,10 @@ impl<T> Parsed<T> {
     /// Blocking (it looks at the file); call it inside `off_thread`.
     pub fn get(&self, path: &Path, load: impl FnOnce(&Path) -> T) -> std::sync::Arc<T> {
         let meta = std::fs::metadata(path).ok();
-        let stamp = (meta.as_ref().and_then(|m| m.modified().ok()), meta.as_ref().map_or(0, |m| m.len()));
+        let stamp = (
+            meta.as_ref().and_then(|m| m.modified().ok()),
+            meta.as_ref().map_or(0, |m| m.len()),
+        );
         if let Ok(slot) = self.slot.lock() {
             if let Some((when, len, value)) = slot.as_ref() {
                 if (*when, *len) == stamp && stamp.0.is_some() {

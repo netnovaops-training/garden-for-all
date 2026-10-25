@@ -103,7 +103,9 @@ round)
     ;;
 shots)
     # Screenshots of both sides (shots.py) in a Playwright container on the host network
-    # (it only talks to 127.0.0.1:18101/18102). Summary in shots.log.
+    # (it only talks to 127.0.0.1:18101/18102). Summary in shots.log. Both sides are restarted
+    # first, so their folder mounts are current after a sync.
+    sh "$0" up base >/dev/null && sh "$0" up cand >/dev/null && sh "$0" tester
     docker run --rm -v "$PWD:/w" alpine rm -rf /w/shots
     docker run --rm --network host -v "$PWD:/w" -w /w -e OWNER="$(id -u):$(id -g)" \
         mcr.microsoft.com/playwright/python:v1.56.0-noble \
@@ -117,8 +119,10 @@ check)
         -v gp-cargo-registry:/usr/local/cargo/registry -v gp-target-$side:/build/target \
         rust:1.95-bookworm sh -c 'rustup component add rustfmt clippy >/dev/null 2>&1;
             cargo fmt --all --check >/dev/null 2>&1 && echo "PASS fmt" || echo "FAIL fmt";
-            cargo clippy --locked -p junsgarden --all-targets -q -- -D warnings > /build/../clippy.log 2>&1 && echo "PASS clippy" || echo "FAIL clippy ($(grep -c "^error" /build/../clippy.log) lints, clippy.log)";
-            cargo test --locked -p junsgarden > /build/../test.log 2>&1 && echo "PASS tests $(grep -o "[0-9]* passed" /build/../test.log | head -1)" || echo "FAIL tests (test.log)"'
+            cargo clippy --locked -p junsgarden --all-targets -q -- -D warnings > /build/target/clippy.log 2>&1 && echo "PASS clippy" || echo "FAIL clippy ($(grep -c "^error" /build/target/clippy.log) lints)";
+            cargo audit --version >/dev/null 2>&1 || cargo install -q --locked cargo-audit >/dev/null 2>&1;
+            cargo audit -q > /build/target/audit.log 2>&1 && echo "PASS audit" || echo "FAIL audit ($(grep -c "^ID:" /build/target/audit.log) advisories)";
+            cargo test --locked -p junsgarden > /build/target/test.log 2>&1 && echo "PASS tests $(grep -o "[0-9]* passed" /build/target/test.log | head -1)" || echo "FAIL tests"'
     ;;
 down)
     docker rm -f gp-base gp-cand $DB >/dev/null 2>&1 || true

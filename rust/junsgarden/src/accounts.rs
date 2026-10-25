@@ -75,7 +75,10 @@ pub fn parse_users(spec: &str) -> Vec<Account> {
     spec.split(',')
         // `filter_map` keeps only pieces that have an `=` (`split_once` gives `Some` or `None`).
         .filter_map(|p| p.split_once('='))
-        .map(|(n, e)| Account { name: n.trim().to_string(), email: e.trim().to_ascii_lowercase() })
+        .map(|(n, e)| Account {
+            name: n.trim().to_string(),
+            email: e.trim().to_ascii_lowercase(),
+        })
         // Keep only entries with a name and an address that has an @ in it.
         .filter(|a| !a.name.is_empty() && a.email.contains('@'))
         .collect()
@@ -87,13 +90,19 @@ pub fn parse_users(spec: &str) -> Vec<Account> {
 /// only be used while `state` exists. `Option` is "an account, or nothing".
 pub fn find<'a>(state: &'a AppState, name: &str) -> Option<&'a Account> {
     let name = name.trim();
-    state.users.iter().find(|a| a.name.eq_ignore_ascii_case(name))
+    state
+        .users
+        .iter()
+        .find(|a| a.name.eq_ignore_ascii_case(name))
 }
 
 /// Find an account by name OR email address, for "forgot my password".
 fn find_by_name_or_email<'a>(state: &'a AppState, who: &str) -> Option<&'a Account> {
     let who = who.trim();
-    state.users.iter().find(|a| a.name.eq_ignore_ascii_case(who) || a.email.eq_ignore_ascii_case(who))
+    state
+        .users
+        .iter()
+        .find(|a| a.name.eq_ignore_ascii_case(who) || a.email.eq_ignore_ascii_case(who))
 }
 
 /// Creates the tables the login needs and makes sure each configured account has a row.
@@ -198,14 +207,26 @@ pub fn password_problem(name: &str, pw: &str) -> Option<&'static str> {
     // Passwords too common to allow. All have at least 10 characters, so the length rule
     // below does not already catch them.
     const TOO_COMMON: [&str; 12] = [
-        "password", "password1", "passw0rd", "1234567890", "qwertyuiop", "letmein123",
-        "welcome123", "iloveyou12", "gardengarden", "junsgarden", "konasgarden", "changeme12",
+        "password",
+        "password1",
+        "passw0rd",
+        "1234567890",
+        "qwertyuiop",
+        "letmein123",
+        "welcome123",
+        "iloveyou12",
+        "gardengarden",
+        "junsgarden",
+        "konasgarden",
+        "changeme12",
     ];
     // Count characters, not bytes.
     let n = pw.chars().count();
     // Minimum length 10.
     if n < 10 {
-        return Some("Use at least 10 characters. A short sentence is easy to remember and hard to guess.");
+        return Some(
+            "Use at least 10 characters. A short sentence is easy to remember and hard to guess.",
+        );
     }
     // Maximum length 128, to keep hashing time reasonable.
     if n > 128 {
@@ -232,14 +253,20 @@ pub enum LoginError {
 /// is right.
 // What it takes in: the shared app state, the typed name, the typed password and the
 // visitor's address. Gives back `Ok(proper name)` or `Err(LoginError)`.
-pub async fn check_password(state: &AppState, typed_name: &str, password: &str, ip: &str) -> Result<String, LoginError> {
+pub async fn check_password(
+    state: &AppState,
+    typed_name: &str,
+    password: &str,
+    ip: &str,
+) -> Result<String, LoginError> {
     // `&` borrows the database pool from the state instead of copying it.
     let db = &state.db;
     // Step 1: forget failed attempts older than the lockout window.
-    let _ = sqlx::query("DELETE FROM `login_attempts` WHERE attempted_at < NOW() - INTERVAL ? SECOND")
-        .bind(WINDOW_SECONDS)
-        .execute(db)
-        .await;
+    let _ =
+        sqlx::query("DELETE FROM `login_attempts` WHERE attempted_at < NOW() - INTERVAL ? SECOND")
+            .bind(WINDOW_SECONDS)
+            .execute(db)
+            .await;
 
     // Step 2: look up the account. It may be `None` for an unknown name.
     let account = find(state, typed_name);
@@ -292,7 +319,10 @@ pub async fn check_password(state: &AppState, typed_name: &str, password: &str, 
 
     // Step 6a: success. Clear this address's failure count and return the account's name.
     if ok {
-        let _ = sqlx::query("DELETE FROM `login_attempts` WHERE ip = ?").bind(ip).execute(db).await;
+        let _ = sqlx::query("DELETE FROM `login_attempts` WHERE ip = ?")
+            .bind(ip)
+            .execute(db)
+            .await;
         Ok(account.map(|a| a.name.clone()).unwrap_or_default())
     // Step 6b: failure. Record it, then answer with the same message for any cause.
     } else {
@@ -310,7 +340,10 @@ pub async fn check_password(state: &AppState, typed_name: &str, password: &str, 
 /// SHA-256 of the text, written as 64 hex characters. Used to store reset codes without
 /// storing the codes themselves.
 fn sha256_hex(s: &str) -> String {
-    Sha256::digest(s.as_bytes()).iter().map(|b| format!("{b:02x}")).collect()
+    Sha256::digest(s.as_bytes())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 /// A new random reset code: 32 random bytes written as 64 hex characters. This is the
@@ -327,7 +360,9 @@ fn new_reset_code() -> String {
 pub async fn start_reset(state: &AppState, who: &str) {
     // `let Some(..) = .. else { return }`: take the account if found; otherwise stop silently.
     // Nothing is said either way, so nobody can learn which names exist.
-    let Some(account) = find_by_name_or_email(state, who) else { return };
+    let Some(account) = find_by_name_or_email(state, who) else {
+        return;
+    };
     // Rate limit: has an email already been sent for this account in the last 2 minutes?
     let recent: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM `garden_users` WHERE username = ? AND reset_sent_at > NOW() - INTERVAL 2 MINUTE",
@@ -392,7 +427,9 @@ pub async fn start_reset(state: &AppState, who: &str) {
 /// Is this a live, unused reset link for this account?
 pub async fn reset_code_valid(state: &AppState, name: &str, code: &str) -> bool {
     // Unknown account name: not valid.
-    let Some(account) = find(state, name) else { return false };
+    let Some(account) = find(state, name) else {
+        return false;
+    };
     // A real code is exactly 64 hex characters; reject anything else before touching the database.
     if code.len() != 64 || !code.bytes().all(|b| b.is_ascii_hexdigit()) {
         return false;
@@ -412,9 +449,16 @@ pub async fn reset_code_valid(state: &AppState, name: &str, code: &str) -> bool 
 /// Use a reset link: set the new password, spend the link, and sign the
 /// account out everywhere (a stolen session should not survive a reset).
 // Returns `Ok(account name)` or `Err(message to show the person)`.
-pub async fn finish_reset(state: &AppState, name: &str, code: &str, new_password: &str) -> Result<String, &'static str> {
+pub async fn finish_reset(
+    state: &AppState,
+    name: &str,
+    code: &str,
+    new_password: &str,
+) -> Result<String, &'static str> {
     // Each early `return Err(..)` stops with a plain-words message.
-    let Some(account) = find(state, name) else { return Err("That link is not valid.") };
+    let Some(account) = find(state, name) else {
+        return Err("That link is not valid.");
+    };
     // The code must still be valid and unused.
     if !reset_code_valid(state, &account.name, code).await {
         return Err("That link has expired or was already used. Ask for a new one.");
@@ -476,11 +520,16 @@ pub async fn send_mail(to: &str, subject: &str, body: &str) -> anyhow::Result<bo
         .header(ContentType::TEXT_PLAIN)
         .body(body.to_string())?;
     // STARTTLS on 587: encrypted, and the port every provider documents.
-    let mailer: AsyncSmtpTransport<Tokio1Executor> = AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&host)?
-        .port(common::env_or("JUNSGARDEN_SMTP_PORT", "587").parse().unwrap_or(587))
-        .credentials(Credentials::new(user, password))
-        .timeout(Some(std::time::Duration::from_secs(20)))
-        .build();
+    let mailer: AsyncSmtpTransport<Tokio1Executor> =
+        AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&host)?
+            .port(
+                common::env_or("JUNSGARDEN_SMTP_PORT", "587")
+                    .parse()
+                    .unwrap_or(587),
+            )
+            .credentials(Credentials::new(user, password))
+            .timeout(Some(std::time::Duration::from_secs(20)))
+            .build();
     mailer.send(message).await?;
     Ok(true)
 }
@@ -532,11 +581,17 @@ mod tests {
 
     #[test]
     fn hashes_verify_and_reject() {
-        let h: PasswordHash = Argon2::default().hash_password(b"the hostas by the porch").unwrap();
+        let h: PasswordHash = Argon2::default()
+            .hash_password(b"the hostas by the porch")
+            .unwrap();
         let h = h.to_string();
         let parsed = PasswordHash::new(&h).unwrap();
-        assert!(Argon2::default().verify_password(b"the hostas by the porch", &parsed).is_ok());
-        assert!(Argon2::default().verify_password(b"the hostas by the porch!", &parsed).is_err());
+        assert!(Argon2::default()
+            .verify_password(b"the hostas by the porch", &parsed)
+            .is_ok());
+        assert!(Argon2::default()
+            .verify_password(b"the hostas by the porch!", &parsed)
+            .is_err());
         assert!(!h.contains("hostas"));
     }
 
@@ -546,8 +601,12 @@ mod tests {
         // Passwords already in the database were hashed that way; they must keep working.
         let old = "$argon2id$v=19$m=19456,t=2,p=1$mZUhciSwFBpOaCwPnTS9Ag$Bz5Lr0D50ED/31jWWccK7yTS/CsCft2O0Qybtbsclss";
         let parsed = PasswordHash::new(old).unwrap();
-        assert!(Argon2::default().verify_password(b"the hostas by the porch", &parsed).is_ok());
-        assert!(Argon2::default().verify_password(b"wrong", &parsed).is_err());
+        assert!(Argon2::default()
+            .verify_password(b"the hostas by the porch", &parsed)
+            .is_ok());
+        assert!(Argon2::default()
+            .verify_password(b"wrong", &parsed)
+            .is_err());
     }
 
     #[test]

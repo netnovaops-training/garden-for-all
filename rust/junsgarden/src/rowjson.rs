@@ -33,9 +33,15 @@ pub fn row_to_json(row: &MySqlRow) -> Value {
             // `None`, and `.unwrap_or(Value::Null)` turns `None` into JSON null.
             "BOOLEAN" | "TINYINT" | "SMALLINT" | "MEDIUMINT" | "INT" | "BIGINT" | "YEAR" => {
                 if unsigned {
-                    row.try_get_unchecked::<Option<u64>, _>(i).ok().flatten().map(|v| json!(v))
+                    row.try_get_unchecked::<Option<u64>, _>(i)
+                        .ok()
+                        .flatten()
+                        .map(|v| json!(v))
                 } else {
-                    row.try_get_unchecked::<Option<i64>, _>(i).ok().flatten().map(|v| json!(v))
+                    row.try_get_unchecked::<Option<i64>, _>(i)
+                        .ok()
+                        .flatten()
+                        .map(|v| json!(v))
                 }
                 .unwrap_or(Value::Null)
             }

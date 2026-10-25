@@ -90,10 +90,20 @@ mod wishlist;
 /// Tab number N in the address (`?tab=N`) is entry N-1 in this list, because lists start counting
 /// at 0. `[&str; 14]` means exactly 14 text pieces.
 pub const TABS: [&str; 14] = [
-    "🌱 Add Plant", "📝 Manual Review (AI)", "✨ Fill Missing Data (AI)", "✍️ Manual Editor",
-    "📸 Manual Image Replace", "⚠️ Partials", "🔍 Awaiting Approval", "🏆 Fully Approved & Verified",
-    "🚩 Flagged for Review", "🔒 AI — Missing Only", "🔄 JSON Pipeline", "🗺️ Bed Assignment",
-    "🌟 Wishlist", "🏷️ Barcodes",
+    "🌱 Add Plant",
+    "📝 Manual Review (AI)",
+    "✨ Fill Missing Data (AI)",
+    "✍️ Manual Editor",
+    "📸 Manual Image Replace",
+    "⚠️ Partials",
+    "🔍 Awaiting Approval",
+    "🏆 Fully Approved & Verified",
+    "🚩 Flagged for Review",
+    "🔒 AI — Missing Only",
+    "🔄 JSON Pipeline",
+    "🗺️ Bed Assignment",
+    "🌟 Wishlist",
+    "🏷️ Barcodes",
 ];
 
 /// GET /streamlit/st.css. Sends the stylesheet. `async fn` is a function that can pause while it
@@ -101,13 +111,30 @@ pub const TABS: [&str; 14] = [
 /// wait for it. `include_str!` copies the text of st.css into the program when it is built.
 /// "no-cache" makes the browser re-check the file each time so changes show up.
 pub async fn css() -> Response {
-    ([(header::CONTENT_TYPE, "text/css; charset=utf-8"), (header::CACHE_CONTROL, "no-cache")], include_str!("st.css")).into_response()
+    (
+        [
+            (header::CONTENT_TYPE, "text/css; charset=utf-8"),
+            (header::CACHE_CONTROL, "no-cache"),
+        ],
+        include_str!("st.css"),
+    )
+        .into_response()
 }
 
 /// GET /streamlit/st.js. Sends the small script that draws the chip boxes and switches the
 /// calendar. Same method as `css`.
 pub async fn js() -> Response {
-    ([(header::CONTENT_TYPE, "application/javascript; charset=utf-8"), (header::CACHE_CONTROL, "no-cache")], include_str!("st.js")).into_response()
+    (
+        [
+            (
+                header::CONTENT_TYPE,
+                "application/javascript; charset=utf-8",
+            ),
+            (header::CACHE_CONTROL, "no-cache"),
+        ],
+        include_str!("st.js"),
+    )
+        .into_response()
 }
 
 /// The request's own settings: which tab, plant, inner tab, and anything
@@ -141,10 +168,13 @@ pub async fn rows(state: &AppState, sql: &str) -> Vec<Map<String, Value>> {
     match sqlx::query(sql).fetch_all(&state.db).await {
         // Turn each database row into JSON; keep it only if it came out as a JSON object
         // (`filter_map` drops the others). `collect()` gathers what is left into a Vec.
-        Ok(rs) => rs.iter().filter_map(|r| match crate::rowjson::row_to_json(r) {
-            Value::Object(m) => Some(m),
-            _ => None,
-        }).collect(),
+        Ok(rs) => rs
+            .iter()
+            .filter_map(|r| match crate::rowjson::row_to_json(r) {
+                Value::Object(m) => Some(m),
+                _ => None,
+            })
+            .collect(),
         // The query failed: write the error in the server log and return an empty list.
         Err(e) => {
             tracing::error!("orchestrator query failed: {e}");
@@ -160,8 +190,15 @@ pub async fn all_plant_names(state: &AppState) -> Vec<String> {
     // `query_scalar` reads one column. The column can be empty, so each item is an
     // `Option<String>`; `flatten()` drops the empty ones, and `filter` drops names that are only
     // spaces. `unwrap_or_default()` gives an empty list if the query failed.
-    let mut v: Vec<String> = sqlx::query_scalar::<_, Option<String>>("SELECT plant_name FROM data_source")
-        .fetch_all(&state.db).await.unwrap_or_default().into_iter().flatten().filter(|s| !s.trim().is_empty()).collect();
+    let mut v: Vec<String> =
+        sqlx::query_scalar::<_, Option<String>>("SELECT plant_name FROM data_source")
+            .fetch_all(&state.db)
+            .await
+            .unwrap_or_default()
+            .into_iter()
+            .flatten()
+            .filter(|s| !s.trim().is_empty())
+            .collect();
     // `dedup` removes neighbours that are equal, which after sorting removes all repeats.
     v.sort();
     v.dedup();
@@ -184,47 +221,66 @@ fn redirect(to: &str) -> Response {
 /// if the header text turns out to be invalid.
 fn flash_cookie(msgs: &[form::Flash]) -> Option<HeaderValue> {
     // Turn each message into a two-item JSON list: the kind, then the text.
-    let v: Vec<Value> = msgs.iter().map(|m| match m {
-        form::Flash::Success(s) => serde_json::json!(["success", s]),
-        form::Flash::Info(s) => serde_json::json!(["info", s]),
-        form::Flash::Warning(s) => serde_json::json!(["warning", s]),
-        form::Flash::Error(s) => serde_json::json!(["error", s]),
-    }).collect();
+    let v: Vec<Value> = msgs
+        .iter()
+        .map(|m| match m {
+            form::Flash::Success(s) => serde_json::json!(["success", s]),
+            form::Flash::Info(s) => serde_json::json!(["info", s]),
+            form::Flash::Warning(s) => serde_json::json!(["warning", s]),
+            form::Flash::Error(s) => serde_json::json!(["error", s]),
+        })
+        .collect();
     // Encode the whole JSON text for use inside a cookie.
     let enc = urlencode(&Value::Array(v).to_string());
     // Path=/streamlit limits the cookie to this tool. Max-Age=120 deletes it after two minutes.
     // HttpOnly hides it from page scripts. SameSite=Lax stops other sites from sending it along.
     // `.ok()` turns a possible error into `None`.
-    HeaderValue::from_str(&format!("st_flash={enc}; Path=/streamlit; Max-Age=120; HttpOnly; SameSite=Lax")).ok()
+    HeaderValue::from_str(&format!(
+        "st_flash={enc}; Path=/streamlit; Max-Age=120; HttpOnly; SameSite=Lax"
+    ))
+    .ok()
 }
 
 /// Reads the `st_flash` cookie from the request and returns the HTML of the messages (empty text if
 /// there is none or it is damaged).
 fn read_flash(headers: &HeaderMap) -> String {
     // The Cookie header is one line like `a=1; b=2`. Read it as text, or "" if absent.
-    let raw = headers.get(header::COOKIE).and_then(|v| v.to_str().ok()).unwrap_or("");
+    let raw = headers
+        .get(header::COOKIE)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
     // `let ... else` tries to match a pattern and runs the `else` block if it does not match. Here:
     // split on ";", split each piece at the first "=", and find the pair named st_flash.
-    let Some(val) = raw.split(';').filter_map(|p| p.trim().split_once('=')).find(|(k, _)| *k == "st_flash").map(|(_, v)| v) else {
+    let Some(val) = raw
+        .split(';')
+        .filter_map(|p| p.trim().split_once('='))
+        .find(|(k, _)| *k == "st_flash")
+        .map(|(_, v)| v)
+    else {
         return String::new();
     };
     // Undo the percent-encoding.
     let decoded: String = url_decode(val);
     // Parse the text as JSON and require a list; anything else gives an empty result.
-    let Ok(Value::Array(items)) = serde_json::from_str::<Value>(&decoded) else { return String::new() };
+    let Ok(Value::Array(items)) = serde_json::from_str::<Value>(&decoded) else {
+        return String::new();
+    };
     // For each message, read the kind (item 0) and the text (item 1). The `?` after a call means
     // "if this gave nothing, stop and skip this message".
-    items.iter().filter_map(|it| {
-        let kind = it.get(0)?.as_str()?;
-        let msg = it.get(1)?.as_str()?;
-        // Pick the HTML box for that kind. Anything unknown is drawn as an error box.
-        Some(match kind {
-            "success" => ui::success(msg),
-            "info" => ui::info(msg),
-            "warning" => ui::warning(msg),
-            _ => ui::error(msg),
+    items
+        .iter()
+        .filter_map(|it| {
+            let kind = it.get(0)?.as_str()?;
+            let msg = it.get(1)?.as_str()?;
+            // Pick the HTML box for that kind. Anything unknown is drawn as an error box.
+            Some(match kind {
+                "success" => ui::success(msg),
+                "info" => ui::info(msg),
+                "warning" => ui::warning(msg),
+                _ => ui::error(msg),
+            })
         })
-    }).collect()
+        .collect()
 }
 
 /// Reverses percent-encoding: "+" becomes a space and "%41" becomes the byte 0x41. Written by hand
@@ -266,7 +322,12 @@ fn shell(visitor: &Visitor, tab: usize, flash: &str, body: &str) -> String {
     // `enumerate` gives each tab its position; tab numbers start at 1, so the link uses i + 1. The
     // current tab gets the class "on" so it is highlighted.
     for (i, t) in TABS.iter().enumerate() {
-        tabs.push_str(&format!("<a href=\"/streamlit/?tab={}\"{}>{}</a>", i + 1, if i + 1 == tab { " class=\"on\"" } else { "" }, he(t)));
+        tabs.push_str(&format!(
+            "<a href=\"/streamlit/?tab={}\"{}>{}</a>",
+            i + 1,
+            if i + 1 == tab { " class=\"on\"" } else { "" },
+            he(t)
+        ));
     }
     // `format!` builds a String; `{name}` marks where a value is placed. Everything that comes from
     // outside (the user name) is escaped with `he()`.
@@ -306,13 +367,20 @@ pub async fn page(
     let mut q: HashMap<String, String> = HashMap::new();
     // Read each setting from the address. A repeated name ending in "[]" (a multi-pick box) has its
     // values joined with ", " into one text.
-    for (k, v) in serde_urlencoded::from_str::<Vec<(String, String)>>(raw.as_deref().unwrap_or("")).unwrap_or_default() {
+    for (k, v) in serde_urlencoded::from_str::<Vec<(String, String)>>(raw.as_deref().unwrap_or(""))
+        .unwrap_or_default()
+    {
         match q.get_mut(&k) {
             // `Some(old) if k.ends_with("[]")` means "the key already exists and is a list-style
             // name": add to the old value.
-            Some(old) if k.ends_with("[]") => { old.push_str(", "); old.push_str(&v); }
+            Some(old) if k.ends_with("[]") => {
+                old.push_str(", ");
+                old.push_str(&v);
+            }
             // Otherwise store or replace the value.
-            _ => { q.insert(k, v); }
+            _ => {
+                q.insert(k, v);
+            }
         }
     }
     // The image manager's "does this look right?" preview picture.
@@ -320,7 +388,14 @@ pub async fn page(
     // none.
     if let Some(pid) = q.get("preview") {
         return match gallery::preview_bytes(&state, crate::php::php_int(pid)) {
-            Some(b) => ([(header::CONTENT_TYPE, "image/webp"), (header::CACHE_CONTROL, "no-store")], b).into_response(),
+            Some(b) => (
+                [
+                    (header::CONTENT_TYPE, "image/webp"),
+                    (header::CACHE_CONTROL, "no-store"),
+                ],
+                b,
+            )
+                .into_response(),
             None => StatusCode::NOT_FOUND.into_response(),
         };
     }
@@ -339,22 +414,34 @@ pub async fn page(
     // function with that file right away.
     match q.get("export").map(String::as_str) {
         // Plant schema reference text file.
-        Some("schema_ref") => return attachment(add::REFERENCE.to_string(), "text/plain; charset=utf-8", "plant_schema_reference.txt"),
+        Some("schema_ref") => {
+            return attachment(
+                add::REFERENCE.to_string(),
+                "text/plain; charset=utf-8",
+                "plant_schema_reference.txt",
+            )
+        }
         // The Add Plant tab's schema JSON for one plant.
-        Some("add_schema") => return match add::schema_json(&state, export_id).await {
-            Some((body, name)) => attachment(body, "application/json", &name),
-            None => StatusCode::NOT_FOUND.into_response(),
-        },
+        Some("add_schema") => {
+            return match add::schema_json(&state, export_id).await {
+                Some((body, name)) => attachment(body, "application/json", &name),
+                None => StatusCode::NOT_FOUND.into_response(),
+            }
+        }
         // The Add Plant tab's missing-fields JSON for one plant.
-        Some("add_missing") => return match add::missing_json(&state, export_id).await {
-            Some((body, name)) => attachment(body, "application/json", &name),
-            None => StatusCode::NOT_FOUND.into_response(),
-        },
+        Some("add_missing") => {
+            return match add::missing_json(&state, export_id).await {
+                Some((body, name)) => attachment(body, "application/json", &name),
+                None => StatusCode::NOT_FOUND.into_response(),
+            }
+        }
         // JSON Pipeline downloads; their names start with "jp_".
-        Some(k) if k.starts_with("jp_") => return match pipeline::export(&state, k, &q).await {
-            Some((body, name)) => attachment(body, "application/json", &name),
-            None => StatusCode::NOT_FOUND.into_response(),
-        },
+        Some(k) if k.starts_with("jp_") => {
+            return match pipeline::export(&state, k, &q).await {
+                Some((body, name)) => attachment(body, "application/json", &name),
+                None => StatusCode::NOT_FOUND.into_response(),
+            }
+        }
         // Any other kind: carry on below.
         _ => {}
     }
@@ -373,7 +460,11 @@ pub async fn page(
     }
     // Pick the tab: read `tab`, parse it as a number, keep it only if it is 1 to 14, otherwise use
     // tab 1.
-    let tab = q.get("tab").and_then(|t| t.parse::<usize>().ok()).filter(|t| (1..=TABS.len()).contains(t)).unwrap_or(1);
+    let tab = q
+        .get("tab")
+        .and_then(|t| t.parse::<usize>().ok())
+        .filter(|t| (1..=TABS.len()).contains(t))
+        .unwrap_or(1);
     // Bundle the tab and settings for the tab functions.
     let req = Req { tab, q };
     // Draw the tab. This waits on the database, hence `.await`.
@@ -384,7 +475,10 @@ pub async fn page(
     let mut res = Html(shell(&visitor, tab, &flash, &body)).into_response();
     // The messages were shown, so delete the cookie (Max-Age=0) so they do not appear again.
     if !flash.is_empty() {
-        res.headers_mut().append(header::SET_COOKIE, HeaderValue::from_static("st_flash=; Path=/streamlit; Max-Age=0"));
+        res.headers_mut().append(
+            header::SET_COOKIE,
+            HeaderValue::from_static("st_flash=; Path=/streamlit; Max-Age=0"),
+        );
     }
     res
 }
@@ -394,14 +488,22 @@ pub async fn page(
 /// with "_" so they cannot break the header.
 fn attachment(body: String, mime: &str, name: &str) -> Response {
     // The header text for the file name.
-    let disp = format!("attachment; filename=\"{}\"", name.replace(['"', '\\', '\r', '\n'], "_"));
+    let disp = format!(
+        "attachment; filename=\"{}\"",
+        name.replace(['"', '\\', '\r', '\n'], "_")
+    );
     // The reply with the content type set (`mime` tells the browser what kind of file it is).
     let mut res = ([(header::CONTENT_TYPE, mime.to_string())], body).into_response();
     // Add the header. If the name has characters a header cannot hold, fall back to a plain name
     // that keeps only the file's extension.
     if let Ok(v) = HeaderValue::from_str(&disp) {
         res.headers_mut().insert(header::CONTENT_DISPOSITION, v);
-    } else if let Ok(v) = HeaderValue::from_str(&format!("attachment; filename=\"plant{}\"", name.rsplit_once('.').map(|(_, e)| format!(".{e}")).unwrap_or_default())) {
+    } else if let Ok(v) = HeaderValue::from_str(&format!(
+        "attachment; filename=\"plant{}\"",
+        name.rsplit_once('.')
+            .map(|(_, e)| format!(".{e}"))
+            .unwrap_or_default()
+    )) {
         res.headers_mut().insert(header::CONTENT_DISPOSITION, v);
     }
     res
@@ -417,8 +519,15 @@ async fn download(state: &AppState, kind: &str, q: &HashMap<String, String>) -> 
     let id = crate::php::php_int(q.get("id").map(String::as_str).unwrap_or(""));
     // Load that plant's whole row. `fetch_optional` gives `Some(row)` or `None`. `?` is not used;
     // every failure here returns 404.
-    let row = match sqlx::query("SELECT * FROM data_source WHERE id = ?").bind(id).fetch_optional(&state.db).await {
-        Ok(Some(r)) => match crate::rowjson::row_to_json(&r) { Value::Object(m) => m, _ => return StatusCode::NOT_FOUND.into_response() },
+    let row = match sqlx::query("SELECT * FROM data_source WHERE id = ?")
+        .bind(id)
+        .fetch_optional(&state.db)
+        .await
+    {
+        Ok(Some(r)) => match crate::rowjson::row_to_json(&r) {
+            Value::Object(m) => m,
+            _ => return StatusCode::NOT_FOUND.into_response(),
+        },
         _ => return StatusCode::NOT_FOUND.into_response(),
     };
     // The plant name, used for the file name.
@@ -430,15 +539,29 @@ async fn download(state: &AppState, kind: &str, q: &HashMap<String, String>) -> 
             // says "Manual Editor Export". `suffix` is the title text and `file` the end of the
             // file name.
             let (suffix, file) = if q.get("kind").map(String::as_str) == Some("partial") {
-                (format!("Partial Export — Missing: {}", opts::missing_fields(&row).join(", ")), "_Partial_Export.html")
+                (
+                    format!(
+                        "Partial Export — Missing: {}",
+                        opts::missing_fields(&row).join(", ")
+                    ),
+                    "_Partial_Export.html",
+                )
             } else {
                 ("Manual Editor Export".to_string(), "_Manual_Export.html")
             };
             // An empty map: no AI "changed" fields here.
             let none = Map::new();
-            attachment(export::plant_html(&row, &row, &suffix, &[], &none), "text/html; charset=utf-8", &export::download_name(&name, file))
+            attachment(
+                export::plant_html(&row, &row, &suffix, &[], &none),
+                "text/html; charset=utf-8",
+                &export::download_name(&name, file),
+            )
         }
-        "missing_json" => attachment(export::missing_json(&row), "application/json", &export::download_name(&name, "_missing_fields.json")),
+        "missing_json" => attachment(
+            export::missing_json(&row),
+            "application/json",
+            &export::download_name(&name, "_missing_fields.json"),
+        ),
         _ => StatusCode::NOT_FOUND.into_response(),
     }
 }
@@ -488,7 +611,14 @@ pub async fn action(
         // The editor's normal Save.
         "save_plant" => form::save(&state, &f).await,
         // `a @ (...)` matches either name and keeps it in `a`.
-        a @ ("ai_start" | "ai_reset") => ai_tabs::action(state.clone(), a, crate::php::php_int(f.str("tab")).max(0) as usize).await,
+        a @ ("ai_start" | "ai_reset") => {
+            ai_tabs::action(
+                state.clone(),
+                a,
+                crate::php::php_int(f.str("tab")).max(0) as usize,
+            )
+            .await
+        }
         // The quantity logger (plants added, lost, moved).
         "qty_event" => form::save_qty_event(&state, &f).await,
         // Everything else is handled in tabs.rs.
@@ -497,14 +627,19 @@ pub async fn action(
     // Back to the same tab, plant and inner tab.
     // Build the address to return to: the tab (kept between 1 and 14), then either what the action
     // asked for or the usual settings. `clamp(1, 14)` forces the number into that range.
-    let mut to = format!("/streamlit/?tab={}", crate::php::php_int(f.str("tab")).clamp(1, TABS.len() as i64));
+    let mut to = format!(
+        "/streamlit/?tab={}",
+        crate::php::php_int(f.str("tab")).clamp(1, TABS.len() as i64)
+    );
     if !next.is_empty() {
         for (k, v) in &next {
             to.push_str(&format!("&{k}={}", urlencode(v)));
         }
     } else {
         // These settings are carried back so the same plant and inner tab are shown again.
-        for k in ["p", "sub", "show", "filter", "batch", "new", "full", "ai", "qc"] {
+        for k in [
+            "p", "sub", "show", "filter", "batch", "new", "full", "ai", "qc",
+        ] {
             if !f.str(k).is_empty() {
                 to.push_str(&format!("&{k}={}", urlencode(f.str(k))));
             }

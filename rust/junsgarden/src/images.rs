@@ -82,13 +82,23 @@ pub fn to_webp_image(img: &DynamicImage, quality: f32) -> Option<Vec<u8>> {
 /// left, returns `fallback`.
 fn clean_name(s: &str, fallback: &str) -> String {
     let c: String = s.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
-    if c.is_empty() { fallback.to_string() } else { c }
+    if c.is_empty() {
+        fallback.to_string()
+    } else {
+        c
+    }
 }
 
 /// `process_and_save_image()` from functions.php: a plant photo saved at
 /// full size as `<Plant>_<Family>_<NN>.webp` (quality 87); a WebP upload is
 /// kept byte for byte.
-pub fn process_and_save_image(bytes: &[u8], original_name: &str, dir: &Path, plant: &str, family: &str) -> Option<String> {
+pub fn process_and_save_image(
+    bytes: &[u8],
+    original_name: &str,
+    dir: &Path,
+    plant: &str,
+    family: &str,
+) -> Option<String> {
     // Empty names become "Unknown"; then everything but letters and digits is removed.
     let plant = clean_name(if plant.is_empty() { "Unknown" } else { plant }, "Plant");
     let family = clean_name(if family.is_empty() { "Unknown" } else { family }, "Family");
@@ -118,7 +128,10 @@ pub fn process_and_save_image(bytes: &[u8], original_name: &str, dir: &Path, pla
     };
 
     // The original file name's extension, lower case, or empty if there is none.
-    let ext = original_name.rsplit_once('.').map(|(_, e)| e.to_ascii_lowercase()).unwrap_or_default();
+    let ext = original_name
+        .rsplit_once('.')
+        .map(|(_, e)| e.to_ascii_lowercase())
+        .unwrap_or_default();
     // WebP is kept as it is; JPEG and PNG are converted; any other type is refused (`None`).
     let data = if ext == "webp" {
         bytes.to_vec()
@@ -135,13 +148,21 @@ pub fn process_and_save_image(bytes: &[u8], original_name: &str, dir: &Path, pla
 /// write it back in its own format.
 pub fn rotate_clockwise_in_place(path: &Path) -> bool {
     // `let Ok(..) = .. else { return false }` unwraps a good result or leaves the function.
-    let Ok(bytes) = std::fs::read(path) else { return false };
-    let Some(img) = decode(&bytes) else { return false };
+    let Ok(bytes) = std::fs::read(path) else {
+        return false;
+    };
+    let Some(img) = decode(&bytes) else {
+        return false;
+    };
     // GD's imagerotate(-90) is clockwise.
     // A quarter turn clockwise.
     let rotated = img.rotate90();
     // The file's extension decides the format it is written back in.
-    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
     let out: Option<Vec<u8>> = match ext.as_str() {
         // JPEG at quality 90.
         "jpg" | "jpeg" => {
@@ -152,7 +173,10 @@ pub fn rotate_clockwise_in_place(path: &Path) -> bool {
         // PNG has no quality setting.
         "png" => {
             let mut buf = std::io::Cursor::new(Vec::new());
-            rotated.write_to(&mut buf, ImageFormat::Png).ok().map(|_| buf.into_inner())
+            rotated
+                .write_to(&mut buf, ImageFormat::Png)
+                .ok()
+                .map(|_| buf.into_inner())
         }
         // WebP at quality 90.
         "webp" => encode_webp(&rotated, 90.0),
@@ -174,7 +198,9 @@ pub fn thumbnail_webp(bytes: &[u8], max_w: u32) -> Option<Vec<u8>> {
     // New width: at most `max_w`, never larger than the original, and at least 1.
     let nw = max_w.min(sw).max(1);
     // New height keeps the same shape: width times the original height/width ratio.
-    let nh = ((nw as f64) * (sh as f64 / sw.max(1) as f64)).round().max(1.0) as u32;
+    let nh = ((nw as f64) * (sh as f64 / sw.max(1) as f64))
+        .round()
+        .max(1.0) as u32;
     // `Triangle` is a smoothing method for shrinking.
     let small = img.resize_exact(nw, nh, image::imageops::FilterType::Triangle);
     encode_webp(&small, 80.0)
@@ -187,7 +213,8 @@ mod tests {
 
     /// Makes a small solid-colour PNG in memory for the tests to use.
     fn png_bytes(w: u32, h: u32) -> Vec<u8> {
-        let img = DynamicImage::ImageRgba8(RgbaImage::from_pixel(w, h, image::Rgba([10, 200, 30, 255])));
+        let img =
+            DynamicImage::ImageRgba8(RgbaImage::from_pixel(w, h, image::Rgba([10, 200, 30, 255])));
         let mut buf = std::io::Cursor::new(Vec::new());
         img.write_to(&mut buf, ImageFormat::Png).unwrap();
         buf.into_inner()
@@ -199,8 +226,10 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         let name = save_as_webp(&png_bytes(8, 6), &dir, 82.0).unwrap();
         assert!(name.ends_with(".webp") && name.len() == 37);
-        let a = process_and_save_image(&png_bytes(8, 6), "x.png", &dir, "Lil' Kim", "Hibiscus").unwrap();
-        let b = process_and_save_image(&png_bytes(8, 6), "x.png", &dir, "Lil' Kim", "Hibiscus").unwrap();
+        let a = process_and_save_image(&png_bytes(8, 6), "x.png", &dir, "Lil' Kim", "Hibiscus")
+            .unwrap();
+        let b = process_and_save_image(&png_bytes(8, 6), "x.png", &dir, "Lil' Kim", "Hibiscus")
+            .unwrap();
         assert_eq!(a, "LilKim_Hibiscus_01.webp");
         assert_eq!(b, "LilKim_Hibiscus_02.webp");
         assert!(process_and_save_image(b"notanimage", "x.png", &dir, "a", "b").is_none());

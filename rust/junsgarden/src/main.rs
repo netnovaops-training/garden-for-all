@@ -149,11 +149,18 @@ impl AppState {
 async fn healthz(State(state): State<Arc<AppState>>) -> Response {
     // `match` looks at a `Result` (success or error) and runs the arm that fits.
     // `Ok(n)` is success carrying the count; `Err(e)` is failure carrying the error.
-    match sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM data_source").fetch_one(&state.db).await {
+    match sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM data_source")
+        .fetch_one(&state.db)
+        .await
+    {
         Ok(n) => Json(json!({"status": "ok", "plant_count": n})).into_response(),
         Err(e) => {
             tracing::error!("healthz DB query failed: {e}");
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"status": "error"}))).into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"status": "error"})),
+            )
+                .into_response()
         }
     }
 }
@@ -168,7 +175,9 @@ async fn healthz(State(state): State<Arc<AppState>>) -> Response {
 fn servable(path: &str) -> bool {
     // Judge the path the way the file server will read it: with the %XX codes decoded
     // ("%2e" is ".", "%69mages" is "images"). A path that does not decode is refused.
-    let Some(decoded) = percent_decode(path) else { return false };
+    let Some(decoded) = percent_decode(path) else {
+        return false;
+    };
     let p = decoded.trim_start_matches('/');
     if p.is_empty() || p.contains("..") || p.contains('\\') || p.contains('\0') {
         return false;
@@ -178,15 +187,28 @@ fn servable(path: &str) -> bool {
         return false;
     }
     let lower = p.to_ascii_lowercase();
-    if lower.contains(".bak") || lower.contains(".pre-") || lower.ends_with('~') || lower.contains(".env") {
+    if lower.contains(".bak")
+        || lower.contains(".pre-")
+        || lower.ends_with('~')
+        || lower.contains(".env")
+    {
         return false;
     }
     // Internal directories: never served, whatever is inside them.
-    const PRIVATE: [&str; 6] = ["data/", "database/", "archive/", "tools/", "cashe/", "garden-ingest/"];
+    const PRIVATE: [&str; 6] = [
+        "data/",
+        "database/",
+        "archive/",
+        "tools/",
+        "cashe/",
+        "garden-ingest/",
+    ];
     if PRIVATE.iter().any(|d| lower.starts_with(d)) {
         return false;
     }
-    let Some((_, ext)) = lower.rsplit_once('.') else { return false };
+    let Some((_, ext)) = lower.rsplit_once('.') else {
+        return false;
+    };
     // The photos folder (mounted at /www/images) holds the garden's own files: only photos and
     // videos are served from it. A PDF, text, zip, json or script file there is a 404, whatever
     // its name looks like, and however the address is written.
@@ -195,8 +217,28 @@ fn servable(path: &str) -> bool {
     }
     matches!(
         ext,
-        "css" | "js" | "png" | "jpg" | "jpeg" | "webp" | "gif" | "svg" | "ico" | "pdf" | "apk"
-            | "mp3" | "mp4" | "mov" | "webm" | "m4v" | "woff" | "woff2" | "ttf" | "html" | "json" | "xmp"
+        "css"
+            | "js"
+            | "png"
+            | "jpg"
+            | "jpeg"
+            | "webp"
+            | "gif"
+            | "svg"
+            | "ico"
+            | "pdf"
+            | "apk"
+            | "mp3"
+            | "mp4"
+            | "mov"
+            | "webm"
+            | "m4v"
+            | "woff"
+            | "woff2"
+            | "ttf"
+            | "html"
+            | "json"
+            | "xmp"
     ) && (ext != "json" || lower.starts_with("sections/cards/") || lower.starts_with("apps/"))
 }
 
@@ -256,8 +298,13 @@ async fn asset_headers(req: Request, next: Next) -> Response {
     let is_html = req.uri().path().to_ascii_lowercase().ends_with(".html");
     let mut res = next.run(req).await;
     if res.status().is_success() {
-        let v = if is_html { "no-cache, must-revalidate" } else { "public, max-age=31536000, immutable" };
-        res.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static(v));
+        let v = if is_html {
+            "no-cache, must-revalidate"
+        } else {
+            "public, max-age=31536000, immutable"
+        };
+        res.headers_mut()
+            .insert(header::CACHE_CONTROL, HeaderValue::from_static(v));
     }
     res
 }
@@ -302,7 +349,10 @@ async fn run() -> anyhow::Result<()> {
     // The database address is required; the program stops here with an error if missing.
     let db_url = common::env_required("JUNSGARDEN_DATABASE_URL")?;
     // Open a pool of at most 8 connections to the database.
-    let db = MySqlPoolOptions::new().max_connections(8).connect(&db_url).await?;
+    let db = MySqlPoolOptions::new()
+        .max_connections(8)
+        .connect(&db_url)
+        .await?;
     // Who may log in. `env_or` reads the setting, or uses the fallback written in the code.
     // Anyone running a copy must set JUNSGARDEN_USERS themselves (see the top of this file).
     let users = accounts::parse_users(&common::env_or("JUNSGARDEN_USERS", accounts::DEFAULT_USERS));
@@ -315,8 +365,14 @@ async fn run() -> anyhow::Result<()> {
 
     // Folders on disk: the site files, the data folder, and the AI answer cache.
     let www = PathBuf::from(common::env_or("JUNSGARDEN_WWW_DIR", "/www"));
-    let data = PathBuf::from(common::env_or("JUNSGARDEN_DATA_DIR", &format!("{}/data", www.display())));
-    let ai_cache_dir = PathBuf::from(common::env_or("JUNSGARDEN_AI_CACHE_DIR", &format!("{}/cashe/AI", www.display())));
+    let data = PathBuf::from(common::env_or(
+        "JUNSGARDEN_DATA_DIR",
+        &format!("{}/data", www.display()),
+    ));
+    let ai_cache_dir = PathBuf::from(common::env_or(
+        "JUNSGARDEN_AI_CACHE_DIR",
+        &format!("{}/cashe/AI", www.display()),
+    ));
     tracing::info!("serving site files from {}", www.display());
 
     // Build the shared state. `Arc::new` wraps it so all handlers can share it.
@@ -338,12 +394,20 @@ async fn run() -> anyhow::Result<()> {
             .filter(|s| !s.is_empty())
             .collect(),
         widget_cache: std::sync::Mutex::new(None),
-        http: reqwest::Client::builder().connect_timeout(std::time::Duration::from_secs(5)).build()?,
+        http: reqwest::Client::builder()
+            .connect_timeout(std::time::Duration::from_secs(5))
+            .build()?,
         ollama_url: common::env_or("OLLAMA_URL", "http://127.0.0.1:11434/api/generate"),
         ollama_model: common::env_or("OLLAMA_MODEL", "phi4:latest"),
         ai_cache_dir,
-        forecast_file: PathBuf::from(common::env_or("JUNSGARDEN_FORECAST_FILE", "/var/www/html/data/latest_prediction.json")),
-        weather_latest: PathBuf::from(common::env_or("JUNSGARDEN_WEATHER_LATEST", "/var/www/html/data/weather_latest.json")),
+        forecast_file: PathBuf::from(common::env_or(
+            "JUNSGARDEN_FORECAST_FILE",
+            "/var/www/html/data/latest_prediction.json",
+        )),
+        weather_latest: PathBuf::from(common::env_or(
+            "JUNSGARDEN_WEATHER_LATEST",
+            "/var/www/html/data/weather_latest.json",
+        )),
         guides: PathBuf::from(common::env_or("JUNSGARDEN_GUIDES_DIR", "/guides")),
         frame: layout::FrameCache::default(),
         // 5 guestbook lines or comments per visitor address per 10 minutes.
@@ -377,26 +441,57 @@ async fn run() -> anyhow::Result<()> {
         .route("/sso-login/{*rest}", home)
         .route("/blog.php", get(blog::blog).post(blog::blog_post))
         .route("/plant_listing.php", get(plant_listing::plant_listing))
-        .route("/catalog.php", get(catalog::catalog_get).post(catalog::catalog_post).layer(uploads))
+        .route(
+            "/catalog.php",
+            get(catalog::catalog_get)
+                .post(catalog::catalog_post)
+                .layer(uploads),
+        )
         .route("/gallery.php", get(gallery::gallery))
-        .route("/comments.php", get(comments::comments).post(comments::comments))
-        .route("/plant_actions.php", get(plant_actions::plant_actions).post(plant_actions::plant_actions))
+        .route(
+            "/comments.php",
+            get(comments::comments).post(comments::comments),
+        )
+        .route(
+            "/plant_actions.php",
+            get(plant_actions::plant_actions).post(plant_actions::plant_actions),
+        )
         .route("/data.php", get(data::data_get).post(data::data_get))
         .route("/widget_data.php", get(data::widget_data))
-        .route("/app_api.php", get(app_api::app_api).post(app_api::app_api).options(app_api::app_api).layer(uploads))
+        .route(
+            "/app_api.php",
+            get(app_api::app_api)
+                .post(app_api::app_api)
+                .options(app_api::app_api)
+                .layer(uploads),
+        )
         // The plant admin, converted from the Streamlit app (orchestrator/).
-        .route("/streamlit/", get(orchestrator::page).post(orchestrator::action).layer(uploads))
-        .route("/streamlit", get(|| async { axum::response::Redirect::permanent("/streamlit/") }))
+        .route(
+            "/streamlit/",
+            get(orchestrator::page)
+                .post(orchestrator::action)
+                .layer(uploads),
+        )
+        .route(
+            "/streamlit",
+            get(|| async { axum::response::Redirect::permanent("/streamlit/") }),
+        )
         .route("/streamlit/st.css", get(orchestrator::css))
         .route("/streamlit/st.js", get(orchestrator::js))
         // The app's camera tools, for people logged in (garden_camera.rs).
-        .route("/app/garden/{action}", axum::routing::post(garden_camera::garden_camera).layer(uploads))
+        .route(
+            "/app/garden/{action}",
+            axum::routing::post(garden_camera::garden_camera).layer(uploads),
+        )
         // The guides, for people logged in (help.rs): /help, /help/images/...
         .merge(help::routes())
         // Layers wrap every route above them; the LAST one added is the OUTERMOST. So, in
         // order: refuse a post another website sent, work out who the visitor is (session.rs),
         // run the page; and every answer, a refusal included, gets the security headers.
-        .layer(middleware::from_fn_with_state(state.clone(), session::with_visitor))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            session::with_visitor,
+        ))
         .layer(middleware::from_fn(guard::same_site_posts))
         .layer(middleware::map_response(guard::security_headers))
         // Every other address: 2 MB is plenty for any form without photos.
@@ -422,15 +517,30 @@ fn main() -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::{servable, static_files};
-    use axum::{body::Body, http::{Request, StatusCode}};
+    use axum::{
+        body::Body,
+        http::{Request, StatusCode},
+    };
     use tower::ServiceExt;
 
     // Ordinary public files must be allowed.
     #[test]
     fn serves_ordinary_assets() {
-        for ok in ["/style.css", "/js/hero.js", "/images/Database/a.webp", "/privacy.html", "/sections/cards/card-01.json", "/images/Gallery/x.mp4",
-                   "/images/Gallery/My%20Photo.JPG", "/images/plan/a.jpeg", "/images/Database/b.png", "/images/Gallery/c.gif",
-                   "/images/Gallery/d.MOV", "/images/Gallery/e.heic", "/images/Database/f.avif"] {
+        for ok in [
+            "/style.css",
+            "/js/hero.js",
+            "/images/Database/a.webp",
+            "/privacy.html",
+            "/sections/cards/card-01.json",
+            "/images/Gallery/x.mp4",
+            "/images/Gallery/My%20Photo.JPG",
+            "/images/plan/a.jpeg",
+            "/images/Database/b.png",
+            "/images/Gallery/c.gif",
+            "/images/Gallery/d.MOV",
+            "/images/Gallery/e.heic",
+            "/images/Database/f.avif",
+        ] {
             assert!(servable(ok), "{ok} should be served");
         }
     }
@@ -439,10 +549,21 @@ mod tests {
     #[test]
     fn refuses_source_config_and_backups() {
         for bad in [
-            "/connection.php", "/connection.php.bak-presso", "/index.php.pre-sso", "/.env",
-            "/data/Data-Source.csv", "/data/comments.txt", "/garden-users.env", "/../etc/passwd",
-            "/images/../connection.php", "/database/x.sql", "/app_api.php", "/sections/other.json",
-            "/js/app.js.bak-before-scrollfix", "/cashe/AI/health.json", "/garden-ingest/vocab.py",
+            "/connection.php",
+            "/connection.php.bak-presso",
+            "/index.php.pre-sso",
+            "/.env",
+            "/data/Data-Source.csv",
+            "/data/comments.txt",
+            "/garden-users.env",
+            "/../etc/passwd",
+            "/images/../connection.php",
+            "/database/x.sql",
+            "/app_api.php",
+            "/sections/other.json",
+            "/js/app.js.bak-before-scrollfix",
+            "/cashe/AI/health.json",
+            "/garden-ingest/vocab.py",
         ] {
             assert!(!servable(bad), "{bad} must not be served");
         }
@@ -452,10 +573,34 @@ mod tests {
     #[test]
     fn photos_folder_serves_only_media() {
         for bad in [
-            "/images/My%20Note.pdf", "/images/note.PDF", "/images/Gallery/x.pdf", "/images/a/b/c/d.pdf", "/images/x.pdf/", "/images/x.pdf.",
-            "/images/x.jpg.pdf", "/images/x.pdf%2ejpg.pdf", "/images/x%2Epdf", "/%69mages/x.pdf", "/Images/x.pdf", "/images/x.txt", "/images/x.zip",
-            "/images/x.json", "/images/x.php", "/images/x.py", "/images/x.csv", "/images/x.xmp", "/images/x.svg", "/images/x.html", "/images/x.js",
-            "/images/x.mp3", "/images/x", "/images/x.pdf%00.jpg", "/images/a%2fb.pdf", "/images//x.pdf", "/images/x.p%64f", "/images/%zz.jpg",
+            "/images/My%20Note.pdf",
+            "/images/note.PDF",
+            "/images/Gallery/x.pdf",
+            "/images/a/b/c/d.pdf",
+            "/images/x.pdf/",
+            "/images/x.pdf.",
+            "/images/x.jpg.pdf",
+            "/images/x.pdf%2ejpg.pdf",
+            "/images/x%2Epdf",
+            "/%69mages/x.pdf",
+            "/Images/x.pdf",
+            "/images/x.txt",
+            "/images/x.zip",
+            "/images/x.json",
+            "/images/x.php",
+            "/images/x.py",
+            "/images/x.csv",
+            "/images/x.xmp",
+            "/images/x.svg",
+            "/images/x.html",
+            "/images/x.js",
+            "/images/x.mp3",
+            "/images/x",
+            "/images/x.pdf%00.jpg",
+            "/images/a%2fb.pdf",
+            "/images//x.pdf",
+            "/images/x.p%64f",
+            "/images/%zz.jpg",
         ] {
             assert!(!servable(bad), "{bad} must not be served");
         }
@@ -464,7 +609,9 @@ mod tests {
     // The real router: a media file is served, a PDF is a 404 even when the file is on the disk.
     #[tokio::test]
     async fn router_serves_media_and_refuses_pdf_in_photos() {
-        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../target").join(format!("garden-static-test-{}", std::process::id()));
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../target")
+            .join(format!("garden-static-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("images/Gallery/deep")).unwrap();
         std::fs::write(dir.join("images/Gallery/a.jpg"), b"jpg").unwrap();
@@ -477,7 +624,10 @@ mod tests {
         let get = |path: &'static str| {
             let app = static_files(&dir);
             async move {
-                app.oneshot(Request::builder().uri(path).body(Body::empty()).unwrap()).await.unwrap().status()
+                app.oneshot(Request::builder().uri(path).body(Body::empty()).unwrap())
+                    .await
+                    .unwrap()
+                    .status()
             }
         };
         for (path, want) in [

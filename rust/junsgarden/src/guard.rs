@@ -53,7 +53,10 @@ pub async fn security_headers(mut res: Response) -> Response {
         if name == "cache-control" && h.contains_key(name) {
             continue;
         }
-        h.insert(HeaderName::from_static(name), HeaderValue::from_static(value));
+        h.insert(
+            HeaderName::from_static(name),
+            HeaderValue::from_static(value),
+        );
     }
     res
 }
@@ -67,7 +70,11 @@ pub async fn security_headers(mut res: Response) -> Response {
 pub async fn same_site_posts(req: Request, next: Next) -> Response {
     if req.method() == Method::POST && !from_this_site(req.headers()) {
         tracing::warn!("refused a cross-site POST to {}", req.uri().path());
-        return (StatusCode::FORBIDDEN, "This form must be sent from the garden site itself.").into_response();
+        return (
+            StatusCode::FORBIDDEN,
+            "This form must be sent from the garden site itself.",
+        )
+            .into_response();
     }
     next.run(req).await
 }
@@ -78,7 +85,10 @@ fn from_this_site(h: &HeaderMap) -> bool {
     if let Some(site) = text("sec-fetch-site") {
         return matches!(site, "same-origin" | "none");
     }
-    match (text("origin"), text("x-forwarded-host").or_else(|| text(header::HOST.as_str()))) {
+    match (
+        text("origin"),
+        text("x-forwarded-host").or_else(|| text(header::HOST.as_str())),
+    ) {
         // "null" is what a sandboxed or file:// page sends: not this site.
         (Some(origin), Some(host)) => origin.split_once("://").map(|(_, rest)| rest) == Some(host),
         (Some(_), None) => false,
@@ -99,13 +109,19 @@ pub struct RateLimit {
 
 impl RateLimit {
     pub fn new(max: usize, window: Duration) -> Self {
-        RateLimit { max, window, hits: Mutex::new(HashMap::new()) }
+        RateLimit {
+            max,
+            window,
+            hits: Mutex::new(HashMap::new()),
+        }
     }
 
     /// Count one try from `who`; false when that address has used up its tries.
     pub fn allow(&self, who: &str) -> bool {
         let now = Instant::now();
-        let Ok(mut hits) = self.hits.lock() else { return true };
+        let Ok(mut hits) = self.hits.lock() else {
+            return true;
+        };
         // Forget addresses whose tries are all old, so the table cannot grow forever.
         if hits.len() > 10_000 {
             hits.retain(|_, t| t.iter().any(|at| now.duration_since(*at) < self.window));
@@ -148,10 +164,16 @@ mod tests {
 
     #[test]
     fn posts_from_the_site_itself_or_the_app_pass() {
-        assert!(from_this_site(&headers(&[("sec-fetch-site", "same-origin")])));
+        assert!(from_this_site(&headers(&[(
+            "sec-fetch-site",
+            "same-origin"
+        )])));
         assert!(from_this_site(&headers(&[("sec-fetch-site", "none")])));
         assert!(from_this_site(&headers(&[]))); // the app, curl
-        assert!(from_this_site(&headers(&[("origin", "https://junsgarden.zapto.org"), ("host", "junsgarden.zapto.org")])));
+        assert!(from_this_site(&headers(&[
+            ("origin", "https://junsgarden.zapto.org"),
+            ("host", "junsgarden.zapto.org")
+        ])));
         assert!(from_this_site(&headers(&[
             ("origin", "https://junsgarden.zapto.org"),
             ("host", "127.0.0.1:8031"),
@@ -161,10 +183,22 @@ mod tests {
 
     #[test]
     fn posts_from_other_sites_are_refused() {
-        assert!(!from_this_site(&headers(&[("sec-fetch-site", "cross-site")])));
-        assert!(!from_this_site(&headers(&[("sec-fetch-site", "same-site")])));
-        assert!(!from_this_site(&headers(&[("origin", "https://evil.example"), ("host", "junsgarden.zapto.org")])));
-        assert!(!from_this_site(&headers(&[("origin", "null"), ("host", "junsgarden.zapto.org")])));
+        assert!(!from_this_site(&headers(&[(
+            "sec-fetch-site",
+            "cross-site"
+        )])));
+        assert!(!from_this_site(&headers(&[(
+            "sec-fetch-site",
+            "same-site"
+        )])));
+        assert!(!from_this_site(&headers(&[
+            ("origin", "https://evil.example"),
+            ("host", "junsgarden.zapto.org")
+        ])));
+        assert!(!from_this_site(&headers(&[
+            ("origin", "null"),
+            ("host", "junsgarden.zapto.org")
+        ])));
     }
 
     #[test]

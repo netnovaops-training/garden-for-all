@@ -27,7 +27,12 @@ use crate::php::he;
 /// `&'static str` is text that lives for the whole run of the program, such
 /// as a literal typed in the code. `Option<..>` means "a value or nothing";
 /// `None` means the field has no fixed list of allowed values.
-type Def = (&'static str, &'static str, Option<&'static [&'static str]>, &'static str);
+type Def = (
+    &'static str,
+    &'static str,
+    Option<&'static [&'static str]>,
+    &'static str,
+);
 
 /// Allowed-value text for companion_plants. It is a hint, not a real list.
 /// `&[&str]` is a borrowed list (a slice) of text pieces.
@@ -51,67 +56,257 @@ const FIELD_DEFS: &[Def] = &[
     ("genus", "string", None, "Lavandula"),
     ("species", "string", None, "angustifolia"),
     ("company", "string", None, "Proven Winners"),
-    ("plant_type", "string — one of list", Some(PLANT_TYPES), "Perennial"),
-    ("native_status", "string — one of list", Some(NATIVE_STATUS_OPTIONS), "Native"),
+    (
+        "plant_type",
+        "string — one of list",
+        Some(PLANT_TYPES),
+        "Perennial",
+    ),
+    (
+        "native_status",
+        "string — one of list",
+        Some(NATIVE_STATUS_OPTIONS),
+        "Native",
+    ),
     ("plant_length", "string", None, "18-24 in"),
     ("plant_width", "string", None, "12-18 in"),
     ("spacing", "string", None, "12-15 in apart"),
     ("zones", "string", None, "5-9"),
     ("life_expectancy", "string", None, "10+ years"),
-    ("growth_rate", "string — one of list", Some(GROWTH_RATES), "Moderate"),
-    ("sun_exposure", "string — one of list", Some(SUN_OPTIONS), "Full Sun"),
-    ("water_needs", "string", None, "Low — drought tolerant once established"),
+    (
+        "growth_rate",
+        "string — one of list",
+        Some(GROWTH_RATES),
+        "Moderate",
+    ),
+    (
+        "sun_exposure",
+        "string — one of list",
+        Some(SUN_OPTIONS),
+        "Full Sun",
+    ),
+    (
+        "water_needs",
+        "string",
+        None,
+        "Low — drought tolerant once established",
+    ),
     ("soil_ph", "string", None, "6.5 – 7.5"),
     ("soil_type", "string", None, "Well-draining, sandy or loamy"),
     ("planting_depth", "string", None, "Crown at soil level"),
     ("chilling_hours", "string", None, "0  (or number of hours)"),
     ("average_cost", "number (float)", None, "8.99"),
     ("quantity", "integer (read-only)", None, "3"),
-    ("year_added", "comma-separated string (read-only)", Some(YEARS_ADDED), "2024"),
-    ("garden_beds", "comma-separated string (read-only)", Some(GARDEN_BEDS), "Zen Garden, River Garden"),
+    (
+        "year_added",
+        "comma-separated string (read-only)",
+        Some(YEARS_ADDED),
+        "2024",
+    ),
+    (
+        "garden_beds",
+        "comma-separated string (read-only)",
+        Some(GARDEN_BEDS),
+        "Zen Garden, River Garden",
+    ),
     ("foliage_color", "string", None, "Silver-green"),
     ("stem_color", "string", None, "Grey-green"),
-    ("is_evergreen", "comma-separated string", Some(EVERGREEN_OPTIONS), "Evergreen"),
-    ("leaf_shape", "string — one of list", Some(LEAF_SHAPES), "Linear (Long, narrow)"),
-    ("leaf_type", "string — one of list", Some(LEAF_TYPES), "Simple (Single undivided blade)"),
-    ("leaf_margin", "string — one of list", Some(LEAF_MARGINS), "Entire (Smooth, no teeth)"),
+    (
+        "is_evergreen",
+        "comma-separated string",
+        Some(EVERGREEN_OPTIONS),
+        "Evergreen",
+    ),
+    (
+        "leaf_shape",
+        "string — one of list",
+        Some(LEAF_SHAPES),
+        "Linear (Long, narrow)",
+    ),
+    (
+        "leaf_type",
+        "string — one of list",
+        Some(LEAF_TYPES),
+        "Simple (Single undivided blade)",
+    ),
+    (
+        "leaf_margin",
+        "string — one of list",
+        Some(LEAF_MARGINS),
+        "Entire (Smooth, no teeth)",
+    ),
     ("bloom_color", "string", None, "Purple, Lavender"),
     ("aromatics", "string", None, "Strong floral, herbal"),
-    ("flower_symmetry", "string — one of list", Some(FLOWER_SYMMETRIES), "Zygomorphic (Bilateral symmetry)"),
-    ("flower_shape", "string — one of list", Some(FLOWER_SHAPES), "Tubular (Cylindrical tube)"),
-    ("flower_size", "string — one of list", Some(FLOWER_SIZES), "Small (1-2 in)"),
-    ("reproduction_type", "string — one of list", Some(REPRODUCTION_OPTIONS), "Hermaphrodite"),
+    (
+        "flower_symmetry",
+        "string — one of list",
+        Some(FLOWER_SYMMETRIES),
+        "Zygomorphic (Bilateral symmetry)",
+    ),
+    (
+        "flower_shape",
+        "string — one of list",
+        Some(FLOWER_SHAPES),
+        "Tubular (Cylindrical tube)",
+    ),
+    (
+        "flower_size",
+        "string — one of list",
+        Some(FLOWER_SIZES),
+        "Small (1-2 in)",
+    ),
+    (
+        "reproduction_type",
+        "string — one of list",
+        Some(REPRODUCTION_OPTIONS),
+        "Hermaphrodite",
+    ),
     ("fruit_type", "string", None, "Nutlet"),
     ("fruit_shape", "string", None, "Oval"),
     ("fruit_color", "string", None, "Brown"),
     ("fruit_size", "string", None, "< 1 mm"),
-    ("fruit_edibility", "string — one of list", Some(FRUIT_EDIBILITY_OPTIONS), "Inedible"),
-    ("root_system", "string — one of list", Some(ROOT_SYSTEM_OPTIONS), "Fibrous/Adventitious Systems"),
-    ("root_morphology", "string — one of list", Some(ROOT_MORPHOLOGY_OPTIONS), "Fine Roots (< 2 mm)"),
-    ("root_function", "string — one of list", Some(ROOT_FUNCTIONAL_OPTIONS), "Absorptive Roots (Lower Orders)"),
-    ("attracts", "string", None, "Bees, Butterflies, Hummingbirds"),
-    ("deer_resistance", "string — one of list", Some(RESISTANCE_OPTIONS), "Deer Resistant"),
-    ("toxicity", "string — one of list", Some(TOXICITY_OPTIONS), "Non-toxic"),
-    ("invasive_local", "string — one of list", Some(INVASIVE_OPTIONS), "No"),
-    ("propagation_method", "string", None, "Stem cuttings, division, seed"),
-    ("cuttings", "string", None, "Take 4 in softwood cuttings in summer"),
-    ("companion_plants", "comma-separated string", Some(COMPANIONS), "Rosemary, Sage, Thyme"),
-    ("fertilizer", "comma-separated string", Some(FERTILIZER_OPTIONS), "Rose-tone, Flower-tone"),
-    ("grow_months", "12-char string (J=Jan … D=Dec, dot=absent)", Some(GROW), "....MAMJJAS.."),
-    ("bloom_months", "12-char string (same encoding as grow_months)", Some(BLOOM), "......JJA..."),
-    ("care_notes", "string (free text)", None, "Water deeply once a week; reduce in winter."),
-    ("maintenance_notes", "string (free text)", None, "Prune lightly after first bloom flush."),
-    ("cleanup_notes", "string (free text)", None, "Cut back by 1/3 in early spring."),
-    ("disease_susceptibility", "string (free text)", None, "Root rot in wet soils; watch for aphids."),
-    ("extra_details", "string (free text)", None, "Culinary herb; edible flowers."),
-    ("picture", "comma-separated filenames (read-only)", None, "Lavender_42_1717000000.jpg"),
-    ("image_search_term", "string (read-only)", None, "Lavandula angustifolia purple"),
+    (
+        "fruit_edibility",
+        "string — one of list",
+        Some(FRUIT_EDIBILITY_OPTIONS),
+        "Inedible",
+    ),
+    (
+        "root_system",
+        "string — one of list",
+        Some(ROOT_SYSTEM_OPTIONS),
+        "Fibrous/Adventitious Systems",
+    ),
+    (
+        "root_morphology",
+        "string — one of list",
+        Some(ROOT_MORPHOLOGY_OPTIONS),
+        "Fine Roots (< 2 mm)",
+    ),
+    (
+        "root_function",
+        "string — one of list",
+        Some(ROOT_FUNCTIONAL_OPTIONS),
+        "Absorptive Roots (Lower Orders)",
+    ),
+    (
+        "attracts",
+        "string",
+        None,
+        "Bees, Butterflies, Hummingbirds",
+    ),
+    (
+        "deer_resistance",
+        "string — one of list",
+        Some(RESISTANCE_OPTIONS),
+        "Deer Resistant",
+    ),
+    (
+        "toxicity",
+        "string — one of list",
+        Some(TOXICITY_OPTIONS),
+        "Non-toxic",
+    ),
+    (
+        "invasive_local",
+        "string — one of list",
+        Some(INVASIVE_OPTIONS),
+        "No",
+    ),
+    (
+        "propagation_method",
+        "string",
+        None,
+        "Stem cuttings, division, seed",
+    ),
+    (
+        "cuttings",
+        "string",
+        None,
+        "Take 4 in softwood cuttings in summer",
+    ),
+    (
+        "companion_plants",
+        "comma-separated string",
+        Some(COMPANIONS),
+        "Rosemary, Sage, Thyme",
+    ),
+    (
+        "fertilizer",
+        "comma-separated string",
+        Some(FERTILIZER_OPTIONS),
+        "Rose-tone, Flower-tone",
+    ),
+    (
+        "grow_months",
+        "12-char string (J=Jan … D=Dec, dot=absent)",
+        Some(GROW),
+        "....MAMJJAS..",
+    ),
+    (
+        "bloom_months",
+        "12-char string (same encoding as grow_months)",
+        Some(BLOOM),
+        "......JJA...",
+    ),
+    (
+        "care_notes",
+        "string (free text)",
+        None,
+        "Water deeply once a week; reduce in winter.",
+    ),
+    (
+        "maintenance_notes",
+        "string (free text)",
+        None,
+        "Prune lightly after first bloom flush.",
+    ),
+    (
+        "cleanup_notes",
+        "string (free text)",
+        None,
+        "Cut back by 1/3 in early spring.",
+    ),
+    (
+        "disease_susceptibility",
+        "string (free text)",
+        None,
+        "Root rot in wet soils; watch for aphids.",
+    ),
+    (
+        "extra_details",
+        "string (free text)",
+        None,
+        "Culinary herb; edible flowers.",
+    ),
+    (
+        "picture",
+        "comma-separated filenames (read-only)",
+        None,
+        "Lavender_42_1717000000.jpg",
+    ),
+    (
+        "image_search_term",
+        "string (read-only)",
+        None,
+        "Lavandula angustifolia purple",
+    ),
     ("approved_jason", "0 or 1 (read-only)", None, "0"),
     ("approved_jun", "0 or 1 (read-only)", None, "0"),
     ("needs_review", "0 or 1 (read-only)", None, "0"),
     ("image_verified", "0 or 1 (read-only)", None, "0"),
-    ("_missing_fields", "list of strings (pipeline metadata)", None, "[\"family\", \"zones\"]"),
-    ("_enriched_fields", "list of strings (pipeline metadata)", None, "[\"family\"]"),
+    (
+        "_missing_fields",
+        "list of strings (pipeline metadata)",
+        None,
+        "[\"family\", \"zones\"]",
+    ),
+    (
+        "_enriched_fields",
+        "list of strings (pipeline metadata)",
+        None,
+        "[\"family\"]",
+    ),
 ];
 
 /// Walks through `FIELD_DEFS` one entry at a time.
@@ -161,22 +356,57 @@ pub fn render(req: &Req) -> String {
     // becomes a list of table cells. `.map(..)` changes each item;
     // `.filter(..)` keeps only the items for which the test is true;
     // `.collect()` gathers the results into a list.
-    let t: Vec<Vec<String>> = defs().filter(|(f, ty, a, _)| q.is_empty() || f.to_lowercase().contains(&q) || ty.to_lowercase().contains(&q) || a.map(|a| a.iter().any(|v| v.to_lowercase().contains(&q))).unwrap_or(false))
-        .map(|(f, ty, a, e)| vec![ui::cell(f), ui::cell(ty), ui::cell(&allowed_text(*a)), ui::cell(e)]).collect();
+    let t: Vec<Vec<String>> = defs()
+        .filter(|(f, ty, a, _)| {
+            q.is_empty()
+                || f.to_lowercase().contains(&q)
+                || ty.to_lowercase().contains(&q)
+                || a.map(|a| a.iter().any(|v| v.to_lowercase().contains(&q)))
+                    .unwrap_or(false)
+        })
+        .map(|(f, ty, a, e)| {
+            vec![
+                ui::cell(f),
+                ui::cell(ty),
+                ui::cell(&allowed_text(*a)),
+                ui::cell(e),
+            ]
+        })
+        .collect();
     // Draw the table.
-    h.push_str(&ui::dataframe(&["Field", "Type", "Allowed Values", "Example"], &t));
+    h.push_str(&ui::dataframe(
+        &["Field", "Type", "Allowed Values", "Example"],
+        &t,
+    ));
     h.push_str(&ui::divider());
-    h.push_str(&ui::h4("Full Option Lists (for dropdown / comma-separated fields)"));
+    h.push_str(&ui::h4(
+        "Full Option Lists (for dropdown / comma-separated fields)",
+    ));
     // Fields that get a full list under the table: more than one allowed value,
     // and not a read-only or metadata field.
-    let lists: Vec<&Def> = defs().filter(|(_, ty, a, _)| a.map(|a| a.len() > 1).unwrap_or(false) && !ty.contains("read-only") && !ty.contains("metadata")).collect();
+    let lists: Vec<&Def> = defs()
+        .filter(|(_, ty, a, _)| {
+            a.map(|a| a.len() > 1).unwrap_or(false)
+                && !ty.contains("read-only")
+                && !ty.contains("metadata")
+        })
+        .collect();
     // Two columns of expanders; `i % 2` sends items alternately to left and right.
     let mut cols = [String::new(), String::new()];
     for (i, (f, _, a, _)) in lists.iter().enumerate() {
         // One bullet per value. `he` turns characters such as < and & into safe
         // HTML so that option text cannot break the page.
-        let body: String = a.unwrap_or(&[]).iter().filter(|v| !v.is_empty()).map(|v| format!("<li><code>{}</code></li>", he(v))).collect();
-        cols[i % 2].push_str(&ui::expander(&format!("`{f}`"), false, &format!("<ul>{body}</ul>")));
+        let body: String = a
+            .unwrap_or(&[])
+            .iter()
+            .filter(|v| !v.is_empty())
+            .map(|v| format!("<li><code>{}</code></li>", he(v)))
+            .collect();
+        cols[i % 2].push_str(&ui::expander(
+            &format!("`{f}`"),
+            false,
+            &format!("<ul>{body}</ul>"),
+        ));
     }
     // Lay the two columns out side by side with equal width ([1, 1]).
     h.push_str(&ui::columns(&[1, 1], cols.to_vec()));
@@ -219,8 +449,16 @@ pub fn schema_json() -> String {
         if let Some(a) = a {
             // Only plain drop-down fields get a strict list. Read-only, metadata,
             // comma-separated and month-string fields are free-form, so no list.
-            if !ty.contains("read-only") && !ty.contains("metadata") && !ty.contains("comma-separated") && !ty.contains("12-char") {
-                let mut en: Vec<Value> = a.iter().filter(|v| !v.is_empty()).map(|v| Value::String(v.to_string())).collect();
+            if !ty.contains("read-only")
+                && !ty.contains("metadata")
+                && !ty.contains("comma-separated")
+                && !ty.contains("12-char")
+            {
+                let mut en: Vec<Value> = a
+                    .iter()
+                    .filter(|v| !v.is_empty())
+                    .map(|v| Value::String(v.to_string()))
+                    .collect();
                 // null and the empty string are also accepted, because fields may be blank.
                 en.push(Value::Null);
                 en.push(Value::String(String::new()));
@@ -252,7 +490,14 @@ mod tests {
     #[test]
     fn option_lists_match_streamlit_order() {
         // Collect the names of fields that would get a full option list.
-        let lists: Vec<&str> = super::defs().filter(|(_, ty, a, _)| a.map(|a| a.len() > 1).unwrap_or(false) && !ty.contains("read-only") && !ty.contains("metadata")).map(|d| d.0).collect();
+        let lists: Vec<&str> = super::defs()
+            .filter(|(_, ty, a, _)| {
+                a.map(|a| a.len() > 1).unwrap_or(false)
+                    && !ty.contains("read-only")
+                    && !ty.contains("metadata")
+            })
+            .map(|d| d.0)
+            .collect();
         assert_eq!(lists.len(), 20);
         assert_eq!(lists[0], "plant_type");
         assert_eq!(lists[19], "fertilizer");

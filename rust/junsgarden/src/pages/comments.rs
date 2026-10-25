@@ -97,9 +97,13 @@ pub fn new_entry(name: &str, message: &str) -> Option<Value> {
     let name = substr(if empty(&name) { "Guest" } else { &name }, 30);
     let now = common::now_local();
     let date = now
-        .format(&time::macros::format_description!("[month repr:short] [day padding:none], [year]"))
+        .format(&time::macros::format_description!(
+            "[month repr:short] [day padding:none], [year]"
+        ))
         .unwrap_or_default();
-    Some(json!({ "name": name, "message": substr(&msg, 200), "date": date, "ts": now.unix_timestamp() }))
+    Some(
+        json!({ "name": name, "message": substr(&msg, 200), "date": date, "ts": now.unix_timestamp() }),
+    )
 }
 
 /// The newest comments for one photo or plant (at most 50, newest first). A damaged file
@@ -124,7 +128,9 @@ pub async fn latest(state: &AppState, kind: Kind, key: &str) -> Vec<Value> {
 /// photo that is in the gallery folder. Stops anybody filling the file with made-up keys.
 fn valid_key(state: &AppState, kind: Kind, key: &str) -> bool {
     match kind {
-        Kind::Plant => !key.is_empty() && key.len() <= 10 && key.bytes().all(|b| b.is_ascii_digit()),
+        Kind::Plant => {
+            !key.is_empty() && key.len() <= 10 && key.bytes().all(|b| b.is_ascii_digit())
+        }
         Kind::Gallery => {
             key.len() <= 255
                 && !key.starts_with('.')
@@ -138,7 +144,11 @@ fn valid_key(state: &AppState, kind: Kind, key: &str) -> bool {
 /// flag. Returns false (and logs why) when it could not be saved.
 pub async fn add(state: &Arc<AppState>, kind: Kind, key: &str, entry: Value) -> bool {
     let _one_at_a_time = state.comments_lock.lock().await;
-    let (path, key, flag) = (kind.file(state), key.to_string(), state.data.join("comment_notify.txt"));
+    let (path, key, flag) = (
+        kind.file(state),
+        key.to_string(),
+        state.data.join("comment_notify.txt"),
+    );
     off_thread(move || {
         let saved = store::update_json(&path, |all| {
             let list = all.entry(key).or_insert_with(|| json!([]));
@@ -167,8 +177,13 @@ pub async fn add(state: &Arc<AppState>, kind: Kind, key: &str, entry: Value) -> 
 
 /// A JSON answer that is never cached by the browser (an old comment list must not show).
 fn json_reply(body: Value) -> Response {
-    let mut res = ([(header::CONTENT_TYPE, "application/json")], body.to_string()).into_response();
-    res.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+    let mut res = (
+        [(header::CONTENT_TYPE, "application/json")],
+        body.to_string(),
+    )
+        .into_response();
+    res.headers_mut()
+        .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
     res
 }
 
@@ -204,7 +219,11 @@ pub async fn comments(
 
     // The admin's bell. Guests always get "false", so they cannot tell whether anyone commented.
     if get && q.contains_key("check_notify") {
-        let on = is_admin && off_thread(move || store::read_text(&notify_file).unwrap_or_default()).await.trim() == "1";
+        let on = is_admin
+            && off_thread(move || store::read_text(&notify_file).unwrap_or_default())
+                .await
+                .trim()
+                == "1";
         return json_reply(json!({ "notify": on }));
     }
     if post && f.has("dismiss_notify") {
@@ -224,12 +243,22 @@ pub async fn comments(
     if post && f.has("post_comment") {
         let kind = Kind::from(f.get("type").unwrap_or("plant"));
         let key = f.str("key").trim();
-        let entry = if empty(key) { None } else { new_entry(f.get("name").unwrap_or("Guest"), f.str("message")) };
-        let Some(entry) = entry else { return error("key and message required") };
+        let entry = if empty(key) {
+            None
+        } else {
+            new_entry(f.get("name").unwrap_or("Guest"), f.str("message"))
+        };
+        let Some(entry) = entry else {
+            return error("key and message required");
+        };
         if !valid_key(&state, kind, key) {
             return error("Unknown photo or plant");
         }
-        if !is_admin && !state.write_limit.allow(&crate::accounts::client_ip(&headers)) {
+        if !is_admin
+            && !state
+                .write_limit
+                .allow(&crate::accounts::client_ip(&headers))
+        {
             return error("Too many comments at once. Please wait a few minutes.");
         }
         if !add(&state, kind, key, entry.clone()).await {
@@ -252,7 +281,9 @@ pub async fn comments(
         let _one_at_a_time = state.comments_lock.lock().await;
         let removed = off_thread(move || {
             store::update_json(&path, |all| {
-                let Some(Value::Array(a)) = all.get_mut(&key) else { return None };
+                let Some(Value::Array(a)) = all.get_mut(&key) else {
+                    return None;
+                };
                 let i = usize::try_from(index).ok().filter(|i| *i < a.len())?;
                 a.remove(i);
                 if a.is_empty() {
@@ -266,7 +297,11 @@ pub async fn comments(
             .is_some()
         })
         .await;
-        return if removed { json_reply(json!({ "status": "ok" })) } else { error("Not found") };
+        return if removed {
+            json_reply(json!({ "status": "ok" }))
+        } else {
+            error("Not found")
+        };
     }
 
     error("Unknown request")
@@ -292,6 +327,12 @@ mod tests {
         assert_eq!(new_entry("0", "x").unwrap()["name"], "Guest");
         assert!(new_entry("Kona", "  ").is_none());
         assert!(new_entry("Kona", "0").is_none());
-        assert_eq!(new_entry(&"n".repeat(99), &"m".repeat(999)).unwrap()["message"].as_str().unwrap().len(), 200);
+        assert_eq!(
+            new_entry(&"n".repeat(99), &"m".repeat(999)).unwrap()["message"]
+                .as_str()
+                .unwrap()
+                .len(),
+            200
+        );
     }
 }

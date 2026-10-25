@@ -80,7 +80,11 @@ impl Visitor {
 
     /// May this person upload plant photos? `JUNSGARDEN_UPLOADERS`.
     pub fn can_upload(&self, state: &AppState) -> bool {
-        self.is_admin() && state.uploaders.iter().any(|u| u.eq_ignore_ascii_case(&self.username))
+        self.is_admin()
+            && state
+                .uploaders
+                .iter()
+                .any(|u| u.eq_ignore_ascii_case(&self.username))
     }
 
     /// May this person see the planning links in the header? Anybody on the
@@ -111,7 +115,8 @@ pub async fn ensure_table(db: &sqlx::MySqlPool) -> Result<(), sqlx::Error> {
 fn valid_sid(s: &str) -> bool {
     !s.is_empty()
         && s.len() <= 128
-        && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b',' || b == b'-')
+        && s.bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b',' || b == b'-')
 }
 
 /// Makes a random hex string from `bytes` random bytes (so twice as many characters).
@@ -122,7 +127,9 @@ fn random_hex(bytes: usize) -> String {
     let mut rng = rand::rng();
     // Make `bytes` random bytes, write each as two hex digits, and join them into a String.
     // `|_|` is a closure (a small unnamed function) that ignores its input.
-    (0..bytes).map(|_| format!("{:02x}", rng.random::<u8>())).collect()
+    (0..bytes)
+        .map(|_| format!("{:02x}", rng.random::<u8>()))
+        .collect()
 }
 
 /// A new random cookie session id: 32 hex characters, like PHP's.
@@ -154,7 +161,10 @@ fn cookie_sid(req: &Request) -> Option<String> {
 /// the header is missing or the key is not 64 hex characters.
 fn bearer(req: &Request) -> Option<String> {
     let raw = req.headers().get(header::AUTHORIZATION)?.to_str().ok()?;
-    let token = raw.strip_prefix("Bearer ").or_else(|| raw.strip_prefix("bearer "))?.trim();
+    let token = raw
+        .strip_prefix("Bearer ")
+        .or_else(|| raw.strip_prefix("bearer "))?
+        .trim();
     // `then(...)` gives `Some(...)` only when the check before it is true.
     is_app_token(token).then(|| token.to_string())
 }
@@ -168,7 +178,10 @@ fn still_a_user(state: &AppState, name: &str) -> bool {
 }
 
 fn header_str<'a>(req: &'a Request, name: &str) -> &'a str {
-    req.headers().get(name).and_then(|v| v.to_str().ok()).unwrap_or("")
+    req.headers()
+        .get(name)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
 }
 
 /// A live session row: who it is, and whether its expiry is due for renewal.
@@ -194,7 +207,11 @@ async fn load_session(state: &AppState, sid: &str) -> Option<Session> {
     // A database error is treated like "no session": the person is just a visitor.
     .ok()
     .flatten()?;
-    Some(Session { username, email, renew: renew != 0 })
+    Some(Session {
+        username,
+        email,
+        renew: renew != 0,
+    })
 }
 
 /// Writes (or renews) a session row that lasts `days` days from now. Errors are logged
@@ -233,7 +250,9 @@ pub async fn destroy(state: &AppState, sid: &str) {
 /// person. The caller sends it back with `session_cookie`.
 pub async fn sign_in(state: &AppState, username: &str) -> String {
     // The email on file for this person, or empty if they have no account.
-    let email = crate::accounts::find(state, username).map(|a| a.email.clone()).unwrap_or_default();
+    let email = crate::accounts::find(state, username)
+        .map(|a| a.email.clone())
+        .unwrap_or_default();
     // A new random id each login, so an id planted before the login is useless.
     let sid = new_sid();
     // Lasts 1 day.
@@ -243,7 +262,9 @@ pub async fn sign_in(state: &AppState, username: &str) -> String {
 
 /// After a correct password in the app: a key good for 90 days.
 pub async fn issue_app_token(state: &AppState, username: &str) -> String {
-    let email = crate::accounts::find(state, username).map(|a| a.email.clone()).unwrap_or_default();
+    let email = crate::accounts::find(state, username)
+        .map(|a| a.email.clone())
+        .unwrap_or_default();
     // 32 random bytes = a 64-character key.
     let token = random_hex(32);
     // App keys last 90 days.
@@ -289,12 +310,19 @@ pub fn session_cookie(sid: &str, https: bool) -> Option<HeaderValue> {
 /// Was this request made over HTTPS (as Caddy reports it)?
 pub fn is_https(headers: &axum::http::HeaderMap) -> bool {
     // Caddy (the front web server) tells us the original scheme in this header.
-    headers.get("x-forwarded-proto").and_then(|v| v.to_str().ok()) == Some("https")
+    headers
+        .get("x-forwarded-proto")
+        .and_then(|v| v.to_str().ok())
+        == Some("https")
 }
 
 /// Middleware for the pages: work out who is asking, make it available to
 /// the handler, and (re)send the cookie the way PHP does.
-pub async fn with_visitor(State(state): State<Arc<AppState>>, mut req: Request, next: Next) -> Response {
+pub async fn with_visitor(
+    State(state): State<Arc<AppState>>,
+    mut req: Request,
+    next: Next,
+) -> Response {
     // Did the request arrive over HTTPS?
     let https = header_str(&req, "x-forwarded-proto") == "https";
 
@@ -302,7 +330,10 @@ pub async fn with_visitor(State(state): State<Arc<AppState>>, mut req: Request, 
     // The app's key wins: if it is there, the cookie is not looked at.
     if let Some(token) = bearer(&req) {
         // `..Default::default()` fills all other fields with empty values.
-        let mut visitor = Visitor { sid: token.clone(), ..Default::default() };
+        let mut visitor = Visitor {
+            sid: token.clone(),
+            ..Default::default()
+        };
         // Only a key found in the database (and not expired) makes this a logged-in visitor.
         if let Some(s) = load_session(&state, &token).await {
             if still_a_user(&state, &s.username) {
@@ -318,16 +349,26 @@ pub async fn with_visitor(State(state): State<Arc<AppState>>, mut req: Request, 
 
     // Use the cookie's id, or make a new one. `unwrap_or_else` runs the fallback only if needed.
     let sid = cookie_sid(&req).unwrap_or_else(new_sid);
-    let mut visitor = Visitor { sid: sid.clone(), ..Default::default() };
+    let mut visitor = Visitor {
+        sid: sid.clone(),
+        ..Default::default()
+    };
     // A request that ANOTHER website started (a link or form on a stranger's
     // page)? Then treat it as a visitor, even with a login cookie: a strange
     // page must never be able to act as the logged-in person. Browsers say so
     // in Sec-Fetch-Site; "same-origin" (this site) and "none" (typed, a
     // bookmark) are fine. Older browsers send nothing, and the Strict cookie
     // covers them.
-    let from_elsewhere = matches!(header_str(&req, "sec-fetch-site"), "cross-site" | "same-site");
+    let from_elsewhere = matches!(
+        header_str(&req, "sec-fetch-site"),
+        "cross-site" | "same-site"
+    );
     // A known, unexpired session: this visitor is logged in.
-    if let Some(s) = if from_elsewhere { None } else { load_session(&state, &sid).await } {
+    if let Some(s) = if from_elsewhere {
+        None
+    } else {
+        load_session(&state, &sid).await
+    } {
         // Only while the person is still on the user list (GARDEN_USERS).
         if still_a_user(&state, &s.username) {
             // Keep the session alive for a day from this click, as PHP's session files are.
@@ -348,11 +389,11 @@ pub async fn with_visitor(State(state): State<Arc<AppState>>, mut req: Request, 
     let mut res = next.run(req).await;
 
     // A login (or logout) sets its own, new cookie; do not overwrite it.
-    let already = res
-        .headers()
-        .get_all(header::SET_COOKIE)
-        .iter()
-        .any(|v| v.to_str().map(|s| s.starts_with("PHPSESSID=")).unwrap_or(false));
+    let already = res.headers().get_all(header::SET_COOKIE).iter().any(|v| {
+        v.to_str()
+            .map(|s| s.starts_with("PHPSESSID="))
+            .unwrap_or(false)
+    });
     if !already {
         // No new cookie from the page: send the usual one, which keeps the id and renews the day.
         if let Some(v) = session_cookie(&sid, https) {
@@ -399,10 +440,17 @@ mod tests {
 
     #[test]
     fn guest_and_logged_in_names() {
-        let v = Visitor { sid: "abc".into(), ..Default::default() };
+        let v = Visitor {
+            sid: "abc".into(),
+            ..Default::default()
+        };
         assert_eq!(v.db_name(), "Guest_abc");
         assert!(!v.is_admin());
-        let j = Visitor { sid: "abc".into(), username: "Jun".into(), ..Default::default() };
+        let j = Visitor {
+            sid: "abc".into(),
+            username: "Jun".into(),
+            ..Default::default()
+        };
         assert_eq!(j.db_name(), "Jun");
         assert!(j.is_admin());
     }

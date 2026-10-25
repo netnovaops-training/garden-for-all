@@ -74,7 +74,8 @@ impl FrameCache {
 
     /// The same for code that cannot wait (the help pages): a stale copy is re-read in place.
     fn get_now(&self, www: &Path) -> Arc<FrameFiles> {
-        self.fresh().unwrap_or_else(|| self.store(FrameFiles::read(www)))
+        self.fresh()
+            .unwrap_or_else(|| self.store(FrameFiles::read(www)))
     }
 
     fn fresh(&self) -> Option<Arc<FrameFiles>> {
@@ -186,7 +187,11 @@ fn hero_images(www: &Path) -> Vec<String> {
             // Keep names whose extension is on the list.
             rd.flatten()
                 .filter_map(|e| e.file_name().into_string().ok())
-                .filter(|n| n.rsplit_once('.').map(|(_, ext)| EXTS.contains(&ext)).unwrap_or(false))
+                .filter(|n| {
+                    n.rsplit_once('.')
+                        .map(|(_, ext)| EXTS.contains(&ext))
+                        .unwrap_or(false)
+                })
                 .map(|n| format!("images/HeroBanner/{n}"))
                 .collect()
         })
@@ -226,7 +231,11 @@ fn app_version(www: &Path) -> String {
     std::fs::read(www.join("apps/version.json"))
         .ok()
         .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok())
-        .and_then(|v| v.get("versionName").and_then(|n| n.as_str()).map(str::to_string))
+        .and_then(|v| {
+            v.get("versionName")
+                .and_then(|n| n.as_str())
+                .map(str::to_string)
+        })
         .unwrap_or_default()
 }
 
@@ -258,11 +267,19 @@ pub fn render_now(state: &AppState, page: Page, visitor: &Visitor) -> String {
 
 fn fill(state: &AppState, page: Page, visitor: &Visitor, files: &FrameFiles) -> String {
     // The hero images only matter when the page shows the banner; a new random order each load.
-    let mut images = if page.show_hero { files.hero.clone() } else { Vec::new() };
+    let mut images = if page.show_hero {
+        files.hero.clone()
+    } else {
+        Vec::new()
+    };
     images.shuffle(&mut rand::rng());
     // The first 3 images load right away; the rest are "deferred" and loaded later by the
     // script. `split_off(3)` removes items from position 3 onward and returns them.
-    let deferred = if images.len() > 3 { images.split_off(3) } else { Vec::new() };
+    let deferred = if images.len() > 3 {
+        images.split_off(3)
+    } else {
+        Vec::new()
+    };
     let is_admin = visitor.is_admin();
 
     // Fill in the template values.
@@ -305,7 +322,9 @@ mod tests {
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_nanos())
             .unwrap_or(0);
-        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../target").join(format!("jg-layout-{tag}-{}-{nanos}", std::process::id()));
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../target")
+            .join(format!("jg-layout-{tag}-{}-{nanos}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }
@@ -325,9 +344,18 @@ mod tests {
         let www = outer.join("www");
         std::fs::create_dir_all(&www).unwrap();
         std::fs::create_dir_all(outer.join("elsewhere")).unwrap();
-        assert!(safe_join_under(&www, "images/HeroBanner").is_none(), "missing folder");
-        assert!(safe_join_under(&www, "../elsewhere").is_none(), "..  leads out of the base");
-        assert!(safe_join_under(&www.join("nope"), "x").is_none(), "missing base");
+        assert!(
+            safe_join_under(&www, "images/HeroBanner").is_none(),
+            "missing folder"
+        );
+        assert!(
+            safe_join_under(&www, "../elsewhere").is_none(),
+            "..  leads out of the base"
+        );
+        assert!(
+            safe_join_under(&www.join("nope"), "x").is_none(),
+            "missing base"
+        );
         std::fs::remove_dir_all(&outer).ok();
     }
 
@@ -353,7 +381,14 @@ mod tests {
         }
         let mut got = hero_images(&www);
         got.sort();
-        assert_eq!(got, ["images/HeroBanner/a.jpg", "images/HeroBanner/b.PNG", "images/HeroBanner/c.webp"]);
+        assert_eq!(
+            got,
+            [
+                "images/HeroBanner/a.jpg",
+                "images/HeroBanner/b.PNG",
+                "images/HeroBanner/c.webp"
+            ]
+        );
         std::fs::remove_dir_all(&www).ok();
     }
 

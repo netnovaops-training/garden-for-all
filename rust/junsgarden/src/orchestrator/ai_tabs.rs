@@ -57,30 +57,45 @@ static RUNNING: Mutex<Option<HashSet<usize>>> = Mutex::new(None);
 
 /// True when the job for `tab` is running. If the lock cannot be taken, say false.
 fn running(tab: usize) -> bool {
-    RUNNING.lock().map(|g| g.as_ref().map(|s| s.contains(&tab)).unwrap_or(false)).unwrap_or(false)
+    RUNNING
+        .lock()
+        .map(|g| g.as_ref().map(|s| s.contains(&tab)).unwrap_or(false))
+        .unwrap_or(false)
 }
 
 /// Marks the job for `tab` as running (`on` = true) or finished (false).
 /// Gives back true if the set changed. Starting a second job on the same
 /// tab gives false, which is how `action` avoids starting it twice.
 fn set_running(tab: usize, on: bool) -> bool {
-    let Ok(mut g) = RUNNING.lock() else { return false };
+    let Ok(mut g) = RUNNING.lock() else {
+        return false;
+    };
     // Create the set on first use.
     let s = g.get_or_insert_with(HashSet::new);
-    if on { s.insert(tab) } else { s.remove(&tab) }
+    if on {
+        s.insert(tab)
+    } else {
+        s.remove(&tab)
+    }
 }
 
 /// The job file for a tab: data/orchestrator-ai/tab<N>.json.
 /// `PathBuf` is an owned file path. `state.data` is the app's data folder.
 fn path(state: &AppState, tab: usize) -> std::path::PathBuf {
-    state.data.join("orchestrator-ai").join(format!("tab{tab}.json"))
+    state
+        .data
+        .join("orchestrator-ai")
+        .join(format!("tab{tab}.json"))
 }
 
 /// Reads a tab's job. Gives back an empty job when the file is missing or broken.
 fn load(state: &AppState, tab: usize) -> Map<String, Value> {
     // read file -> bytes -> JSON. `.ok()` turns a failure into "nothing", and
     // `.and_then(..)` runs the next step only if the earlier one worked.
-    match std::fs::read(path(state, tab)).ok().and_then(|b| serde_json::from_slice::<Value>(&b).ok()) {
+    match std::fs::read(path(state, tab))
+        .ok()
+        .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
+    {
         Some(Value::Object(m)) => m,
         _ => Map::new(),
     }
@@ -107,12 +122,18 @@ fn s(m: &Map<String, Value>, k: &str) -> String {
 /// Gets the list stored under key `k` as a list of objects (empty if absent).
 /// The result borrows from `m`, which the `'a` marks show.
 fn arr<'a>(m: &'a Map<String, Value>, k: &str) -> Vec<&'a Map<String, Value>> {
-    m.get(k).and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_object).collect()).unwrap_or_default()
+    m.get(k)
+        .and_then(Value::as_array)
+        .map(|a| a.iter().filter_map(Value::as_object).collect())
+        .unwrap_or_default()
 }
 
 /// Gets the list stored under key `k` as a list of text values (empty if absent).
 fn strings(m: &Map<String, Value>, k: &str) -> Vec<String> {
-    m.get(k).and_then(Value::as_array).map(|a| a.iter().map(|x| text(Some(x))).collect()).unwrap_or_default()
+    m.get(k)
+        .and_then(Value::as_array)
+        .map(|a| a.iter().map(|x| text(Some(x))).collect())
+        .unwrap_or_default()
 }
 
 /// SQL for tab 10: a plant needs filling when any key field is NULL or blank
@@ -150,7 +171,9 @@ pub async fn action(state: Arc<AppState>, act: &str, tab: usize) -> Vec<Flash> {
     }
     // Do not start a second job on the same tab.
     if running(tab) {
-        return vec![Flash::Warning("The AI is still working on the last request. Wait for it to finish.".into())];
+        return vec![Flash::Warning(
+            "The AI is still working on the last request. Wait for it to finish.".into(),
+        )];
     }
     // Which plants to pick depends on the tab.
     let picked = match tab {
@@ -186,10 +209,16 @@ pub async fn action(state: Arc<AppState>, act: &str, tab: usize) -> Vec<Flash> {
     }
     // Tab 10 remembers where it stopped, so "Next Plant" moves on (S-9 in DEVIATIONS.md).
     if let Some(p) = picked.first().filter(|_| tab == 10) {
-        job.insert("last_id".into(), p.get("id").cloned().unwrap_or(Value::Null));
+        job.insert(
+            "last_id".into(),
+            p.get("id").cloned().unwrap_or(Value::Null),
+        );
     }
     // The queue is the picked plants; the batch (finished answers) starts empty.
-    job.insert("queue".into(), Value::Array(picked.into_iter().map(Value::Object).collect()));
+    job.insert(
+        "queue".into(),
+        Value::Array(picked.into_iter().map(Value::Object).collect()),
+    );
     job.insert("batch".into(), Value::Array(Vec::new()));
     store(&state, tab, &job);
     // `set_running` is true only if this tab was not already running.
@@ -209,7 +238,19 @@ async fn work(state: Arc<AppState>, tab: usize) {
     loop {
         let mut job = load(&state, tab);
         // Take the first plant off the queue; if the queue is empty, stop the loop.
-        let Some(Value::Object(row)) = job.get_mut("queue").and_then(Value::as_array_mut).and_then(|q| if q.is_empty() { None } else { Some(q.remove(0)) }) else { break };
+        let Some(Value::Object(row)) =
+            job.get_mut("queue")
+                .and_then(Value::as_array_mut)
+                .and_then(|q| {
+                    if q.is_empty() {
+                        None
+                    } else {
+                        Some(q.remove(0))
+                    }
+                })
+        else {
+            break;
+        };
         // The queue as it is after removing that plant.
         let queue_left = job.get("queue").cloned();
         // Show the plant being worked on, still counted in the queue.
@@ -224,7 +265,8 @@ async fn work(state: Arc<AppState>, tab: usize) {
             let mut st = showing.clone();
             st.insert("stage".into(), Value::String(stage.into()));
             store(&state, tab, &st);
-        }).await;
+        })
+        .await;
         // Load again (the stage notes changed the file), then record the finished plant.
         let mut job = load(&state, tab);
         if let Some(q) = queue_left {
@@ -244,12 +286,18 @@ async fn work(state: Arc<AppState>, tab: usize) {
 
 /// `_is_empty` (tab_ai_safe_fill.py): 'none', 'n/a' and '0' are real answers.
 fn safe_empty(v: Option<&Value>) -> bool {
-    matches!(text(v).trim().to_lowercase().as_str(), "" | "null" | "[]" | "............" | "unknown" | "unknown only")
+    matches!(
+        text(v).trim().to_lowercase().as_str(),
+        "" | "null" | "[]" | "............" | "unknown" | "unknown only"
+    )
 }
 
 /// `is_emp` (tab_fill_missing.py).
 fn fill_empty(v: Option<&Value>) -> bool {
-    matches!(text(v).trim().to_lowercase().as_str(), "" | "unknown" | "unknown only" | "[]" | "............")
+    matches!(
+        text(v).trim().to_lowercase().as_str(),
+        "" | "unknown" | "unknown only" | "[]" | "............"
+    )
 }
 
 /// Asks the AI about one plant and builds the finished answer for the batch.
@@ -258,7 +306,12 @@ fn fill_empty(v: Option<&Value>) -> bool {
 /// row, the AI's values (`llm`), and extras for the tab: `new_fields` and
 /// `changed_fields` (tab 3), `merged` and `ai_filled` (tab 10), or `error` and
 /// `raw` when the AI failed. `impl Fn(&str)` means "any function that takes text".
-async fn process(state: &AppState, tab: usize, row: Map<String, Value>, stage: impl Fn(&str)) -> Map<String, Value> {
+async fn process(
+    state: &AppState,
+    tab: usize,
+    row: Map<String, Value>,
+    stage: impl Fn(&str),
+) -> Map<String, Value> {
     // Weather/location context and Perenual plant data are given to the AI.
     let name = s(&row, "plant_name");
     let loc = ai::location_context(state, &name).await;
@@ -274,7 +327,7 @@ async fn process(state: &AppState, tab: usize, row: Map<String, Value>, stage: i
         }
         Ok(llm) => {
             // Tab 3: compare the AI's values with the row.
-                // Was empty, now filled = "new"; different value = "changed".
+            // Was empty, now filled = "new"; different value = "changed".
             if tab == 3 {
                 let mut new = Vec::new();
                 let mut changed = Map::new();
@@ -282,7 +335,10 @@ async fn process(state: &AppState, tab: usize, row: Map<String, Value>, stage: i
                     let old = row.get(k);
                     if fill_empty(old) && !fill_empty(Some(nv)) {
                         new.push(Value::String(k.clone()));
-                    } else if !fill_empty(old) && !fill_empty(Some(nv)) && text(old).trim() != text(Some(nv)).trim() {
+                    } else if !fill_empty(old)
+                        && !fill_empty(Some(nv))
+                        && text(old).trim() != text(Some(nv)).trim()
+                    {
                         changed.insert(k.clone(), Value::String(text(old)));
                     }
                 }
@@ -311,7 +367,10 @@ async fn process(state: &AppState, tab: usize, row: Map<String, Value>, stage: i
                         }
                     }
                 }
-                item.insert("ai_filled".into(), Value::Array(filled.into_iter().map(Value::String).collect()));
+                item.insert(
+                    "ai_filled".into(),
+                    Value::Array(filled.into_iter().map(Value::String).collect()),
+                );
                 item.insert("merged".into(), Value::Object(merged));
             }
             item.insert("llm".into(), Value::Object(llm));
@@ -327,8 +386,15 @@ async fn process(state: &AppState, tab: usize, row: Map<String, Value>, stage: i
 /// Takes the plant snapshot from the job. Looks the plant up by id.
 async fn fresh(state: &AppState, snap: &Map<String, Value>) -> Map<String, Value> {
     let id = crate::php::php_int(&s(snap, "id"));
-    match sqlx::query("SELECT * FROM data_source WHERE id = ?").bind(id).fetch_optional(&state.db).await {
-        Ok(Some(r)) => match crate::rowjson::row_to_json(&r) { Value::Object(m) => m, _ => snap.clone() },
+    match sqlx::query("SELECT * FROM data_source WHERE id = ?")
+        .bind(id)
+        .fetch_optional(&state.db)
+        .await
+    {
+        Ok(Some(r)) => match crate::rowjson::row_to_json(&r) {
+            Value::Object(m) => m,
+            _ => snap.clone(),
+        },
         _ => snap.clone(),
     }
 }
@@ -340,7 +406,10 @@ fn start_button(tab: usize, label: &str) -> String {
 
 /// A spinner with a message.
 fn status(label: &str) -> String {
-    format!("<div class=\"st-status\"><span class=\"st-spin\"></span>{}</div>", ui::md(label))
+    format!(
+        "<div class=\"st-status\"><span class=\"st-spin\"></span>{}</div>",
+        ui::md(label)
+    )
 }
 
 /// While the job works: the queue count, what it is doing, and a reload.
@@ -353,17 +422,29 @@ fn progress(job: &Map<String, Value>, tab: usize) -> String {
         return String::new();
     }
     // The plant being worked on, or the first in the queue.
-    let name = { let w = s(job, "working"); if w.is_empty() { s(queue[0], "plant_name") } else { w } };
+    let name = {
+        let w = s(job, "working");
+        if w.is_empty() {
+            s(queue[0], "plant_name")
+        } else {
+            w
+        }
+    };
     let mut h = String::new();
     // Tab 10 shows one plant at a time, so no queue count there.
     if tab != 10 {
-        h.push_str(&ui::caption(&format!("⏳ {} plants in queue...", queue.len())));
+        h.push_str(&ui::caption(&format!(
+            "⏳ {} plants in queue...",
+            queue.len()
+        )));
     }
     // The status text depends on the tab (and on the companion stage for tab 10).
     h.push_str(&status(&match tab {
         2 => format!("🤖 Fetching {name} via free cloud models..."),
         3 => format!("🤖 Finding missing data for {name}..."),
-        _ if s(job, "stage") == "companions" => format!("🔗 Linking companion plants for **{name}** from your database..."),
+        _ if s(job, "stage") == "companions" => {
+            format!("🔗 Linking companion plants for **{name}** from your database...")
+        }
         _ => format!("🔒 Safely filling missing fields for **{name}**..."),
     }));
     h.push_str("<script>setTimeout(function(){location.reload()},4000)</script>");
@@ -372,15 +453,33 @@ fn progress(job: &Map<String, Value>, tab: usize) -> String {
 
 /// Draws the normal plant editor (form.rs) with the AI's values laid over the row.
 /// `new` = fields the AI filled; `changed` = fields it would change (old values).
-async fn editor(state: &AppState, tab: usize, p: &Map<String, Value>, data: &Map<String, Value>, new: &[String], changed: &Map<String, Value>) -> String {
+async fn editor(
+    state: &AppState,
+    tab: usize,
+    p: &Map<String, Value>,
+    data: &Map<String, Value>,
+    new: &[String],
+    changed: &Map<String, Value>,
+) -> String {
     let names = all_plant_names(state).await;
-    let ctx = FormCtx { back: vec![("tab", tab.to_string())], is_ai: true, new_fields: new, changed_fields: changed, all_names: &names, images_dir: state.www.join("images/Database") };
+    let ctx = FormCtx {
+        back: vec![("tab", tab.to_string())],
+        is_ai: true,
+        new_fields: new,
+        changed_fields: changed,
+        all_names: &names,
+        images_dir: state.www.join("images/Database"),
+    };
     form::render(p, data, &ctx)
 }
 
 /// A link button to download one AI result as HTML (`export` below).
 fn export_button(tab: usize, i: usize, label: &str) -> String {
-    ui::link_button(&format!("/streamlit/?export=ai_html&tab={tab}&i={i}"), label).replace("class=\"st-btn\"", "class=\"st-btn st-full\"")
+    ui::link_button(
+        &format!("/streamlit/?export=ai_html&tab={tab}&i={i}"),
+        label,
+    )
+    .replace("class=\"st-btn\"", "class=\"st-btn st-full\"")
 }
 
 /// Draws one of the three AI tabs. `req.tab` says which. Gives back HTML.
@@ -394,9 +493,11 @@ pub async fn render(state: &AppState, req: &Req) -> String {
         // Tabs 2 and 3: a start button, one expander per finished plant, then the progress.
         2 | 3 => {
             let mut h = if tab == 2 {
-                ui::header("Search & Review Data (AI Only)") + &start_button(tab, "Search Next 3 Plants")
+                ui::header("Search & Review Data (AI Only)")
+                    + &start_button(tab, "Search Next 3 Plants")
             } else {
-                ui::header("✨ Fill Missing Data (Review & Approve)") + &start_button(tab, "Find 3 Partially Filled Plants")
+                ui::header("✨ Fill Missing Data (Review & Approve)")
+                    + &start_button(tab, "Find 3 Partially Filled Plants")
             };
             // Number each result (`i`) so its export link can find it.
             for (i, it) in arr(&job, "batch").into_iter().enumerate() {
@@ -404,12 +505,21 @@ pub async fn render(state: &AppState, req: &Req) -> String {
                 let name = s(row, "plant_name");
                 let err = s(it, "error");
                 let new = strings(it, "new_fields");
-                let chg = it.get("changed_fields").and_then(Value::as_object).cloned().unwrap_or_default();
+                let chg = it
+                    .get("changed_fields")
+                    .and_then(Value::as_object)
+                    .cloned()
+                    .unwrap_or_default();
                 // Expander title depends on the tab and on whether the AI failed.
                 let title = if tab == 2 {
                     format!("{} {name}", if err.is_empty() { "✅" } else { "⚠️" })
                 } else {
-                    format!("{} {name} - {} New, {} Proposed", if err.is_empty() { "✨" } else { "⚠️" }, new.len(), chg.len())
+                    format!(
+                        "{} {name} - {} New, {} Proposed",
+                        if err.is_empty() { "✨" } else { "⚠️" },
+                        new.len(),
+                        chg.len()
+                    )
                 };
                 // Failed: show the error (tab 2 also shows the raw text).
                 let body = if !err.is_empty() {
@@ -422,13 +532,16 @@ pub async fn render(state: &AppState, req: &Req) -> String {
                 } else {
                     let llm = it.get("llm").and_then(Value::as_object).unwrap_or(&empty);
                     let label = if tab == 2 {
-                        "📄 Export this result as HTML (open in browser → Print → Save as PDF)".to_string()
+                        "📄 Export this result as HTML (open in browser → Print → Save as PDF)"
+                            .to_string()
                     } else {
                         format!("📄 Export this result as HTML  ({} new · {} changed)  — open in browser → Print → Save as PDF", new.len(), chg.len())
                     };
                     // Re-read the plant: photos or sign-offs may have changed since the AI looked.
                     let p = fresh(state, row).await;
-                    export_button(tab, i, &label) + &ui::divider() + &editor(state, tab, &p, llm, &new, &chg).await
+                    export_button(tab, i, &label)
+                        + &ui::divider()
+                        + &editor(state, tab, &p, llm, &new, &chg).await
                 };
                 h.push_str(&ui::expander(&title, true, &body));
             }
@@ -441,7 +554,9 @@ pub async fn render(state: &AppState, req: &Req) -> String {
             h.push_str(&format!("<div class=\"st-alert st-info\"><p>🛡️</p>{}</div>", ui::md("**Strict read-protect mode.** The AI can only fill fields that are completely empty. Any field that already has a value is skipped — the AI never overwrites or proposes changes to existing data. Plants are reviewed **one at a time**. Save or discard, then fetch the next one.")));
             // No plants left: say so and offer "Check Again".
             if job.get("done").and_then(Value::as_bool) == Some(true) {
-                h.push_str(&ui::success("🎉 No more plants with missing fields were found in the database!"));
+                h.push_str(&ui::success(
+                    "🎉 No more plants with missing fields were found in the database!",
+                ));
                 h.push_str(&format!("<form method=\"post\" action=\"/streamlit/\"><input type=\"hidden\" name=\"act\" value=\"ai_reset\"><input type=\"hidden\" name=\"tab\" value=\"{tab}\">{}</form>", ui::button("go", "1", "🔄 Check Again", false, false)));
                 return h;
             }
@@ -449,7 +564,14 @@ pub async fn render(state: &AppState, req: &Req) -> String {
             let batch = arr(&job, "batch");
             let busy = !arr(&job, "queue").is_empty();
             let has_plant = !batch.is_empty() || busy;
-            h.push_str(&start_button(tab, if has_plant { "➡️ Next Plant" } else { "🔍 Find Next Plant with Missing Fields" }));
+            h.push_str(&start_button(
+                tab,
+                if has_plant {
+                    "➡️ Next Plant"
+                } else {
+                    "🔍 Find Next Plant with Missing Fields"
+                },
+            ));
             h.push_str(&progress(&job, tab));
             // Nothing finished yet: stop after the button and progress.
             let Some(it) = batch.first() else { return h };
@@ -457,18 +579,31 @@ pub async fn render(state: &AppState, req: &Req) -> String {
             let name = s(row, "plant_name");
             h.push_str(&ui::divider());
             if !s(it, "error").is_empty() {
-                h.push_str(&ui::error(&format!("AI error for **{name}**: {}", s(it, "error"))));
+                h.push_str(&ui::error(&format!(
+                    "AI error for **{name}**: {}",
+                    s(it, "error")
+                )));
                 h.push_str(&ui::warning(&format!("Raw output: {}", s(it, "raw"))));
                 return h;
             }
             // `filled` = the fields the AI filled; `merged` = the row with those values added.
             let filled = strings(it, "ai_filled");
             let merged = it.get("merged").and_then(Value::as_object).unwrap_or(row);
-            h.push_str(&ui::columns(&[3, 1], vec![ui::subheader(&format!("🔒 {name}")), export_button(tab, 0, "📄 Export as HTML")]));
+            h.push_str(&ui::columns(
+                &[3, 1],
+                vec![
+                    ui::subheader(&format!("🔒 {name}")),
+                    export_button(tab, 0, "📄 Export as HTML"),
+                ],
+            ));
             if filled.is_empty() {
                 h.push_str(&ui::warning("The AI found no additional missing data to fill for this plant. You can still edit fields manually below, or click **Next Plant** to skip."));
             } else {
-                h.push_str(&ui::success(&format!("✅ AI filled **{}** previously empty field(s): `{}`", filled.len(), filled.join("`, `"))));
+                h.push_str(&ui::success(&format!(
+                    "✅ AI filled **{}** previously empty field(s): `{}`",
+                    filled.len(),
+                    filled.join("`, `")
+                )));
             }
             h.push_str(&ui::caption("🛡️ Fields with existing data were locked — the AI could not touch them. Only green-highlighted fields were filled by the AI."));
             h.push_str(&ui::divider());
@@ -493,14 +628,45 @@ pub fn export(state: &AppState, tab: usize, i: usize) -> Option<(String, String)
     let new = strings(it, "new_fields");
     // The page title differs per tab.
     Some(match tab {
-        2 => (export::plant_html(it.get("llm")?.as_object()?, row, "AI Review — Tab 1", &[], &empty), export::download_name(&name, "_AI_Review.html")),
+        2 => (
+            export::plant_html(
+                it.get("llm")?.as_object()?,
+                row,
+                "AI Review — Tab 1",
+                &[],
+                &empty,
+            ),
+            export::download_name(&name, "_AI_Review.html"),
+        ),
         3 => {
-            let chg = it.get("changed_fields").and_then(Value::as_object).cloned().unwrap_or_default();
-            (export::plant_html(it.get("llm")?.as_object()?, row, &format!("Fill Missing — {} new · {} changed", new.len(), chg.len()), &new, &chg), export::download_name(&name, "_Fill_Review.html"))
+            let chg = it
+                .get("changed_fields")
+                .and_then(Value::as_object)
+                .cloned()
+                .unwrap_or_default();
+            (
+                export::plant_html(
+                    it.get("llm")?.as_object()?,
+                    row,
+                    &format!("Fill Missing — {} new · {} changed", new.len(), chg.len()),
+                    &new,
+                    &chg,
+                ),
+                export::download_name(&name, "_Fill_Review.html"),
+            )
         }
         10 => {
             let filled = strings(it, "ai_filled");
-            (export::plant_html(it.get("merged")?.as_object()?, row, &format!("Safe Fill — {} field(s) filled", filled.len()), &filled, &empty), export::download_name(&name, "_SafeFill.html"))
+            (
+                export::plant_html(
+                    it.get("merged")?.as_object()?,
+                    row,
+                    &format!("Safe Fill — {} field(s) filled", filled.len()),
+                    &filled,
+                    &empty,
+                ),
+                export::download_name(&name, "_SafeFill.html"),
+            )
         }
         _ => return None,
     })
@@ -514,23 +680,50 @@ pub fn export(state: &AppState, tab: usize, i: usize) -> Option<(String, String)
 pub async fn stage_image(state: &AppState, f: &crate::formdata::FormData) -> Vec<Flash> {
     let id = crate::php::php_int(f.str("id"));
     // The plant's name and current picture list.
-    let row: Option<(Option<String>, Option<String>)> = sqlx::query_as("SELECT plant_name, picture FROM data_source WHERE id = ?").bind(id).fetch_optional(&state.db).await.ok().flatten();
-    let Some((name, picture)) = row else { return vec![Flash::Error(format!("Plant {id} was not found."))] };
+    let row: Option<(Option<String>, Option<String>)> =
+        sqlx::query_as("SELECT plant_name, picture FROM data_source WHERE id = ?")
+            .bind(id)
+            .fetch_optional(&state.db)
+            .await
+            .ok()
+            .flatten();
+    let Some((name, picture)) = row else {
+        return vec![Flash::Error(format!("Plant {id} was not found."))];
+    };
     let name = name.unwrap_or_default();
     // Search for a free image using the botanical name, the name and any search term.
-    let Some(bytes) = super::gallery::fetch_free_image(state, f.str("botanical_name"), &name, f.str("image_search_term")).await else {
+    let Some(bytes) = super::gallery::fetch_free_image(
+        state,
+        f.str("botanical_name"),
+        &name,
+        f.str("image_search_term"),
+    )
+    .await
+    else {
         return vec![Flash::Error("No suitable imagery found online.".into())];
     };
     // Seconds since 1970, to make the file name unique.
-    let ts = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
     let fname = format!("{}_{id}_{ts}.webp", form::file_safe(&name));
     if let Err(e) = std::fs::write(state.www.join("images/Database").join(&fname), bytes) {
         return vec![Flash::Error(format!("Could not save the image: {e}"))];
     }
     // Existing pictures as a clean list, then the new file is added at the end.
-    let mut pics: Vec<String> = picture.unwrap_or_default().split(',').map(|x| x.trim().to_string()).filter(|x| !x.is_empty() && !matches!(x.to_lowercase().as_str(), "none" | "null" | "[]")).collect();
+    let mut pics: Vec<String> = picture
+        .unwrap_or_default()
+        .split(',')
+        .map(|x| x.trim().to_string())
+        .filter(|x| !x.is_empty() && !matches!(x.to_lowercase().as_str(), "none" | "null" | "[]"))
+        .collect();
     pics.push(fname);
-    let _ = sqlx::query("UPDATE data_source SET picture = ? WHERE id = ?").bind(pics.join(", ")).bind(id).execute(&state.db).await;
+    let _ = sqlx::query("UPDATE data_source SET picture = ? WHERE id = ?")
+        .bind(pics.join(", "))
+        .bind(id)
+        .execute(&state.db)
+        .await;
     state.invalidate_widget_cache();
     vec![Flash::Success("Staged image! It is now in this plant's gallery; click Save Changes to keep the AI's other values.".into())]
 }

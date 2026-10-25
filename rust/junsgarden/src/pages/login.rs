@@ -60,9 +60,17 @@ struct LoginTemplate {
 // `String` that is safe to redirect to. A web address would be abused as an
 // "open redirect" if we sent people wherever the link said.
 fn safe_back(s: &str) -> String {
-    let ok = s.starts_with('/') && !s.starts_with("//") && !s.contains('\\')
-        && !s.contains("://") && s.len() < 300 && !s.starts_with("/login.php");
-    if ok { s.to_string() } else { "/".to_string() }
+    let ok = s.starts_with('/')
+        && !s.starts_with("//")
+        && !s.contains('\\')
+        && !s.contains("://")
+        && s.len() < 300
+        && !s.starts_with("/login.php");
+    if ok {
+        s.to_string()
+    } else {
+        "/".to_string()
+    }
 }
 
 /// Make an HTTP redirect (status 302 "Found") to `to`. Takes the target path.
@@ -108,7 +116,9 @@ pub async fn login_get(
     // password" box only if the code is valid (unused, under 30 minutes old).
     // Otherwise fall back to the "forgot" box with an explanation.
     if !get("reset").is_empty() {
-        let name = accounts::find(&state, get("u")).map(|a| a.name.clone()).unwrap_or_default();
+        let name = accounts::find(&state, get("u"))
+            .map(|a| a.name.clone())
+            .unwrap_or_default();
         if !name.is_empty() && accounts::reset_code_valid(&state, &name, get("reset")).await {
             t.mode = "reset".into();
             t.reset_user = name;
@@ -171,7 +181,14 @@ pub async fn login_post(
     // the match directly.
     if f.has("admin_login") {
         let back = safe_back(f.str("back"));
-        return match accounts::check_password(&state, f.str("admin_user"), f.str("admin_password"), &ip).await {
+        return match accounts::check_password(
+            &state,
+            f.str("admin_user"),
+            f.str("admin_password"),
+            &ip,
+        )
+        .await
+        {
             Ok(name) => {
                 // Security: the old session id is destroyed and a new one issued, so an id an
                 // attacker may have seen before login is useless afterwards.
@@ -186,8 +203,12 @@ pub async fn login_post(
                 res
             }
             // Too many failures: back to the form, with the `back` page kept in the address.
-            Err(LoginError::TooMany) => redirect(&format!("/login.php?msg=toomany&back={}", urlencode(&back))),
-            Err(LoginError::Invalid) => redirect(&format!("/login.php?msg=invalid&back={}", urlencode(&back))),
+            Err(LoginError::TooMany) => {
+                redirect(&format!("/login.php?msg=toomany&back={}", urlencode(&back)))
+            }
+            Err(LoginError::Invalid) => {
+                redirect(&format!("/login.php?msg=invalid&back={}", urlencode(&back)))
+            }
         };
     }
 
@@ -212,7 +233,9 @@ pub async fn login_post(
         } else {
             match accounts::finish_reset(&state, &name, &code, f.str("password")).await {
                 Ok(_) => return redirect("/login.php?msg=set"),
-                Err(e) if e.starts_with("That link") => return redirect("/login.php?reset=expired&u=x"),
+                Err(e) if e.starts_with("That link") => {
+                    return redirect("/login.php?reset=expired&u=x")
+                }
                 Err(e) => e,
             }
         };
@@ -221,7 +244,9 @@ pub async fn login_post(
             error: problem.to_string(),
             notice: String::new(),
             back: "/".into(),
-            reset_user: accounts::find(&state, &name).map(|a| a.name.clone()).unwrap_or_default(),
+            reset_user: accounts::find(&state, &name)
+                .map(|a| a.name.clone())
+                .unwrap_or_default(),
             reset_code: code,
         };
         return page(&state, &visitor, t).await;

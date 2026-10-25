@@ -66,15 +66,26 @@ fn providers() -> Vec<(&'static str, String, String)> {
     if !g.is_empty() {
         // The model names: the ones from the setting, or (through `chain`) the two defaults when
         // the setting is empty.
-        for m in env("JUNSGARDEN_GEMINI_MODELS").split(',').map(str::trim).filter(|m| !m.is_empty()).chain(
-            if env("JUNSGARDEN_GEMINI_MODELS").is_empty() { vec!["gemini-flash-latest", "gemini-flash-lite-latest"] } else { vec![] }) {
+        for m in env("JUNSGARDEN_GEMINI_MODELS")
+            .split(',')
+            .map(str::trim)
+            .filter(|m| !m.is_empty())
+            .chain(if env("JUNSGARDEN_GEMINI_MODELS").is_empty() {
+                vec!["gemini-flash-latest", "gemini-flash-lite-latest"]
+            } else {
+                vec![]
+            })
+        {
             v.push((GEMINI_URL, g.clone(), m.to_string()));
         }
     }
     // OpenRouter's free models are tried after Gemini.
     let o = env("JUNSGARDEN_OPENROUTER_API_KEY");
     if !o.is_empty() {
-        for m in ["google/gemma-4-31b-it:free", "google/gemma-4-26b-a4b-it:free"] {
+        for m in [
+            "google/gemma-4-31b-it:free",
+            "google/gemma-4-26b-a4b-it:free",
+        ] {
             v.push((OPENROUTER_URL, o.clone(), m.to_string()));
         }
     }
@@ -85,11 +96,19 @@ fn providers() -> Vec<(&'static str, String, String)> {
 /// Sends one question to the first free model that is not resting and returns its answer text.
 /// `system` is the standing instruction, `prompt` the question, `max_tokens` the longest answer
 /// allowed. Returns `Err(text)` with the reasons if no model could answer.
-pub async fn chat(state: &AppState, system: &str, prompt: &str, max_tokens: u32) -> Result<String, String> {
+pub async fn chat(
+    state: &AppState,
+    system: &str,
+    prompt: &str,
+    max_tokens: u32,
+) -> Result<String, String> {
     // Get the list of models; with no keys at all, say so.
     let ps = providers();
     if ps.is_empty() {
-        return Err("No free AI key is set (JUNSGARDEN_GEMINI_API_KEY / JUNSGARDEN_OPENROUTER_API_KEY).".into());
+        return Err(
+            "No free AI key is set (JUNSGARDEN_GEMINI_API_KEY / JUNSGARDEN_OPENROUTER_API_KEY)."
+                .into(),
+        );
     }
     // Why each model failed, for the final error message.
     let mut reasons = Vec::new();
@@ -97,7 +116,12 @@ pub async fn chat(state: &AppState, system: &str, prompt: &str, max_tokens: u32)
     for (url, key, model) in ps {
         // Look in the shared table: is this model resting until a time that has not come yet?
         // `lock()` can fail, so it is handled as "not resting".
-        let resting = RESTING.lock().ok().and_then(|g| g.as_ref().and_then(|m| m.get(&model).copied())).map(|t| t > Instant::now()).unwrap_or(false);
+        let resting = RESTING
+            .lock()
+            .ok()
+            .and_then(|g| g.as_ref().and_then(|m| m.get(&model).copied()))
+            .map(|t| t > Instant::now())
+            .unwrap_or(false);
         // Skip a model that is resting.
         if resting {
             reasons.push(format!("{model}: resting"));
@@ -111,15 +135,23 @@ pub async fn chat(state: &AppState, system: &str, prompt: &str, max_tokens: u32)
         });
         // Build the HTTP request. The key is sent as a bearer token. The 90 second limit stops a
         // stuck model from hanging the page.
-        let mut rq = state.http.post(url).bearer_auth(&key).json(&body).timeout(Duration::from_secs(90));
+        let mut rq = state
+            .http
+            .post(url)
+            .bearer_auth(&key)
+            .json(&body)
+            .timeout(Duration::from_secs(90));
         // OpenRouter asks callers to say which site they are.
         if url == OPENROUTER_URL {
-            rq = rq.header("HTTP-Referer", "https://junsgarden.zapto.org").header("X-Title", "Jun's Garden");
+            rq = rq
+                .header("HTTP-Referer", "https://junsgarden.zapto.org")
+                .header("X-Title", "Jun's Garden");
         }
         // A closure that puts a model to rest for 300 seconds (5 minutes).
         let rest = |m: &str| {
             if let Ok(mut g) = RESTING.lock() {
-                g.get_or_insert_with(HashMap::new).insert(m.to_string(), Instant::now() + Duration::from_secs(300));
+                g.get_or_insert_with(HashMap::new)
+                    .insert(m.to_string(), Instant::now() + Duration::from_secs(300));
             }
         };
         // Send the request and look at the outcome.
@@ -128,7 +160,11 @@ pub async fn chat(state: &AppState, system: &str, prompt: &str, max_tokens: u32)
             // `choices[0].message.content`.
             Ok(r) if r.status().is_success() => {
                 let v: Value = r.json().await.unwrap_or(Value::Null);
-                let t = v.pointer("/choices/0/message/content").and_then(Value::as_str).unwrap_or("").to_string();
+                let t = v
+                    .pointer("/choices/0/message/content")
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_string();
                 if !t.trim().is_empty() {
                     tracing::info!("orchestrator AI: {model} answered");
                     return Ok(t);
@@ -146,13 +182,23 @@ pub async fn chat(state: &AppState, system: &str, prompt: &str, max_tokens: u32)
             }
             // No answer at all (timeout or network problem). Rest the model too.
             Err(e) => {
-                reasons.push(format!("{model}: {}", if e.is_timeout() { "timeout".to_string() } else { "unreachable".to_string() }));
+                reasons.push(format!(
+                    "{model}: {}",
+                    if e.is_timeout() {
+                        "timeout".to_string()
+                    } else {
+                        "unreachable".to_string()
+                    }
+                ));
                 rest(&model);
             }
         }
     }
     // Every model failed.
-    Err(format!("The free AI readers are all busy or at today's free limit ({}). Try again later.", reasons.join("; ")))
+    Err(format!(
+        "The free AI readers are all busy or at today's free limit ({}). Try again later.",
+        reasons.join("; ")
+    ))
 }
 
 /// `fetch_location_context`: two DuckDuckGo result snippets about growing
@@ -164,8 +210,17 @@ pub async fn location_context(state: &AppState, plant: &str) -> String {
     // The search words, built from the plant name.
     let q = format!("{plant} growing season bloom time Clifton Park New York zone 5b 6a annual perennial evergreen invasive scent fruit lifespan reproduction root system");
     // Post the search. If it fails, return empty text.
-    let Ok(r) = state.http.post("https://html.duckduckgo.com/html/").header("User-Agent", "Mozilla/5.0")
-        .form(&[("q", q.as_str())]).timeout(Duration::from_secs(15)).send().await else { return String::new() };
+    let Ok(r) = state
+        .http
+        .post("https://html.duckduckgo.com/html/")
+        .header("User-Agent", "Mozilla/5.0")
+        .form(&[("q", q.as_str())])
+        .timeout(Duration::from_secs(15))
+        .send()
+        .await
+    else {
+        return String::new();
+    };
     let html = r.text().await.unwrap_or_default();
     let mut out = Vec::new();
     // Each result's text sits after the marker `class="result__snippet"`. Skip the first piece
@@ -197,7 +252,11 @@ fn strip_tags(s: &str) -> String {
         }
     }
     // Turn codes like &amp; back into characters; &#x27; and &nbsp; are handled by hand.
-    crate::php::htmlspecialchars_decode(&out).replace("&#x27;", "'").replace("&nbsp;", " ").trim().to_string()
+    crate::php::htmlspecialchars_decode(&out)
+        .replace("&#x27;", "'")
+        .replace("&nbsp;", " ")
+        .trim()
+        .to_string()
 }
 
 /// `fetch_perenual_data`: the Perenual species record as JSON text, or "".
@@ -210,25 +269,97 @@ pub async fn perenual(state: &AppState, plant: &str) -> String {
         return String::new();
     }
     // Step 1: search the species list.
-    let Ok(r) = state.http.get("https://perenual.com/api/species-list").query(&[("key", key.as_str()), ("q", plant)]).timeout(Duration::from_secs(10)).send().await else { return String::new() };
-    let Ok(v) = r.json::<Value>().await else { return String::new() };
+    let Ok(r) = state
+        .http
+        .get("https://perenual.com/api/species-list")
+        .query(&[("key", key.as_str()), ("q", plant)])
+        .timeout(Duration::from_secs(10))
+        .send()
+        .await
+    else {
+        return String::new();
+    };
+    let Ok(v) = r.json::<Value>().await else {
+        return String::new();
+    };
     // The first result's id, read with a JSON pointer (`/data/0/id`).
-    let Some(id) = v.pointer("/data/0/id").and_then(Value::as_i64) else { return String::new() };
+    let Some(id) = v.pointer("/data/0/id").and_then(Value::as_i64) else {
+        return String::new();
+    };
     // Step 2: fetch the details for that id.
-    let Ok(r) = state.http.get(format!("https://perenual.com/api/species/details/{id}")).query(&[("key", key.as_str())]).timeout(Duration::from_secs(10)).send().await else { return String::new() };
+    let Ok(r) = state
+        .http
+        .get(format!("https://perenual.com/api/species/details/{id}"))
+        .query(&[("key", key.as_str())])
+        .timeout(Duration::from_secs(10))
+        .send()
+        .await
+    else {
+        return String::new();
+    };
     r.text().await.unwrap_or_default()
 }
 
 /// The 57 plant fields sent to the AI as current data, and checked in the answer. Months
 /// (grow_months, bloom_months) are handled apart.
 const FIELDS: [&str; 57] = [
-    "company", "family", "genus", "botanical_name", "species", "plant_type", "sun_exposure", "cleanup_notes",
-    "care_notes", "cuttings", "fertilizer", "maintenance_notes", "attracts", "zones", "water_needs", "deer_resistance",
-    "soil_ph", "soil_type", "toxicity", "bloom_color", "foliage_color", "stem_color", "disease_susceptibility", "propagation_method",
-    "plant_length", "plant_width", "spacing", "average_cost", "extra_details", "image_search_term", "leaf_shape", "leaf_type", "leaf_margin",
-    "flower_symmetry", "flower_shape", "flower_size", "fruit_type", "fruit_shape", "fruit_color", "fruit_size", "fruit_edibility",
-    "invasive_local", "native_status", "growth_rate", "planting_depth", "chilling_hours", "companion_plants", "garden_beds", "aromatics",
-    "is_evergreen", "quantity", "year_added", "life_expectancy", "reproduction_type", "root_system", "root_morphology", "root_function",
+    "company",
+    "family",
+    "genus",
+    "botanical_name",
+    "species",
+    "plant_type",
+    "sun_exposure",
+    "cleanup_notes",
+    "care_notes",
+    "cuttings",
+    "fertilizer",
+    "maintenance_notes",
+    "attracts",
+    "zones",
+    "water_needs",
+    "deer_resistance",
+    "soil_ph",
+    "soil_type",
+    "toxicity",
+    "bloom_color",
+    "foliage_color",
+    "stem_color",
+    "disease_susceptibility",
+    "propagation_method",
+    "plant_length",
+    "plant_width",
+    "spacing",
+    "average_cost",
+    "extra_details",
+    "image_search_term",
+    "leaf_shape",
+    "leaf_type",
+    "leaf_margin",
+    "flower_symmetry",
+    "flower_shape",
+    "flower_size",
+    "fruit_type",
+    "fruit_shape",
+    "fruit_color",
+    "fruit_size",
+    "fruit_edibility",
+    "invasive_local",
+    "native_status",
+    "growth_rate",
+    "planting_depth",
+    "chilling_hours",
+    "companion_plants",
+    "garden_beds",
+    "aromatics",
+    "is_evergreen",
+    "quantity",
+    "year_added",
+    "life_expectancy",
+    "reproduction_type",
+    "root_system",
+    "root_morphology",
+    "root_function",
 ];
 
 /// The 28 field rules from the Streamlit app, sent word for word to the model. They fix the allowed
@@ -297,7 +428,10 @@ const TEMPLATE: &str = r#"
 /// True when a value counts as "nothing yet": empty, 0, unknown, none or "[]". Values like these
 /// may be replaced by the AI; others are kept.
 fn is_empty(v: Option<&Value>) -> bool {
-    matches!(text(v).trim().to_lowercase().as_str(), "" | "0.00" | "0.0" | "0" | "unknown" | "none" | "[]" | "unknown only")
+    matches!(
+        text(v).trim().to_lowercase().as_str(),
+        "" | "0.00" | "0.0" | "0" | "unknown" | "none" | "[]" | "unknown only"
+    )
 }
 
 /// A list the AI sent (["a","b"]) as the comma text the database stores.
@@ -305,7 +439,13 @@ fn is_empty(v: Option<&Value>) -> bool {
 /// Other values are returned unchanged.
 fn flat(v: &Value) -> Value {
     match v {
-        Value::Array(a) => Value::String(a.iter().map(|x| text(Some(x))).filter(|s| !s.is_empty()).collect::<Vec<_>>().join(", ")),
+        Value::Array(a) => Value::String(
+            a.iter()
+                .map(|x| text(Some(x)))
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>()
+                .join(", "),
+        ),
         other => other.clone(),
     }
 }
@@ -315,7 +455,15 @@ fn flat(v: &Value) -> Value {
 fn months(v: Option<&Value>) -> Vec<u32> {
     match v {
         // A list: accept numbers and number-like text; drop anything else.
-        Some(Value::Array(a)) => a.iter().filter_map(|x| x.as_u64().or_else(|| x.as_str().and_then(|s| s.trim().parse().ok()))).map(|m| m as u32).filter(|m| (1..=12).contains(m)).collect(),
+        Some(Value::Array(a)) => a
+            .iter()
+            .filter_map(|x| {
+                x.as_u64()
+                    .or_else(|| x.as_str().and_then(|s| s.trim().parse().ok()))
+            })
+            .map(|m| m as u32)
+            .filter(|m| (1..=12).contains(m))
+            .collect(),
         // Text: read it as a month code.
         Some(Value::String(s)) => opts::parse_m(s),
         _ => Vec::new(),
@@ -337,13 +485,32 @@ pub struct AiError {
 /// `existing` is the plant's current values, `loc` the web snippets, `peren` the Perenual text, and
 /// `allow_proposals` says whether the AI may suggest changes to values already filled in. On
 /// success the map holds the AI's values; on failure an `AiError`.
-pub async fn ask(state: &AppState, existing: &Map<String, Value>, loc: &str, peren: &str, allow_proposals: bool) -> Result<Map<String, Value>, AiError> {
+pub async fn ask(
+    state: &AppState,
+    existing: &Map<String, Value>,
+    loc: &str,
+    peren: &str,
+    allow_proposals: bool,
+) -> Result<Map<String, Value>, AiError> {
     // The plant name for the prompt, or "Unknown Plant".
-    let name = { let n = text(existing.get("plant_name")); if n.is_empty() { "Unknown Plant".into() } else { n } };
+    let name = {
+        let n = text(existing.get("plant_name"));
+        if n.is_empty() {
+            "Unknown Plant".into()
+        } else {
+            n
+        }
+    };
     // Copy the current value of each of the 57 fields. Missing ones are empty text.
     let mut current = Map::new();
     for f in FIELDS {
-        current.insert(f.into(), existing.get(f).cloned().unwrap_or(Value::String(String::new())));
+        current.insert(
+            f.into(),
+            existing
+                .get(f)
+                .cloned()
+                .unwrap_or(Value::String(String::new())),
+        );
     }
     // Build the question: name, location, Perenual facts, the rules, the current data and the
     // answer template.
@@ -354,14 +521,25 @@ pub async fn ask(state: &AppState, existing: &Map<String, Value>, loc: &str, per
     );
     // Ask the free models (2000 tokens at most). `map_err` turns the plain text error into an
     // `AiError`; `?` returns it at once on failure.
-    let raw = chat(state, SYSTEM, &prompt, 2000).await.map_err(|e| AiError { error: e, raw: "None".into() })?;
+    let raw = chat(state, SYSTEM, &prompt, 2000)
+        .await
+        .map_err(|e| AiError {
+            error: e,
+            raw: "None".into(),
+        })?;
     // The answer may have extra words around the JSON. Find the first `{` and the last `}`. If
     // either is missing, report that the answer was not JSON.
     let (Some(a), Some(b)) = (raw.find('{'), raw.rfind('}')) else {
-        return Err(AiError { error: "AI did not output a recognizable JSON object.".into(), raw });
+        return Err(AiError {
+            error: "AI did not output a recognizable JSON object.".into(),
+            raw,
+        });
     };
     if a > b {
-        return Err(AiError { error: "AI did not output a recognizable JSON object.".into(), raw });
+        return Err(AiError {
+            error: "AI did not output a recognizable JSON object.".into(),
+            raw,
+        });
     }
     // Models often write `,` before a closing bracket, which JSON forbids. Copy the text, leaving
     // out any comma whose next non-space character is `}` or `]`.
@@ -385,18 +563,31 @@ pub async fn ask(state: &AppState, existing: &Map<String, Value>, loc: &str, per
     }
     // Parse the cleaned text as a JSON object.
     let Ok(Value::Object(mut data)) = serde_json::from_str::<Value>(&cleaned) else {
-        return Err(AiError { error: "Execution Error: the answer was not valid JSON".into(), raw });
+        return Err(AiError {
+            error: "Execution Error: the answer was not valid JSON".into(),
+            raw,
+        });
     };
     // Force the cost to be a number (0 if it is not).
-    let cost = text(data.get("average_cost")).trim().parse::<f64>().unwrap_or(0.0);
+    let cost = text(data.get("average_cost"))
+        .trim()
+        .parse::<f64>()
+        .unwrap_or(0.0);
     data.insert("average_cost".into(), serde_json::json!(cost));
     // Force the quantity to be a whole number (1 if it is not).
-    let qty = text(data.get("quantity")).trim().parse::<f64>().map(|q| q as i64).unwrap_or(1);
+    let qty = text(data.get("quantity"))
+        .trim()
+        .parse::<f64>()
+        .map(|q| q as i64)
+        .unwrap_or(1);
     data.insert("quantity".into(), serde_json::json!(qty));
     // Safety rule: if the plant already has a real value, keep it. Only when proposals are allowed
     // and the AI gave a real value may it replace it. List fields are handled below.
     for f in FIELDS {
-        if matches!(f, "fertilizer" | "garden_beds" | "companion_plants" | "year_added" | "is_evergreen") {
+        if matches!(
+            f,
+            "fertilizer" | "garden_beds" | "companion_plants" | "year_added" | "is_evergreen"
+        ) {
             continue;
         }
         if !is_empty(existing.get(f)) && (!allow_proposals || is_empty(data.get(f))) {
@@ -405,13 +596,30 @@ pub async fn ask(state: &AppState, existing: &Map<String, Value>, loc: &str, per
     }
     // Months: keep the existing months unless proposals are allowed and the AI gave some. Then
     // store them as a 12-letter code.
-    for (k, ex) in [("grow_months", months(existing.get("grow_months"))), ("bloom_months", months(existing.get("bloom_months")))] {
+    for (k, ex) in [
+        ("grow_months", months(existing.get("grow_months"))),
+        ("bloom_months", months(existing.get("bloom_months"))),
+    ] {
         let ai = months(data.get(k));
-        let pick = if !ex.is_empty() { if allow_proposals && !ai.is_empty() { ai } else { ex } } else { ai };
+        let pick = if !ex.is_empty() {
+            if allow_proposals && !ai.is_empty() {
+                ai
+            } else {
+                ex
+            }
+        } else {
+            ai
+        };
         data.insert(k.into(), Value::String(opts::format_m(&pick)));
     }
     // Turn list answers into comma text for the database.
-    for k in ["fertilizer", "garden_beds", "companion_plants", "year_added", "is_evergreen"] {
+    for k in [
+        "fertilizer",
+        "garden_beds",
+        "companion_plants",
+        "year_added",
+        "is_evergreen",
+    ] {
         if let Some(v) = data.get(k).cloned() {
             data.insert(k.into(), flat(&v));
         }
@@ -432,25 +640,36 @@ pub async fn companions(state: &AppState, row: &Map<String, Value>, all: &[Strin
     let g = |k: &str| text(row.get(k));
     let name = g("plant_name");
     // The garden's plant names, one per line.
-    let list = all.iter().map(|n| format!("- {n}")).collect::<Vec<_>>().join("\n");
+    let list = all
+        .iter()
+        .map(|n| format!("- {n}"))
+        .collect::<Vec<_>>()
+        .join("\n");
     // The prompt tells the model to pick only exact names from the list, one per line, or write
     // NONE.
     let prompt = format!("You are a horticulture expert helping to populate a garden database.\n\nPLANT TO EVALUATE:\n  Name:      {name}\n  Botanical: {}\n  Family:    {}\n  Type:      {}\n  Zones:     {}\n  Sun:       {}\n  Water:     {}\n\nAVAILABLE DATABASE PLANTS (you may ONLY choose from this exact list):\n{list}\n\nTASK: Select up to 8 plants from the list above that are genuinely good companion\nplants for \"{name}\". Good companions share similar growing conditions OR\nprovide a known beneficial relationship (e.g. pest deterrence, pollinator support,\nnitrogen fixation, shade tolerance pairing).\n\nSTRICT RULES:\n- Return ONLY names that appear EXACTLY in the database list above.\n- Do NOT invent, abbreviate, or modify any name.\n- Output one plant name per line, no bullets, no numbering, no explanations.\n- If no plants from the list are suitable, output exactly: NONE",
         g("botanical_name"), g("family"), g("plant_type"), g("zones"), g("sun_exposure"), g("water_needs"));
     // Ask. A failure just means no suggestions.
-    let Ok(raw) = chat(state, "You are a horticulture expert.", &prompt, 512).await else { return Vec::new() };
+    let Ok(raw) = chat(state, "You are a horticulture expert.", &prompt, 512).await else {
+        return Vec::new();
+    };
     // The model said NONE.
     if raw.trim().eq_ignore_ascii_case("NONE") {
         return Vec::new();
     }
     // A lookup from lower-case name to the real name, so matching ignores capitals.
-    let lower: HashMap<String, &String> = all.iter().map(|n| (n.trim().to_lowercase(), n)).collect();
+    let lower: HashMap<String, &String> =
+        all.iter().map(|n| (n.trim().to_lowercase(), n)).collect();
     // The accepted names.
     let mut out: Vec<String> = Vec::new();
     // Clean each line (bullets and spaces removed), look it up, and accept it only if it exists in
     // the garden, is not the plant itself and is not already chosen.
     for line in raw.lines() {
-        let c = line.trim().trim_start_matches(['-', '•', '*', ' ']).trim().to_lowercase();
+        let c = line
+            .trim()
+            .trim_start_matches(['-', '•', '*', ' '])
+            .trim()
+            .to_lowercase();
         if let Some(canon) = lower.get(&c) {
             if **canon != name && !out.contains(canon) {
                 out.push((*canon).clone());
@@ -477,6 +696,9 @@ mod tests {
     /// Checks that HTML tags are removed and codes decoded.
     #[test]
     fn tags_are_stripped() {
-        assert_eq!(strip_tags("Grows <b>well</b> &amp; fast"), "Grows well & fast");
+        assert_eq!(
+            strip_tags("Grows <b>well</b> &amp; fast"),
+            "Grows well & fast"
+        );
     }
 }

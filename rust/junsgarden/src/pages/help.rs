@@ -231,7 +231,9 @@ fn read_guide(state: &AppState, name: &str, lang: Lang) -> Option<(String, bool)
         return std::fs::read_to_string(p).ok().map(|t| (t, true));
     }
     let p = guides::guide_file(&state.guides, name, Lang::En)?;
-    std::fs::read_to_string(p).ok().map(|t| (t, lang == Lang::En))
+    std::fs::read_to_string(p)
+        .ok()
+        .map(|t| (t, lang == Lang::En))
 }
 
 fn split_tags(s: &str) -> Vec<String> {
@@ -245,7 +247,9 @@ fn index_page(state: &AppState, visitor: &Visitor, lang: Lang) -> Response {
     for s in guides::STEPS {
         let mut list = Vec::new();
         for &name in s.guides {
-            let Some((text, in_lang)) = read_guide(state, name, lang) else { continue };
+            let Some((text, in_lang)) = read_guide(state, name, lang) else {
+                continue;
+            };
             let title = guides::title_of(&text);
             let summary = guides::summary_of(&text);
             // Each #word opens the help id it was written for.
@@ -258,10 +262,21 @@ fn index_page(state: &AppState, visitor: &Visitor, lang: Lang) -> Response {
             let words: Vec<&str> = tags.iter().map(|t| t.0.as_str()).collect();
             let search = format!("{title} {summary} {} {name}", words.join(" ")).to_lowercase();
             titles.insert(name, title.clone());
-            list.push(GuideView { name, title, summary, tags, search, in_lang });
+            list.push(GuideView {
+                name,
+                title,
+                summary,
+                tags,
+                search,
+                in_lang,
+            });
         }
         if !list.is_empty() {
-            steps.push(StepView { num: s.num, label: if lang == Lang::Ko { s.ko } else { s.en }, guides: list });
+            steps.push(StepView {
+                num: s.num,
+                label: if lang == Lang::Ko { s.ko } else { s.en },
+                guides: list,
+            });
         }
     }
     let topics = reg
@@ -270,8 +285,21 @@ fn index_page(state: &AppState, visitor: &Visitor, lang: Lang) -> Response {
         .map(|e| {
             let guide_title = titles.get(e.guide.as_str()).cloned().unwrap_or_default();
             let tags = split_tags(e.tags(lang));
-            let search = format!("{} {} {} {}", e.brief(lang), tags.join(" "), guide_title, e.id).to_lowercase();
-            TopicView { id: e.id.clone(), brief: e.brief(lang).to_string(), guide_title, tags, search }
+            let search = format!(
+                "{} {} {} {}",
+                e.brief(lang),
+                tags.join(" "),
+                guide_title,
+                e.id
+            )
+            .to_lowercase();
+            TopicView {
+                id: e.id.clone(),
+                brief: e.brief(lang).to_string(),
+                guide_title,
+                tags,
+                search,
+            }
         })
         .collect();
     let t = IndexTemplate {
@@ -283,7 +311,11 @@ fn index_page(state: &AppState, visitor: &Visitor, lang: Lang) -> Response {
         steps,
         topics,
     };
-    let title = if lang == Lang::Ko { "도움말" } else { "Help" };
+    let title = if lang == Lang::Ko {
+        "도움말"
+    } else {
+        "Help"
+    };
     framed(state, visitor, title, t.render().unwrap_or_default()).into_response()
 }
 
@@ -309,7 +341,11 @@ struct GuideTemplate {
 }
 
 /// The title of a neighbouring guide, for "Previous" / "Next".
-fn neighbour(state: &AppState, name: Option<&'static str>, lang: Lang) -> Option<(&'static str, String)> {
+fn neighbour(
+    state: &AppState,
+    name: Option<&'static str>,
+    lang: Lang,
+) -> Option<(&'static str, String)> {
     let name = name?;
     let (text, _) = read_guide(state, name, lang)?;
     Some((name, guides::title_of(&text)))
@@ -318,13 +354,21 @@ fn neighbour(state: &AppState, name: Option<&'static str>, lang: Lang) -> Option
 fn guide_page(state: &AppState, visitor: &Visitor, asked: &str, lang: Lang) -> Response {
     // The name is looked up in the fixed list; from here on only the list's own
     // text is used, never what was typed in the address.
-    let Some(name) = guides::order().find(|g| *g == asked) else { return not_found(state, visitor, lang) };
-    let Some((text, in_lang)) = read_guide(state, name, lang) else { return not_found(state, visitor, lang) };
+    let Some(name) = guides::order().find(|g| *g == asked) else {
+        return not_found(state, visitor, lang);
+    };
+    let Some((text, in_lang)) = read_guide(state, name, lang) else {
+        return not_found(state, visitor, lang);
+    };
     let shown = if in_lang { lang } else { Lang::En };
     let r = guides::render(&text, shown);
-    let order: Vec<&'static str> = guides::order().filter(|g| guides::guide_file(&state.guides, g, Lang::En).is_some()).collect();
+    let order: Vec<&'static str> = guides::order()
+        .filter(|g| guides::guide_file(&state.guides, g, Lang::En).is_some())
+        .collect();
     let i = order.iter().position(|g| *g == name);
-    let prev = i.and_then(|i| i.checked_sub(1)).and_then(|j| order.get(j).copied());
+    let prev = i
+        .and_then(|i| i.checked_sub(1))
+        .and_then(|j| order.get(j).copied());
     let next = i.and_then(|i| order.get(i + 1).copied());
     let step = guides::step_of(name);
     let title = guides::title_of(&text);
@@ -337,7 +381,9 @@ fn guide_page(state: &AppState, visitor: &Visitor, asked: &str, lang: Lang) -> R
         has_ko: guides::guide_file(&state.guides, name, Lang::Ko).is_some(),
         english_only: !in_lang,
         step_num: step.map(|s| s.num).unwrap_or(""),
-        step_label: step.map(|s| if lang == Lang::Ko { s.ko } else { s.en }).unwrap_or(""),
+        step_label: step
+            .map(|s| if lang == Lang::Ko { s.ko } else { s.en })
+            .unwrap_or(""),
         title: title.clone(),
         sections: r.sections,
         body: r.html,
@@ -367,7 +413,11 @@ struct BriefTemplate {
 /// Where a help id's full text is: the guide in `lang` (English when that
 /// guide has no Korean file) at the id's anchor.
 pub fn full_href(state: &AppState, e: &HelpEntry, lang: Lang) -> String {
-    let lang = if guides::guide_file(&state.guides, &e.guide, lang).is_some() { lang } else { Lang::En };
+    let lang = if guides::guide_file(&state.guides, &e.guide, lang).is_some() {
+        lang
+    } else {
+        Lang::En
+    };
     format!("/help?guide={}{}#{}", e.guide, lang.amp(), e.anchor(lang))
 }
 
@@ -383,8 +433,12 @@ fn go_full(state: &AppState, visitor: &Visitor, id: &str, lang: Lang) -> Respons
 /// `/help/ID`: the brief, the way to the full guide, and the full reading.
 fn id_page(state: &AppState, visitor: &Visitor, id: &str, lang: Lang, _full: bool) -> Response {
     let reg = guides::load_registry(&state.guides);
-    let Some(e) = reg.iter().find(|e| e.id == id) else { return not_found(state, visitor, lang) };
-    let Some((text, in_lang)) = read_guide(state, &e.guide, lang) else { return not_found(state, visitor, lang) };
+    let Some(e) = reg.iter().find(|e| e.id == id) else {
+        return not_found(state, visitor, lang);
+    };
+    let Some((text, in_lang)) = read_guide(state, &e.guide, lang) else {
+        return not_found(state, visitor, lang);
+    };
     let shown = if in_lang { lang } else { Lang::En };
     let section = guides::section_html(&guides::render(&text, shown).html, &e.anchor(shown));
     let t = BriefTemplate {
@@ -444,13 +498,26 @@ pub async fn old_id_path(
 }
 
 /// `/help/images/FILE`: a picture from START-HERE/images (plain names only).
-pub async fn image(State(state): State<Arc<AppState>>, Extension(visitor): Extension<Visitor>, Path(name): Path<String>) -> Response {
+pub async fn image(
+    State(state): State<Arc<AppState>>,
+    Extension(visitor): Extension<Visitor>,
+    Path(name): Path<String>,
+) -> Response {
     if !visitor.is_admin() {
         return StatusCode::FORBIDDEN.into_response();
     }
-    let Some((path, mime)) = guides::image_file(&state.guides, &name) else { return StatusCode::NOT_FOUND.into_response() };
+    let Some((path, mime)) = guides::image_file(&state.guides, &name) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
     match tokio::fs::read(&path).await {
-        Ok(bytes) => ([(header::CONTENT_TYPE, mime), (header::CACHE_CONTROL, "private, max-age=86400")], bytes).into_response(),
+        Ok(bytes) => (
+            [
+                (header::CONTENT_TYPE, mime),
+                (header::CACHE_CONTROL, "private, max-age=86400"),
+            ],
+            bytes,
+        )
+            .into_response(),
         Err(_) => StatusCode::NOT_FOUND.into_response(),
     }
 }

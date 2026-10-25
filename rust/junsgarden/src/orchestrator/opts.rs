@@ -23,63 +23,223 @@ use serde_json::{Map, Value};
 
 /// The three-letter month names, January first. `[&str; 12]` means a fixed array of exactly 12 text
 /// pieces. `pub` means other files may use it.
-pub const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+pub const MONTHS: [&str; 12] = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
 /// Drop-down choices for "Plant Type". The first "" is the blank choice.
-pub const PLANT_TYPES: &[&str] = &["", "Perennial", "Annual", "Biennial", "Shrub", "Tree", "Succulent", "Vine", "Unknown"];
+pub const PLANT_TYPES: &[&str] = &[
+    "",
+    "Perennial",
+    "Annual",
+    "Biennial",
+    "Shrub",
+    "Tree",
+    "Succulent",
+    "Vine",
+    "Unknown",
+];
 /// Choices for foliage retention (`is_evergreen`). No blank choice: this one is a multi-pick box.
-pub const EVERGREEN_OPTIONS: &[&str] = &["Evergreen", "Semi-evergreen", "Deciduous", "Deciduous Conifer", "Herbaceous", "Spring Ephemeral", "Summer Dormant"];
+pub const EVERGREEN_OPTIONS: &[&str] = &[
+    "Evergreen",
+    "Semi-evergreen",
+    "Deciduous",
+    "Deciduous Conifer",
+    "Herbaceous",
+    "Spring Ephemeral",
+    "Summer Dormant",
+];
 /// Drop-down choices for leaf shape. The words in brackets are shown to help the person choose.
-pub const LEAF_SHAPES: &[&str] = &["", "Linear (Long, narrow)", "Lanceolate (Long tapering tip)", "Ovate (Egg-shaped)", "Elliptic (Oval tapering ends)", "Cordate (Heart-shaped)", "Palmate (Hand-like lobes)", "Deltoid (Triangular)"];
+pub const LEAF_SHAPES: &[&str] = &[
+    "",
+    "Linear (Long, narrow)",
+    "Lanceolate (Long tapering tip)",
+    "Ovate (Egg-shaped)",
+    "Elliptic (Oval tapering ends)",
+    "Cordate (Heart-shaped)",
+    "Palmate (Hand-like lobes)",
+    "Deltoid (Triangular)",
+];
 /// Drop-down choices for leaf type (one blade or a leaf split into leaflets).
-pub const LEAF_TYPES: &[&str] = &["", "Simple (Single undivided blade)", "Pinnately Compound (Feather-like leaflets)", "Palmately Compound (Radiating leaflets)"];
+pub const LEAF_TYPES: &[&str] = &[
+    "",
+    "Simple (Single undivided blade)",
+    "Pinnately Compound (Feather-like leaflets)",
+    "Palmately Compound (Radiating leaflets)",
+];
 /// Drop-down choices for the leaf edge.
-pub const LEAF_MARGINS: &[&str] = &["", "Entire (Smooth, no teeth)", "Serrated (Saw-toothed edges)", "Shallowly Serrate", "Lobed (Deep indentations)"];
+pub const LEAF_MARGINS: &[&str] = &[
+    "",
+    "Entire (Smooth, no teeth)",
+    "Serrated (Saw-toothed edges)",
+    "Shallowly Serrate",
+    "Lobed (Deep indentations)",
+];
 /// Drop-down choices for flower symmetry.
-pub const FLOWER_SYMMETRIES: &[&str] = &["", "None", "Actinomorphic (Radial symmetry)", "Zygomorphic (Bilateral symmetry)"];
+pub const FLOWER_SYMMETRIES: &[&str] = &[
+    "",
+    "None",
+    "Actinomorphic (Radial symmetry)",
+    "Zygomorphic (Bilateral symmetry)",
+];
 /// Drop-down choices for flower shape.
-pub const FLOWER_SHAPES: &[&str] = &["", "None", "Rotate (Flat wheel-shaped)", "Stellate (Star-shaped)", "Stellate (Chionodoxa)", "Cruciate (Cross-shaped)", "Campanulate (Bell-shaped)", "Infundibuliform (Funnel-shaped)", "Tubular (Cylindrical tube)", "Salverform (Tube opening flat)", "Bilabiate (Two-lipped)", "Urceolate (Urn-shaped)", "Trumpet/Cup-shaped (Daffodil)", "High-centered", "Double Blossoms"];
+pub const FLOWER_SHAPES: &[&str] = &[
+    "",
+    "None",
+    "Rotate (Flat wheel-shaped)",
+    "Stellate (Star-shaped)",
+    "Stellate (Chionodoxa)",
+    "Cruciate (Cross-shaped)",
+    "Campanulate (Bell-shaped)",
+    "Infundibuliform (Funnel-shaped)",
+    "Tubular (Cylindrical tube)",
+    "Salverform (Tube opening flat)",
+    "Bilabiate (Two-lipped)",
+    "Urceolate (Urn-shaped)",
+    "Trumpet/Cup-shaped (Daffodil)",
+    "High-centered",
+    "Double Blossoms",
+];
 /// Drop-down choices for flower size.
-pub const FLOWER_SIZES: &[&str] = &["", "None", "Tiny (<1 in)", "Small (1-2 in)", "Small to Large (1-5 in)", "Medium (2-4 in)", "Large (4-6 in)", "Massive (>6 in)"];
+pub const FLOWER_SIZES: &[&str] = &[
+    "",
+    "None",
+    "Tiny (<1 in)",
+    "Small (1-2 in)",
+    "Small to Large (1-5 in)",
+    "Medium (2-4 in)",
+    "Large (4-6 in)",
+    "Massive (>6 in)",
+];
 /// Drop-down choices for how the plant reproduces.
-pub const REPRODUCTION_OPTIONS: &[&str] = &["", "Hermaphrodite", "Monoecious", "Dioecious", "Polygamous", "Unknown"];
+pub const REPRODUCTION_OPTIONS: &[&str] = &[
+    "",
+    "Hermaphrodite",
+    "Monoecious",
+    "Dioecious",
+    "Polygamous",
+    "Unknown",
+];
 /// Drop-down choices for growth rate.
 pub const GROWTH_RATES: &[&str] = &["", "Slow", "Moderate", "Fast"];
 /// Drop-down choices for the kind of root system.
-pub const ROOT_SYSTEM_OPTIONS: &[&str] = &["", "Taproot Systems", "Fibrous/Adventitious Systems", "Specialized Systems", "Unknown"];
+pub const ROOT_SYSTEM_OPTIONS: &[&str] = &[
+    "",
+    "Taproot Systems",
+    "Fibrous/Adventitious Systems",
+    "Specialized Systems",
+    "Unknown",
+];
 /// Drop-down choices for root thickness.
-pub const ROOT_MORPHOLOGY_OPTIONS: &[&str] = &["", "Fine Roots (< 2 mm)", "Coarse Roots (> 2 mm)", "Mixed Fine & Coarse", "Unknown"];
+pub const ROOT_MORPHOLOGY_OPTIONS: &[&str] = &[
+    "",
+    "Fine Roots (< 2 mm)",
+    "Coarse Roots (> 2 mm)",
+    "Mixed Fine & Coarse",
+    "Unknown",
+];
 /// Drop-down choices for what the roots do.
-pub const ROOT_FUNCTIONAL_OPTIONS: &[&str] = &["", "Absorptive Roots (Lower Orders)", "Transport Roots (Higher Orders)", "Mixed Orders", "Unknown"];
+pub const ROOT_FUNCTIONAL_OPTIONS: &[&str] = &[
+    "",
+    "Absorptive Roots (Lower Orders)",
+    "Transport Roots (Higher Orders)",
+    "Mixed Orders",
+    "Unknown",
+];
 /// Drop-down choices for whether the plant is invasive locally.
 pub const INVASIVE_OPTIONS: &[&str] = &["", "No", "Yes", "Watchlist"];
 /// Drop-down choices for native status.
-pub const NATIVE_STATUS_OPTIONS: &[&str] = &["", "Native", "Non-native", "Introduced", "Cultivar", "Unknown"];
+pub const NATIVE_STATUS_OPTIONS: &[&str] = &[
+    "",
+    "Native",
+    "Non-native",
+    "Introduced",
+    "Cultivar",
+    "Unknown",
+];
 /// Drop-down choices for whether the fruit can be eaten.
-pub const FRUIT_EDIBILITY_OPTIONS: &[&str] = &["", "Edible", "Inedible", "Toxic", "Wildlife Only", "None"];
+pub const FRUIT_EDIBILITY_OPTIONS: &[&str] =
+    &["", "Edible", "Inedible", "Toxic", "Wildlife Only", "None"];
 /// Drop-down choices for sun exposure. The wishlist tab uses this list too.
-pub const SUN_OPTIONS: &[&str] = &["", "Full Sun", "Partial", "Shade", "Full Sun - Partial", "Full Shade", "Full Sun - Full Shade", "Partial Shade - Full Shade", "Full Shade - Partial Shade"];
+pub const SUN_OPTIONS: &[&str] = &[
+    "",
+    "Full Sun",
+    "Partial",
+    "Shade",
+    "Full Sun - Partial",
+    "Full Shade",
+    "Full Sun - Full Shade",
+    "Partial Shade - Full Shade",
+    "Full Shade - Partial Shade",
+];
 /// Drop-down choices for deer and rabbit resistance.
-pub const RESISTANCE_OPTIONS: &[&str] = &["", "Deer Resistant", "Rabbit Resistant", "Both", "Not Resistant"];
+pub const RESISTANCE_OPTIONS: &[&str] = &[
+    "",
+    "Deer Resistant",
+    "Rabbit Resistant",
+    "Both",
+    "Not Resistant",
+];
 /// Drop-down choices for toxicity.
-pub const TOXICITY_OPTIONS: &[&str] = &["", "Non-toxic", "Toxic", "Toxic to Dogs/Cats", "Toxic to Humans", "Toxic to Humans & Pets", "Unknown"];
+pub const TOXICITY_OPTIONS: &[&str] = &[
+    "",
+    "Non-toxic",
+    "Toxic",
+    "Toxic to Dogs/Cats",
+    "Toxic to Humans",
+    "Toxic to Humans & Pets",
+    "Unknown",
+];
 /// The years a plant can be marked as added. Add the next year here when it is needed.
 pub const YEARS_ADDED: &[&str] = &["2022", "2023", "2024", "2025", "2026", "2027"];
 /// Fertilizer products a plant can use. Multi-pick box, so there is no blank choice.
-pub const FERTILIZER_OPTIONS: &[&str] = &["Azalea-tone", "Berry-tone", "Bio-tone", "Bloom Booster", "Bulb-tone", "Citrus-tone", "Evergreen-tone", "Flower-tone", "Garden-tone", "Holly-tone", "Iron-tone", "Palm-tone", "Plant-tone", "Rose-tone", "Tomato-tone", "Tree-tone", "None"];
+pub const FERTILIZER_OPTIONS: &[&str] = &[
+    "Azalea-tone",
+    "Berry-tone",
+    "Bio-tone",
+    "Bloom Booster",
+    "Bulb-tone",
+    "Citrus-tone",
+    "Evergreen-tone",
+    "Flower-tone",
+    "Garden-tone",
+    "Holly-tone",
+    "Iron-tone",
+    "Palm-tone",
+    "Plant-tone",
+    "Rose-tone",
+    "Tomato-tone",
+    "Tree-tone",
+    "None",
+];
 /// The bed names, with the curly apostrophe (’) the database uses.
 /// These names are saved as text in the database, so they must match it exactly. That includes the
 /// curly apostrophe. The first entry is where a plant waits until it has a real bed.
 pub const GARDEN_BEDS: &[&str] = &[
     "To Be Sorted",
-    "All Animals Go to Heaven", "Annuals", "Aunt Sharon’s Garden",
-    "Barwaz Garden", "Boo Boo’s Garden", "China Town Garden",
-    "Dead or Removed", "Grandma Emily Barwaz Garden", "Grandpa Duke of Earl Middleton Garden",
-    "Jason’s Terrace", "Jimmy John’s Blue’s Garden", "Karta’s Corner Garden",
-    "Ko-Ja Garden", "Kona’s Garden", "Korea Garden",
-    "Orchard Grove", "River Garden", "Sister Elizabeth’s Garden",
-    "The 4 Season Garden", "The Royal Run", "Uncle Dennis Garden",
-    "Want (Wishlist)", "Zen Garden",
+    "All Animals Go to Heaven",
+    "Annuals",
+    "Aunt Sharon’s Garden",
+    "Barwaz Garden",
+    "Boo Boo’s Garden",
+    "China Town Garden",
+    "Dead or Removed",
+    "Grandma Emily Barwaz Garden",
+    "Grandpa Duke of Earl Middleton Garden",
+    "Jason’s Terrace",
+    "Jimmy John’s Blue’s Garden",
+    "Karta’s Corner Garden",
+    "Ko-Ja Garden",
+    "Kona’s Garden",
+    "Korea Garden",
+    "Orchard Grove",
+    "River Garden",
+    "Sister Elizabeth’s Garden",
+    "The 4 Season Garden",
+    "The Royal Run",
+    "Uncle Dennis Garden",
+    "Want (Wishlist)",
+    "Zen Garden",
 ];
 
 /// "..MAMJJA...." -> [3,4,5,6,7,8]. Anything that is not exactly 12
@@ -98,7 +258,12 @@ pub fn parse_m(s: &str) -> Vec<u32> {
     // that is not '.', turn its position into a month number (position + 1), and gather the numbers
     // into a list. `|(_, c)|` is a small inline function that receives each pair; `_` means "ignore
     // this part".
-    chars.iter().enumerate().filter(|(_, c)| **c != '.').map(|(i, _)| i as u32 + 1).collect()
+    chars
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| **c != '.')
+        .map(|(i, _)| i as u32 + 1)
+        .collect()
 }
 
 /// [3,4,5] -> "..MAM.......".
@@ -110,7 +275,15 @@ pub fn format_m(months: &[u32]) -> String {
     const CHARS: [char; 12] = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
     // For each of the 12 positions: use that month's letter if its number (position + 1) is in the
     // list, otherwise a dot. `collect()` joins the characters into one String.
-    (0..12).map(|i| if months.contains(&(i as u32 + 1)) { CHARS[i] } else { '.' }).collect()
+    (0..12)
+        .map(|i| {
+            if months.contains(&(i as u32 + 1)) {
+                CHARS[i]
+            } else {
+                '.'
+            }
+        })
+        .collect()
 }
 
 /// Start..end month numbers, wrapping past December (Nov..Feb = 11,12,1,2).
@@ -142,7 +315,13 @@ pub fn text(v: Option<&Value>) -> String {
         Some(Value::String(s)) => s.clone(),
         // Yes/no: Python printed these as True and False, so the same words are used here. `*b`
         // reads the true/false behind the reference `b`.
-        Some(Value::Bool(b)) => if *b { "True".into() } else { "False".into() },
+        Some(Value::Bool(b)) => {
+            if *b {
+                "True".into()
+            } else {
+                "False".into()
+            }
+        }
         // Anything else, such as a number: use JSON's own text form (3 becomes "3").
         Some(other) => other.to_string(),
     }
@@ -152,17 +331,61 @@ pub fn text(v: Option<&Value>) -> String {
 /// this list. The order is the order they are reported in. Copied from the Streamlit app's
 /// config.py.
 const REQUIRED: [&str; 56] = [
-    "botanical_name", "company", "family", "genus", "species", "plant_type",
-    "plant_length", "plant_width", "spacing", "zones", "sun_exposure", "water_needs", "soil_ph",
-    "soil_type", "bloom_color", "foliage_color", "stem_color", "attracts",
-    "deer_resistance", "toxicity", "care_notes", "maintenance_notes",
-    "cleanup_notes", "disease_susceptibility", "extra_details", "fertilizer",
-    "propagation_method", "cuttings", "picture", "grow_months", "bloom_months",
-    "leaf_shape", "leaf_type", "leaf_margin", "flower_symmetry", "flower_shape", "flower_size",
-    "fruit_type", "fruit_shape", "fruit_color", "fruit_size", "fruit_edibility",
-    "invasive_local", "native_status", "growth_rate", "planting_depth",
-    "chilling_hours", "garden_beds", "aromatics", "is_evergreen", "life_expectancy",
-    "reproduction_type", "root_system", "root_morphology", "root_function",
+    "botanical_name",
+    "company",
+    "family",
+    "genus",
+    "species",
+    "plant_type",
+    "plant_length",
+    "plant_width",
+    "spacing",
+    "zones",
+    "sun_exposure",
+    "water_needs",
+    "soil_ph",
+    "soil_type",
+    "bloom_color",
+    "foliage_color",
+    "stem_color",
+    "attracts",
+    "deer_resistance",
+    "toxicity",
+    "care_notes",
+    "maintenance_notes",
+    "cleanup_notes",
+    "disease_susceptibility",
+    "extra_details",
+    "fertilizer",
+    "propagation_method",
+    "cuttings",
+    "picture",
+    "grow_months",
+    "bloom_months",
+    "leaf_shape",
+    "leaf_type",
+    "leaf_margin",
+    "flower_symmetry",
+    "flower_shape",
+    "flower_size",
+    "fruit_type",
+    "fruit_shape",
+    "fruit_color",
+    "fruit_size",
+    "fruit_edibility",
+    "invasive_local",
+    "native_status",
+    "growth_rate",
+    "planting_depth",
+    "chilling_hours",
+    "garden_beds",
+    "aromatics",
+    "is_evergreen",
+    "life_expectancy",
+    "reproduction_type",
+    "root_system",
+    "root_morphology",
+    "root_function",
     "average_cost",
 ];
 
@@ -172,7 +395,10 @@ pub fn is_blank(s: &str) -> bool {
     // the text after `trim()` removes spaces at both ends and `to_lowercase()` ignores capital
     // letters. These words all mean "nobody has filled this in": empty, "unknown", "[]" (an empty
     // list) and 12 dots (a month code with no months).
-    matches!(s.trim().to_lowercase().as_str(), "" | "unknown" | "unknown only" | "[]" | "............")
+    matches!(
+        s.trim().to_lowercase().as_str(),
+        "" | "unknown" | "unknown only" | "[]" | "............"
+    )
 }
 
 /// `get_missing_fields`: which of the 56 required fields a plant lacks.
@@ -190,7 +416,12 @@ pub fn missing_fields(p: &Map<String, Value>) -> Vec<&'static str> {
         "not ornamental" | "none" | "insignificant" | "non-flowering" | "inconspicuous"
     );
     // The fields that flowerless plants may leave blank.
-    let flower_optional = ["bloom_months", "flower_symmetry", "flower_shape", "flower_size"];
+    let flower_optional = [
+        "bloom_months",
+        "flower_symmetry",
+        "flower_shape",
+        "flower_size",
+    ];
     // `let mut` makes a variable that can be changed later. `out` collects the names of missing
     // fields.
     let mut out = Vec::new();
@@ -231,12 +462,6 @@ pub fn today() -> chrono::NaiveDate {
         .unwrap_or_else(|| chrono::NaiveDate::from_ymd_opt(2026, 1, 1).unwrap())
 }
 
-/// A filename-safe version of a plant name: letters and digits only, as the
-/// Python's `"".join(c for c in name if c.isalnum())`.
-pub fn safe_name(name: &str) -> String {
-    name.chars().filter(|c| c.is_alphanumeric()).collect()
-}
-
 /// Tests. `#[cfg(test)]` means this block is only built when running `cargo test`; it is not part
 /// of the running website.
 #[cfg(test)]
@@ -273,11 +498,5 @@ mod tests {
         assert!(!missing_fields(&p).contains(&"bloom_months"));
         p.insert("chilling_hours".into(), json!("0"));
         assert!(!missing_fields(&p).contains(&"chilling_hours"));
-    }
-
-    /// Checks that punctuation and symbols are removed from a name.
-    #[test]
-    fn safe_names() {
-        assert_eq!(safe_name("Lil' Kim® Rose"), "LilKimRose");
     }
 }

@@ -119,7 +119,7 @@ fn strip_tags(s: &str) -> String {
         // extra condition. Arms: start a tag, end a tag, keep the character, or skip it.
         match c {
             // Like PHP, a "<" followed by a space is just a less-than sign.
-            '<' if !in_tag && !chars.get(i + 1).map_or(true, |n| n.is_whitespace()) => in_tag = true,
+            '<' if !in_tag && !chars.get(i + 1).is_none_or(|n| n.is_whitespace()) => in_tag = true,
             '>' if in_tag => in_tag = false,
             _ if !in_tag => out.push(c),
             _ => {}
@@ -148,7 +148,11 @@ async fn read_comments(state: &AppState) -> Vec<String> {
     let path = state.data.join("comments.txt");
     off_thread(move || {
         let text = store::read_text(&path).unwrap_or_default();
-        guestbook_lines(&text).into_iter().take(20).map(str::to_string).collect()
+        guestbook_lines(&text)
+            .into_iter()
+            .take(20)
+            .map(str::to_string)
+            .collect()
     })
     .await
 }
@@ -157,7 +161,11 @@ async fn read_comments(state: &AppState) -> Vec<String> {
 /// The caller holds `comments_lock`.
 fn write_guestbook(path: &std::path::Path, lines: &[&str]) {
     let lines = &lines[..lines.len().min(GUESTBOOK_KEEP)];
-    let out = if lines.is_empty() { String::new() } else { format!("{}\n", lines.join("\n")) };
+    let out = if lines.is_empty() {
+        String::new()
+    } else {
+        format!("{}\n", lines.join("\n"))
+    };
     if let Err(e) = store::write_atomic(path, out.as_bytes()) {
         tracing::error!("could not save the guestbook {}: {e}", path.display());
     }
@@ -167,11 +175,23 @@ fn write_guestbook(path: &std::path::Path, lines: &[&str]) {
 /// `<span class='c-date'>Oct 5</span> <strong>Name:</strong> text`. Tags are stripped, the
 /// text cut to the form's limits (counted in characters) and escaped.
 async fn add_comment(state: &AppState, name: &str, message: &str) {
-    let name = he(&strip_tags(name).chars().take(MAX_NAME_CHARS).collect::<String>());
-    let msg = he(&strip_tags(message).chars().take(MAX_MESSAGE_CHARS).collect::<String>());
-    let name = if php_empty(&name) { "Guest".to_string() } else { name };
+    let name = he(&strip_tags(name)
+        .chars()
+        .take(MAX_NAME_CHARS)
+        .collect::<String>());
+    let msg = he(&strip_tags(message)
+        .chars()
+        .take(MAX_MESSAGE_CHARS)
+        .collect::<String>());
+    let name = if php_empty(&name) {
+        "Guest".to_string()
+    } else {
+        name
+    };
     let date = common::now_local()
-        .format(&time::macros::format_description!("[month repr:short] [day padding:none]"))
+        .format(&time::macros::format_description!(
+            "[month repr:short] [day padding:none]"
+        ))
         .unwrap_or_default();
     let entry = format!("<span class='c-date'>{date}</span> <strong>{name}:</strong> {msg}");
 
@@ -195,7 +215,9 @@ async fn delete_comment(state: &AppState, index: i64) {
     let _one_at_a_time = state.comments_lock.lock().await;
     let path = state.data.join("comments.txt");
     off_thread(move || {
-        let Ok(text) = store::read_text(&path) else { return };
+        let Ok(text) = store::read_text(&path) else {
+            return;
+        };
         let mut lines = guestbook_lines(&text);
         if let Some(i) = usize::try_from(index).ok().filter(|i| *i < lines.len()) {
             lines.remove(i);
@@ -217,7 +239,13 @@ fn post_cards(rows: &[PostRow]) -> Vec<PostCard> {
             let images = match p.picture.as_deref().filter(|s| !s.is_empty()) {
                 Some(pic) => pic
                     .split(',')
-                    .map(|img| if img.starts_with("http") { img.to_string() } else { format!("{IMG_BASE}{}", img.trim()) })
+                    .map(|img| {
+                        if img.starts_with("http") {
+                            img.to_string()
+                        } else {
+                            format!("{IMG_BASE}{}", img.trim())
+                        }
+                    })
                     .collect(),
                 None => vec![NO_PICTURE.to_string()],
             };
@@ -240,7 +268,10 @@ fn post_cards(rows: &[PostRow]) -> Vec<PostCard> {
                 content_html: nl2br(&he(&htmlspecialchars_decode(&p.content))),
                 content_raw: p.content.clone(),
                 share_url: urlencode("https://junsgarden.zapto.org/"),
-                share_text: urlencode(&format!("Check out this update from Jun's Garden: {}", p.title)),
+                share_text: urlencode(&format!(
+                    "Check out this update from Jun's Garden: {}",
+                    p.title
+                )),
             }
         })
         .collect()
@@ -265,7 +296,11 @@ async fn render_home(state: &AppState, visitor: &Visitor, zip: &str) -> Html<Str
     // `sections/weather.php`: only a five-digit zip is accepted.
     // 2. Weather box. Only a five-digit zip is accepted (letters and long text are
     // dropped); anything else becomes an empty zip.
-    let zip = if zip.len() == 5 && zip.bytes().all(|b| b.is_ascii_digit()) { zip } else { "" };
+    let zip = if zip.len() == 5 && zip.bytes().all(|b| b.is_ascii_digit()) {
+        zip
+    } else {
+        ""
+    };
     let weather = WeatherBody {
         theme: random_theme(),
         zip: zip.to_string(),
@@ -303,7 +338,12 @@ pub async fn home(
     Extension(visitor): Extension<Visitor>,
     Query(q): Query<HashMap<String, String>>,
 ) -> Html<String> {
-    render_home(&state, &visitor, q.get("zip").map(String::as_str).unwrap_or("")).await
+    render_home(
+        &state,
+        &visitor,
+        q.get("zip").map(String::as_str).unwrap_or(""),
+    )
+    .await
 }
 
 /// Save the photos attached to a post; returns the new file names.
@@ -312,7 +352,13 @@ pub async fn home(
 async fn save_post_images(state: &AppState, files: &[&formdata::Upload]) -> Vec<String> {
     let dir = state.www.join("images/post");
     let photos: Vec<Vec<u8>> = files.iter().map(|u| u.bytes.clone()).collect();
-    off_thread(move || photos.iter().filter_map(|b| images::save_as_webp(b, &dir, 82.0)).collect()).await
+    off_thread(move || {
+        photos
+            .iter()
+            .filter_map(|b| images::save_as_webp(b, &dir, 82.0))
+            .collect()
+    })
+    .await
 }
 
 /// Everything the home page accepts by POST: the guestbook (anyone), and
@@ -321,10 +367,16 @@ async fn save_post_images(state: &AppState, files: &[&formdata::Upload]) -> Vec<
 /// Takes the state, the visitor, the parsed form and the page path. Gives back
 /// `Some(response)` when it handled the form (usually a redirect), or `None`
 /// when the form was not one of these buttons so the caller carries on.
-async fn handle_post(state: &AppState, visitor: &Visitor, f: &FormData, path: &str) -> Option<Response> {
+async fn handle_post(
+    state: &AppState,
+    visitor: &Visitor,
+    f: &FormData,
+    path: &str,
+) -> Option<Response> {
     // `redirect` is a closure (a small function stored in a variable) that makes a
     // 302 redirect response to the given address.
-    let redirect = |to: &str| Some((StatusCode::FOUND, [(header::LOCATION, to.to_string())]).into_response());
+    let redirect =
+        |to: &str| Some((StatusCode::FOUND, [(header::LOCATION, to.to_string())]).into_response());
 
     // 1. Logout button: works for anyone.
     if f.has("logout") {
@@ -342,17 +394,27 @@ async fn handle_post(state: &AppState, visitor: &Visitor, f: &FormData, path: &s
         let title = he(f.str("title"));
         let content = he(f.str("content"));
         let uploaded = save_post_images(state, &f.files_for("blog_images[]")).await;
-        let picture = if uploaded.is_empty() { None } else { Some(uploaded.join(",")) };
+        let picture = if uploaded.is_empty() {
+            None
+        } else {
+            Some(uploaded.join(","))
+        };
         // Posts by "Joshua" are stored as "Jun" (kept from the PHP).
         // Joshua posts as Jun.
-        let author = if visitor.username == "Joshua" { "Jun".to_string() } else { visitor.username.clone() };
-        let r = sqlx::query("INSERT INTO garden_blog (author, title, content, picture) VALUES (?, ?, ?, ?)")
-            .bind(author)
-            .bind(title)
-            .bind(content)
-            .bind(picture)
-            .execute(&state.db)
-            .await;
+        let author = if visitor.username == "Joshua" {
+            "Jun".to_string()
+        } else {
+            visitor.username.clone()
+        };
+        let r = sqlx::query(
+            "INSERT INTO garden_blog (author, title, content, picture) VALUES (?, ?, ?, ?)",
+        )
+        .bind(author)
+        .bind(title)
+        .bind(content)
+        .bind(picture)
+        .execute(&state.db)
+        .await;
         if let Err(e) = r {
             tracing::error!("post_blog failed: {e}");
         }
@@ -393,7 +455,10 @@ async fn handle_post(state: &AppState, visitor: &Visitor, f: &FormData, path: &s
     // 5. Delete post by id.
     if f.has("delete_blog") {
         let id = php_int(f.str("blog_id"));
-        let _ = sqlx::query("DELETE FROM garden_blog WHERE id=?").bind(id).execute(&state.db).await;
+        let _ = sqlx::query("DELETE FROM garden_blog WHERE id=?")
+            .bind(id)
+            .execute(&state.db)
+            .await;
         return redirect("index.php");
     }
 
@@ -426,14 +491,26 @@ pub async fn home_post(
     let message = f.str("user_message");
     if php_empty(message) {
         // Not a guestbook post either: show the page, as the PHP did.
-        return render_home(&state, &visitor, q.get("zip").map(String::as_str).unwrap_or("")).await.into_response();
+        return render_home(
+            &state,
+            &visitor,
+            q.get("zip").map(String::as_str).unwrap_or(""),
+        )
+        .await
+        .into_response();
     }
-    if visitor.is_admin() || state.write_limit.allow(&crate::accounts::client_ip(&headers)) {
+    if visitor.is_admin()
+        || state
+            .write_limit
+            .allow(&crate::accounts::client_ip(&headers))
+    {
         add_comment(&state, f.str("user_name"), message).await;
     }
     // 4. Back to the guestbook with a GET (the PHP showed the page as the POST's answer, so a
     // refresh posted the same line again). The weather zip is kept.
-    let zip = q.get("zip").filter(|z| z.len() == 5 && z.bytes().all(|b| b.is_ascii_digit()));
+    let zip = q
+        .get("zip")
+        .filter(|z| z.len() == 5 && z.bytes().all(|b| b.is_ascii_digit()));
     let to = match zip {
         Some(z) => format!("index.php?zip={z}#guestbook"),
         None => "index.php#guestbook".to_string(),
@@ -450,7 +527,9 @@ pub async fn cards(State(state): State<Arc<AppState>>) -> Response {
     // `if let Ok(x) = ...` runs only when the step succeeded; a bad file is skipped.
     let dir = state.www.join("sections/cards");
     let cards: Vec<Value> = off_thread(move || {
-        let Ok(rd) = std::fs::read_dir(&dir) else { return Vec::new() };
+        let Ok(rd) = std::fs::read_dir(&dir) else {
+            return Vec::new();
+        };
         let mut files: Vec<_> = rd
             .flatten()
             .filter(|e| {
@@ -467,7 +546,12 @@ pub async fn cards(State(state): State<Arc<AppState>>) -> Response {
             .filter(Value::is_object)
             .collect();
         // Sorted by each card's `id` text ("" when it has none); a stable sort keeps file order for ties.
-        cards.sort_by_key(|v| v.get("id").and_then(Value::as_str).unwrap_or("").to_string());
+        cards.sort_by_key(|v| {
+            v.get("id")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_string()
+        });
         cards
     })
     .await;
@@ -490,7 +574,10 @@ mod tests {
     // Checks that tags are removed but a lone "<" followed by a space is kept.
     #[test]
     fn strip_tags_removes_markup() {
-        assert_eq!(strip_tags("hi <b>there</b> <script>x</script>"), "hi there x");
+        assert_eq!(
+            strip_tags("hi <b>there</b> <script>x</script>"),
+            "hi there x"
+        );
         assert_eq!(strip_tags("a < b"), "a < b");
     }
 
