@@ -15,7 +15,8 @@
 #                   folder docker/wiki/seed to the helper, read-only. Without the
 #                   add-on the wiki is still set up, just empty.
 # =============================================================================
-FROM python:3.14-alpine
+# The @sha256 digest pins the exact image (Dependabot's docker updates keep it current).
+FROM python:3.14-alpine@sha256:601e99e090cb08c2784a42395487709500bc39930307fe72f3f11a8f3c430762
 
 RUN apk add --no-cache mariadb-client
 

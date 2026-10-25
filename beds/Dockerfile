@@ -3,8 +3,9 @@
 # Build:  docker build -t junsgarden/beds:mine .
 # (or let docker compose build it; see README.md in this folder)
 #
-# python:3.14-slim is a small Debian with Python 3.14 already installed.
-FROM python:3.14-slim
+# python:3.14-slim is a small Debian with Python 3.14 already installed. The @sha256 digest
+# pins the exact image (Dependabot's docker updates keep it current).
+FROM python:3.14-slim@sha256:35caba83af2fe6da9a5d922f9b0156f21d1246a48278c58a08bd253303ba42e8
 
 # The only libraries this service needs from outside Python itself:
 #   pymysql  talks to the MariaDB database
