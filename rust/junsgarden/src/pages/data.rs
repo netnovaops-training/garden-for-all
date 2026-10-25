@@ -1810,11 +1810,25 @@ pub async fn data_get(
     State(state): State<Arc<AppState>>,
     Extension(visitor): Extension<Visitor>,
     Query(q): Query<HashMap<String, String>>,
+    headers: axum::http::HeaderMap,
 ) -> Response {
+    // The AI calls below are slow and anybody can ask, so: a fresh (forced) AI run happens at
+    // most once per 10 minutes for the whole site (the weather collector's half-hourly
+    // `?warm_ai` fits; a flood just gets the cached answers), and one visitor address may ask
+    // for at most 20 plant predictions per 10 minutes.
+    let may_recompute = || state.ai_recompute.allow("site");
     // `?ai_predict&plant_id=N`: ask the local model for a prediction about one plant.
     if q.contains_key("ai_predict") {
         if !AI_ENABLED || !brain::available(&state).await {
             return json_response(json!({ "error": "AI offline" }));
+        }
+        if !state
+            .ai_per_visitor
+            .allow(&crate::accounts::client_ip(&headers))
+        {
+            return json_response(
+                json!({ "error": "Too many questions at once. Please wait a few minutes." }),
+            );
         }
         let pid = q.get("plant_id").map(|p| php_int(p)).unwrap_or(0);
         if pid == 0 {
@@ -1842,15 +1856,17 @@ pub async fn data_get(
     }
     // `?discover`: the model's garden discoveries; `warm` asks it to recompute.
     if q.contains_key("discover") {
-        let warm = q.get("warm").is_some_and(|w| !w.is_empty() && w != "0");
+        let warm = q.get("warm").is_some_and(|w| !w.is_empty() && w != "0") && may_recompute();
         return json_response(brain::disc_run(&state, warm).await);
     }
-    // `?warm_ai`: pre-fill the AI caches and report how many seconds it took.
+    // `?warm_ai`: pre-fill the AI caches and report how many seconds it took. Within 10 minutes
+    // of the last run it only reads the caches (same answer shape, much faster).
     if q.contains_key("warm_ai") {
         let started = std::time::Instant::now();
-        let ws = widgets::render_all(&state, true).await;
+        let fresh = may_recompute();
+        let ws = widgets::render_all(&state, fresh).await;
         let ok = !ws.garden_intelligence.is_empty();
-        let d = brain::disc_run(&state, true).await;
+        let d = brain::disc_run(&state, fresh).await;
         let disc_ok = !d["ai"].is_null();
         return json_response(
             json!({ "warmed": ok, "discoveries": disc_ok, "seconds": php_round(started.elapsed().as_secs_f64(), 1) }),
@@ -1858,7 +1874,11 @@ pub async fn data_get(
     }
     // `?ai_fuse`: the cross-tab plus the model's reading of it.
     if q.contains_key("ai_fuse") {
-        return json_response(cross_tab(&state, &q, true).await);
+        // Without the model's part when this visitor has asked too often: the counts still come.
+        let with_ai = state
+            .ai_per_visitor
+            .allow(&crate::accounts::client_ip(&headers));
+        return json_response(cross_tab(&state, &q, with_ai).await);
     }
     // `?weather_forecast`: the saved forecast file, cached for five minutes.
     if q.contains_key("weather_forecast") {

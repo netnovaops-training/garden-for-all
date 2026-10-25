@@ -138,6 +138,10 @@ pub struct AppState {
     pub write_limit: guard::RateLimit,
     /// The gallery's photo list (tags_cache.csv), parsed once until the file changes.
     pub gallery: store::Parsed<Vec<serde_json::Value>>,
+    /// A fresh (forced) AI run on the data page: once per 10 minutes for the whole site.
+    pub ai_recompute: guard::RateLimit,
+    /// AI questions on the data page: 20 per visitor address per 10 minutes.
+    pub ai_per_visitor: guard::RateLimit,
 }
 
 /// Methods that belong to `AppState`. `&self` means a method only reads the value.
@@ -422,6 +426,8 @@ async fn run() -> anyhow::Result<()> {
         // 5 guestbook lines or comments per visitor address per 10 minutes.
         write_limit: guard::RateLimit::new(5, std::time::Duration::from_secs(600)),
         gallery: Default::default(),
+        ai_recompute: guard::RateLimit::new(1, std::time::Duration::from_secs(600)),
+        ai_per_visitor: guard::RateLimit::new(20, std::time::Duration::from_secs(600)),
     });
 
     // The router for static files (CSS, scripts, photos). `ServeDir` hands out files from

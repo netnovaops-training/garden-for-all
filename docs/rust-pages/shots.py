@@ -8,6 +8,12 @@ pages.txt: one path per line; "@login path" to take it logged in. What is random
 pinned first, so only real differences show: Math.random is fixed, the colour theme class
 (bg-theme-N) is set to 0, the hero photos and animations are switched off.
 Writes <n>-<width>-{base,cand,diff}.png and prints the share of pixels that differ.
+
+Two pages never match to the pixel, by design, and are proven by the exact HTML comparison
+(sbs.py) instead: gallery.php (its photo wall drifts with time, so two shots a moment apart
+catch it at different offsets) and data.php (with no sensor readings it draws random demo
+weather on every load). Freezing the browser clock was tried: it breaks pages that load on
+timers (the catalogue).
 """
 import json
 import os

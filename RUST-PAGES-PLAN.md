@@ -29,9 +29,10 @@ A lab on any Linux machine with Docker (`GARDEN_LAB=user@host sh docs/rust-pages
 | Check | Result |
 |---|---|
 | round: urls-port / extra / app / post | PASS / PASS / PASS / PASS (all differences are listed fixes) |
-| unit tests | 94 pass (was 86) |
-| screenshots | public pages identical; full re-run on sample data pending |
-| fmt, clippy -D warnings | todo (45 lints, most existed before) |
+| unit tests | 93 pass |
+| screenshots | 30/36 identical; the other 6 are gallery (photo wall drifts with time) and data.php (random demo weather): both proven by the exact HTML comparison instead |
+| fmt, clippy -D warnings, cargo audit | PASS (Rust 1.99) |
+| dependencies | sqlx 0.9, reqwest 0.13, all crates latest; Rust 1.99 + Debian 13; Python locks refreshed; compose images by digest |
 
 ## Changes so far
 - `guard.rs` (new): security headers (+ Permissions-Policy, COOP, CORP); POSTs started by another
@@ -79,6 +80,21 @@ A lab on any Linux machine with Docker (`GARDEN_LAB=user@host sh docs/rust-pages
 4. Plant admin vs the original Streamlit app; list the features that were hard to match.
 5. Android app: dead code from the household version removed on a local branch; build + tests.
 6. Open TODO items for Jun's project (broken first).
-7. Installer test from scratch (Ubuntu 24.04 throwaway, Windows lint + dry run, Pi arm64);
-   how the slim download's pin moves (commit a67990d is never rewritten).
-8. Fingerprints regenerated; robot opens a PR.
+7. The garden's own address, end to end (each option in all THREE places: the QR/label script,
+   the GUI wizard and the bash wizard `garden.sh` menu + subcommands; every screen, prompt and
+   guide in English AND Korean):
+   - Base address = domain plus optional sub-path (`example.com/garden`); nothing hard-codes a host.
+   - Server publishes it (`/app/config.json`, signed); old domain keeps answering/redirecting.
+   - QR codes and bed labels encode short stable paths (`/q/<plant id>`, `/b/<bed id>`) that the
+     server resolves; a renamed bed keeps its QR; printed labels survive a domain change.
+   - Android app: one APK, set up at first run from a QR/link on the wizard page; follows a
+     domain change on next contact; self-update follows too; old app versions keep working
+     (no removed/renamed endpoints).
+   - Domain-change option (wizard + bash) regenerates labels on request.
+   - Tests: base URL with/without sub-path, renamed bed, old printed QR after a domain change,
+     app 3.1 + new app x old/new domain x updated/not updated, both languages.
+8. Installer test from scratch (Ubuntu 24.04 throwaway, Windows lint + dry run, Pi arm64 build);
+   how the slim download's pin moves (commit a67990d is never rewritten). What Jun does: run the
+   wizard, scan the app QR / install the app, set his own password.
+9. Guides (START-HERE, EN + KO): Rust 1.99 / Debian 13 mentions, new options; PDFs regenerated.
+10. Fingerprints regenerated; robot opens a PR.

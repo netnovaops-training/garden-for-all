@@ -67,6 +67,8 @@ fn state(guides: PathBuf) -> Arc<AppState> {
         frame: Default::default(),
         write_limit: crate::guard::RateLimit::new(5, std::time::Duration::from_secs(600)),
         gallery: Default::default(),
+        ai_recompute: crate::guard::RateLimit::new(1, std::time::Duration::from_secs(600)),
+        ai_per_visitor: crate::guard::RateLimit::new(20, std::time::Duration::from_secs(600)),
     })
 }
 
