@@ -117,7 +117,7 @@ check)
     side=${2:-cand}
     docker run --rm -v "$PWD/src-$side/rust:/build" -w /build \
         -v gp-cargo-registry:/usr/local/cargo/registry -v gp-target-$side:/build/target \
-        rust:1.95-bookworm sh -c 'rustup component add rustfmt clippy >/dev/null 2>&1;
+        rust:1.99-trixie sh -c 'rustup component add rustfmt clippy >/dev/null 2>&1;
             cargo fmt --all --check >/dev/null 2>&1 && echo "PASS fmt" || echo "FAIL fmt";
             cargo clippy --locked -p junsgarden --all-targets -q -- -D warnings > /build/target/clippy.log 2>&1 && echo "PASS clippy" || echo "FAIL clippy ($(grep -c "^error" /build/target/clippy.log) lints)";
             cargo audit --version >/dev/null 2>&1 || cargo install -q --locked cargo-audit >/dev/null 2>&1;

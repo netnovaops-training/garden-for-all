@@ -27,8 +27,8 @@ behaviour. This copy has only the live Rust site: the old PHP pages are not
 included. `docs/rust-port/` and `docs/streamlit-port/` describe how each page
 was matched to the original.
 
-Stack: Rust 1.95, **axum 0.8** (web server), **askama 0.14** (HTML
-templates, checked at compile time), **sqlx 0.8** (MariaDB), tokio. It runs
+Stack: Rust 1.99, **axum 0.8** (web server), **askama 0.16** (HTML
+templates, checked at compile time), **sqlx 0.9** (MariaDB), tokio. It runs
 in Docker on a Linux server behind **Caddy** (the reverse proxy that holds
 the HTTPS certificate). Logins are the site's own: see rule 1 below.
 
@@ -87,7 +87,7 @@ Docker. From the repo root:
 
 ```sh
 # unit tests (42 today; all must pass)
-cd rust && docker run --rm -v "$PWD":/build -w /build rust:1.95-bookworm cargo test --locked -p junsgarden
+cd rust && docker run --rm -v "$PWD":/build -w /build rust:1.99-trixie cargo test --locked -p junsgarden
 
 # build the image
 docker build --build-arg APP=junsgarden -t junsgarden/rs rust
@@ -192,7 +192,7 @@ handles NULLs).
 
 ```sh
 sh tools/check-secrets.sh      # gitleaks + semgrep, both must be clean
-cd rust && docker run --rm -v "$PWD":/build -w /build rust:1.95-bookworm cargo test --locked -p junsgarden
+cd rust && docker run --rm -v "$PWD":/build -w /build rust:1.99-trixie cargo test --locked -p junsgarden
 ```
 
 Commit messages: one line saying what changed and why, in plain words.

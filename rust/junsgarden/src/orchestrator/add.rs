@@ -429,7 +429,7 @@ async fn edit_phase(state: &AppState, req: &Req) -> String {
         "✅ ok — **{name}** added (ID {id}). All fields saved."
     ));
     h.push_str(&ui::columns(&[1, 1], vec![
-        format!("<a class=\"st-btn st-primary st-full\" href=\"/streamlit/?tab=1\">➕ Add Another Plant</a>"),
+        "<a class=\"st-btn st-primary st-full\" href=\"/streamlit/?tab=1\">➕ Add Another Plant</a>".to_string(),
         format!("<form method=\"get\" action=\"/streamlit/\" onchange=\"this.submit()\"><input type=\"hidden\" name=\"tab\" value=\"1\">{}{}</form>",
             keep(req, &["new", "ai", "qc"]), ui::toggle("full", "✏️ Open full editor for this plant", full, Some("Only if you need to review or fix something before moving on."))),
     ]));

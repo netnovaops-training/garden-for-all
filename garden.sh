@@ -753,8 +753,8 @@ do_helpme() {
 # the program's own makers maintain it.  part|image|what|why|page
 IMAGES_LIST=(
     "core|mariadb:13|MariaDB database (Docker Official Image)|stores plants, logins, wiki pages|https://hub.docker.com/_/mariadb"
-    "core|rust:1.95-slim-bookworm|Rust compiler (Docker Official Image), used only while building|turns the website's code in rust/ into a program|https://hub.docker.com/_/rust"
-    "core|debian:bookworm-slim|Debian Linux, small (Docker Official Image)|the base the finished website runs on|https://hub.docker.com/_/debian"
+    "core|rust:1.99-slim-trixie|Rust compiler (Docker Official Image), used only while building|turns the website's code in rust/ into a program|https://hub.docker.com/_/rust"
+    "core|debian:trixie-slim|Debian Linux, small (Docker Official Image)|the base the finished website runs on|https://hub.docker.com/_/debian"
     "core|alpine:3.20|Alpine Linux, tiny (Docker Official Image)|the base of the toolbox (backup, restore, passwords)|https://hub.docker.com/_/alpine"
     "beds|python:3.12-slim|Python (Docker Official Image)|the base of the garden tools in beds/|https://hub.docker.com/_/python"
     "wiki|ghcr.io/requarks/wiki:2|Wiki.js, from its makers on GitHub|your garden wiki|https://github.com/requarks/wiki"
@@ -4678,6 +4678,6 @@ case "${1:-menu}" in
     checkup)    docker_checkup "${2:-}" ;;
     cleanup)    docker_cleanup ;;
     photos)     do_photos ;;
-    test)       dk run --rm -v "$HERE/rust":/build -w /build rust:1.95-bookworm cargo test --locked -p junsgarden ;;
+    test)       dk run --rm -v "$HERE/rust":/build -w /build rust:1.99-trixie cargo test --locked -p junsgarden ;;
     *)          sed -n '2,34p' "$0" ;;
 esac
