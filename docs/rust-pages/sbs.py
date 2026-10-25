@@ -21,6 +21,7 @@ Results go to out/<n>.base / out/<n>.cand and one line per request on screen.
 """
 import http.cookiejar
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -55,12 +56,18 @@ def fetch(op, url, body=None, extra=None):
     return r.status, {k.lower(): v for k, v in r.headers.items()}, r.read()
 
 
+def test_pw():
+    """The lab tester's password, from test-login.env (made by `lab.sh tester`)."""
+    text = pathlib.Path(HERE, "test-login.env").read_text()
+    return dict(line.strip().split("=", 1) for line in text.splitlines() if "=" in line)["TEST_PW"]
+
+
 def login(root):
     jar = http.cookiejar.CookieJar()
     op = opener(jar)
-    pw = dict(line.strip().split("=", 1) for line in open(os.path.join(HERE, "test-login.env")) if "=" in line)["TEST_PW"]
+    pw = test_pw()
     fetch(op, root + "login.php")
-    st, h, _ = fetch(op, root + "login.php", urllib.parse.urlencode({"admin_user": "Tester", "admin_password": pw, "admin_login": "", "back": ""}))
+    st, _, _ = fetch(op, root + "login.php", urllib.parse.urlencode({"admin_user": "Tester", "admin_password": pw, "admin_login": "", "back": ""}))
     if st not in (302, 303) or not any(c.name for c in jar):
         sys.exit(f"login on {root} failed ({st}); run `sh lab.sh tester` first")
     return op
@@ -69,7 +76,7 @@ def login(root):
 def app_key(root):
     """Log in the way the Android app does (POST app_api.php?action=login) and return its key."""
     import json
-    pw = dict(line.strip().split("=", 1) for line in open(os.path.join(HERE, "test-login.env")) if "=" in line)["TEST_PW"]
+    pw = test_pw()
     st, _, body = fetch(opener(http.cookiejar.CookieJar()), root + "app_api.php?action=login",
                         urllib.parse.urlencode({"username": "Tester", "password": pw}))
     token = json.loads(body or b"{}").get("token") if st == 200 else None
@@ -82,7 +89,7 @@ def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     only = sys.argv[sys.argv.index("--only") + 1] if "--only" in sys.argv else None
     cand_root = BASE if "--self" in sys.argv else CAND
-    raw = [l.rstrip("\n") for l in open(args[0], encoding="utf-8")]
+    raw = pathlib.Path(args[0]).read_text(encoding="utf-8").splitlines()
     raw = [l.strip() for l in raw if l.strip() and not l.lstrip().startswith("#")]
     # Pair each request with the "expect:" line that may follow it.
     lines = []
@@ -135,13 +142,13 @@ def main():
             # The data page prints the time it was made, to the second.
             stamp = re.compile(rb"Updated: \d{4}-\d\d-\d\d \d\d:\d\d:\d\d")
             old, new = stamp.sub(b"Updated: T", old), stamp.sub(b"Updated: T", new)
-        open(fa, "wb").write(old)
-        open(fb, "wb").write(new)
+        pathlib.Path(fa).write_bytes(old)
+        pathlib.Path(fb).write_bytes(new)
         if old != new:
             kind = ["--json"] if "json" in ha.get("content-type", "") else []
             if "html" in ha.get("content-type", "") or kind:
                 out = subprocess.run([sys.executable, os.path.join(HERE, "compare_pages.py"), fa, fb, *kind],
-                                     capture_output=True, text=True)
+                                     capture_output=True, text=True, check=False)  # its exit code is read below
                 if out.returncode:
                     problems.append("body: " + " | ".join(out.stdout.strip().splitlines()[:4]))
             else:

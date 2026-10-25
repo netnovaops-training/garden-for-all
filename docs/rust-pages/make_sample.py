@@ -17,6 +17,16 @@ import zlib
 R = random.Random(7)
 OUT = sys.argv[1]
 
+
+def save(path, data):
+    """Write text or bytes to a file (closed at once)."""
+    with open(path, "wb" if isinstance(data, bytes) else "w", **({} if isinstance(data, bytes) else {"encoding": "utf-8"})) as f:
+        f.write(data)
+
+
+def save_json(path, value):
+    save(path, json.dumps(value, indent=4))
+
 BEDS = ["Front Border", "Korea Bed", "Shade Garden", "Vegetable Garden Bed", "Herb Spiral",
         "Rose Corner", "Pond Edge", "Dead or Removed"]
 FAMILIES = ["Asparagaceae", "Rosaceae", "Lamiaceae", "Asteraceae", "Ranunculaceae", "Solanaceae", "Hydrangeaceae"]
@@ -106,29 +116,28 @@ def main():
                                       "barcode": "000000000007", "barcode_image": png((0, 0, 0))}]),
            insert("flower_bed_qr", [{"bed_name": "Korea Bed", "qr_code": png((20, 20, 20))}]),
            "UPDATE data_source SET qr_code = " + q(png((10, 10, 10))) + " WHERE id IN (1, 2);\n"]
-    open(f"{OUT}/sample-data.sql", "w", encoding="utf-8").write("".join(sql))
+    save(f"{OUT}/sample-data.sql", "".join(sql))
 
     pics = {"HeroBanner": [f"hero-{n}.png" for n in range(5)], "Database": [f"plant-{n}.png" for n in range(6)],
             "Gallery": [f"garden-{n}.png" for n in range(6)], "post": ["post-1.png"]}
     for folder, names in pics.items():
         os.makedirs(f"{OUT}/images/{folder}", exist_ok=True)
         for n in names:
-            open(f"{OUT}/images/{folder}/{n}", "wb").write(png((R.randrange(256), R.randrange(256), R.randrange(256))))
+            save(f"{OUT}/images/{folder}/{n}", png((R.randrange(256), R.randrange(256), R.randrange(256))))
     with open(f"{OUT}/images/Gallery/tags_cache.csv", "w", encoding="utf-8") as f:
         f.write("file,name,thumb,thumb_tab,thumb_mob,download,tags,width,height\n")
         for n, name in enumerate(pics["Gallery"]):
             f.write(f'{name},"Sample garden {n}",,,,{name},{"Bees|Flowers" if n % 2 else "Vegetables"},24,16\n')
 
     d = f"{OUT}/data"
-    open(f"{d}/facts.txt", "w").write("Sample fact one.\nSample fact two.\nSample fact three.\n")
-    open(f"{d}/comments.txt", "w").write(
-        "<span class='c-date'>Oct 1</span> <strong>Kona:</strong> Lovely sample garden\n"
-        "<span class='c-date'>Sep 3</span> <strong>Guest:</strong> Hello\n")
-    json.dump({"2": [{"name": "Kona", "message": "Nice", "date": "Oct 1, 2026", "ts": 1790000000}]},
-              open(f"{d}/plant_comments.json", "w"), indent=4)
-    json.dump({"garden-1.png": [{"name": "Guest", "message": "Pretty", "date": "Oct 2, 2026", "ts": 1790000100}]},
-              open(f"{d}/gallery_comments.json", "w"), indent=4)
-    open(f"{d}/comment_notify.txt", "w").write("0")
+    save(f"{d}/facts.txt", "Sample fact one.\nSample fact two.\nSample fact three.\n")
+    save(f"{d}/comments.txt",
+         "<span class='c-date'>Oct 1</span> <strong>Kona:</strong> Lovely sample garden\n"
+         "<span class='c-date'>Sep 3</span> <strong>Guest:</strong> Hello\n")
+    save_json(f"{d}/plant_comments.json", {"2": [{"name": "Kona", "message": "Nice", "date": "Oct 1, 2026", "ts": 1790000000}]})
+    save_json(f"{d}/gallery_comments.json",
+              {"garden-1.png": [{"name": "Guest", "message": "Pretty", "date": "Oct 2, 2026", "ts": 1790000100}]})
+    save(f"{d}/comment_notify.txt", "0")
     print(f"sample written: {len(plants)} plants, {len(future)} wish-list, 4 posts")
 
 

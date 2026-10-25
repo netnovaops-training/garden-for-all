@@ -91,10 +91,12 @@ def compare(a, b, out):
 
 
 def main():
-    pages = [l.strip() for l in open(sys.argv[1]) if l.strip() and not l.startswith("#")]
+    with open(sys.argv[1], encoding="utf-8") as f:
+        pages = [l.strip() for l in f if l.strip() and not l.startswith("#")]
     out = sys.argv[2]
     os.makedirs(out, exist_ok=True)
-    pw = dict(l.strip().split("=", 1) for l in open("test-login.env") if "=" in l)["TEST_PW"]
+    with open("test-login.env", encoding="utf-8") as f:
+        pw = dict(l.strip().split("=", 1) for l in f if "=" in l)["TEST_PW"]
     with sync_playwright() as p:
         browser = p.chromium.launch()
         for n, line in enumerate(pages, 1):
@@ -106,7 +108,7 @@ def main():
                     shot(browser, BASE, path, w, files[0], auth, pw)
                     shot(browser, CAND, path, w, files[1], auth, pw)
                     print(f"{n:3} {w:5} {line[:60]:60} {compare(*files)}", flush=True)
-                except Exception as e:  # report and go on with the next page
+                except Exception as e:  # noqa: BLE001 -- any failure is reported, then the next page
                     print(f"{n:3} {w:5} {line[:60]:60} ERROR {str(e)[:120]}", flush=True)
         browser.close()
 

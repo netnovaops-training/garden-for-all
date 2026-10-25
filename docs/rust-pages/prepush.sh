@@ -6,7 +6,7 @@
 # names and addresses, keys and tokens. Prints PASS, or FAIL with what was found (values of
 # secrets are redacted by gitleaks; the search shows only the kind of match). Exit 1 = do not push.
 set -u
-cd "$(dirname "$0")/../.."
+cd "$(dirname "$0")/../.." || exit 1
 range="origin/rust-pages..HEAD"
 git rev-parse -q --verify origin/rust-pages >/dev/null || range="HEAD~1..HEAD"
 fail=0

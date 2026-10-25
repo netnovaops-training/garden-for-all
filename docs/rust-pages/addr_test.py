@@ -11,6 +11,7 @@ import sys
 import urllib.error
 import urllib.request
 
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 NEW, OLD = "http://127.0.0.1:18103/garden", "http://127.0.0.1:18104"
@@ -77,7 +78,7 @@ try:
     Ed25519PublicKey.from_public_bytes(bytes.fromhex(c["key"])).verify(
         bytes.fromhex(c["sig"]), f"junsgarden-config-v1\n{c['base']}\n{c['issued']}".encode())
     signed = True
-except Exception as e:  # report, do not stop
+except (ValueError, KeyError, InvalidSignature) as e:  # report, do not stop
     signed = repr(e)
 check("config signature verifies", signed is True, signed)
 st, h, *_ = get(NEW + "/qr/app-setup.png")

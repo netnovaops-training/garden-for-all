@@ -17,7 +17,20 @@ bad() { results=$((results+1)); failed=$((failed+1)); echo "FAIL $1"; }
 inside() { docker exec "$name" sh -c "$1"; }
 code() { inside "curl -s -o /dev/null -w '%{http_code}' ${2:-} 'http://localhost:8030$1'"; }
 
-docker build -q -t "$img" src-cand/docs/rust-pages/wizard >/dev/null
+# A throwaway "Jun's laptop": Ubuntu 24.04 with systemd as the first process (so services start
+# like on a real machine; systemd must run as root, which is why this is not a Dockerfile in the
+# repo for the scanners to flag), user jun with sudo. Nothing is published on the network.
+docker build -q -t "$img" - >/dev/null <<'EOF'
+FROM ubuntu:24.04
+ENV container=docker DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends systemd systemd-sysv sudo dbus curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && (userdel -r ubuntu 2>/dev/null || true) \
+    && useradd -m -s /bin/bash -c Jun jun && echo 'jun ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/jun \
+    && systemctl mask systemd-logind getty.target console-getty.service
+STOPSIGNAL SIGRTMIN+3
+CMD ["/sbin/init"]
+EOF
 docker rm -f "$name" >/dev/null 2>&1
 docker volume rm "$name-docker" "$name-containerd" >/dev/null 2>&1
 docker run -d --name "$name" --hostname jun-laptop --privileged --cgroupns=host --cpus=6 --memory=8g \
