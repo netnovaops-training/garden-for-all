@@ -16,6 +16,8 @@ on:
     branches: [main, fixes]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: '41 4 * * *' # daily: every job runs and gitleaks scans the whole history
   workflow_dispatch:
 
 permissions:
