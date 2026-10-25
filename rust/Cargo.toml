@@ -38,8 +38,8 @@ time = { version = "0.3", features = ["formatting", "macros", "local-offset"] }
 
 # Password hashing for the two logins (accounts.rs). Argon2 is deliberately
 # slow and memory-hard, so every guess costs real time and RAM; the database
-# holds only the hash, never the password.
-argon2 = "0.5"
+# holds only the hash, never the password. 0.6 makes the random salt itself.
+argon2 = "0.6"
 # Reset links are stored as a SHA-256 of the code, never the code itself.
 sha2 = "0.11"
 # Session tokens (the visitor cookie id). OsRng is the operating system's own CSPRNG --
@@ -56,7 +56,7 @@ lettre = { version = "0.11", default-features = false, features = ["smtp-transpo
 # disk instead of compiling every decoder the crate supports.
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
 webp = "0.3"
-md5 = "0.7"
+md5 = "0.8"
 multer = "3"
 futures-util = "0.3"
 

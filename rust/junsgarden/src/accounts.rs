@@ -29,8 +29,8 @@
 use std::sync::OnceLock;
 
 // The argon2 library hashes and checks passwords. sha2 makes SHA-256 hashes.
-use argon2::password_hash::rand_core::OsRng;
-use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
+use argon2::password_hash::phc::PasswordHash;
+use argon2::password_hash::{PasswordHasher, PasswordVerifier};
 use argon2::Argon2;
 use rand::RngExt;
 use sha2::{Digest, Sha256};
@@ -156,10 +156,10 @@ async fn hash_password(pw: String) -> Option<String> {
     // `spawn_blocking` runs slow work on a separate thread. `move ||` is a closure (a small
     // unnamed function) that takes ownership of the values it uses.
     tokio::task::spawn_blocking(move || {
-        // A random salt makes two identical passwords hash differently.
-        let salt = SaltString::generate(&mut OsRng);
-        // Hash with default Argon2 settings and turn the hash into text.
-        Argon2::default().hash_password(pw.as_bytes(), &salt).ok().map(|h| h.to_string())
+        // Hash with default Argon2 settings and turn the hash into text. Argon2 adds a fresh
+        // random salt itself, so two identical passwords still hash differently.
+        let h: Result<PasswordHash, _> = Argon2::default().hash_password(pw.as_bytes());
+        h.ok().map(|h| h.to_string())
     })
     .await
     .ok()
@@ -186,11 +186,8 @@ fn dummy_hash() -> String {
     // A value created once, the first time this runs, and kept for the whole program.
     static H: OnceLock<String> = OnceLock::new();
     H.get_or_init(|| {
-        let salt = SaltString::generate(&mut OsRng);
-        Argon2::default()
-            .hash_password(b"not-a-real-password", &salt)
-            .map(|h| h.to_string())
-            .unwrap_or_default()
+        let h: Result<PasswordHash, _> = Argon2::default().hash_password(b"not-a-real-password");
+        h.map(|h| h.to_string()).unwrap_or_default()
     })
     .clone()
 }
@@ -535,12 +532,22 @@ mod tests {
 
     #[test]
     fn hashes_verify_and_reject() {
-        let salt = SaltString::generate(&mut OsRng);
-        let h = Argon2::default().hash_password(b"the hostas by the porch", &salt).unwrap().to_string();
+        let h: PasswordHash = Argon2::default().hash_password(b"the hostas by the porch").unwrap();
+        let h = h.to_string();
         let parsed = PasswordHash::new(&h).unwrap();
         assert!(Argon2::default().verify_password(b"the hostas by the porch", &parsed).is_ok());
         assert!(Argon2::default().verify_password(b"the hostas by the porch!", &parsed).is_err());
         assert!(!h.contains("hostas"));
+    }
+
+    #[test]
+    fn a_hash_saved_before_the_argon2_update_still_logs_in() {
+        // Made by argon2 0.5 (the version before this one) from the same test password.
+        // Passwords already in the database were hashed that way; they must keep working.
+        let old = "$argon2id$v=19$m=19456,t=2,p=1$mZUhciSwFBpOaCwPnTS9Ag$Bz5Lr0D50ED/31jWWccK7yTS/CsCft2O0Qybtbsclss";
+        let parsed = PasswordHash::new(old).unwrap();
+        assert!(Argon2::default().verify_password(b"the hostas by the porch", &parsed).is_ok());
+        assert!(Argon2::default().verify_password(b"wrong", &parsed).is_err());
     }
 
     #[test]
