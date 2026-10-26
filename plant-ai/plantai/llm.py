@@ -29,7 +29,7 @@ def ask(model: str, system: str, user: str, schema: dict, images: list[bytes] | 
         num_ctx: int = 8192, tag: str = "") -> dict | None:
     """One chat turn; gives the parsed JSON object, or None if the model never produced valid JSON."""
     key = hashlib.sha256(json.dumps([model, system, user, schema, tag,
-                                     [hashlib.sha1(i).hexdigest() for i in images or []]]).encode()).hexdigest()
+                                     [hashlib.sha1(i, usedforsecurity=False).hexdigest() for i in images or []]]).encode()).hexdigest()
     hit = db.cache_get(key)
     if hit is not None:
         STATS["cached"] += 1

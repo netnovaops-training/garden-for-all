@@ -47,7 +47,8 @@ def _cache() -> Path:
 
 
 def _key(url: str) -> Path:
-    return _cache() / hashlib.sha1(url.encode()).hexdigest()
+    # A file name for the cache, not a security check.
+    return _cache() / hashlib.sha1(url.encode(), usedforsecurity=False).hexdigest()
 
 
 def cached(url: str) -> dict | None:
