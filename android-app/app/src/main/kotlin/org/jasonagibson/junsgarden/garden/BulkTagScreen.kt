@@ -47,10 +47,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import org.jasonagibson.junsgarden.R
+import org.jasonagibson.junsgarden.ui.AppText
 
 /**
  * A pile of tag photographs, turned into a queue, in one go.
@@ -124,11 +127,11 @@ fun BulkTagScreen(
             Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = onBack) { Text("‹  Garden") }
+            TextButton(onClick = onBack) { Text(stringResource(R.string.back_garden)) }
             Spacer(Modifier.weight(1f))
             if (picked.isNotEmpty() && !busy) {
                 TextButton(onClick = { picked.clear(); result = null }) {
-                    Text("Clear")
+                    Text(stringResource(R.string.clear))
                 }
             }
         }
@@ -138,26 +141,24 @@ fun BulkTagScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
-                "Many tags at once",
+                stringResource(R.string.bulk_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                "Photograph every tag first, then pick them all here. " +
-                    "They are queued and read afterwards, so you can put " +
-                    "the phone down.",
+                stringResource(R.string.bulk_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ModeChip(
-                    "Front then back",
+                    stringResource(R.string.front_then_back),
                     pairMode == PairMode.FrontThenBack,
                     enabled = !busy,
                 ) { pairMode = PairMode.FrontThenBack }
                 ModeChip(
-                    "Fronts only",
+                    stringResource(R.string.fronts_only),
                     pairMode == PairMode.FrontsOnly,
                     enabled = !busy,
                 ) { pairMode = PairMode.FrontsOnly }
@@ -174,12 +175,12 @@ fun BulkTagScreen(
                 enabled = !busy,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(if (picked.isEmpty()) "Pick photos" else "Add more photos")
+                Text(stringResource(if (picked.isEmpty()) R.string.pick_photos else R.string.add_more_photos))
             }
 
             if (picked.isNotEmpty()) {
                 Text(
-                    "${picked.size} photos · ${pairs.size} tags",
+                    stringResource(R.string.photos_tags, picked.size, pairs.size),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -190,8 +191,7 @@ fun BulkTagScreen(
                 // last tag genuinely has no back. Both are fine; guessing
                 // which is not.
                 Text(
-                    "There is an odd photo at the end — it will be sent as a " +
-                        "front with no back.",
+                    stringResource(R.string.odd_photo),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                 )
@@ -207,7 +207,7 @@ fun BulkTagScreen(
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     Text(
-                        "${r.queued} tags queued",
+                        stringResource(R.string.tags_queued, r.queued),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -216,18 +216,17 @@ fun BulkTagScreen(
                     // is recorded rather than refused, and somebody should
                     // be able to see that it happened.
                     if (r.duplicates > 0) Text(
-                        "${r.duplicates} were already sent before",
+                        stringResource(R.string.tags_duplicates, r.duplicates),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                     if (r.unreadable > 0) Text(
-                        "${r.unreadable} could not be read as photographs",
+                        stringResource(R.string.tags_unreadable, r.unreadable),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                     Text(
-                        "${r.waiting} waiting to be read. They appear in the " +
-                            "catalogue for approval as each one finishes.",
+                        stringResource(R.string.tags_waiting_read, r.waiting),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
@@ -251,7 +250,7 @@ fun BulkTagScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Text(
-                        "Sending $done of ${pairs.size}…",
+                        stringResource(R.string.sending_n, done, pairs.size),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(top = 4.dp),
                     )
@@ -268,7 +267,7 @@ fun BulkTagScreen(
                             result = it
                             picked.clear()
                         }.onFailure {
-                            failure = it.message ?: "Could not send those tags."
+                            failure = it.message ?: AppText.s(R.string.send_failed)
                         }
                         busy = false
                     }
@@ -277,8 +276,8 @@ fun BulkTagScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    if (pairs.isEmpty()) "Nothing to send"
-                    else "Queue ${pairs.size} tags"
+                    if (pairs.isEmpty()) stringResource(R.string.nothing_to_send)
+                    else stringResource(R.string.queue_n, pairs.size)
                 )
             }
         }
@@ -337,9 +336,9 @@ enum class PairMode { FrontThenBack, FrontsOnly }
 
 /** "Tag 3 front" / "Tag 3 back", so a mis-pairing is visible before sending. */
 private fun labelFor(index: Int, mode: PairMode): String = when (mode) {
-    PairMode.FrontsOnly -> "Tag ${index + 1}"
+    PairMode.FrontsOnly -> AppText.s(R.string.tag_n, index + 1)
     PairMode.FrontThenBack ->
-        "Tag ${index / 2 + 1} " + if (index % 2 == 0) "front" else "back"
+        AppText.s(if (index % 2 == 0) R.string.tag_n_front else R.string.tag_n_back, index / 2 + 1)
 }
 
 /**

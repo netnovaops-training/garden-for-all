@@ -13,6 +13,8 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import org.jasonagibson.junsgarden.R
+import org.jasonagibson.junsgarden.ui.AppText
 
 /**
  * The catalogue, read straight from the garden's own API.
@@ -59,13 +61,13 @@ object GardenApi {
             val body = (if (code in 200..299) conn.inputStream else conn.errorStream)
                 ?.bufferedReader()?.use { it.readText() } ?: ""
             if (code !in 200..299) {
-                throw GardenException("The garden answered $code.")
+                throw GardenException(AppText.s(R.string.garden_answered, code))
             }
             // A body that is not JSON is almost always a proxy error page. Say
             // that, rather than letting a parser exception reach the screen as
             // "Expected literal value at 1".
             if (!body.trimStart().startsWith("{")) {
-                throw GardenException("The garden is not reachable right now.")
+                throw GardenException(AppText.s(R.string.unreachable_now))
             }
             JSONObject(body)
         } finally {
@@ -134,7 +136,7 @@ object GardenApi {
         val o = get("action=barcode_lookup&code=" + enc(code))
         if (!o.optBoolean("found")) return null
         val id = o.optInt("id")
-        val name = o.str("plant_name").ifBlank { "(unnamed)" }
+        val name = o.str("plant_name").ifBlank { AppText.s(R.string.unnamed) }
         // A future plant is not in the catalogue yet, so asking for its
         // detail would 404. The name is all there is, and it is enough.
         if (id <= 0 || o.optBoolean("is_future")) {
@@ -208,7 +210,7 @@ data class PlantSummary(
     companion object {
         fun from(o: JSONObject) = PlantSummary(
             id = o.optInt("id"),
-            name = o.str("plant_name").ifBlank { "(unnamed)" },
+            name = o.str("plant_name").ifBlank { AppText.s(R.string.unnamed) },
             botanical = o.str("botanical_name"),
             bed = o.str("flower_bed"),
             sun = o.str("sun_exposure"),
@@ -275,7 +277,7 @@ data class PlantDetail(
             rest.sortBy { it.first }
             return PlantDetail(
                 id = o.optInt("id"),
-                name = o.str("plant_name").ifBlank { "(unnamed)" },
+                name = o.str("plant_name").ifBlank { AppText.s(R.string.unnamed) },
                 botanical = o.str("botanical_name"),
                 photo = GardenApi.photoUrl(
                     o.str("image").ifBlank { o.str("picture") }

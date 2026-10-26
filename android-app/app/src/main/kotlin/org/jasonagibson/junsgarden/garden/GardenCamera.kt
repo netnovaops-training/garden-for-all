@@ -21,6 +21,8 @@ import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jasonagibson.junsgarden.R
+import org.jasonagibson.junsgarden.ui.AppText
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
@@ -85,15 +87,13 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
         if (name.isBlank() && verdict.isBlank()) {
             val why = named.exceptionOrNull() ?: health.exceptionOrNull()
             throw GardenException(
-                why?.message ?: "The garden could not read that photograph."
+                why?.message ?: AppText.s(R.string.photo_not_read_by_garden)
             )
         }
 
         return Reading(
-            headline = name.ifBlank { "Couldn't name it" },
-            body = verdict.ifBlank {
-                "No health reading came back for this one."
-            },
+            headline = name.ifBlank { AppText.s(R.string.couldnt_name) },
+            body = verdict.ifBlank { AppText.s(R.string.no_health) },
         )
     }
 
@@ -235,9 +235,9 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
         if (o.optBoolean("queued")) {
             val waiting = o.optInt("waiting", 1)
             return Reading(
-                headline = "Saved for later",
-                body = note.ifBlank { "The free AI readers are busy." } +
-                    if (waiting > 1) "\n\n$waiting tags are waiting in line." else "",
+                headline = AppText.s(R.string.saved_for_later),
+                body = note.ifBlank { AppText.s(R.string.ai_busy) } +
+                    if (waiting > 1) "\n\n" + AppText.s(R.string.tags_in_line, waiting) else "",
             )
         }
         val read = o.optJSONObject("read")
@@ -248,11 +248,8 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
 
         if (name.isBlank()) {
             return Reading(
-                headline = "Couldn't read that tag",
-                body = note.ifBlank {
-                    "Try again with the printed side filling the frame, in " +
-                        "even light."
-                },
+                headline = AppText.s(R.string.couldnt_read_tag),
+                body = note.ifBlank { AppText.s(R.string.tag_retry) },
             )
         }
 
@@ -267,7 +264,7 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
             val sides = o.optInt("sides_read", 1)
             if (sides > 1) {
                 append('\n')
-                append("Read both sides of the tag.")
+                append(AppText.s(R.string.read_both_sides))
             }
             // WHAT HAPPENED TO THE PLANT, not just to the fields.
             // Before this the answer never said whether anything had
@@ -287,22 +284,18 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
             if (kept > 0) {
                 append('\n')
                 append(
-                    if (kept == 1) "The photo is saved with the plant."
-                    else "Both photos are saved with the plant."
+                    AppText.s(if (kept == 1) R.string.photo_saved_one else R.string.photo_saved_both)
                 )
             }
             val clashes = o.optJSONObject("conflicts")
             if (clashes != null && clashes.length() > 0) {
                 append('\n').append('\n')
-                append("The two sides disagree on: ")
-                append(clashes.keys().asSequence().joinToString(", ") {
-                    it.replace('_', ' ')
-                })
-                append(". Worth checking before approving.")
+                val fields = clashes.keys().asSequence().joinToString(", ") { it.replace('_', ' ') }
+                append(AppText.s(R.string.sides_disagree, fields))
             }
             if (queued > 0) {
                 append('\n')
-                append("$queued field(s) waiting for approval.")
+                append(AppText.s(R.string.fields_waiting, queued))
             }
         }.trim()
 
@@ -320,10 +313,8 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
         // that in its words beats reconstructing it badly from the counts.
         if (lines == null || lines.length() == 0) {
             return Reading(
-                headline = "Nothing recorded",
-                body = o.optString("message").trim().ifBlank {
-                    "Try again with the whole slip flat in the frame."
-                },
+                headline = AppText.s(R.string.nothing_recorded),
+                body = o.optString("message").trim().ifBlank { AppText.s(R.string.receipt_retry) },
             )
         }
 
@@ -339,7 +330,7 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
                 append('\n')
             }
             val spent = o.optString("spent").trim()
-            if (spent.isNotBlank()) append("\nSpent: $").append(spent)
+            if (spent.isNotBlank()) append('\n').append(AppText.s(R.string.spent, spent))
             val msg = o.optString("message").trim()
             if (msg.isNotBlank()) append("\n\n").append(msg)
         }.trim()
@@ -349,7 +340,7 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
         return Reading(
             headline = listOf(store, date).filter { it.isNotBlank() }
                 .joinToString("  ·  ")
-                .ifBlank { "Receipt recorded" },
+                .ifBlank { AppText.s(R.string.receipt_recorded) },
             body = body,
             queued = kept,
         )
@@ -388,7 +379,7 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
     private suspend fun post(action: String, body: JSONObject): JSONObject =
         withContext(Dispatchers.IO) {
             val token = accessTokenProvider().getOrElse {
-                throw GardenException("Sign in again to use the camera.")
+                throw GardenException(AppText.s(R.string.sign_in_again_camera))
             }
             val conn = (URL("$BASE/$action").openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
@@ -405,7 +396,7 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
                     ?.bufferedReader()?.use { it.readText() } ?: ""
                 when {
                     code == 401 || code == 403 ->
-                        throw GardenException("Sign in again to use the camera.")
+                        throw GardenException(AppText.s(R.string.sign_in_again_camera))
                     code !in 200..299 ->
                         // The server's own sentence when it sent one -- e.g.
                         // "The free AI readers are all busy ... try again in
@@ -414,10 +405,10 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
                             runCatching { JSONObject(text).optString("error") }.getOrNull()
                                 ?.takeIf { it.isNotBlank() }
                                 ?: text.takeIf { it.isNotBlank() && it.length < 200 }
-                                ?: "The garden answered $code."
+                                ?: AppText.s(R.string.garden_answered, code)
                         )
                     !text.trimStart().startsWith("{") ->
-                        throw GardenException("The garden is not reachable right now.")
+                        throw GardenException(AppText.s(R.string.unreachable_now))
                     else -> JSONObject(text)
                 }
             } finally {
@@ -440,7 +431,7 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
             val n = best.optString("plant_name").trim()
             if (n.isNotBlank()) {
                 val bot = best.optString("botanical_name").trim()
-                val mine = if (o.optBoolean("in_catalogue")) "  ·  in your garden" else ""
+                val mine = if (o.optBoolean("in_catalogue")) AppText.s(R.string.in_your_garden) else ""
                 return n + (if (bot.isNotBlank()) "  ($bot)" else "") + mine
             }
         }
@@ -462,9 +453,9 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
      */
     private fun readDiagnosis(o: JSONObject): String {
         val sections = listOf(
-            "looked_at" to "What's visible",
-            "consistent" to "Consistent with",
-            "confirm" to "Would confirm it",
+            "looked_at" to AppText.s(R.string.seen_visible),
+            "consistent" to AppText.s(R.string.seen_consistent),
+            "confirm" to AppText.s(R.string.seen_confirm),
         )
         val text = buildString {
             sections.forEach { (key, heading) ->
@@ -512,7 +503,7 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
      */
     private fun encode(context: Context, uri: Uri): String {
         val decoded = decodeBitmap(context, uri)
-            ?: throw GardenException("Could not read that photograph.")
+            ?: throw GardenException(AppText.s(R.string.photo_unreadable))
 
         val rotation = context.contentResolver.openInputStream(uri)?.use { stream ->
             when (

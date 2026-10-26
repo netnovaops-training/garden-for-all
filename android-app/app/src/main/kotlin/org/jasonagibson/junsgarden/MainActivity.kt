@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
 import org.jasonagibson.junsgarden.app.Updater
 import org.jasonagibson.junsgarden.garden.GardenAddress
@@ -43,6 +44,7 @@ import org.jasonagibson.junsgarden.garden.GardenLogin
 import org.jasonagibson.junsgarden.garden.GardenScreen
 import org.jasonagibson.junsgarden.garden.GardenSignInScreen
 import org.jasonagibson.junsgarden.garden.SplashScreen
+import org.jasonagibson.junsgarden.ui.AppText
 import org.jasonagibson.junsgarden.ui.JunsGardenTheme
 
 /**
@@ -61,6 +63,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // The app's words in its language (English or Korean), for code that is not a screen.
+        AppText.init(this)
         // Where the garden is (GardenAddress.kt); a setup QR that launched the app sets it.
         GardenAddress.init(this)
         setupLink(intent)
@@ -115,7 +119,7 @@ class MainActivity : ComponentActivity() {
         val saved = GardenAddress.applySetupLink(this, link) ?: return
         android.widget.Toast.makeText(
             this,
-            "Your garden: $saved\n내 정원: $saved",
+            getString(R.string.your_garden, saved),
             android.widget.Toast.LENGTH_LONG,
         ).show()
     }
@@ -142,12 +146,12 @@ private fun GardenApp() {
     // Guests: Barcode only (decoded on the phone, looked up in the public
     // catalogue), so this camera never has a key to send.
     val camera = remember {
-        GardenCamera { Result.failure(GardenException("Log in to use the camera tools.")) }
+        GardenCamera { Result.failure(GardenException(AppText.s(R.string.login_for_camera))) }
     }
     val loggedInCamera = remember {
         GardenCamera {
             login.token()?.let { Result.success(it) }
-                ?: Result.failure(GardenException("Log in again to use the camera."))
+                ?: Result.failure(GardenException(AppText.s(R.string.login_again_camera)))
         }
     }
 
@@ -183,10 +187,10 @@ private fun GardenApp() {
             onGuest = { who = Who.Guest },
         )
         is Who.Guest -> GardenScreen(
-            signedInAs = "Guest",
+            signedInAs = stringResource(R.string.guest),
             camera = camera,
             guest = true,
-            accountLabel = "Sign in",
+            accountLabel = stringResource(R.string.sign_in),
             onSignIn = { who = Who.Out },
         ) {}
         is Who.In -> GardenScreen(
@@ -196,7 +200,7 @@ private fun GardenApp() {
             camera = loggedInCamera,
             guest = false,
             showAsk = false,
-            accountLabel = "Log out ${w.name}",
+            accountLabel = stringResource(R.string.log_out_name, w.name),
             onSignIn = {
                 scope.launch {
                     login.logout()
@@ -209,13 +213,13 @@ private fun GardenApp() {
     update?.let { up ->
         AlertDialog(
             onDismissRequest = { if (progress < 0) update = null },
-            title = { Text("Update available: ${up.versionName}") },
+            title = { Text(stringResource(R.string.update_available, up.versionName)) },
             text = {
                 Text(
                     when {
                         updateError != null -> updateError!!
-                        progress in 0..99 -> "Downloading $progress%"
-                        else -> up.notes.ifBlank { "A newer version of the garden app is ready." }
+                        progress in 0..99 -> stringResource(R.string.downloading, progress)
+                        else -> up.notes.ifBlank { stringResource(R.string.newer_ready) }
                     }
                 )
             },
@@ -227,13 +231,13 @@ private fun GardenApp() {
                         runCatching { updater.downloadAndInstall(context, up) { p -> progress = p } }
                             .onFailure { e ->
                                 progress = -1
-                                updateError = e.message ?: "The update could not be installed."
+                                updateError = e.message ?: AppText.s(R.string.update_failed)
                             }
                     }
-                }) { Text("Update") }
+                }) { Text(stringResource(R.string.update)) }
             },
             dismissButton = {
-                if (progress < 0) TextButton(onClick = { update = null }) { Text("Later") }
+                if (progress < 0) TextButton(onClick = { update = null }) { Text(stringResource(R.string.later)) }
             },
         )
     }

@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -39,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.jasonagibson.junsgarden.BuildConfig
+import org.jasonagibson.junsgarden.R
+import org.jasonagibson.junsgarden.ui.AppText
 
 /**
  * The first screen: log in as Jun or the author, or carry on as a guest.
@@ -72,7 +75,7 @@ fun GardenSignInScreen(
         scope.launch {
             login.login(username, password).fold(
                 onSuccess = { name -> password = ""; onLoggedIn(name) },
-                onFailure = { e -> error = e.message ?: "Login failed." },
+                onFailure = { e -> error = e.message ?: AppText.s(R.string.login_failed) },
             )
             busy = false
         }
@@ -86,12 +89,12 @@ fun GardenSignInScreen(
         Text("🌱", fontSize = 56.sp)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Jun & Kona's Garden",
+            stringResource(R.string.garden_title),
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
         )
         Text(
-            "Sign in to continue",
+            stringResource(R.string.sign_in_to_continue),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary,
         )
@@ -100,7 +103,7 @@ fun GardenSignInScreen(
         OutlinedTextField(
             value = username,
             onValueChange = { username = it; error = null },
-            label = { Text("Username") },
+            label = { Text(stringResource(R.string.username)) },
             leadingIcon = { Text("👤") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
@@ -113,10 +116,12 @@ fun GardenSignInScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it; error = null },
-            label = { Text("Password") },
+            label = { Text(stringResource(R.string.password)) },
             leadingIcon = { Text("🔒") },
             trailingIcon = {
-                TextButton(onClick = { show = !show }) { Text(if (show) "Hide" else "Show") }
+                TextButton(onClick = { show = !show }) {
+                    Text(stringResource(if (show) R.string.hide else R.string.show))
+                }
             },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
@@ -137,12 +142,12 @@ fun GardenSignInScreen(
             onClick = { submit() },
             enabled = !busy && username.isNotBlank() && password.isNotEmpty(),
             modifier = Modifier.fillMaxWidth().height(48.dp),
-        ) { Text(if (busy) "Signing in…" else "Sign In") }
+        ) { Text(stringResource(if (busy) R.string.signing_in else R.string.sign_in_button)) }
 
         Spacer(Modifier.height(16.dp))
-        TextButton(onClick = onGuest) { Text("Continue as guest") }
+        TextButton(onClick = onGuest) { Text(stringResource(R.string.continue_guest)) }
         Text(
-            "Guests can browse the whole catalog.",
+            stringResource(R.string.guests_browse),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.primary,
             textAlign = TextAlign.Center,
@@ -152,7 +157,7 @@ fun GardenSignInScreen(
         // on file. Done in the browser so the app never handles that link.
         TextButton(onClick = {
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GardenLogin.forgotPasswordUrl)))
-        }) { Text("Forgot password? / First time?") }
+        }) { Text(stringResource(R.string.forgot_password)) }
         Text(
             "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
             style = MaterialTheme.typography.labelSmall,

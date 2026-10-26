@@ -9,7 +9,7 @@
 //
 // FOLLOWING A MOVE. Once per launch the app asks <base>/app/config.json where the garden is
 // now (an old address forwards to the new one). It moves to the new address ONLY when the
-// answer is signed with the garden's key (Ed25519, checked here with Android's own crypto).
+// answer is signed with the garden's key (Ed25519, checked here with Google Tink).
 // If an old domain ever lapses and a stranger takes it, their answer is not signed with
 // Jun's key, so the app stays put. Without a saved key (an app never set up by QR) the app
 // never moves on its own.
@@ -26,10 +26,8 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
+import com.google.crypto.tink.subtle.Ed25519Verify
 import java.net.URLDecoder
-import java.security.KeyFactory
-import java.security.Signature
-import java.security.spec.X509EncodedKeySpec
 
 object GardenAddress {
     private const val PREFS = "junsgarden_address"
@@ -53,10 +51,12 @@ object GardenAddress {
     private fun save(context: Context, newBase: String, newKey: String?) {
         base = newBase
         if (newKey != null) key = newKey
+        // commit(), not apply(): written before this returns, so an app closed right after a
+        // move (or a setup scan) still has the new address next time. A tiny, rare write.
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString("base", newBase)
             .apply { if (newKey != null) putString("key", newKey) }
-            .apply()
+            .commit()
     }
 
     /** A setup link the wizard's QR opened. Gives the saved address, or null if it was not one. */
@@ -112,16 +112,16 @@ object GardenAddress {
             u.rawQuery == null && u.rawFragment == null && b.none { it.isWhitespace() }
     }
 
-    /** Does `sigHex` sign `message` with the Ed25519 public key `keyHex`? */
+    /**
+     * Does `sigHex` sign `message` with the Ed25519 public key `keyHex`?
+     *
+     * Google Tink's Ed25519, not Android's own: Android's crypto refuses Ed25519 keys (tested on
+     * an Android 16 emulator, where a correct signature came back "no"), while the desktop Java
+     * that runs the unit tests accepts them. Tink behaves the same everywhere.
+     */
     fun verify(keyHex: String, message: String, sigHex: String): Boolean = runCatching {
-        // A raw Ed25519 key wrapped in the standard X.509 header, which Java's KeyFactory reads.
-        val spki = hex("302a300506032b6570032100") + hex(keyHex)
-        val pub = KeyFactory.getInstance("Ed25519").generatePublic(X509EncodedKeySpec(spki))
-        Signature.getInstance("Ed25519").run {
-            initVerify(pub)
-            update(message.toByteArray(Charsets.UTF_8))
-            verify(hex(sigHex))
-        }
+        Ed25519Verify(hex(keyHex)).verify(hex(sigHex), message.toByteArray(Charsets.UTF_8))
+        true // verify() returns only when the signature is right; otherwise it throws
     }.getOrDefault(false)
 
     private fun hex(s: String): ByteArray {

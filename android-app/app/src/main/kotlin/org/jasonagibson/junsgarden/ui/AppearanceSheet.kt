@@ -28,8 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.jasonagibson.junsgarden.R
 
 /**
  * Pick a theme, and pick light or dark.
@@ -58,11 +60,11 @@ fun AppearanceSheet(dark: Boolean, onClose: () -> Unit) {
             tonalElevation = 3.dp,
         ) {
             Column(Modifier.fillMaxSize().padding(20.dp)) {
-                Text("Appearance", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.appearance), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(14.dp))
 
                 Text(
-                    "Light or dark",
+                    stringResource(R.string.light_or_dark),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -72,14 +74,14 @@ fun AppearanceSheet(dark: Boolean, onClose: () -> Unit) {
                         FilterChip(
                             selected = appearance.mode == m,
                             onClick = { appearance.change(null, m) },
-                            label = { Text(m.label) },
+                            label = { Text(stringResource(m.label)) },
                         )
                     }
                 }
 
                 Spacer(Modifier.height(18.dp))
                 Text(
-                    "Theme",
+                    stringResource(R.string.theme),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -109,7 +111,7 @@ fun AppearanceSheet(dark: Boolean, onClose: () -> Unit) {
                             Swatch(preview.primary)
                             Spacer(Modifier.size(14.dp))
                             Text(
-                                t.label,
+                                stringResource(t.label),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight =
                                     if (chosen) FontWeight.SemiBold else FontWeight.Normal,
@@ -120,7 +122,7 @@ fun AppearanceSheet(dark: Boolean, onClose: () -> Unit) {
                     }
                 }
 
-                TextButton(onClick = onClose) { Text("Done") }
+                TextButton(onClick = onClose) { Text(stringResource(R.string.done)) }
             }
         }
     }

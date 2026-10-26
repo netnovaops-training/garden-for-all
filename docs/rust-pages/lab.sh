@@ -150,6 +150,48 @@ check)
             cargo audit -q > /build/target/audit.log 2>&1 && echo "PASS audit" || echo "FAIL audit ($(grep -c "^ID:" /build/target/audit.log) advisories)";
             cargo test --locked -p junsgarden > /build/target/test.log 2>&1 && echo "PASS tests $(grep -o "[0-9]* passed" /build/target/test.log | head -1)" || echo "FAIL tests"'
     ;;
+appserver)
+    # The garden for the phone-app test (app-matrix/matrix.sh): the new code with cand_db, behind
+    # a lab Caddy on two local ports that stand for two web names, as an Android emulator sees
+    # them through a tunnel (10.0.2.2 is the emulator's name for the computer it runs on):
+    #   old   127.0.0.1:18181 = the garden's address ("old name"); nothing on 18182
+    #   new   the garden moved to 18182; 18181 now answers the phone's addresses (app_api.php,
+    #         /app/*, /apps/*) and forwards everything else, exactly as garden.sh does for an old
+    #         web name (old_name_blocks)
+    #   stop  everything removed
+    # One signing key for the whole test (appkey.hex, lab only), so a phone set up before the
+    # move can check the move. The phone's update files are served from app-www/apps/.
+    phase=${2:-old}
+    docker rm -f gp-app gp-appproxy >/dev/null 2>&1 || true
+    # (app-www holds thumbnails the site made as its own user, so a container removes it.)
+    wipe_app_www() { docker run --rm -v "$PWD:/w" alpine:3.22 rm -rf /w/app-www; }
+    [ "$phase" = stop ] && { wipe_app_www; rm -f appkey.hex app-proxy.Caddyfile; echo "appserver removed"; exit 0; }
+    [ -f appkey.hex ] || { umask 077; rnd 32 > appkey.hex; umask 022; }
+    [ -f test-login.env ] || sh "$0" tester
+    # A fresh copy of the site for each test (the first phase); the move keeps the same one.
+    [ "$phase" = old ] && { wipe_app_www; cp -a cand-www app-www; }
+    case $phase in
+        old) url=http://10.0.2.2:18181
+             printf '{\n\tauto_https off\n\tadmin off\n}\n:18181 {\n\treverse_proxy gp-app:8030\n}\n' > app-proxy.Caddyfile ;;
+        new) url=http://10.0.2.2:18182
+             printf '{\n\tauto_https off\n\tadmin off\n}\n:18182 {\n\treverse_proxy gp-app:8030\n}\n:18181 {\n\t@phone path /app_api.php /app/* /apps/*\n\thandle @phone {\n\t\treverse_proxy gp-app:8030\n\t}\n\thandle {\n\t\tredir http://10.0.2.2:18182{uri} 308\n\t}\n}\n' > app-proxy.Caddyfile ;;
+        *) echo "appserver old|new|stop"; exit 2 ;;
+    esac
+    docker run -d --name gp-app --network $NET \
+        -e JUNSGARDEN_DATABASE_URL="mysql://root:$(dbpw)@$DB:3306/cand_db" -e APP_PORT=8030 -e TZ=America/New_York \
+        -e JUNSGARDEN_WWW_DIR=/www -e JUNSGARDEN_DATA_DIR=/data -e JUNSGARDEN_AI_CACHE_DIR=/ai-cache \
+        -e JUNSGARDEN_USERS="$USERS" -e JUNSGARDEN_PUBLIC_URL="$url" -e JUNSGARDEN_SIGNING_KEY="$(cat appkey.hex)" \
+        -e JUNSGARDEN_INGEST_URL="http://127.0.0.1:9" -e OLLAMA_URL="http://127.0.0.1:9/api/generate" \
+        -v "$PWD/app-www:/www" -v "$PWD/cand-data:/data" -v "$PWD/cand-ai-cache:/ai-cache" \
+        -v "$PWD/src-cand/START-HERE:/guides:ro" gardenlab/cand >/dev/null
+    docker create --name gp-appproxy -p 127.0.0.1:18181:18181 -p 127.0.0.1:18182:18182 \
+        -v "$PWD/app-proxy.Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine >/dev/null
+    docker network connect $NET gp-appproxy && docker start gp-appproxy >/dev/null
+    port=${url##*:}
+    i=0; until curl -fs "http://127.0.0.1:$port/healthz" >/dev/null 2>&1; do
+        i=$((i+1)); [ $i -lt 40 ] || { docker logs --tail 15 gp-app; exit 1; }; sleep 1; done
+    echo "appserver $phase on $url"
+    ;;
 down)
     docker rm -f gp-base gp-cand $DB >/dev/null 2>&1 || true
     docker network rm $NET >/dev/null 2>&1 || true

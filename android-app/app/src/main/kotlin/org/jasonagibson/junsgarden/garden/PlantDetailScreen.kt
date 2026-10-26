@@ -43,11 +43,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import org.jasonagibson.junsgarden.R
+import org.jasonagibson.junsgarden.ui.AppText
 
 /**
  * One plant, laid out the way catalog.php lays it out.
@@ -88,7 +91,7 @@ fun PlantDetailScreen(
         failed = null
         runCatching { GardenApi.detail(summary.id) }
             .onSuccess { detail = it }
-            .onFailure { failed = it.message ?: "Could not load that plant." }
+            .onFailure { failed = it.message ?: AppText.s(R.string.could_not_load_plant) }
     }
 
     // Lowercased once, because every lookup below is by column name and the
@@ -102,7 +105,7 @@ fun PlantDetailScreen(
             Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = onBack) { Text("‹  Catalog") }
+            TextButton(onClick = onBack) { Text(stringResource(R.string.back_catalog)) }
         }
 
         LazyColumn(
@@ -139,7 +142,7 @@ fun PlantDetailScreen(
                     val by = byKey["company"].orEmpty()
                     if (by.isNotBlank()) {
                         Text(
-                            "By $by",
+                            stringResource(R.string.by_company, by),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onPrimary,
@@ -249,8 +252,8 @@ fun PlantDetailScreen(
             if (grow.isNotBlank() || bloom.isNotBlank()) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        if (grow.isNotBlank()) Banner("🌱", "Plant / Grow", grow)
-                        if (bloom.isNotBlank()) Banner("🌸", "Bloom", bloom)
+                        if (grow.isNotBlank()) Banner("🌱", stringResource(R.string.plant_grow), grow)
+                        if (bloom.isNotBlank()) Banner("🌸", stringResource(R.string.bloom), bloom)
                     }
                 }
             }
@@ -270,7 +273,7 @@ fun PlantDetailScreen(
                 else -> {
                     val notes = plantNotes(byKey)
                     if (notes.isNotEmpty()) {
-                        item { SectionCard("📝", "Notes") { NotesBody(notes) } }
+                        item { SectionCard("📝", stringResource(R.string.notes)) { NotesBody(notes) } }
                     }
 
                     plantSections(byKey).forEach { section ->
@@ -284,7 +287,7 @@ fun PlantDetailScreen(
                     val rest = plantLeftovers(detail!!.fields)
                     if (rest.isNotEmpty()) {
                         item {
-                            SectionCard("📋", "More details") {
+                            SectionCard("📋", stringResource(R.string.more_details)) {
                                 rest.forEach { (k, v) -> FieldRow(prettify(k), v) }
                             }
                         }
