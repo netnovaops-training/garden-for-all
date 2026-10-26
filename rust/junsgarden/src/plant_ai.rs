@@ -480,7 +480,7 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/plant-ai/jobs/{id}/{what}", post(report))
 }
 
-fn reply(status: StatusCode, body: Value) -> Response {
+pub(crate) fn reply(status: StatusCode, body: Value) -> Response {
     (
         status,
         [(header::CONTENT_TYPE, "application/json")],
@@ -491,7 +491,7 @@ fn reply(status: StatusCode, body: Value) -> Response {
 
 /// The helper's key and address are checked here. Gives the key's id, or the refusal to send
 /// (boxed: a whole reply is large to pass around).
-async fn helper(state: &AppState, h: &HeaderMap) -> Result<i64, Box<Response>> {
+pub(crate) async fn helper(state: &AppState, h: &HeaderMap) -> Result<i64, Box<Response>> {
     let refuse = |s: StatusCode, msg: &str| Box::new(reply(s, json!({ "error": msg })));
     let any = common::env_bool("JUNSGARDEN_PLANT_AI_ANY_ADDRESS", false);
     if !any && !is_home_address(&crate::accounts::client_ip(h)) {

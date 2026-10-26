@@ -540,7 +540,7 @@ $pNet = New-Page "part-network" "A reserved address in your router" "Reserved ad
 # Local plant AI on THIS PC (only offered when the card can run it; Garden-PlantAi.ps1 does the work).
 $pPlantAi = New-Page "part-plantai" "Local plant AI on this PC" "Local plant AI"
 [void](P-Text $pPlantAi (PlantAi-Plan $PlantAiHw))
-[void](P-Text $pPlantAi (PaT "What gets installed here: Ollama (runs the AI models, starts with Windows, answers on this PC only), the two models (about 18 GB of downloads), Python and the small helper program. Windows asks for permission once."))
+[void](P-Text $pPlantAi (PaT "What gets installed here: Ollama (runs the AI models, starts with Windows, answers on this PC only), the two models (about 18 GB of downloads), Python and the small helper program, and, if Docker is installed, a small tag reader for the scan queue (this PC only). Windows asks for permission once."))
 [void](P-Text $pPlantAi (PaT "The helper asks your garden website for new plants every minute, through its usual address. Nothing is opened on this PC or on the garden computer. While this PC is off, new plants wait in a queue."))
 $tbPaSite = P-Field $pPlantAi "Your garden's address, as you open it at home (like https://name.zapto.org)" 360
 $tbPaKey = P-Field $pPlantAi "Helper key (on the website: Add plant, Desktop helper, Make a helper key). Empty = add it later: menu, More, 22" 420 -Secret

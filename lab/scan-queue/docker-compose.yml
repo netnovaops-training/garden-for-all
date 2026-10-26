@@ -1,0 +1,49 @@
+# A throw-away copy of the garden to test the scan queue end to end (lab/scan-queue/e2e.py runs it).
+#
+# It is NOT the garden: its own database (empty plant tables, made-up plants added by the test), its
+# own copy of the site folder, its own users, and a website on 127.0.0.1:18030 only. Nothing here
+# touches junsgarden.zapto.org, the NUC or your real garden folders. e2e.py makes the folder in
+# LAB_DIR and a random database password in LAB_DB_PASSWORD, and removes everything afterwards.
+name: gfa-scan-lab
+
+services:
+  db:
+    image: mariadb:lts-noble
+    container_name: gfa-scan-lab-db
+    environment:
+      MARIADB_ROOT_PASSWORD: ${LAB_DB_PASSWORD}
+      MARIADB_DATABASE: juns_garden_db
+    volumes:
+      - ../../db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  site:
+    image: gfa-scan-lab/site
+    container_name: gfa-scan-lab-site
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      JUNSGARDEN_DATABASE_URL: mysql://root:${LAB_DB_PASSWORD}@db:3306/juns_garden_db
+      APP_PORT: "8030"
+      TZ: America/New_York
+      # The first name is the garden owner (the only one who may confirm a match).
+      JUNSGARDEN_USERS: Jun=jun@lab.invalid,Author=author@lab.invalid
+      JUNSGARDEN_UPLOADERS: Jun,Author
+      JUNSGARDEN_PUBLIC_URL: http://localhost:18030
+      OLLAMA_URL: http://127.0.0.1:9/none
+      OLLAMA_MODEL: none
+    volumes:
+      - ${LAB_DIR}/site:/www
+      # Folders the site writes into: plain folders in LAB_DIR (e2e.py makes them), so the site's
+      # own user can write there.
+      - ${LAB_DIR}/images:/www/images
+      - ${LAB_DIR}/data:/www/data
+      - ${LAB_DIR}/cashe:/www/cashe
+      - ../../START-HERE:/guides:ro
+    ports:
+      - "127.0.0.1:18030:8030"

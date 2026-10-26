@@ -83,6 +83,8 @@ mod pipeline_ref;
 mod pipeline_wl;
 /// Tabs 15-17: Add plant (with the AI queue, review and Approve), Receipt, Pictures.
 mod quick;
+/// Tab 18: the Scan queue (tags and plant photos waiting to be read and matched).
+mod scan;
 /// One function per remaining tab, and the tab picker.
 mod tabs;
 /// Streamlit's widgets drawn as HTML.
@@ -93,8 +95,8 @@ mod wishlist;
 /// The tabs, in order. 1 to 14 are the Streamlit app's own (their numbers stay, so old links
 /// keep working); 15 to 17 are the short path for a new plant (quick.rs), shown first.
 /// Tab number N in the address (`?tab=N`) is entry N-1 in this list, because lists start counting
-/// at 0. `[&str; 17]` means exactly 17 text pieces.
-pub const TABS: [&str; 17] = [
+/// at 0. `[&str; 18]` means exactly 18 text pieces.
+pub const TABS: [&str; 18] = [
     "🌱 Add Plant (full form)",
     "📝 Manual Review (AI)",
     "✨ Fill Missing Data (AI)",
@@ -112,11 +114,12 @@ pub const TABS: [&str; 17] = [
     "🌱 Add plant",
     "🧾 Receipt",
     "🖼️ Pictures",
+    "📷 Scan queue",
 ];
 
 /// The order the tabs are shown in. The main row first; then the "Advanced" row, which holds
 /// the cloud-AI tabs, the full Add Plant form and the JSON Pipeline (import/export).
-const MAIN_TABS: [usize; 12] = [15, 16, 17, 4, 5, 6, 7, 8, 9, 12, 13, 14];
+const MAIN_TABS: [usize; 13] = [15, 18, 16, 17, 4, 5, 6, 7, 8, 9, 12, 13, 14];
 const ADVANCED_TABS: [usize; 5] = [11, 1, 2, 3, 10];
 /// The tab shown when the address names none.
 const DEFAULT_TAB: usize = 15;
@@ -356,7 +359,9 @@ fn shell(visitor: &Visitor, tab: usize, flash: &str, body: &str, l: lang::Lang) 
         format!(
             "<a href=\"/streamlit/?tab={n}\"{}>{}</a>",
             if n == tab { " class=\"on\"" } else { "" },
-            he(quick::tab_label(n, l).unwrap_or(TABS[n - 1]))
+            he(quick::tab_label(n, l)
+                .or_else(|| scan::tab_label(n, l))
+                .unwrap_or(TABS[n - 1]))
         )
     };
     let tabs: String = MAIN_TABS.iter().map(|n| link(*n)).collect();
@@ -729,6 +734,12 @@ pub async fn action(
         // The newer tabs (quick.rs): Add plant, Approve, Receipt, Pictures.
         a if a.starts_with("pa_") => {
             let (m, n) = quick::action(&state, &visitor, a, &f, l).await;
+            next = n;
+            m
+        }
+        // The Scan queue tab (scan.rs).
+        a if a.starts_with("sq_") => {
+            let (m, n) = scan::action(&state, &visitor, a, &f, l).await;
             next = n;
             m
         }

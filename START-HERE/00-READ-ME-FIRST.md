@@ -101,6 +101,7 @@ They are made from the same files as the PDFs, so they always match.
 | [08 Gemini setup](08-gemini-setup.md) | Gemini CLI on the laptop |
 | [05 Gemini prompts](05-gemini-prompts.md) | Copy-and-paste starters |
 | [15 Local AI](15-local-ai.md) | AI on a strong home computer (optional, advanced) |
+| [27 Scan plants](27-scan-queue.md) | Scan plant tags or plants with the phone, pick the bed, and the PC at home matches them (optional, needs the helper from guide 15) |
 | [17 Your Android app, and coding it with AI](17-android-app-and-ai-coding.md) | Android Studio, the app on your phone, Gemini in Android Studio, local AI, the safe way to change code |
 | [00b Before you start](00b-before-you-start.md) | Everything you need, necessary and optional, with how long each part takes. Read this first |
 | [20 SSH and Remote Desktop](20-ssh-and-remote-desktop.md) | Work on the garden computer from your Windows PC; keys; copying files; seeing its screen |

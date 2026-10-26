@@ -6,6 +6,8 @@
    See https://developer.android.com/about/versions/12/backup-restore
 -->
 <full-backup-content>
+    <!-- The scan queue's pictures (ScanStore.kt) are the garden's private photos: never copied to a cloud backup. -->
+    <exclude domain="file" path="scanq" />
     <!--
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>

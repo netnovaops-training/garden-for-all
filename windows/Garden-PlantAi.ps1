@@ -18,6 +18,11 @@
    5. A task that starts the helper when you sign in. It asks your garden website
       for new plants every minute (outgoing only, like a browser): no port is opened
       on this PC or on the garden computer.
+   6. The tag reader for the scan queue (plant-ai\ocr): a small Docker container
+      (Tesseract and RapidOCR, on the processor, not the graphics card) that reads plant
+      tag photos. It answers on THIS PC only (127.0.0.1:8788) and restarts with Docker.
+      Skipped, with a note, when Docker is not installed (the scan queue then reads tags
+      only with the AI model, which is slower and less exact).
  The Linux installer (garden.sh) never installs AI models: this part is Windows only.
 ===============================================================================
 #>
@@ -78,6 +83,29 @@ function PlantAi-Ollama {
 # Does Ollama answer on this PC? (127.0.0.1 only.)
 function PlantAi-Up {
     try { Invoke-RestMethod -Uri "http://127.0.0.1:11434/api/tags" -TimeoutSec 5 | Out-Null; return $true } catch { return $false }
+}
+
+# Does the tag reader (Docker container garden-ocr) answer on this PC? (127.0.0.1 only.)
+function PlantAi-OcrUp {
+    try { Invoke-RestMethod -Uri "http://127.0.0.1:8788/health" -TimeoutSec 5 | Out-Null; return $true } catch { return $false }
+}
+
+# The tag reader for the scan queue: build the image from plant-ai\ocr and run it, published on
+# 127.0.0.1 only, read-only, without extra rights, restarted by Docker. Not fatal if Docker is missing.
+function Install-PlantAiOcr {
+    Say "The tag reader (OCR) for the scan queue"
+    $dk = Get-Command docker.exe -ErrorAction SilentlyContinue
+    if (-not $dk) {
+        Note (PaT "Docker is not installed, so the tag reader is skipped. The scan queue then reads tags only with the AI model (slower, less exact). Install Docker Desktop and run this again.")
+        return
+    }
+    if ((Run-Console "docker.exe" "build -t garden-ocr `"$(Join-Path $PlantAiDir 'ocr')`"") -ne 0) { Fail "The tag reader did not build. Is Docker Desktop running? Start it, then run this again."; return }
+    Run-Console "docker.exe" "rm -f garden-ocr" | Out-Null
+    $run = "run -d --name garden-ocr --restart unless-stopped -p 127.0.0.1:8788:8098 --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges garden-ocr"
+    if ((Run-Console "docker.exe" $run) -ne 0) { Fail "The tag reader did not start."; return }
+    $up = $false
+    for ($i = 0; $i -lt 30 -and -not $up; $i++) { Start-Sleep -Seconds 2; $up = PlantAi-OcrUp }
+    if ($up) { Note "Added: Docker container 'garden-ocr', answering on 127.0.0.1:8788 only." } else { Fail "The tag reader does not answer on 127.0.0.1:8788 yet. Give it a minute, then run this again." }
 }
 
 # Python 3.13 (or 3.12) through the Python launcher, or "".
@@ -197,7 +225,9 @@ function Do-PlantAi($site, $key) {
     $set = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
     Register-ScheduledTask -TaskName $PlantAiHelperTask -Action $act -Trigger $trg -Settings $set -Force | Out-Null
     if (Test-Path (Join-Path $PlantAiDir "worker-key.txt")) { Start-ScheduledTask -TaskName $PlantAiHelperTask }
-    # 7. A check: Ollama and both models.
+    # 7. The tag reader for the scan queue (needs Docker; skipped with a note without it).
+    Install-PlantAiOcr
+    # 8. A check: Ollama and both models.
     Push-Location $PlantAiDir
     try { & $vpy -m plantai check } finally { Pop-Location }
     Note (PaT "Done. Add a plant on the website (Add plant tab): the helper fills it in within a few minutes while this PC is on.")
@@ -210,6 +240,7 @@ function Show-PlantAi {
     if (-not $hw.Ok) { Note "Not offered here: $($hw.Why)."; Note (PaT "It needs an NVIDIA card with 12 GB of graphics memory or more (like an RTX 4070 Ti). The rest of the garden works without it."); return }
     Note (PlantAi-Plan $hw)
     Note ("Ollama: " + $(if (PlantAi-Up) { "answering on 127.0.0.1:11434" } else { "not answering" }))
+    Note ("Tag reader (scan queue): " + $(if (PlantAi-OcrUp) { "answering on 127.0.0.1:8788" } else { "not answering (Set up or repair starts it; it needs Docker)" }))
     Note ("Helper key: " + $(if (Test-Path (Join-Path $PlantAiDir "worker-key.txt")) { "saved (not shown)" } else { "not saved yet" }))
     Write-Host "`n   1) Set up or repair   2) Paste a new helper key   3) Switch the helper off   0) Back"
     switch (Read-Host "`n  Type a number, then press Enter") {

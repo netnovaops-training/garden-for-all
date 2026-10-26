@@ -169,8 +169,24 @@ pub async fn render_add(state: &AppState, req: &Req) -> String {
     let l = req.lang;
     let mut h = ui::header(l.t("🌱 Add a plant", "🌱 식물 추가"));
     h.push_str(&helper_line(state, l).await);
-    // The six boxes.
-    let beds: Vec<String> = opts::GARDEN_BEDS.iter().map(|b| b.to_string()).collect();
+    // The six boxes. The bed is picked by its number (garden_bed.id), so a renamed bed still
+    // works; the old name list is only the fallback when the database cannot list beds.
+    let beds = crate::scan_queue::beds(state).await;
+    let bed_pick = if beds.is_empty() {
+        let names: Vec<String> = opts::GARDEN_BEDS.iter().map(|b| b.to_string()).collect();
+        ui::select_plain("bed", l.t("Bed", "화단"), &names, "To Be Sorted")
+    } else {
+        let opts_: Vec<(String, String)> = beds
+            .iter()
+            .map(|b| (b.id.to_string(), b.name.clone()))
+            .collect();
+        let first = beds
+            .iter()
+            .find(|b| b.name == crate::scan_queue::WAITING_BED)
+            .map(|b| b.id.to_string())
+            .unwrap_or_default();
+        ui::selectbox("bed_id", l.t("Bed", "화단"), &opts_, &first, false)
+    };
     h.push_str(&post_form("pa_add", 15, "", false));
     h.push_str(&ui::columns(
         &[1, 1],
@@ -204,7 +220,7 @@ pub async fn render_add(state: &AppState, req: &Req) -> String {
     h.push_str(&ui::columns(
         &[2, 1, 1],
         vec![
-            ui::select_plain("bed", l.t("Bed", "화단"), &beds, "To Be Sorted"),
+            bed_pick,
             ui::number_input("qty", l.t("Quantity", "수량"), "1", Some(0), "1"),
             ui::number_input(
                 "price",
@@ -292,7 +308,7 @@ pub async fn render_add(state: &AppState, req: &Req) -> String {
 }
 
 /// One line: is the desktop helper on?
-async fn helper_line(state: &AppState, l: Lang) -> String {
+pub(super) async fn helper_line(state: &AppState, l: Lang) -> String {
     let seen = plant_ai::helper_last_seen(state).await;
     let fresh: bool = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM plant_ai_keys WHERE revoked = 0 AND last_seen > NOW() - INTERVAL 10 MINUTE")
         .fetch_one(&state.db)
@@ -1087,11 +1103,23 @@ async fn add(
             .map(|x| x.to_ascii_uppercase().to_string() + &c.as_str().to_lowercase())
             .unwrap_or_default()
     };
-    let bed = f.str("bed").trim();
-    let bed = if opts::GARDEN_BEDS.contains(&bed) {
-        bed
+    // The bed: by its number (`bed_id`, the bed's name as it is now), or, from an older form,
+    // by name from the fixed list; anything else waits in "To Be Sorted".
+    let picked_id = php_int(f.str("bed_id"));
+    let bed = match if picked_id > 0 {
+        crate::scan_queue::bed_name(state, picked_id).await
     } else {
-        "To Be Sorted"
+        None
+    } {
+        Some(n) => n,
+        None => {
+            let by_name = f.str("bed").trim();
+            if opts::GARDEN_BEDS.contains(&by_name) {
+                by_name.to_string()
+            } else {
+                crate::scan_queue::WAITING_BED.to_string()
+            }
+        }
     };
     let qty = php_int(f.str("qty")).clamp(0, 100_000);
     let price: Option<f64> = f
@@ -1100,29 +1128,12 @@ async fn add(
         .parse::<f64>()
         .ok()
         .filter(|p| p.is_finite() && *p >= 0.0 && *p < 1_000_000.0);
-    let botanical = if species.is_empty() {
-        genus.clone()
-    } else {
-        format!("{genus} {species}")
+    let id = match crate::scan_queue::insert_plant(state, &genus, &species, &name, &bed, qty, price)
+        .await
+    {
+        Ok(id) => id,
+        Err(e) => return (vec![Flash::Error(e)], vec![]),
     };
-    let year = common::current_year().to_string();
-    let r = sqlx::query("INSERT INTO data_source (plant_name, genus, species, botanical_name, garden_beds, flower_bed, qty, average_cost, year_added) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        .bind(&name)
-        .bind(&genus)
-        .bind(if species.is_empty() { None } else { Some(species.clone()) })
-        .bind(&botanical)
-        .bind(bed)
-        .bind(bed)
-        .bind(qty)
-        .bind(price)
-        .bind(&year)
-        .execute(&state.db)
-        .await;
-    let id = match r {
-        Ok(r) => r.last_insert_id() as i64,
-        Err(e) => return (vec![Flash::Error(format!("Database error: {e}"))], vec![]),
-    };
-    state.invalidate_widget_cache();
     let mut msgs = vec![Flash::Success(format!(
         "✅ **{name}** {}",
         l.t("is saved.", "저장했어요.")

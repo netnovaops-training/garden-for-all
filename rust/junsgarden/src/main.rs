@@ -70,6 +70,8 @@ mod pages;
 mod php;
 mod plant_ai;
 mod rowjson;
+mod scan_api;
+mod scan_queue;
 mod session;
 mod store;
 mod weblink;
@@ -369,6 +371,10 @@ async fn ensure_tables(db: &MySqlPool, users: &[accounts::Account]) -> anyhow::R
     if let Err(e) = plant_ai::ensure_tables(db).await {
         tracing::warn!("could not make the plant AI tables: {e}");
     }
+    // The scan queue (scan_queue.rs): scans waiting to be read, matched and added.
+    if let Err(e) = scan_queue::ensure_tables(db).await {
+        tracing::warn!("could not make the scan queue tables: {e}");
+    }
     Ok(())
 }
 
@@ -539,6 +545,9 @@ async fn run() -> anyhow::Result<()> {
         // The desktop helper's queue (plant_ai.rs): its own key, home network only. A result
         // carries up to 5 photos, so it gets the photo-sized allowance.
         .merge(plant_ai::routes().layer(uploads))
+        // The scan queue (scan_api.rs): the phone's scans and the helper's side of it. A scan
+        // carries up to 4 pictures, so it gets the photo-sized allowance too.
+        .merge(scan_api::routes().layer(uploads))
         // Layers wrap every route above them; the LAST one added is the OUTERMOST. So, in
         // order: refuse a post another website sent, work out who the visitor is (session.rs),
         // run the page; and every answer, a refusal included, gets the security headers.

@@ -4,16 +4,12 @@
    for details.
 -->
 <data-extraction-rules>
+    <!-- The scan queue's pictures (ScanStore.kt) are the garden's private photos: not in a cloud
+         backup, and not copied to a new phone either (unsent scans are sent from the old one). -->
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="file" path="scanq" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="file" path="scanq" />
     </device-transfer>
-    -->
 </data-extraction-rules>

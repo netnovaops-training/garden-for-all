@@ -101,6 +101,7 @@
 | [08 Gemini 설정](08-gemini-setup.md) | 노트북의 Gemini CLI |
 | [05 Gemini 질문](05-gemini-prompts.md) | 복사해서 붙여 넣는 시작 질문 |
 | [15 로컬 AI](15-local-ai.md) | 집의 성능 좋은 컴퓨터에서 돌리는 AI(선택, 고급) |
+| [27 식물 스캔](27-scan-queue.md) | 폰으로 식물 이름표나 식물을 스캔하고 화단을 고르면 집 PC가 찾아 줘요(선택, 안내서 15의 도우미가 필요해요) |
 | [17 Android 앱, 그리고 AI로 코딩하기](17-android-app-and-ai-coding.md) | Android Studio, 휴대폰의 앱, Android Studio 안의 Gemini, 로컬 AI, 코드를 안전하게 바꾸는 방법 |
 | [00b 시작하기 전에](00b-before-you-start.md) | 필요한 모든 것(꼭 필요한 것과 선택)과 부분마다 걸리는 시간. 이것부터 읽으세요 |
 | [20 SSH와 원격 데스크톱](20-ssh-and-remote-desktop.md) | Windows PC에서 정원 컴퓨터로 일하기, 키, 파일 복사, 그 컴퓨터 화면 보기 |
@@ -203,6 +204,7 @@ AI는 가끔 자신 있는 목소리로 틀려요. **명령을 실행하기 전�
 | [11 How your website works](11-maintain-your-site.md) | 파일 위치, 안전하게 바꾸는 방법 |
 | [12 Your database](12-your-database.md) | 표, 안을 보는 방법, 안전한 습관 |
 | [15 Local AI](15-local-ai.md) | 집의 성능 좋은 컴퓨터에서 돌리는 AI(선택, 고급) |
+| [27 Scan plants](27-scan-queue.md) | 폰으로 식물 이름표나 식물을 스캔하고 화단을 고르면 집 PC가 찾아 줘요(선택) |
 | [17 Android app and AI coding](17-android-app-and-ai-coding.md) | Android Studio, 휴대폰 앱, AI로 코딩하기 |
 | [22 Bash, 한 단계씩](22-bash-walkthrough.md) | 터미널로 하는 방법, 조금 더 어렵지만 힘들지 않아요: 처음 쓰는 사람을 위한 bash 입문서 |
 | [Projects](../projects/P01-uptime-kuma.md)(영어로만 있어요) | 프로젝트 1~9(Uptime Kuma, 백업, Home Assistant, Govee 조명, 날씨, 흙 센서, 물 주기 ...) |

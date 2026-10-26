@@ -7,6 +7,10 @@
                                                a batch from a JSON array of plant rows (our own data run)
   python -m plantai report [--work DIR] [--out DIR]
                                                rebuild the batch output files only
+  python -m plantai synth --tags DIR [--count 40] [--seed 1] [--level easy|normal|hard]
+                                               made-up plant tags (front and back) to test the tag reader
+  python -m plantai ocr-eval --tags DIR [--engine tesseract|rapid|both|all]
+                                               how well the tag reader (plant-ai/ocr) reads them
 """
 import argparse
 import json
@@ -33,7 +37,12 @@ def gpu() -> str:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="plantai")
-    ap.add_argument("cmd", choices=["check", "worker", "run", "report"])
+    ap.add_argument("cmd", choices=["check", "worker", "run", "report", "synth", "ocr-eval"])
+    ap.add_argument("--tags", type=Path, help="synth: where to write the made-up tags; ocr-eval: where they are")
+    ap.add_argument("--count", type=int, default=40)
+    ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--level", choices=["easy", "normal", "hard"], default="normal")
+    ap.add_argument("--engine", choices=["tesseract", "rapid", "both", "all"], default="all")
     ap.add_argument("--settings", type=Path)
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--in", dest="inp", type=Path)
@@ -60,9 +69,20 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         site = worker.Site(s["site"], worker.read_key(key_file))
         if a.once:
-            print(f"done {worker.run_once(site)}")
+            print(f"done {worker.run_round(site)}")
             return 0
         worker.run_forever(site, float(s.get("poll_seconds", 60)))
+        return 0
+    if a.cmd in ("synth", "ocr-eval"):
+        if not a.tags:
+            ap.error(f"{a.cmd} needs --tags DIR")
+        if a.cmd == "synth":
+            from . import synth
+            print(f"PASS {len(synth.make(a.tags, a.count, a.seed, a.level))} made-up tags in {a.tags}")
+        else:
+            from . import ocr_eval
+            engines = ["tesseract", "rapid", "both"] if a.engine == "all" else [a.engine]
+            print(ocr_eval.report(a.tags, engines))
         return 0
     config.use(a.work, a.out)
     if a.photos_dir:

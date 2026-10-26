@@ -103,6 +103,8 @@ press **Approve** (only the garden owner can).
 - What the AI could not find: **Export what's still missing** gives a small file with the
   empty fields, their allowed values and a ready prompt for your own Claude. Bring the
   answer back with Advanced, JSON Pipeline, Import (you see every value first).
+- **Scanning plants with the phone** (tags and plants photographed one after another, matched
+  by this same PC, one tap to confirm): guide 27 (`27-scan-queue.md`).
 
 ## Read more (official)
 - Ollama: <https://ollama.com>, documentation: <https://github.com/ollama/ollama/tree/main/docs>

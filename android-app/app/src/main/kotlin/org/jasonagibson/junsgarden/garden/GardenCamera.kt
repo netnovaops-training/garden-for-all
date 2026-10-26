@@ -501,7 +501,14 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
      * in sensor orientation and records the rotation in EXIF; a vision
      * model reading a sideways plant tag reads a sideways plant tag.
      */
-    private fun encode(context: Context, uri: Uri): String {
+    private fun encode(context: Context, uri: Uri): String =
+        Base64.encodeToString(jpegBytes(context, uri), Base64.NO_WRAP)
+
+    /**
+     * The same photograph as plain JPEG bytes: what the scan queue keeps on the phone until the
+     * website has it (ScanStore.kt). Shrunk and turned upright exactly as above.
+     */
+    fun jpegBytes(context: Context, uri: Uri): ByteArray {
         val decoded = decodeBitmap(context, uri)
             ?: throw GardenException(AppText.s(R.string.photo_unreadable))
 
@@ -536,7 +543,7 @@ class GardenCamera(private val accessTokenProvider: suspend () -> Result<String>
         finished.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, out)
         if (finished !== decoded) finished.recycle()
         decoded.recycle()
-        return Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+        return out.toByteArray()
     }
 
     private companion object {

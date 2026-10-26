@@ -51,9 +51,13 @@ rust/                     Cargo workspace (build from here)
     normalise.rs          the plant-field clean-up rules
     brain.rs              optional local AI (Ollama); fails quietly if absent
     guides.rs             the START-HERE guides as HTML for /help (pages/help.rs)
+    plant_ai.rs           the desktop helper's queue: plant jobs, helper keys, backups, Approve
+    scan_queue.rs         the scan queue: scans from the phone, the PC's matches, one-tap confirm
+    scan_api.rs           its addresses: /app/scan/... (phone) and /plant-ai/scans, /plant-ai/catalog (helper)
     pages/*.rs            one file per page or endpoint (catalog.rs = catalog.php)
-    orchestrator/         /streamlit/, the plant admin (was a Streamlit app); 14 tabs,
+    orchestrator/         /streamlit/, the plant admin (was a Streamlit app); 18 tabs,
                           HTML built in Rust (no templates); start with its mod.rs
+                          (tab 18 = the Scan queue, scan.rs)
   junsgarden/templates/   the HTML, one file per page; {{ }} are the holes Rust fills
 db/schema.sql             database structure only (no data)
 docs/rust-port/           how it was built, verified, deployed; read README.md first

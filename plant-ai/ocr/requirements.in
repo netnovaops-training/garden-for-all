@@ -1,0 +1,19 @@
+# The libraries the tag reader (plant-ai/ocr) needs. Edit THIS file, then rebuild requirements.txt
+# (every library with its exact version and checksum) with:
+#   docker run --rm -v "$PWD":/w -w /w python:3.13-slim sh -c \
+#     "pip install -q pip-tools && pip-compile --generate-hashes --strip-extras --allow-unsafe -o requirements.txt requirements.in"
+#   pytesseract           talks to the Tesseract program installed by the Dockerfile
+#   pillow                opens and turns the pictures
+#   numpy                 pictures as arrays for RapidOCR
+#   rapidocr-onnxruntime  the PaddleOCR models, run with ONNX on the processor
+#   pyzbar                reads barcodes and QR codes (needs the zbar library, installed by the Dockerfile)
+# The last three lines only keep three libraries RapidOCR pulls in above the versions that fix
+# known security problems found by the image scan (Trivy, October 2026); raise them, never lower.
+pytesseract
+pillow
+numpy
+rapidocr-onnxruntime
+pyzbar
+msgpack>=1.2.1
+urllib3>=2.8.0
+setuptools>=78.1.1

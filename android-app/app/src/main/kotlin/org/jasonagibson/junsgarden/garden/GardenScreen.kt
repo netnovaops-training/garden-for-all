@@ -125,6 +125,9 @@ fun GardenScreen(
     // asked for.
     var showBulk by remember { mutableStateOf(false) }
     var askHowMany by remember { mutableStateOf(false) }
+    // The scan queue (ScanScreen.kt): tags and plants photographed one after another, kept on the
+    // phone, read by the computer at home. Its own big button, above the four camera tools.
+    var showScan by remember { mutableStateOf(false) }
 
     // What the camera was asked to do, so the result knows how to be read.
     var job by remember { mutableStateOf<Job?>(null) }
@@ -219,7 +222,13 @@ fun GardenScreen(
 
     Box(Modifier.fillMaxSize()) {
         val plant = openPlant
-        if (showBulk) {
+        if (showScan) {
+            ScanScreen(
+                camera = camera,
+                bottomInset = 24.dp,
+                onBack = { showScan = false },
+            )
+        } else if (showBulk) {
             BulkTagScreen(
                 camera = camera,
                 bottomInset = BAR_SPACE,
@@ -238,7 +247,7 @@ fun GardenScreen(
             )
         }
 
-        if (!open && !showBulk) {
+        if (!open && !showBulk && !showScan) {
             Column(
                 // A BACKGROUND, BECAUSE THE BAR FLOATS OVER THE CONTENT.
                 //
@@ -258,6 +267,15 @@ fun GardenScreen(
                     .background(MaterialTheme.colorScheme.background)
                     .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 16.dp),
             ) {
+                if (!guest) {
+                    androidx.compose.material3.Button(
+                        onClick = { showScan = true },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                    ) {
+                        Text(stringResource(R.string.scan_open), style = MaterialTheme.typography.titleMedium)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -572,7 +590,7 @@ private fun GardenAction(label: String, modifier: Modifier, onClick: () -> Unit)
 }
 
 /** A file the camera app may write into, and a content:// URI for it. */
-private fun newPhotoTarget(ctx: Context): Uri {
+internal fun newPhotoTarget(ctx: Context): Uri {
     val dir = File(ctx.cacheDir, "images").apply { mkdirs() }
     val file = File(dir, "garden_${System.currentTimeMillis()}.jpg")
     return FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", file)
@@ -594,7 +612,7 @@ private val BAR_SPACE = 132.dp
  * always turn over, and reading one side beats refusing to read any.
  */
 @Composable
-private fun BackSidePrompt(onTakeBack: () -> Unit, onSkip: () -> Unit) {
+internal fun BackSidePrompt(onTakeBack: () -> Unit, onSkip: () -> Unit) {
     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f))) {
         Surface(
             modifier = Modifier

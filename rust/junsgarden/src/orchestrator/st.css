@@ -110,6 +110,17 @@ textarea.st-input { resize: vertical; }
 .pa-quote { color: var(--st-muted); font-style: italic; }
 .pa-chips code { display: inline-block; margin: 0 .25rem .25rem 0; }
 .pa-key { font-family: monospace; font-size: 1rem; }
+/* scan queue (tab 18): big targets for a phone */
+.sq-file { width: 100%; padding: 1rem .5rem; font-size: 1.1rem; }
+.sq-card { border: 1px solid var(--st-border); border-radius: .75rem; padding: .75rem; margin: 0 0 1rem; }
+.sq-head { margin: 0 0 .5rem; }
+.sq-chip { display: inline-block; padding: .15rem .6rem; border-radius: 1rem; font-weight: 600; background: #eee; }
+.sq-wait { background: #eceff1; } .sq-work { background: #e3f2fd; } .sq-ok { background: #e8f5e9; }
+.sq-you { background: #fff8e1; } .sq-done { background: #c8e6c9; } .sq-bad { background: #ffebee; }
+.sq-cand { border: 1px solid var(--st-border); border-radius: .5rem; padding: .5rem .75rem; margin: 0 0 .5rem; }
+.sq-best { border-color: #2e7d32; border-width: 2px; }
+.sq-pct { float: right; font-weight: 700; }
+.sq-card .st-btn { min-height: 3rem; font-size: 1.05rem; }
 
 /* images */
 .st-gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }

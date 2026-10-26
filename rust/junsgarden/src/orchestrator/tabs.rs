@@ -52,6 +52,7 @@ pub async fn render(state: &AppState, req: &Req) -> String {
         15 => super::quick::render_add(state, req).await,
         16 => super::quick::render_receipt(state, req).await,
         17 => super::quick::render_pictures(state, req).await,
+        18 => super::scan::render(state, req).await,
         // A tab that has not been converted yet shows a short note. `super::TABS[n - 1]` is the
         // tab's name (lists count from 0).
         n => ui::info(&format!(

@@ -58,6 +58,26 @@ class Site:
         r = self.c.post(f"{self.base}/plant-ai/jobs/{int(job)}/{what}", json=body, headers=self._h)
         r.raise_for_status()
 
+    # The scan queue (scans.py): tags and plant photos Jun scanned with the phone.
+    def take_scans(self, n: int) -> list[dict]:
+        r = self.c.get(f"{self.base}/plant-ai/scans", params={"take": n}, headers=self._h)
+        r.raise_for_status()
+        return r.json().get("items", [])
+
+    def scan_photo(self, photo_id: int) -> bytes:
+        r = self.c.get(f"{self.base}/plant-ai/scan-photos/{int(photo_id)}", headers=self._h)
+        r.raise_for_status()
+        return r.content
+
+    def catalog(self) -> list[dict]:
+        r = self.c.get(f"{self.base}/plant-ai/catalog", headers=self._h)
+        r.raise_for_status()
+        return r.json().get("plants", [])
+
+    def post_scan(self, item: int, what: str, body: dict) -> None:
+        r = self.c.post(f"{self.base}/plant-ai/scans/{int(item)}/{what}", json=body, headers=self._h)
+        r.raise_for_status()
+
 
 def read_key(path: Path) -> str:
     """The key from its file: the first non-empty line, trimmed."""
@@ -121,15 +141,27 @@ def run_once(site: Site, take: int = 10) -> int:
     return done
 
 
+def run_round(site: Site, take: int = 10) -> int:
+    """One pass: first every waiting scan (quick, and Jun is waiting for them), then plant jobs.
+    A problem in one part never stops the other. Gives how much was done."""
+    n = 0
+    try:
+        from . import scans
+        n += scans.run_all(site)
+    except (httpx.HTTPError, ValueError, KeyError) as e:
+        batch.log(f"scan queue: site not reachable or odd answer: {type(e).__name__}")
+    try:
+        n += run_once(site, take)
+    except (httpx.HTTPError, ValueError, KeyError) as e:
+        batch.log(f"site not reachable or odd answer: {type(e).__name__}")
+    return n
+
+
 def run_forever(site: Site, poll: float = 60.0, take: int = 10) -> None:
-    """Ask every `poll` seconds while idle; straight away again after a busy round."""
+    """Ask every `poll` seconds while idle; straight away again after a busy round. Scans Jun adds
+    meanwhile are picked up at the start of the next round."""
     while True:
-        try:
-            n = run_once(site, take)
-        except (httpx.HTTPError, ValueError, KeyError) as e:
-            batch.log(f"site not reachable or odd answer: {type(e).__name__}")
-            n = 0
-        if n == 0:
+        if run_round(site, take) == 0:
             time.sleep(poll)
 
 

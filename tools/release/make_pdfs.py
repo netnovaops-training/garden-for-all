@@ -25,7 +25,7 @@ STEPS = [
     ("1 - Ubuntu on the computer", "1 - 컴퓨터에 Ubuntu 설치", ["01-ubuntu-laptop"]),
     ("2 - Docker and the install", "2 - Docker와 설치", ["02-docker", "03-run-your-garden"]),
     ("3 - Going online", "3 - 인터넷에 올리기", ["04-go-public-no-ip-caddy", "04b-take-over-junsgarden-zapto", "07-sso-gate", "14-reserve-your-ip", "20-ssh-and-remote-desktop"]),
-    ("4 - Email, keys and AI", "4 - 이메일, 키, AI", ["16-ai-studio", "05-gemini-prompts", "08-gemini-setup", "15-local-ai", "17-android-app-and-ai-coding"]),
+    ("4 - Email, keys and AI", "4 - 이메일, 키, AI", ["16-ai-studio", "05-gemini-prompts", "08-gemini-setup", "15-local-ai", "27-scan-queue", "17-android-app-and-ai-coding"]),
     ("5 - Backups and your data", "5 - 백업과 내 데이터", ["13-backups-and-folders", "12-your-database"]),
     ("6 - Everyday use and help", "6 - 평소에 쓰기와 도움", ["19-every-menu-option", "25-common-questions", "26-rename-move-and-switch", "09-troubleshooting", "11-maintain-your-site", "10-the-plan", "18-review-the-code", "06-shopping-list"]),
     # The terminal way: harder than Garden Bridge, but not tough, with the author's walkthrough. English only.

@@ -120,6 +120,7 @@ pub const STEPS: &[Step] = &[
             "05-gemini-prompts",
             "08-gemini-setup",
             "15-local-ai",
+            "27-scan-queue",
             "17-android-app-and-ai-coding",
         ],
     },

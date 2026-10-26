@@ -22,6 +22,7 @@ step by step. This README is the reference you come back to.
 | Plant page | One plant: photo, name, and everything recorded about it in cards, grouped the same way as the website. | `garden/PlantDetailScreen.kt`, `garden/PlantSections.kt` |
 | Camera buttons | Along the bottom: **Identify**, **Tag**, **Barcode**, **Receipt**. Guests only get **Barcode**. The phone's own camera app takes the photo. | `garden/GardenScreen.kt`, `garden/GardenCamera.kt` |
 | Many tags at once | From **Tag**, choose "Many at once": photograph a whole tray of tags (front, then back), check the pairs, send them all to be read later. | `garden/BulkTagScreen.kt` |
+| Scan plants | The big **Scan plants** button above the camera buttons (not for guests): pick the bed once, then **Scan a tag** (front, back) or **Photo of a plant**, one after another. Scans are kept on the phone, sent to the website when there is signal (also with the app closed), and shown with their status; a tap on a found one shows the best and likely matches with how sure the computer is, and one tap on **This one** adds the plant (the garden owner only). Also **Type it instead**. Guide 27. | `garden/ScanScreen.kt`, `ScanReview.kt`, `ScanModel.kt`, `ScanCore.kt` (the rules, unit-tested), `ScanStore.kt`, `ScanApi.kt`, `ScanSync.kt`, `ScanUploadWorker.kt` |
 | Theme | Pick a colour theme (Evergreen, Forest, Ivy and more) and Light, Dark or Match phone. | `ui/AppearanceSheet.kt`, `ui/GardenThemes.kt`, `ui/Theme.kt` |
 | Update offer | If the website has a newer version, a small box says "Update available" with **Update** and **Later**. | `app/Updater.kt`, `MainActivity.kt` |
 
@@ -43,12 +44,14 @@ does. Longer comments inside explain *why* things are done a certain way.
 | Log in, check login, log out | `GARDEN_BASE/app_api.php?action=login`, `whoami`, `logout` | It *is* the login |
 | Plant photos | `GARDEN_BASE/images/...` | No |
 | Identify, diagnose, tag, tag queue, receipt | `GARDEN_BASE/app/garden/identify`, `diagnose`, `tag`, `tag-queue`, `receipt` | Yes, the garden login key |
+| Scan queue: beds, list, new scan, confirm, change bed, remove, type a plant | `GARDEN_BASE/app/scan/beds`, `items`, `items/<id>/confirm`, `items/<id>/bed`, `items/<id>/remove`, `manual` | Yes, the garden login key (confirm: the garden owner only) |
 | Is there a newer app? | `https://junsgarden.zapto.org/apps/version.json` | No |
 
 `GARDEN_BASE` is set in `app/build.gradle.kts` (see below). On the website
 side, `app_api.php` is answered by `rust/junsgarden/src/pages/app_api.rs` (the
 old PHP name is kept so the app does not have to change), and `/app/garden/...`
-by `rust/junsgarden/src/pages/garden_camera.rs`. The rule in `AGENTS.md`
+by `rust/junsgarden/src/pages/garden_camera.rs`; `/app/scan/...` (the scan
+queue) by `rust/junsgarden/src/scan_api.rs`. The rule in `AGENTS.md`
 applies: you can add fields to these answers, but never rename or remove one,
 or the app breaks.
 

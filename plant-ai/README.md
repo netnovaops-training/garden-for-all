@@ -64,6 +64,63 @@ built in.
 
 Tests (no network, no Ollama): `python -m pytest plant-ai/tests -q`.
 
+## The scan queue (tags and plants scanned with the phone)
+
+Guide: `START-HERE/27-scan-queue.md`. The same helper (`worker.py`) also takes **scans** from the
+website, before it does plant jobs (`worker.run_round`). A scan is a tag (front, back) or a plant
+photo with a bed (by number) and a count. For each one (`scans.py`):
+
+```
+ tagocr.py    OCR service (ocr/, Docker, 127.0.0.1:8788) -> lines; tagparse.py -> name, Latin name,
+              size, grower, barcode. Weak reading -> gemma4:12b reads the picture (llm.ask).
+ catalog.py   the garden's plants (GET /plant-ai/catalog): barcode, name, Latin name, fuzzy
+ imgindex.py  the plant image index on 127.0.0.1:8099 (optional; a note when it is not running)
+ webfind.py   DuckDuckGo + grower/reference pages, with discover.py/pages.py (polite, cached)
+ matcher.py   clues combined (1 - product of doubts) -> best match + 2 to 4 likely, each with %
+```
+
+The garden lookup comes first; the photo index and the internet run at the same time in threads.
+The website decides "matched" (best at 75% or more and 15 points ahead) or "needs you" and keeps
+the scan until the garden owner taps one match (`scan_queue.rs`).
+
+The tag reader (`ocr/`): `docker build -t garden-ocr plant-ai/ocr`, then the `docker run` line at
+the top of `ocr/Dockerfile` (published on 127.0.0.1 only, read-only, no extra rights). The Windows
+wizard does this (`windows/Garden-PlantAi.ps1`). Settings: `PLANTAI_OCR` (address),
+`PLANTAI_OCR_ENGINE` (`rapid`, `tesseract` or `both`), `PLANTAI_IMAGE_INDEX` (address).
+
+### How the tag reader was chosen
+
+No real tag photos exist yet, so `python -m plantai synth --tags DIR --count 40 --seed 3` makes made-up
+tags (3 layouts, 9 font families, tilt, perspective, blur, shadow, noise, JPEG; front and back; real
+EAN-13 barcodes) and `python -m plantai ocr-eval --tags DIR` scores each engine on them.
+Fresh 40 tags (parsing rules were tuned on other seeds), the share of tags read right:
+
+| engine | name | Latin name | size | grower | barcode | all five |
+|---|---|---|---|---|---|---|
+| Tesseract | 47.5% | 62.5% | 80% | 82.5% | 100% | 22.5% |
+| RapidOCR (PaddleOCR models, ONNX) | 92.5% | 100% | 100% | 100% | 100% | **92.5%** |
+| both merged | 85% | 100% | 97.5% | 100% | 100% | 82.5% |
+
+(name, Latin name, grower: at least 85% alike; size and barcode exact. Barcodes are decoded with
+zbar, so they are exact in every row.) On 20 "hard" tags RapidOCR got all five on 70%. Seconds per
+tag on the processor (front and back): Tesseract 1.6, RapidOCR 4.7. These are made-up tags: they show the
+pipeline works, not the accuracy on Jun's tags. `gemma4:12b` as a reader was NOT measured (the
+graphics card was busy with another run and no model was pulled); it is only asked for weak readings.
+
+Lab test of the whole queue (a throw-away website and database in Docker, a fake phone, the real
+helper code): `python lab/scan-queue/e2e.py`.
+
+Not tested yet, because it needs a real phone, real tags or the graphics card:
+- the Android screens on a phone (they compile, lint and unit-test, but nobody has tapped them);
+  the phone camera app (TakePicture), the phone's own barcode read (ZXing), WorkManager sending
+  with the app closed and on a weak signal;
+- real nursery tags (glare, curved plastic, faded print, tags in pots, other languages);
+- `gemma4:12b` as the second reader (not pulled; the card was busy) and the real image index
+  (another branch; only its answer shape is tested);
+- the Windows wizard's new tag-reader step on a real Windows install (the script parses; Docker
+  Desktop on the wizard's PC was not exercised);
+- a very long queue (hundreds of scans) and two phones scanning at once.
+
 ---
 
 ## 한국어
@@ -90,3 +147,11 @@ Tests (no network, no Ollama): `python -m pytest plant-ai/tests -q`.
 설정: Windows 설치 마법사(CUSTOM, '로컬 식물 AI', 12GB 카드가 있을 때만 보여요) 또는 Windows 메뉴
 More, 22. **Linux 설치 프로그램(garden.sh)은 AI 모델을 절대 설치하지 않아요.** 도우미 키는 웹사이트에서
 만들어요 (식물 추가, 데스크톱 도우미, 도우미 키 만들기).
+
+**스캔 대기열** (폰으로 찍은 이름표와 식물): 안내서 `START-HERE/ko/27-scan-queue.md`. 같은 도우미가
+웹사이트의 **스캔**도 가져와요 (식물 작업보다 먼저). 스캔마다 `tagocr.py`가 이름표 글자를 읽고(Docker의
+`ocr/`, 이 PC의 127.0.0.1:8788, 약한 읽기는 gemma4:12b가 사진으로 읽어요), `catalog.py`가 내 정원에서,
+`imgindex.py`가 사진 색인(있으면)에서, `webfind.py`가 인터넷(DuckDuckGo, 재배 회사 페이지)에서 찾고,
+`matcher.py`가 가장 가까운 것과 가능성 있는 것 2~4개를 확신도와 함께 만들어요. 정원 주인이 한 번 누를 때까지는
+아무것도 추가되지 않아요. 이름표 읽기 프로그램은 가짜 이름표 40장으로 재서 골랐어요 (RapidOCR: 다섯 칸 모두
+맞은 것 92.5%, Tesseract 22.5%). 진짜 이름표로는 더 낮을 수 있어요.
