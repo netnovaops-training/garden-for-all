@@ -1,14 +1,16 @@
 #!/bin/sh
-# Before every push of this branch: no secret and no private detail may leave.
-#   sh docs/rust-pages/prepush.sh && git push origin rust-pages
-# Scans the commits not yet on GitHub (origin/rust-pages..HEAD): gitleaks over their full
-# patch, and a search of the added lines for home-network addresses, server paths, personal
-# names and addresses, keys and tokens. Prints PASS, or FAIL with what was found (values of
-# secrets are redacted by gitleaks; the search shows only the kind of match). Exit 1 = do not push.
+# Before every push: no secret and no private detail may leave.
+#   sh docs/rust-pages/prepush.sh && git push origin <branch>
+# Scans the commits not yet on GitHub: those after the branch's own copy there, or, for a new
+# branch, those after main. gitleaks over their full patch, and a search of the added lines for
+# home-network addresses, server paths, personal names and addresses, keys and tokens. Prints
+# PASS, or FAIL with what was found (values of secrets are redacted by gitleaks; the search shows
+# only the kind of match). Exit 1 = do not push.
 set -u
 cd "$(dirname "$0")/../.." || exit 1
-range="origin/rust-pages..HEAD"
-git rev-parse -q --verify origin/rust-pages >/dev/null || range="HEAD~1..HEAD"
+branch=$(git rev-parse --abbrev-ref HEAD)
+range="origin/$branch..HEAD"
+git rev-parse -q --verify "origin/$branch" >/dev/null || range="origin/main..HEAD"
 fail=0
 if ! git log -p "$range" | docker run --rm -i ghcr.io/gitleaks/gitleaks:latest stdin --redact --no-banner >/dev/null 2>&1; then
     echo "FAIL gitleaks found something (run: git log -p $range | gitleaks stdin --redact -v)"

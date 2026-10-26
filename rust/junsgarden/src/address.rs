@@ -124,7 +124,7 @@ fn hex32(s: &str) -> Option<[u8; 32]> {
 
 /// The site's own top-level names. Only links that start with one of these get the folder
 /// added, so links to other websites and to `//cdn...` are never touched.
-const OWN_PATHS: [&str; 29] = [
+const OWN_PATHS: [&str; 30] = [
     "images/",
     "js/",
     "sections/",
@@ -154,6 +154,7 @@ const OWN_PATHS: [&str; 29] = [
     "loader-preview.html",
     "favicon.svg",
     "ic_launcher_playstore.png",
+    "labels",
 ];
 
 /// Add `prefix` to every root-relative link of the site's own in `text`: a quote, bracket or
@@ -414,9 +415,10 @@ async fn labels(
          @media print{header,footer,.no-print{display:none!important}}</style>\
          <div class=\"page-content no-hero\" style=\"padding:16px\"><h1>🏷️ Labels / 이름표</h1>\
          <p class=\"no-print\">Print this page. The codes point to the garden's current address, and keep working after a \
-         domain change or a bed rename.<br>이 페이지를 인쇄하세요. 주소가 바뀌거나 화단 이름을 바꿔도 코드는 계속 작동해요.</p>\
-         <h2>Beds / 화단</h2><div class=\"lbls\">",
+         domain change or a bed rename.<br>이 페이지를 인쇄하세요. 주소가 바뀌거나 화단 이름을 바꿔도 코드는 계속 작동해요.</p>",
     );
+    body.push_str(&address_panel(&state).await);
+    body.push_str("<h2>Beds / 화단</h2><div class=\"lbls\">");
     for (id, name) in &beds {
         body.push_str(&card(format!("/qr/bed/{id}.png"), name, &format!("#{id}")));
     }
@@ -435,6 +437,178 @@ async fn labels(
     Html(layout::render(&state, page, &visitor).await).into_response()
 }
 
+// --- Changing the web address from the admin page --------------------------------------------
+//
+// The website cannot change the garden computer's front door (Caddy) or its settings file
+// itself, and it should not be able to. So the admin page only FILES A REQUEST: a small file
+// `address-request.json` in the data folder with the new web name and folder. On the garden
+// computer a systemd path unit (set up by `garden.sh address-watch`, part of the install)
+// notices the file within a second and runs `garden.sh address-request`, which checks the name
+// again and does the same one-step change as `garden.sh webname` (settings, front door, old
+// name forwarding, restart, labels). It writes the result to `address-status.json`, shown here.
+
+/// The request file the admin page writes, and the status file `garden.sh` writes back.
+const ADDRESS_REQUEST: &str = "address-request.json";
+const ADDRESS_STATUS: &str = "address-status.json";
+
+/// A web name someone may ask for: 4 to 253 of `a-z 0-9 . -`, at least one dot, every part
+/// between dots 1 to 63 long and not starting or ending with `-`, the last part two or more
+/// letters. (The same rule as garden.sh's valid_webname, which checks it again.)
+pub fn valid_web_name(s: &str) -> bool {
+    (4..=253).contains(&s.len())
+        && s.rsplit('.')
+            .next()
+            .is_some_and(|tld| tld.len() >= 2 && tld.bytes().all(|b| b.is_ascii_lowercase()))
+        && s.contains('.')
+        && s.split('.').all(|p| {
+            !p.is_empty()
+                && p.len() <= 63
+                && !p.starts_with('-')
+                && !p.ends_with('-')
+                && p.bytes()
+                    .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+        })
+}
+
+/// A folder after the web name: empty (the top) or `/name`, with `a-z 0-9 _ -`, at most 40.
+pub fn valid_folder(s: &str) -> bool {
+    let Some(rest) = s.strip_prefix('/') else {
+        return s.is_empty();
+    };
+    (1..=40).contains(&rest.len())
+        && rest
+            .bytes()
+            .next()
+            .is_some_and(|b| b.is_ascii_lowercase() || b.is_ascii_digit())
+        && rest
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_' || b == b'-')
+}
+
+/// The address box on the labels page: the address now, the last change, a waiting request,
+/// and the form to ask for a new one. Bilingual, like the rest of the page; never printed.
+async fn address_panel(state: &Arc<AppState>) -> String {
+    let data = state.data.clone();
+    let (request, status) = crate::guard::off_thread(move || {
+        let read = |name: &str| {
+            crate::store::file_in(&data, name)
+                .ok()
+                .and_then(|p| crate::store::read_json(&p).ok())
+                .filter(|m| !m.is_empty())
+        };
+        (read(ADDRESS_REQUEST), read(ADDRESS_STATUS))
+    })
+    .await;
+    let s = |m: &serde_json::Map<String, Value>, k: &str| {
+        he(m.get(k).and_then(Value::as_str).unwrap_or(""))
+    };
+    let mut out = format!(
+        "<div class=\"no-print\" style=\"border:1px solid #9a9;border-radius:10px;padding:12px;margin:12px 0\">\
+         <h2 style=\"margin-top:0\">🌐 Web address / 웹 주소</h2>\
+         <p>Now / 지금: <b>{}</b></p>",
+        he(&state.address.url)
+    );
+    if let Some(st) = &status {
+        let (at, old, new) = (s(st, "at"), s(st, "old"), s(st, "new"));
+        out.push_str(&if st.get("state").and_then(Value::as_str) == Some("done") {
+            format!(
+                "<p>✅ Changed on {at} from <b>{old}</b> to <b>{new}</b>. Every code on this page uses the \
+                 new address; labels printed before keep working.<br>{at}에 <b>{old}</b>에서 <b>{new}</b>(으)로 \
+                 바뀌었어요. 이 페이지의 모든 코드는 새 주소를 써요. 전에 인쇄한 이름표도 계속 작동해요.</p>"
+            )
+        } else {
+            let why = s(st, "message");
+            format!(
+                "<p>⚠️ The last change did not finish ({at}): {why}<br>지난번 변경이 끝나지 않았어요({at}): {why}</p>"
+            )
+        });
+    }
+    if let Some(rq) = &request {
+        let to = format!("{}{}", s(rq, "name"), s(rq, "folder"));
+        out.push_str(&format!(
+            "<p>⏳ Waiting for the garden computer to switch to <b>{to}</b> (usually under a minute; \
+             reload this page).<br>정원 컴퓨터가 <b>{to}</b>(으)로 바꾸는 중이에요(보통 1분 안. 이 페이지를 \
+             새로 고치세요).</p>"
+        ));
+    }
+    out.push_str(
+        "<form method=\"post\" action=\"/labels/address\" style=\"display:flex;flex-wrap:wrap;gap:8px;align-items:end\">\
+         <label>New web name / 새 웹 이름<br><input name=\"name\" required placeholder=\"name.zapto.org\" \
+         pattern=\"[a-z0-9.-]+\" autocapitalize=\"off\" spellcheck=\"false\"></label>\
+         <label>Folder (optional) / 폴더(선택)<br><input name=\"folder\" placeholder=\"/garden\" \
+         pattern=\"(/[a-z0-9][a-z0-9_-]*)?\"></label>\
+         <button type=\"submit\">Change the address / 주소 바꾸기</button></form>\
+         <p><small>In one step: the settings, the front door, the codes on this page and the phone app's \
+         address all change; the old name keeps forwarding. The new name must be in your No-IP account \
+         first (guide 04).<br>한 번에: 설정, 현관문, 이 페이지의 코드, 휴대폰 앱의 주소가 모두 바뀌고, 예전 \
+         이름은 계속 새 이름으로 넘겨줘요. 새 이름은 먼저 내 No-IP 계정에 있어야 해요(안내서 04).</small></p></div>",
+    );
+    out
+}
+
+/// `POST /labels/address`: the admin asks for a new web address. Checked here, written to
+/// `address-request.json` for `garden.sh` to carry out (and checked there again).
+async fn ask_new_address(
+    State(state): State<Arc<AppState>>,
+    Extension(visitor): Extension<Visitor>,
+    headers: axum::http::HeaderMap,
+    body: axum::body::Bytes,
+) -> Response {
+    if !visitor.is_admin() {
+        return Redirect::to("/login.php?back=/labels").into_response();
+    }
+    let f = crate::formdata::parse(&headers, body).await;
+    let name = f.str("name").trim().to_ascii_lowercase();
+    let folder = f
+        .str("folder")
+        .trim()
+        .trim_end_matches('/')
+        .to_ascii_lowercase();
+    let back = "<p><a href=\"/labels\">Back / 돌아가기</a></p>";
+    if !valid_web_name(&name) || !valid_folder(&folder) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Html(format!(
+                "<p>That does not look like a web name (like name.zapto.org) and an optional folder \
+                 (like /garden). / 웹 이름(예: name.zapto.org)과 폴더(예: /garden)가 맞지 않아요.</p>{back}"
+            )),
+        )
+            .into_response();
+    }
+    let request = json!({
+        "name": name,
+        "folder": folder,
+        "by": visitor.db_name(),
+        "at": common::now_local().unix_timestamp(),
+    });
+    let data = state.data.clone();
+    // `None` = saved; `Some(why)` = not saved.
+    let failed = crate::guard::off_thread(move || {
+        crate::store::file_in(&data, ADDRESS_REQUEST)
+            .and_then(|p| {
+                crate::store::write_atomic(
+                    &p,
+                    &serde_json::to_vec_pretty(&request).unwrap_or_default(),
+                )
+            })
+            .err()
+            .map(|e| e.to_string())
+    })
+    .await;
+    if let Some(e) = failed {
+        tracing::error!("address request not saved: {e}");
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Html(format!(
+                "<p>The request could not be saved. / 요청을 저장하지 못했어요.</p>{back}"
+            )),
+        )
+            .into_response();
+    }
+    tracing::info!("web address change requested: {name}{folder}");
+    Redirect::to("/labels").into_response()
+}
+
 /// The routes this file answers.
 pub fn routes() -> Router<Arc<AppState>> {
     Router::new()
@@ -447,6 +621,7 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/app/config.json", get(config))
         .route("/app/setup", get(setup_page))
         .route("/labels", get(labels))
+        .route("/labels/address", axum::routing::post(ask_new_address))
 }
 
 #[cfg(test)]
@@ -552,5 +727,65 @@ mod tests {
         assert_eq!(&png[..8], b"\x89PNG\r\n\x1a\n");
         let img = image::load_from_memory(&png).unwrap();
         assert_eq!(img.width(), img.height());
+    }
+
+    #[test]
+    fn only_plain_web_names_and_folders_can_be_asked_for() {
+        for ok in [
+            "name.zapto.org",
+            "my-garden.example.com",
+            "a1.bc",
+            "xn--bcher-kva.example",
+        ] {
+            assert!(valid_web_name(ok), "{ok}");
+        }
+        for bad in [
+            "",
+            "nodot",
+            "Name.zapto.org",
+            "a1.b2",
+            "a.c",
+            "-a.org",
+            "a-.org",
+            "a..org",
+            ".a.org",
+            "a.org.",
+            "a.org/x",
+            "a.org;rm -rf",
+            "a.org\n",
+            "a b.org",
+            "https://a.org",
+            &"a".repeat(64),
+        ] {
+            assert!(!valid_web_name(bad), "{bad:?}");
+        }
+        for ok in ["", "/garden", "/g", "/my_garden-2"] {
+            assert!(valid_folder(ok), "{ok}");
+        }
+        for bad in [
+            "garden",
+            "/",
+            "/Garden",
+            "/_x",
+            "/a/b",
+            "/../x",
+            "/a b",
+            "/a;b",
+            &format!("/{}", "a".repeat(41)),
+        ] {
+            assert!(!valid_folder(bad), "{bad:?}");
+        }
+    }
+
+    #[test]
+    fn labels_stay_inside_the_folder() {
+        assert_eq!(
+            add_prefix("<a href=\"/labels\">", "/garden"),
+            "<a href=\"/garden/labels\">"
+        );
+        assert_eq!(
+            add_prefix("action=\"/labels/address\"", "/garden"),
+            "action=\"/garden/labels/address\""
+        );
     }
 }

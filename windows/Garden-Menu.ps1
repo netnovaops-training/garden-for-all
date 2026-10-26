@@ -734,6 +734,24 @@ function Clean-Webname($raw) {
     return $n
 }
 function Test-Webname($n) { return ($n -match '^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$') }
+
+# -Action webname -WebName NEW [-Folder /garden]: change the garden's web address in one step on
+# the garden computer (garden.sh webname), bring this PC's copy along, then open the new labels.
+function Change-Address {
+    $new = Clean-Webname $WebName
+    # (English here; the garden computer's own lines below follow its language setting, so
+    # they are in Korean too when Korean is chosen. This file stays ASCII for Windows PowerShell.)
+    if (-not (Test-Webname $new)) { Fail "`"$new`" does not look like a web name (like name.zapto.org)"; return }
+    if ($Folder -and $Folder -cnotmatch '^/[a-z0-9][a-z0-9_-]{0,39}$') { Fail "a folder is / and then letters, numbers, - or _ (like /garden)"; return }
+    Say "Changing the web address to $new$Folder"
+    Note "Settings, the front door, the codes on the labels page and the phone app's address change"
+    Note "together; the old name keeps forwarding."
+    $job = "webname $new"
+    if ($Folder) { $job += " $Folder" }
+    if ((Invoke-Garden $job "ASSUME_YES=1 ") -ne 0) { Fail "the change stopped. Read the lines above."; return }
+    Sync-Webname-Here
+    Open-Website "/labels"
+}
 # The name THIS PC's copy of the files uses now.
 function Get-Webname-Here { return (Get-Webname ([IO.File]::ReadAllText((Join-Path $Root "site\apps\version.json")))) }
 
@@ -1141,6 +1159,9 @@ switch ($Action) {
     # The same pages garden.sh app / garden.sh labels show, opened in THIS PC's browser.
     "open-app-setup" { Open-Website "/app/setup" }
     "open-labels" { Open-Website "/labels" }
+    # The web address in one step (the same as garden.sh webname NAME [FOLDER] and the labels
+    # page's form): settings, front door, old name forwarding, restart, then the new labels.
+    "webname" { Change-Address }
     "copy-newest-quiet" { Copy-Newest-Quiet }
     default   { exit (Invoke-Garden $Action) }
 }

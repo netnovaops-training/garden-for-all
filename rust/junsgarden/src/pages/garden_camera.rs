@@ -137,6 +137,15 @@ pub async fn garden_camera(
         }
         // The call itself failed (garden-ingest is down or timed out). Log the real
         // error for the author, and give the phone a plain message without details.
+        // Nothing listens at all: the garden tools part is off on this garden (not a fault).
+        // Say how to turn it on, with 503 (not available) instead of 502 (something broke).
+        Err(e) if e.is_connect() => {
+            tracing::warn!("/app/garden/{action}: the garden tools are not running ({e})");
+            reply(
+                StatusCode::SERVICE_UNAVAILABLE,
+                json!({ "error": "The camera tools are turned off on this garden. On the garden computer: menu 9 (Parts), then garden tools. / 이 정원에서는 카메라 도구가 꺼져 있어요. 정원 컴퓨터에서: 메뉴 9(구성 요소), 정원 도구." }),
+            )
+        }
         Err(e) => {
             tracing::error!("/app/garden/{action}: {e}");
             reply(

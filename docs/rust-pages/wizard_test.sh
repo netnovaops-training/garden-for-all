@@ -92,6 +92,28 @@ if [ -n "$folder" ]; then
     inside "grep -q '^PUBLIC_PATH=$folder\$' /home/jun/junsgarden/.env" && ok "folder $folder saved" || bad "folder $folder saved"
 fi
 
+# The web address changes in ONE step, the way Jun would do it on the website: the labels page's
+# form files the request, the address watcher (systemd, set up by the install) carries it out.
+newname=garden-new.example.test
+inside "systemctl is-enabled junsgarden-address.path" 2>/dev/null | grep -q enabled \
+    && ok "address watcher installed" || bad "address watcher installed"
+c=$(inside "curl -s -b /tmp/j -o /dev/null -w '%{http_code}' -X POST --data-urlencode name=$newname --data-urlencode folder=$folder http://localhost:8030/labels/address")
+[ "$c" = 303 ] && ok "labels page accepts the new address ($c)" || bad "labels page accepts the new address ($c)"
+st=/home/jun/junsgarden/local/data/address-status.json
+for _ in $(seq 120); do inside "grep -q '\"new\":\"$newname' $st" 2>/dev/null && break; sleep 5; done
+inside "grep -q '\"state\":\"done\"' $st" 2>/dev/null && ok "the garden computer made the change" || bad "the garden computer made the change"
+inside "curl -s http://localhost:8030/app/config.json" | grep -q "\"base\":\"https://$newname$folder\"" \
+    && ok "app config (signed) names the new address" || bad "app config names the new address"
+lp=$(inside "curl -s -b /tmp/j http://localhost:8030/labels")
+printf '%s' "$lp" | grep -q "<b>https://$newname$folder</b>" && ok "labels page shows the new address" || bad "labels page shows the new address"
+printf '%s' "$lp" | grep -q "Changed on" && ok "labels page says the codes use it" || bad "labels page says the codes use it"
+inside "grep -q $newname /home/jun/junsgarden/site/privacy.html /home/jun/junsgarden/site/apps/version.json" \
+    && ok "site files say the new name" || bad "site files say the new name"
+[ "$(code /q/1)" = 302 ] || [ "$(code /q/1)" = 303 ] && ok "an old printed code (/q/1) still lands" || bad "an old printed code (/q/1) still lands"
+inside "grep -q '^OLD_NAMES=.*junsgarden.zapto.org' /home/jun/junsgarden/.env" \
+    && ok "the old name is kept forwarding" || bad "the old name is kept forwarding"
+
 echo "$((results-failed))/$results passed"
-docker rm -f "$name" >/dev/null 2>&1; docker volume rm "$name-docker" "$name-containerd" >/dev/null 2>&1
+# KEEP=1 keeps the machine to look inside (docker exec -it gp-wiz-<lang> bash); remove it after.
+[ "${KEEP:-0}" = 1 ] || { docker rm -f "$name" >/dev/null 2>&1; docker volume rm "$name-docker" "$name-containerd" >/dev/null 2>&1; }
 [ $failed = 0 ]
