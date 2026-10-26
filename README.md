@@ -35,6 +35,7 @@ Its public home: <https://github.com/netnovaops-training/garden-for-all>.
 | [`docker/`](docker/), [`docker-compose.yml`](docker-compose.yml) | Each program in its own container; only the front door faces the internet |
 | [`START-HERE/`](START-HERE/) | Guides 00 to 26, each with a quick version first; Korean in [`START-HERE/ko/`](START-HERE/ko/) |
 | [`PDF guides/`](PDF%20guides/) | Every guide as a PDF, short and full, to read or print: `English/` and `Korean/` (한국어) |
+| [`walkthrough/`](walkthrough/) | How to use the garden, a picture for every step: [English PDF](walkthrough/JunsGarden-guide-English.pdf), [Korean PDF](walkthrough/JunsGarden-guide-Korean.pdf) (한국어) |
 | [`tools/release/`](tools/release/) | How the downloads, PDFs and the web handbook are built (`build_release.py`), and the checks run before each release |
 
 The garden's own data (plants database, photos, wiki pages) is **not** in this
@@ -86,4 +87,5 @@ MIT: free to use, change and share. See [`LICENSE`](LICENSE).
   영어·한국어 안내서를 만들었어요.
 - 이 코드나 기록에는 비밀번호, 키, 계정이 하나도 없어요. 설치할 때마다 새 비밀 정보를 만들어요.
 - 시작: [`00-READ-ME-FIRST-KO.html`](00-READ-ME-FIRST-KO.html), 안내서: [`START-HERE/ko/`](START-HERE/ko/). 한 페이지 요약: [`HANDOVER-SUMMARY.md`](HANDOVER-SUMMARY.md).
+- 사진으로 보는 사용법(단계마다 사진 한 장): [한국어 PDF](walkthrough/JunsGarden-guide-Korean.pdf), [English PDF](walkthrough/JunsGarden-guide-English.pdf).
 - MIT 라이선스: 자유롭게 쓰고, 바꾸고, 나눌 수 있어요.
