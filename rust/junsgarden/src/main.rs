@@ -68,6 +68,7 @@ mod normalise;
 mod orchestrator;
 mod pages;
 mod php;
+mod plant_ai;
 mod rowjson;
 mod session;
 mod store;
@@ -351,6 +352,11 @@ async fn ensure_tables(db: &MySqlPool, users: &[accounts::Account]) -> anyhow::R
     // The session and account tables are described in their own files.
     session::ensure_table(db).await?;
     accounts::ensure_tables(db, users).await?;
+    // The local plant AI's queue, helper keys and backups (new tables only). A problem here
+    // only switches that feature off; the rest of the site starts as usual.
+    if let Err(e) = plant_ai::ensure_tables(db).await {
+        tracing::warn!("could not make the plant AI tables: {e}");
+    }
     Ok(())
 }
 
@@ -518,6 +524,9 @@ async fn run() -> anyhow::Result<()> {
         .merge(help::routes())
         // Labels, short QR paths, and the app's address and setup page (address.rs).
         .merge(address::routes())
+        // The desktop helper's queue (plant_ai.rs): its own key, home network only. A result
+        // carries up to 5 photos, so it gets the photo-sized allowance.
+        .merge(plant_ai::routes().layer(uploads))
         // Layers wrap every route above them; the LAST one added is the OUTERMOST. So, in
         // order: refuse a post another website sent, work out who the visitor is (session.rs),
         // run the page; and every answer, a refusal included, gets the security headers.

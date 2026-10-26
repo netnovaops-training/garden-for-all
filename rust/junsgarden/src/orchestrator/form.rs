@@ -838,24 +838,15 @@ pub fn render(p: &Map<String, Value>, data: &Map<String, Value>, ctx: &FormCtx) 
     h.push_str(&ui::subheader(
         "✅ Section 14: Validation Signing Authority",
     ));
-    // Small helper: is this yes/no field switched on?
-    let on = |k: &str| matches!(s(p, k).trim(), "1" | "true" | "True");
-    h.push_str(&ui::columns(
-        &[1, 1],
-        vec![
-            ui::toggle(
-                "approved_jason",
-                "Author Signature Sign-Off",
-                on("approved_jason"),
-                None,
-            ),
-            ui::toggle(
-                "approved_jun",
-                "Jun Rae Signature Sign-Off",
-                on("approved_jun"),
-                None,
-            ),
-        ],
+    // Approval is the garden owner's Approve button (Add plant review, Awaiting Approval), not a
+    // switch here, so saving this form never changes it. Only the owner's approval is shown;
+    // nothing else is asked for.
+    h.push_str(&ui::markdown(
+        if crate::plant_ai::is_approved(p) {
+            "✅ **Approved by the garden owner.** / 정원 주인이 승인했어요."
+        } else {
+            "⏳ **Not approved yet.** The garden owner approves with the ✅ Approve button (Add plant tab, or Awaiting Approval). / 아직 승인되지 않았어요. 정원 주인이 ✅ 승인 버튼으로 승인해요."
+        },
     ));
     h.push_str(&ui::button("save", "1", "Save Changes", true, true));
     h.push_str("</form>");
@@ -1087,10 +1078,11 @@ pub async fn save(state: &crate::AppState, f: &crate::formdata::FormData) -> Vec
             None
         },
     ));
-    // Tick boxes: only sent by the browser when ticked, so absent means 0.
-    for k in ["approved_jason", "approved_jun", "needs_review"] {
-        sets.push((k, Some(if f.has(k) { "1" } else { "0" }.to_string())));
-    }
+    // Tick boxes: only sent by the browser when ticked, so absent means 0. The approval columns
+    // are not written here: only the owner's Approve button changes `approved_jun`, and the old
+    // second sign-off column is left exactly as it is.
+    let flag = if f.has("needs_review") { "1" } else { "0" };
+    sets.push(("needs_review", Some(flag.to_string())));
     // Calendar months from the form.
     let grow = months_from_form(f, ("gs", "ge"), "gm");
     // "Does not bloom" clears the bloom months and sets bloom_color to "Not ornamental".

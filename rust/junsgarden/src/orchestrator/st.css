@@ -97,7 +97,19 @@ textarea.st-input { resize: vertical; }
 .st-drop-s { display: block; font-size: .875rem; color: var(--st-muted); }
 .st-drop-b { margin: 0 0 0 auto; }
 .st-num { display: block; text-align: right; }
-.st-thumb { height: 30px; display: block; margin: 0 auto; }
+.st-thumb { height: 30px; width: 40px; object-fit: cover; display: block; margin: 0 auto; }
+
+/* the Advanced row of tabs, and the newer tabs (quick.rs): one photo file, sized here */
+.st-advanced { margin: -.5rem 0 1rem; font-size: .875rem; }
+.st-advanced summary { cursor: pointer; color: var(--st-muted); }
+.st-advanced .st-tabs { margin: .25rem 0 0; }
+.pa-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .75rem; margin: 0 0 1rem; }
+.pa-photo { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: .5rem; border: 1px solid var(--st-border); display: block; }
+.pa-bar { height: .5rem; background: #eee; border-radius: .25rem; overflow: hidden; margin: .25rem 0; min-width: 6rem; }
+.pa-bar span { display: block; height: 100%; background: #2e7d32; }
+.pa-quote { color: var(--st-muted); font-style: italic; }
+.pa-chips code { display: inline-block; margin: 0 .25rem .25rem 0; }
+.pa-key { font-family: monospace; font-size: 1rem; }
 
 /* images */
 .st-gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }

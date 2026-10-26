@@ -71,6 +71,8 @@ mod export;
 pub mod form;
 /// The image manager (fetch, upload, remove photos).
 mod gallery;
+/// English or Korean for the newer screens (a small cookie).
+mod lang;
 /// The drop-down lists and the "missing fields" rule.
 pub mod opts;
 /// Tab 11, the JSON Pipeline (export, AI in a file, import).
@@ -79,6 +81,8 @@ mod pipeline;
 mod pipeline_ref;
 /// The wishlist side of the JSON Pipeline.
 mod pipeline_wl;
+/// Tabs 15-17: Add plant (with the AI queue, review and Approve), Receipt, Pictures.
+mod quick;
 /// One function per remaining tab, and the tab picker.
 mod tabs;
 /// Streamlit's widgets drawn as HTML.
@@ -86,11 +90,12 @@ pub mod ui;
 /// Tab 13 (Wishlist) and tab 14 (Barcodes).
 mod wishlist;
 
-/// The tabs, exactly as Streamlit labelled them, in order.
+/// The tabs, in order. 1 to 14 are the Streamlit app's own (their numbers stay, so old links
+/// keep working); 15 to 17 are the short path for a new plant (quick.rs), shown first.
 /// Tab number N in the address (`?tab=N`) is entry N-1 in this list, because lists start counting
-/// at 0. `[&str; 14]` means exactly 14 text pieces.
-pub const TABS: [&str; 14] = [
-    "🌱 Add Plant",
+/// at 0. `[&str; 17]` means exactly 17 text pieces.
+pub const TABS: [&str; 17] = [
+    "🌱 Add Plant (full form)",
     "📝 Manual Review (AI)",
     "✨ Fill Missing Data (AI)",
     "✍️ Manual Editor",
@@ -104,7 +109,27 @@ pub const TABS: [&str; 14] = [
     "🗺️ Bed Assignment",
     "🌟 Wishlist",
     "🏷️ Barcodes",
+    "🌱 Add plant",
+    "🧾 Receipt",
+    "🖼️ Pictures",
 ];
+
+/// The order the tabs are shown in. The main row first; then the "Advanced" row, which holds
+/// the cloud-AI tabs, the full Add Plant form and the JSON Pipeline (import/export).
+const MAIN_TABS: [usize; 12] = [15, 16, 17, 4, 5, 6, 7, 8, 9, 12, 13, 14];
+const ADVANCED_TABS: [usize; 5] = [11, 1, 2, 3, 10];
+/// The tab shown when the address names none.
+const DEFAULT_TAB: usize = 15;
+
+/// Write checked {field: value} pairs to one plant (the JSON Pipeline's own `commit`, so lists,
+/// month codes and real-column checks work the same way). Used by crate::plant_ai.
+pub async fn commit_fields(
+    state: &AppState,
+    id: i64,
+    fields: &Map<String, Value>,
+) -> Result<usize, String> {
+    pipeline::commit(state, "data_source", id, fields, false).await
+}
 
 /// GET /streamlit/st.css. Sends the stylesheet. `async fn` is a function that can pause while it
 /// waits (for the network or the database) without blocking other requests; callers use `.await` to
@@ -141,10 +166,14 @@ pub async fn js() -> Response {
 /// else on the address.
 /// A `struct` groups named fields into one value. This one is made once per page request.
 pub struct Req {
-    /// The tab number, 1 to 14.
+    /// The tab number, 1 to 17.
     pub tab: usize,
     /// Every setting from the address, such as `p` (plant id) or `sub` (inner tab).
     pub q: HashMap<String, String>,
+    /// English or Korean (the newer tabs).
+    pub lang: lang::Lang,
+    /// Is the signed-in person the garden owner (the only one who may Approve)?
+    pub owner: bool,
 }
 
 /// An `impl` block holds the functions (methods) that belong to a type.
@@ -320,32 +349,49 @@ fn url_decode(s: &str) -> String {
 /// Wraps a tab's HTML in the whole page: the head with the stylesheet and script, the sidebar (who
 /// is logged in, Logout, the AI model note) and the row of 14 tab links. `body` is the tab's HTML
 /// and `flash` the messages from the last action. Returns the page as a `String`.
-fn shell(visitor: &Visitor, tab: usize, flash: &str, body: &str) -> String {
-    // Build the row of tab links. `mut` allows the String to grow.
-    let mut tabs = String::new();
-    // `enumerate` gives each tab its position; tab numbers start at 1, so the link uses i + 1. The
-    // current tab gets the class "on" so it is highlighted.
-    for (i, t) in TABS.iter().enumerate() {
-        tabs.push_str(&format!(
-            "<a href=\"/streamlit/?tab={}\"{}>{}</a>",
-            i + 1,
-            if i + 1 == tab { " class=\"on\"" } else { "" },
-            he(t)
-        ));
-    }
+fn shell(visitor: &Visitor, tab: usize, flash: &str, body: &str, l: lang::Lang) -> String {
+    // One tab link; the current tab gets the class "on" so it is highlighted. The newer tabs
+    // have Korean names too (quick.rs); the Streamlit tabs keep their English names.
+    let link = |n: usize| {
+        format!(
+            "<a href=\"/streamlit/?tab={n}\"{}>{}</a>",
+            if n == tab { " class=\"on\"" } else { "" },
+            he(quick::tab_label(n, l).unwrap_or(TABS[n - 1]))
+        )
+    };
+    let tabs: String = MAIN_TABS.iter().map(|n| link(*n)).collect();
+    let adv: String = ADVANCED_TABS.iter().map(|n| link(*n)).collect();
+    // The Advanced row: closed unless one of its tabs is open.
+    let advanced = format!(
+        "<details class=\"st-advanced\"{}><summary>{}</summary><nav class=\"st-tabs\">{adv}</nav></details>",
+        if ADVANCED_TABS.contains(&tab) { " open" } else { "" },
+        he(l.t("⚙️ Advanced: JSON import and export, cloud AI, the full form", "⚙️ 고급: JSON 가져오기·내보내기, 클라우드 AI, 전체 양식"))
+    );
+    // The language links: they set the `st_lang` cookie and come back to this tab.
+    let langs = format!(
+        "<p class=\"st-caption\"><a href=\"/streamlit/?setlang=en&amp;tab={tab}\">English</a> · <a href=\"/streamlit/?setlang=ko&amp;tab={tab}\">한국어</a></p>"
+    );
     // `format!` builds a String; `{name}` marks where a value is placed. Everything that comes from
     // outside (the user name) is escaped with `he()`.
     format!(
-        "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
+        "<!DOCTYPE html><html lang=\"{code}\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\
 <title>Garden Data Orchestrator</title><link rel=\"stylesheet\" href=\"/streamlit/st.css\"><script src=\"/streamlit/st.js\" defer></script></head>\
 <body><div class=\"st-decoration\"></div><div class=\"st-app\"><aside class=\"st-sidebar\"><h2>⚙️ Settings</h2>\
-<p>👤 <strong>Logged in as: {user}</strong></p>\
-<form method=\"post\" action=\"/streamlit/\"><input type=\"hidden\" name=\"act\" value=\"logout\"><button class=\"st-btn\" type=\"submit\">Logout</button></form>\
-<label class=\"st-field\"><span class=\"st-label\">AI model</span><input class=\"st-input\" value=\"free cloud models (Gemini, OpenRouter)\" disabled></label>\
-<p class=\"st-caption\">The Streamlit app's \"Claude Model Name\" box. The AI tabs now use free cloud models only (DEVIATIONS.md S-4).</p>\
+<p>👤 <strong>{logged}: {user}</strong></p>{langs}\
+<form method=\"post\" action=\"/streamlit/\"><input type=\"hidden\" name=\"act\" value=\"logout\"><button class=\"st-btn\" type=\"submit\">{logout}</button></form>\
+<label class=\"st-field\"><span class=\"st-label\">AI</span><input class=\"st-input\" value=\"{ai}\" disabled></label>\
+<p class=\"st-caption\">{ai_note}</p>\
 <p class=\"st-caption\"><a href=\"/\">← Jun's Garden</a></p></aside>\
-<main class=\"st-main\">{h1}<nav class=\"st-tabs\">{tabs}</nav>{flash}{body}</main></div></body></html>",
+<main class=\"st-main\">{h1}<nav class=\"st-tabs\">{tabs}</nav>{advanced}{flash}{body}</main></div></body></html>",
+        code = l.code(),
         user = he(&visitor.username),
+        logged = he(l.t("Logged in as", "로그인한 사람")),
+        logout = he(l.t("Logout", "로그아웃")),
+        ai = he(l.t("Add plant: local AI (desktop helper)", "식물 추가: 로컬 AI (데스크톱 도우미)")),
+        ai_note = he(l.t(
+            "Add plant uses the local AI on the desktop PC. The tabs under Advanced use free cloud models (DEVIATIONS.md S-4).",
+            "식물 추가는 데스크톱 PC의 로컬 AI를 써요. '고급' 아래 탭들은 무료 클라우드 모델을 써요 (DEVIATIONS.md S-4).",
+        )),
         h1 = ui::h1("🌱 Jun & Kona's Garden Orchestrator"),
     )
 }
@@ -386,6 +432,55 @@ pub async fn page(
                 q.insert(k, v);
             }
         }
+    }
+    // `?setlang=ko|en`: remember the language (a year-long cookie for this tool only) and go
+    // back to the same tab.
+    if let Some(code) = q.get("setlang") {
+        let t = q
+            .get("tab")
+            .and_then(|t| t.parse::<usize>().ok())
+            .filter(|t| (1..=TABS.len()).contains(t))
+            .unwrap_or(DEFAULT_TAB);
+        let mut res = redirect(&format!("/streamlit/?tab={t}"));
+        let v = if code == "ko" { "ko" } else { "en" };
+        if let Ok(c) = HeaderValue::from_str(&format!(
+            "st_lang={v}; Path=/streamlit; Max-Age=31536000; SameSite=Lax"
+        )) {
+            res.headers_mut().append(header::SET_COOKIE, c);
+        }
+        return res;
+    }
+    let l = lang::Lang::from_headers(&headers);
+    // The newer tabs' downloads: the still-missing file and a kept receipt.
+    match q.get("export").map(String::as_str) {
+        Some("pa_missing") => {
+            let id = crate::php::php_int(q.get("id").map(String::as_str).unwrap_or(""));
+            return match quick::missing_export(&state, id).await {
+                Some((body, name)) => attachment(body, "application/json", &name),
+                None => StatusCode::NOT_FOUND.into_response(),
+            };
+        }
+        Some("pa_receipt") => {
+            let id = crate::php::php_int(q.get("id").map(String::as_str).unwrap_or(""));
+            return match quick::receipt_file(&state, id).await {
+                Some((bytes, mime, name)) => {
+                    let mut res = (
+                        [
+                            (header::CONTENT_TYPE, mime),
+                            (header::CACHE_CONTROL, "no-store"),
+                        ],
+                        bytes,
+                    )
+                        .into_response();
+                    if let Ok(v) = HeaderValue::from_str(&format!("inline; filename=\"{name}\"")) {
+                        res.headers_mut().insert(header::CONTENT_DISPOSITION, v);
+                    }
+                    res
+                }
+                None => StatusCode::NOT_FOUND.into_response(),
+            };
+        }
+        _ => {}
     }
     // The image manager's "does this look right?" preview picture.
     // `?preview=<id>`: send the waiting preview picture as WebP, or 404 (not found) if there is
@@ -462,21 +557,27 @@ pub async fn page(
     if let Some(kind) = q.get("export") {
         return download(&state, kind, &q).await;
     }
-    // Pick the tab: read `tab`, parse it as a number, keep it only if it is 1 to 14, otherwise use
-    // tab 1.
+    // Pick the tab: read `tab`, parse it as a number, keep it only if it is 1 to 17, otherwise use
+    // the Add plant tab.
     let tab = q
         .get("tab")
         .and_then(|t| t.parse::<usize>().ok())
         .filter(|t| (1..=TABS.len()).contains(t))
-        .unwrap_or(1);
+        .unwrap_or(DEFAULT_TAB);
     // Bundle the tab and settings for the tab functions.
-    let req = Req { tab, q };
+    let owner = crate::plant_ai::is_owner(&state, &visitor);
+    let req = Req {
+        tab,
+        q,
+        lang: l,
+        owner,
+    };
     // Draw the tab. This waits on the database, hence `.await`.
     let body = tabs::render(&state, &req).await;
     // Messages left by the previous action, as HTML.
     let flash = read_flash(&headers);
     // Build the page reply.
-    let mut res = Html(shell(&visitor, tab, &flash, &body)).into_response();
+    let mut res = Html(shell(&visitor, tab, &flash, &body, l)).into_response();
     // The messages were shown, so delete the cookie (Max-Age=0) so they do not appear again.
     if !flash.is_empty() {
         res.headers_mut().append(
@@ -598,7 +699,39 @@ pub async fn action(
     // Pick the code to run from the action name. The names start with a prefix that tells which
     // area handles it: "add_" Add Plant, "jp_" JSON Pipeline, "ai_" the AI tabs, "wl_" wishlist,
     // "bc_" barcodes, "img_" image manager.
+    let l = lang::Lang::from_headers(&headers);
+    // A new desktop-helper key is shown once, on its own page, and never kept in a cookie.
+    if f.str("act") == "pa_key_new" {
+        return match quick::make_key(&state, &visitor, f.str("label"), l).await {
+            Ok(key) => {
+                let mut res = Html(shell(
+                    &visitor,
+                    DEFAULT_TAB,
+                    "",
+                    &quick::key_page(&key, l),
+                    l,
+                ))
+                .into_response();
+                res.headers_mut()
+                    .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+                res
+            }
+            Err(e) => {
+                let mut res = redirect(&format!("/streamlit/?tab={DEFAULT_TAB}"));
+                if let Some(c) = flash_cookie(&[form::Flash::Error(e)]) {
+                    res.headers_mut().append(header::SET_COOKIE, c);
+                }
+                res
+            }
+        };
+    }
     let msgs = match f.str("act") {
+        // The newer tabs (quick.rs): Add plant, Approve, Receipt, Pictures.
+        a if a.starts_with("pa_") => {
+            let (m, n) = quick::action(&state, &visitor, a, &f, l).await;
+            next = n;
+            m
+        }
         // An arm with `if` is a match arm with an extra condition.
         a if a.starts_with("add_") => {
             let (m, n) = add::action(&state, a, &f).await;

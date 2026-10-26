@@ -291,8 +291,14 @@ const FIELD_DEFS: &[Def] = &[
         None,
         "Lavandula angustifolia purple",
     ),
-    ("approved_jason", "0 or 1 (read-only)", None, "0"),
-    ("approved_jun", "0 or 1 (read-only)", None, "0"),
+    // Only the owner's approval is shown; the old second sign-off column stays in the
+    // database untouched and is no longer part of any screen.
+    (
+        "approved_jun",
+        "0 or 1 (read-only: the owner's Approve button)",
+        None,
+        "0",
+    ),
     ("needs_review", "0 or 1 (read-only)", None, "0"),
     ("image_verified", "0 or 1 (read-only)", None, "0"),
     (
@@ -315,6 +321,14 @@ const FIELD_DEFS: &[Def] = &[
 /// exact type is not important to the caller.
 fn defs() -> impl Iterator<Item = &'static Def> {
     FIELD_DEFS.iter()
+}
+
+/// One field's (type text, allowed values, example), for the "Export what's still missing" file
+/// (quick.rs). `None` for a field not in the reference.
+pub fn field_def(
+    name: &str,
+) -> Option<(&'static str, Option<&'static [&'static str]>, &'static str)> {
+    defs().find(|d| d.0 == name).map(|d| (d.1, d.2, d.3))
 }
 
 /// Makes the short "Allowed Values" cell text for the table.
