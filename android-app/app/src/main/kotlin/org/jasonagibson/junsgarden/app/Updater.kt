@@ -15,7 +15,9 @@ import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jasonagibson.junsgarden.BuildConfig
+import org.jasonagibson.junsgarden.R
 import org.jasonagibson.junsgarden.garden.GardenAddress
+import org.jasonagibson.junsgarden.ui.AppText
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
@@ -114,7 +116,7 @@ class Updater {
 
         try {
             if (conn.responseCode !in 200..299) {
-                throw IllegalStateException("The download failed (${conn.responseCode}).")
+                throw IllegalStateException(AppText.s(R.string.download_failed, conn.responseCode))
             }
             val total = conn.contentLengthLong
             // SHA-256 when the manifest has it; md5 only for a manifest from before it did.
@@ -139,9 +141,7 @@ class Updater {
             val want = if (useSha) update.sha256 else update.md5
             if (want.isNotBlank() && !got.equals(want, ignoreCase = true)) {
                 target.delete()
-                throw IllegalStateException(
-                    "The download did not arrive intact, so it was not installed. Try again."
-                )
+                throw IllegalStateException(AppText.s(R.string.download_not_intact))
             }
         } finally {
             conn.disconnect()

@@ -12,6 +12,8 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jasonagibson.junsgarden.R
+import org.jasonagibson.junsgarden.ui.AppText
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -82,13 +84,13 @@ class GardenLogin(context: Context) {
                 val text = (if (code in 200..299) conn.inputStream else conn.errorStream)
                     ?.bufferedReader()?.use { it.readText() } ?: ""
                 val json = runCatching { JSONObject(text) }.getOrNull()
-                    ?: throw GardenException("The garden is not reachable right now.")
+                    ?: throw GardenException(AppText.s(R.string.unreachable_now))
                 if (!json.optBoolean("ok")) {
-                    throw GardenException(json.optString("error").ifBlank { "Login failed." })
+                    throw GardenException(json.optString("error").ifBlank { AppText.s(R.string.login_failed) })
                 }
                 val name = json.optString("username")
                 val token = json.optString("token")
-                if (token.length != 64) throw GardenException("The garden sent back something unexpected.")
+                if (token.length != 64) throw GardenException(AppText.s(R.string.unexpected_answer))
                 prefs.edit().putString(TOKEN, token).putString(NAME, name).apply()
                 name
             } finally {

@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -51,6 +52,8 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import org.jasonagibson.junsgarden.R
+import org.jasonagibson.junsgarden.ui.AppText
 
 /**
  * The plant catalogue, native, the way it was before the app became a window
@@ -126,7 +129,7 @@ fun CatalogScreen(
                 // A load cancelled because a newer one replaced it is not a
                 // failure to show anybody: let the cancellation through.
                 if (it is kotlinx.coroutines.CancellationException) throw it
-                failed = it.message ?: "Could not reach the garden."
+                failed = it.message ?: AppText.s(R.string.unreachable)
             }
         loading = false
     }
@@ -164,14 +167,14 @@ fun CatalogScreen(
             OutlinedTextField(
                 value = search,
                 onValueChange = { search = it },
-                label = { Text("Search plants") },
+                label = { Text(stringResource(R.string.search_plants)) },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
             )
             // Beside the search box rather than behind a menu: the original
             // app kept appearance one tap away, and a theme nobody can find
             // is a theme nobody uses.
-            TextButton(onClick = onAppearance) { Text("Theme") }
+            TextButton(onClick = onAppearance) { Text(stringResource(R.string.theme)) }
         }
 
         if (beds.isNotEmpty()) {
@@ -184,7 +187,7 @@ fun CatalogScreen(
                 FilterChip(
                     selected = bed.isEmpty(),
                     onClick = { bed = "" },
-                    label = { Text("All") },
+                    label = { Text(stringResource(R.string.all)) },
                 )
                 beds.forEach { b ->
                     FilterChip(
@@ -208,7 +211,7 @@ fun CatalogScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(horizontal = 24.dp),
                     )
-                    TextButton(onClick = { attempt++ }) { Text("Try again") }
+                    TextButton(onClick = { attempt++ }) { Text(stringResource(R.string.try_again)) }
                 }
             }
 
@@ -222,8 +225,7 @@ fun CatalogScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    if (search.isBlank()) "No plants here yet."
-                    else "Nothing matches that.",
+                    stringResource(if (search.isBlank()) R.string.no_plants else R.string.no_match),
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
