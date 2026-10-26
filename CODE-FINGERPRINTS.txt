@@ -291,7 +291,7 @@ debee7f1c5e7987cf0d94d51a79cfea549741025401ee5350737386d90e5fe24  docker/wiki/wi
 66d1ddef994282d5b830dc1fd07745e85269854f55e737525af52ffe114da6a1  docs/page-builder/DESIGN.md
 50380f8d13cf1db881e0b0289bd4992546d6c9c179b34e4120ad9a09c496cd84  docs/page-builder/GUIDE.ko.md
 4db87d02176b76e948075a7075e64991cb653e2e204fa7539f4140d73023a8f3  docs/page-builder/GUIDE.md
-d852ce7ddc6f8158a75ee712f8068777275a6386d78cf4d4d518842c922cb6c7  docs/page-builder/RESUME.md
+1a16044810c5b63f239452dac116aff98e9feef54d8c45d2aaba5f3b4cf1f08c  docs/page-builder/RESUME.md
 872e5637bb30d79d16c78b366c29e025798336137cdf94bbe17b67cbcd9cc14e  docs/page-builder/images/01-edit-button.png
 ea135022921b4eedd6af2f39ea7b43db5fbe3440d97ade0ec80cfdb090f27b74  docs/page-builder/images/02-editor-home.png
 e5aa9cf477818c654de04eac3f56f8be5879dc9c009dbb3da8b559f3213dfd0e  docs/page-builder/images/03-editor-new-page.png
