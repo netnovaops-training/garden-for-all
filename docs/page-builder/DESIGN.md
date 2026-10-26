@@ -225,9 +225,11 @@ CREATE TABLE IF NOT EXISTS page_builder_seen (
   uses the default layout.
 - **Save** inserts version N+1 inside a transaction. The client sends the version it
   started from, and a stale editor gets 409 instead of overwriting.
-- **Backup before each save.** Before writing, the current layout is written to
-  `<data>/page-layouts/<page>-v<N>-<time>.json` (atomic write, `store.rs`), and the 200
-  newest are kept. The old rows also stay in the table.
+- **Backup before each save.** Before writing, the saved layout being replaced goes to
+  `<data>/page-layouts/row-<row id>.json` (atomic write through `store::file_in`). The file
+  name uses only the database's row number, never request text. About the last 1000 are
+  kept. The old rows also stay in the table. A page still on its default layout needs no
+  backup: Reset always brings it back.
 - **Undo** inserts a copy of version N-1 as N+1, so history only grows and an undo can
   itself be undone. **Reset** inserts the default layout. **Bring back** (the history list)
   inserts any kept older version. Unsaved changes are dropped by Undo after a question.
