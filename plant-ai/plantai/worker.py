@@ -14,8 +14,10 @@ website (Add plant tab, "Desktop helper"), shown once, and stored there only as 
 """
 import base64
 import json
+import re
 import time
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -25,10 +27,24 @@ from .config import CFG
 SET = "new"
 
 
+HOME = re.compile(r"^(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$")
+
+
+def safe_address(base: str) -> bool:
+    """https anywhere; plain http only to an address at home (the key must not cross the internet
+    unencrypted)."""
+    u = urlsplit(base)
+    if u.scheme == "https" and u.hostname:
+        return True
+    return u.scheme == "http" and bool(HOME.match(u.hostname or ""))
+
+
 class Site:
     """The garden website, as the helper sees it."""
 
     def __init__(self, base: str, key: str, client: httpx.Client | None = None):
+        if not safe_address(base):
+            raise ValueError("the garden's address must be https://..., or http:// with an address at home")
         self.base = base.rstrip("/")
         self._h = {"Authorization": f"Worker {key}", "User-Agent": "JunsGarden-plant-ai/1.0"}
         self.c = client or httpx.Client(timeout=120)

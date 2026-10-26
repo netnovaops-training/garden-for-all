@@ -75,6 +75,35 @@ and leave the address empty.
 - Cloud AI keys (guide 03 part D) and local AI can both be set. Only free keys,
   never a paid one.
 
+<a id="help-plant-ai"></a>
+
+## Local plant AI: the desktop helper that fills in new plants
+A second, separate use of local AI, for the plant admin's **Add plant** tab: you type the
+genus, species, name, bed, quantity and price, and a helper on a Windows PC fills in the
+rest from the grower's page and trusted garden pages, checks every value, and finds up to
+5 photos. You then see what was filled, what needs a look and what is still missing, and
+press **Approve** (only the garden owner can).
+
+- **Windows PC only, with an NVIDIA card with 12 GB of graphics memory or more** (like an
+  RTX 4070 Ti). The Windows setup wizard offers it (CUSTOM, "Local plant AI") only on such
+  a PC, and says why not on any other. Later: the Windows menu, More, 22.
+- **The Linux installer (garden.sh) never installs AI models.** This is the one thing the
+  Windows and Ubuntu installers do differently: a garden laptop has no graphics card for it.
+- What is installed on the PC: Ollama (a background task that starts with Windows and
+  answers on that PC only, 127.0.0.1), the models `phi4` (fills in facts) and `gemma4:12b`
+  (checks them and the photos), one loaded at a time, Python, and the helper (`plant-ai/`).
+- **No new open port anywhere.** The website keeps a queue. The helper asks the website
+  for work every minute, through its usual address (outgoing, like a browser), with its
+  own key, and only from your home network. The website can run on another computer (a
+  laptop); plants added while the PC is off wait in the queue.
+- The key: on the website, Add plant, Desktop helper, **Make a helper key** (shown once).
+  Paste it into the wizard's Local plant AI page, or the Windows menu, More, 22.
+- The AI only fills **empty** fields and never replaces a value; a copy of the plant is
+  kept before every change. Pictures are one `.webp` each (500 to 2000 px), no thumbnails.
+- What the AI could not find: **Export what's still missing** gives a small file with the
+  empty fields, their allowed values and a ready prompt for your own Claude. Bring the
+  answer back with Advanced, JSON Pipeline, Import (you see every value first).
+
 ## Read more (official)
 - Ollama: <https://ollama.com>, documentation: <https://github.com/ollama/ollama/tree/main/docs>
 - The model list: <https://ollama.com/library>

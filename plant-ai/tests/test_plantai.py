@@ -146,6 +146,16 @@ def test_worker_round_trip(work, monkeypatch):
     assert base64.b64decode(body["photos"][0]["data"])[:4] == b"RIFF"   # a .webp file
 
 
+def test_worker_only_safe_addresses():
+    assert worker.safe_address("https://name.example.org")
+    assert worker.safe_address("http://10.0.0.5:8030")
+    assert worker.safe_address("http://localhost:8030")
+    assert not worker.safe_address("http://name.example.org")      # the key would cross the internet in clear
+    assert not worker.safe_address("ftp://10.0.0.5")
+    with pytest.raises(ValueError):
+        worker.Site("http://8.8.8.8", "k")
+
+
 def test_worker_wrong_key_is_refused(work):
     site = FakeSite("right-key-123456")
     s = worker.Site("https://garden.example", "wrong-key", httpx.Client(transport=httpx.MockTransport(site.handler)))

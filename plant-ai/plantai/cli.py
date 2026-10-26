@@ -52,7 +52,13 @@ def main(argv: list[str] | None = None) -> int:
         config.use(here / s.get("work", "work"), here / s.get("out", "out"))
         if s.get("reference_photos"):
             config.CFG.reference_photos = sorted(Path(here / s["reference_photos"]).glob("*.*"))[:3]
-        site = worker.Site(s["site"], worker.read_key(here / s.get("key_file", "worker-key.txt")))
+        key_file = here / s.get("key_file", "worker-key.txt")
+        if not key_file.is_file():
+            # Not an error: the key is made on the website after the install (Add plant tab).
+            batch.log("no helper key yet (worker-key.txt): nothing to do until one is saved")
+            print("no helper key yet: on the website, Add plant, Desktop helper, Make a helper key")
+            return 0
+        site = worker.Site(s["site"], worker.read_key(key_file))
         if a.once:
             print(f"done {worker.run_once(site)}")
             return 0

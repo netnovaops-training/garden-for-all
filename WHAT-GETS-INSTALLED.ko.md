@@ -55,6 +55,7 @@
 | 이메일(Gmail) | 내 Gmail이 사이트의 이메일(비밀번호 링크)을 보내요 | 집 인터넷에서 바로 보낸 이메일은 스팸함으로 가요 | 설정만, 설치하는 것 없음 | <https://support.google.com/accounts/answer/185833> |
 | 바탕화면 아이콘 | 앱 목록과 바탕화면의 "Jun's Garden" | 한 번 클릭으로 메뉴를 열어요 | Ubuntu | <https://specifications.freedesktop.org/desktop-entry-spec/latest/> |
 | Docker Desktop(Windows만, 고를 때만) | Docker Inc.의 Windows 앱: 정원의 프로그램을 돌리고 버튼(시작, 멈춤, 메시지)과 함께 보여 줘요. winget으로 설치해요. 개인 사용은 무료 | Windows PC에서 정원을 다루는 쉬운 방법. 다른 방법인 Ubuntu 안의 Docker는 Windows에 더 설치할 것이 없어요 | Windows | <https://docs.docker.com/desktop/setup/install/windows-install/>, 안내서 26 |
+| 로컬 식물 AI(Windows PC만, 12GB 이상의 NVIDIA 카드, 고를 때만) | Ollama(공식 설치 프로그램, winget으로)를 Windows와 함께 시작하고 그 PC 안에서만(127.0.0.1) 응답하는 백그라운드 작업으로; 모델 `phi4`와 `gemma4:12b`(약 18GB); Python 3.13과 정확한 버전·체크섬의 라이브러리를 쓰는 도우미 `plant-ai/`; 로그인할 때 도우미를 시작하는 작업. `garden.sh`는 절대 설치하지 않아요 | '식물 추가' 탭의 새 식물을 스스로 채우고 모든 값을 확인해요. 웹사이트에 밖으로만 일을 물어봐요: 여는 포트가 없어요 | 그 Windows PC | <https://ollama.com>, `plant-ai/README.md`, 안내서 15 |
 
 ## 고급 선택(나중에, 메뉴 `M`에서)
 
