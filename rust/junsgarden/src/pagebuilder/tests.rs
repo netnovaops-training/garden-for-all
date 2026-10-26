@@ -88,15 +88,16 @@ async fn only_the_owner_on_the_website_gets_the_editor() {
     let st = state();
     let mut app_key = person("Owner");
     app_key.app_token = Some("k".into());
-    for (who, want) in [
+    let cases = [
         (person(""), StatusCode::FORBIDDEN),
         (person("Helper"), StatusCode::FORBIDDEN),
         (app_key, StatusCode::FORBIDDEN),
         (person("Owner"), StatusCode::OK),
-    ] {
-        let a = app(&st, who.clone());
+    ];
+    for (case, (who, want)) in cases.into_iter().enumerate() {
+        let a = app(&st, who);
         let (s, body) = send(&a, get("/pagebuilder/api/updates")).await;
-        assert_eq!(s, want, "{:?}", who.username);
+        assert_eq!(s, want, "case {case}");
         if s == StatusCode::OK {
             assert!(body.contains("not_set_up"));
         } else {

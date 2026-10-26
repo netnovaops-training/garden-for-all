@@ -186,6 +186,12 @@ Every route checks:
 Admin sections enforce their own permission **at render time**, in `render`, whatever page
 they are placed on. A visitor gets an empty string. Tests prove this.
 
+**The preview** is drawn by the server as a visitor sees it: no session, admin sections shown
+as a labelled placeholder, no Edit button. It goes into an `<iframe srcdoc>` sandboxed with
+`allow-scripts allow-same-origin`, so the page's own scripts run. There is no `allow-forms`
+and no top navigation. Its HTML is the site's own, and no setting carries markup. The editor
+puts all server text on the page with `textContent`.
+
 ### 5.4 Adding a section later (incl. the pending ones)
 
 1. Add a template slice (or reuse the page's own) and a `load`/`render` pair in
@@ -265,6 +271,19 @@ CREATE TABLE IF NOT EXISTS page_builder_seen (
 | Signed manifest: good signature passes; changed byte, wrong key, no key fail; "new" badge logic | `cargo test` | update check is safe |
 | Registry: every entry has a renderer, names in EN and KO, unique ids | `cargo test` | registry is complete |
 | fmt, clippy `-D warnings`, gitleaks, trufflehog, semgrep | CI and `tools/check-secrets.sh` | repo rules |
+
+**Results (2026-10-26, on the made-up sample data):**
+
+- `cargo test`: 127 pass, 26 of them new. `fmt` and `clippy -D warnings` are clean.
+- `main` vs `page-builder`, HTML: 12/12 pages byte-identical. These were home, home with a
+  zip, archive, gallery, catalog, quick search, login and the tip cards, logged out and in.
+  `data.php` is left out because it prints random demo values on every load; its code is
+  unchanged.
+- Screenshots at 390 and 1366 px: 8/10 identical. The two others are the gallery, whose wall
+  drifts with time (known; its HTML is identical).
+- In a browser, end to end, 11/11: Edit button for the owner only; the default layout; drag
+  and drop side by side; save, undo; Korean; on a new page, a visitor sees no admin section;
+  a phone shows the page stacked.
 
 ## 9. Open questions for the author
 

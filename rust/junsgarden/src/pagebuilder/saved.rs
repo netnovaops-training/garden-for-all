@@ -13,9 +13,9 @@ use sqlx::Row;
 use super::layout::{self, Layout};
 use crate::AppState;
 
-/// Versions kept per page (older rows are removed), and backup files kept per page.
+/// Versions kept per page (older rows are removed), and backup files kept (all pages).
 const KEEP_VERSIONS: i32 = 200;
-const KEEP_BACKUPS: usize = 200;
+const KEEP_BACKUPS: i32 = 1000;
 
 /// Create the two tables if they are not there yet (called at start-up).
 pub async fn ensure_tables(db: &sqlx::MySqlPool) -> Result<(), sqlx::Error> {
@@ -173,21 +173,19 @@ pub async fn save(
     .fetch_one(&mut *tx)
     .await?;
     let version = next_version(newest, base)?;
-    // Backup first: the layout that is about to be replaced (the default if none was saved).
-    let before = if newest == 0 {
-        Some(layout::default_layout(page))
-    } else {
-        sqlx::query_scalar::<_, String>(
-            "SELECT layout FROM page_layouts WHERE page = ? AND version = ?",
+    // Backup first: the saved layout that is about to be replaced. (Nothing to back up when
+    // the page still has its default layout: that one is in the code, and Reset brings it back.)
+    if newest > 0 {
+        let before = sqlx::query_as::<_, (i32, String)>(
+            "SELECT id, layout FROM page_layouts WHERE page = ? AND version = ?",
         )
         .bind(page)
         .bind(newest)
         .fetch_optional(&mut *tx)
-        .await?
-        .and_then(|t| serde_json::from_str(&t).ok())
-    };
-    if let Some(before) = before {
-        backup(state, page, newest, &before).await;
+        .await?;
+        if let Some((row, text)) = before {
+            backup(state, row, text).await;
+        }
     }
     sqlx::query(
         "INSERT INTO page_layouts (page, version, layout, saved_by, note) VALUES (?, ?, ?, ?, ?)",
@@ -216,48 +214,31 @@ pub fn forget(state: &AppState, page: &str) {
     }
 }
 
-/// Write `<data>/page-layouts/<page>-v<version>-<unix time>.json` and keep the newest
-/// `KEEP_BACKUPS` of that page. A failed backup is logged; it does not stop the save.
-async fn backup(state: &AppState, page: &str, version: i32, l: &Layout) {
-    let dir = state.data.join("page-layouts");
-    let page = page.to_string();
-    let body = serde_json::to_vec_pretty(l).unwrap_or_default();
+/// Write the stored row as `<data>/page-layouts/row-<row id>.json` (the JSON names its page)
+/// and remove the file `KEEP_BACKUPS` rows older, so at most that many are kept. The file name
+/// is made only of the database's own row number, never of anything a request sent.
+/// A failed backup is logged; it does not stop the save.
+async fn backup(state: &AppState, row: i32, text: String) {
+    let data = state.data.clone();
     crate::guard::off_thread(move || {
-        if let Err(e) = std::fs::create_dir_all(&dir) {
+        let dir = match crate::store::file_in(&data, "page-layouts") {
+            Ok(d) => d,
+            Err(e) => return tracing::error!("page layout backup folder: {e}"),
+        };
+        if let Err(e) = std::fs::create_dir_all(dir.as_path()) {
             return tracing::error!("page layout backup folder: {e}");
         }
-        let stamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_secs())
-            .unwrap_or(0);
-        let name = format!("{page}-v{version}-{stamp}.json");
-        match crate::store::file_in(&dir, &name) {
+        let file = |n: i32| crate::store::file_in(dir.as_path(), &format!("row-{n}.json"));
+        match file(row) {
             Ok(p) => {
-                if let Err(e) = crate::store::write_atomic(&p, &body) {
-                    tracing::error!("page layout backup {name}: {e}");
+                if let Err(e) = crate::store::write_atomic(&p, text.as_bytes()) {
+                    tracing::error!("page layout backup of row {row}: {e}");
                 }
             }
-            Err(e) => tracing::error!("page layout backup {name}: {e}"),
+            Err(e) => tracing::error!("page layout backup of row {row}: {e}"),
         }
-        // Keep the newest backups of this page (names sort by version, then time).
-        let prefix = format!("{page}-v");
-        let mut mine: Vec<(i64, String)> = std::fs::read_dir(&dir)
-            .map(|rd| {
-                rd.flatten()
-                    .filter_map(|e| e.file_name().into_string().ok())
-                    .filter_map(|n| {
-                        let v = n.strip_prefix(&prefix)?.split('-').next()?.parse().ok()?;
-                        Some((v, n))
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-        mine.sort();
-        let extra = mine.len().saturating_sub(KEEP_BACKUPS);
-        for (_, old) in mine.into_iter().take(extra) {
-            if let Ok(p) = crate::store::file_in(&dir, &old) {
-                let _ = std::fs::remove_file(p.as_path());
-            }
+        if let Ok(old) = file(row - KEEP_BACKUPS) {
+            let _ = std::fs::remove_file(old.as_path());
         }
     })
     .await
