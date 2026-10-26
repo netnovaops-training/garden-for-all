@@ -1155,8 +1155,27 @@ pdf_finish() {
     PDF_PID=
 }
 # Menu P: get or refresh the PDF guides, now.
+# The picture walkthroughs (walkthrough/, one picture per step), in the garden's language first.
+walkthrough_note() {
+    L "   How to use the garden, a picture for every step:"
+    if [ "$LANG_MODE" = ko ]; then printf '      %s\n      %s\n' walkthrough/JunsGarden-guide-Korean.pdf walkthrough/JunsGarden-guide-English.pdf
+    else printf '      %s\n      %s\n' walkthrough/JunsGarden-guide-English.pdf walkthrough/JunsGarden-guide-Korean.pdf; fi
+    return 0
+}
+
+# garden.sh walkthrough: open the picture walkthrough (Korean when the garden speaks Korean).
+do_walkthrough() {
+    local f=walkthrough/JunsGarden-guide-English.pdf
+    [ "$LANG_MODE" = ko ] && f=walkthrough/JunsGarden-guide-Korean.pdf
+    walkthrough_note
+    [ -f "$f" ] || { fail "$f is not in this folder"; return 1; }
+    command -v xdg-open >/dev/null 2>&1 && xdg-open "$f" >/dev/null 2>&1 &
+    return 0
+}
+
 do_pdfs() {
     say "PDF guides"
+    walkthrough_note
     [ -f "PDF guides/STATUS.txt" ] && sed 's/^/      /' "PDF guides/STATUS.txt"
     pdf_ask
     local c; c=$(pdf_choice)
@@ -1382,6 +1401,7 @@ do_install() {
     say "ALL DONE"
     note "Your garden:   $(site_url)"
     has_part wiki && note "Your wiki:     http://localhost:3000"
+    walkthrough_note
     note "The checklist was saved to CHECKLIST.txt; this whole install is in $LOG"
     [ -f 00-WELCOME.html ] && note "Every guide, one click away: open 00-WELCOME.html in the garden folder (double-click it)."
     [ "${ASSUME_YES:-0}" = 1 ] && return 0
@@ -4281,7 +4301,7 @@ menu() {
    A) My addresses: every web address, and which need signing in
 
    H) Help file for someone helping you (no passwords in it)
-   P) PDF guides: get or refresh them (English / Korean)
+   P) PDF guides: get or refresh them (English / Korean), and the picture walkthrough
    M) More (advanced)        L) Language: English / 한국어 / both
    0) Quit
 EOF
@@ -4892,6 +4912,7 @@ case "${1:-menu}" in
     address-watch)   do_address_watch ;;
     caddy-apply)     caddy_apply ;;
     labels)     do_labels ;;
+    walkthrough) do_walkthrough ;;
     app)        do_app_setup ;;
     folder)     do_folder "${2-ask}" ;;
     tailscale)  do_tailscale ;;

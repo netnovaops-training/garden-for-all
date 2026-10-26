@@ -611,6 +611,9 @@ $btnLabels = Row-Button $rDone2 (Both "Labels: beds and plants"); $btnLabels.Min
 $btnApp.add_Click({ Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$Menu`" -Action open-app-setup" })
 $btnLabels.add_Click({ Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$Menu`" -Action open-labels" })
 [void](P-Text $pDone (Both "1. On the phone, open this page (or scan its codes from this screen):") -Small)
+# How to use the garden, a picture for every step (walkthrough/), in both languages.
+[void](P-Link $pDone (Both "Picture walkthrough: how to use the garden (English PDF)") "walkthrough/JunsGarden-guide-English.pdf")
+[void](P-Link $pDone (Both "Picture walkthrough: how to use the garden (Korean PDF)") "walkthrough/JunsGarden-guide-Korean.pdf")
 # Change the web address later, in one step (the same as garden.sh webname and the labels page's
 # form): settings, front door, labels and the phone app's address together; the old name forwards.
 $tbNewAddr = P-Field $pDone (Both "New web name (like name.zapto.org)") 260
