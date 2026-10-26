@@ -1,7 +1,9 @@
-<div class="page-content" style="background-color: var(--light-green);">
+{#- Page builder: the named blocks are the page shell and the `blog.archive` section
+    (pagebuilder/sections.rs). Block tags print nothing, so the page is unchanged. -#}
+{% block shell_open %}<div class="page-content" style="background-color: var(--light-green);">
     <div class="catalog-container">
 
-        <div class="vine-separator"><h2>📚 Complete Garden History Log</h2></div>
+{% endblock %}{% block blog_archive %}        <div class="vine-separator"><h2>📚 Complete Garden History Log</h2></div>
 
         {% if is_admin %}
         <div style="text-align:center; margin-bottom:30px;">
@@ -81,6 +83,6 @@
             <a href="index.php" class="archive-redirect-btn" style="background:#333; color:#fff !important;">⬅️ Back to Main Dashboard</a>
         </div>
 
-    </div>
+{% endblock %}{% block shell_close %}    </div>
 </div>
-
+{% endblock %}

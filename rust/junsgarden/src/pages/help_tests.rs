@@ -44,33 +44,7 @@ fn fixture() -> PathBuf {
 }
 
 fn state(guides: PathBuf) -> Arc<AppState> {
-    Arc::new(AppState {
-        // A pool that never connects: nothing here asks the database.
-        db: sqlx::mysql::MySqlPoolOptions::new()
-            .connect_lazy("mysql://test@127.0.0.1:9/test")
-            .unwrap(),
-        www: std::env::temp_dir().join("jg-help-no-www"), // nosemgrep: rust.lang.security.temp-dir.temp-dir (test only: a per-process throwaway folder, or a path that is never created)
-        data: std::env::temp_dir().join("jg-help-no-data"), // nosemgrep: rust.lang.security.temp-dir.temp-dir (test only: a per-process throwaway folder, or a path that is never created)
-        comments_lock: tokio::sync::Mutex::new(()),
-        users: Vec::new(),
-        uploaders: Vec::new(),
-        public_url: "http://localhost".into(),
-        ingest_url: "http://127.0.0.1:9".into(),
-        widget_cache: std::sync::Mutex::new(None),
-        http: reqwest::Client::new(),
-        ollama_url: "http://127.0.0.1:9".into(),
-        ollama_model: "none".into(),
-        ai_cache_dir: std::env::temp_dir().join("jg-help-no-cache"), // nosemgrep: rust.lang.security.temp-dir.temp-dir (test only: a per-process throwaway folder, or a path that is never created)
-        forecast_file: PathBuf::new(),
-        weather_latest: PathBuf::new(),
-        guides,
-        frame: Default::default(),
-        write_limit: crate::guard::RateLimit::new(5, std::time::Duration::from_secs(600)),
-        gallery: Default::default(),
-        ai_recompute: crate::guard::RateLimit::new(1, std::time::Duration::from_secs(600)),
-        ai_per_visitor: crate::guard::RateLimit::new(20, std::time::Duration::from_secs(600)),
-        address: crate::address::SiteAddress::new("http://localhost", ""),
-    })
+    crate::test_state(guides, Vec::new())
 }
 
 fn app(dir: PathBuf, signed_in: bool) -> Router {

@@ -1,0 +1,12 @@
+/* Page builder rows with 2-4 sections side by side (loaded only on pages that have one).
+   Phones and narrow windows stack the sections, one under the other. */
+.pb-row { display: grid; gap: 20px; width: 95%; max-width: 1400px; margin: 0 auto 30px; box-sizing: border-box; align-items: start; }
+.pb-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pb-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pb-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pb-col { min-width: 0; }
+@media (max-width: 800px) {
+    .pb-row { grid-template-columns: minmax(0, 1fr); }
+}
+/* The editor's preview: where a signed-in-only section sits (visitors see nothing there). */
+.pb-locked { margin: 10px auto; max-width: 900px; padding: 14px; text-align: center; border: 3px dashed #e65100; border-radius: 12px; background: #fff8e1; color: #6d4c41; font-weight: 700; }

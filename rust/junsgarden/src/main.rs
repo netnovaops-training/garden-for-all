@@ -66,6 +66,7 @@ mod images;
 mod layout;
 mod normalise;
 mod orchestrator;
+mod pagebuilder;
 mod pages;
 mod php;
 mod rowjson;
@@ -145,6 +146,8 @@ pub struct AppState {
     pub ai_per_visitor: guard::RateLimit,
     /// The garden's address (domain and optional folder) and signing key (address.rs).
     pub address: address::SiteAddress,
+    /// The page builder: who may edit pages, cached layouts, the sections check (pagebuilder/).
+    pub pagebuilder: pagebuilder::Builder,
 }
 
 /// Methods that belong to `AppState`. `&self` means a method only reads the value.
@@ -351,6 +354,7 @@ async fn ensure_tables(db: &MySqlPool, users: &[accounts::Account]) -> anyhow::R
     // The session and account tables are described in their own files.
     session::ensure_table(db).await?;
     accounts::ensure_tables(db, users).await?;
+    pagebuilder::saved::ensure_tables(db).await?;
     Ok(())
 }
 
@@ -398,8 +402,16 @@ async fn run() -> anyhow::Result<()> {
     }
     tracing::info!("serving site files from {}", www.display());
 
+    // The page builder's owner (JUNSGARDEN_PAGE_OWNER, else the first GARDEN_USERS name) and
+    // the author's key for the signed sections list (pagebuilder/updates.rs).
+    let pagebuilder = pagebuilder::Builder::new(
+        &users,
+        &common::env_or("JUNSGARDEN_PAGE_OWNER", ""),
+        &common::env_or("JUNSGARDEN_SECTIONS_KEY", ""),
+    );
     // Build the shared state. `Arc::new` wraps it so all handlers can share it.
     let state = Arc::new(AppState {
+        pagebuilder,
         db,
         www: www.clone(),
         data,
@@ -470,7 +482,10 @@ async fn run() -> anyhow::Result<()> {
         // somewhere: it is just the home page now.
         .route("/sso-login", home.clone())
         .route("/sso-login/{*rest}", home)
-        .route("/blog.php", get(blog::blog).post(blog::blog_post))
+        .route(
+            "/blog.php",
+            get(blog::blog).post(blog::blog_post).layer(uploads),
+        )
         .route("/plant_listing.php", get(plant_listing::plant_listing))
         .route(
             "/catalog.php",
@@ -478,7 +493,19 @@ async fn run() -> anyhow::Result<()> {
                 .post(catalog::catalog_post)
                 .layer(uploads),
         )
-        .route("/gallery.php", get(gallery::gallery))
+        // POSTs: forms of home-page sections the owner placed on this page (index.rs).
+        .route(
+            "/gallery.php",
+            get(gallery::gallery).post(index::home_post).layer(uploads),
+        )
+        // The owner's own pages, and the page builder's editor (owner only).
+        .route(
+            "/page.php",
+            get(pagebuilder::editor::owner_page)
+                .post(index::home_post)
+                .layer(uploads),
+        )
+        .merge(pagebuilder::editor::routes())
         .route(
             "/comments.php",
             get(comments::comments).post(comments::comments),
@@ -547,6 +574,40 @@ async fn run() -> anyhow::Result<()> {
 fn main() -> anyhow::Result<()> {
     common::init_local_offset();
     common::runtime()?.block_on(run())
+}
+
+/// A whole `AppState` for tests: a database pool that never connects (the code under test
+/// must not need it), throwaway folders, the given guides folder and accounts.
+#[cfg(test)]
+pub fn test_state(guides: PathBuf, users: Vec<accounts::Account>) -> Arc<AppState> {
+    let tmp = |name: &str| std::env::temp_dir().join(name); // nosemgrep: rust.lang.security.temp-dir.temp-dir (test only: a path that is never created)
+    Arc::new(AppState {
+        pagebuilder: pagebuilder::Builder::new(&users, "", ""),
+        db: sqlx::mysql::MySqlPoolOptions::new()
+            .connect_lazy("mysql://test@127.0.0.1:9/test")
+            .unwrap(),
+        www: tmp("jg-test-no-www"),
+        data: tmp("jg-test-no-data"),
+        comments_lock: tokio::sync::Mutex::new(()),
+        users,
+        uploaders: Vec::new(),
+        public_url: "http://localhost".into(),
+        ingest_url: "http://127.0.0.1:9".into(),
+        widget_cache: std::sync::Mutex::new(None),
+        http: reqwest::Client::new(),
+        ollama_url: "http://127.0.0.1:9".into(),
+        ollama_model: "none".into(),
+        ai_cache_dir: tmp("jg-test-no-cache"),
+        forecast_file: PathBuf::new(),
+        weather_latest: PathBuf::new(),
+        guides,
+        frame: Default::default(),
+        write_limit: guard::RateLimit::new(5, std::time::Duration::from_secs(600)),
+        gallery: Default::default(),
+        ai_recompute: guard::RateLimit::new(1, std::time::Duration::from_secs(600)),
+        ai_per_visitor: guard::RateLimit::new(20, std::time::Duration::from_secs(600)),
+        address: address::SiteAddress::new("http://localhost", ""),
+    })
 }
 
 // Tests: only compiled when running `cargo test`; they check `servable()` and the static router.

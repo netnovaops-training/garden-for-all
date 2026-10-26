@@ -1,0 +1,39 @@
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <button onclick="document.getElementById('blog-modal').style.display='flex'"{{ " " }}
+                            style="background: #FFD700; color: #333; border-radius: 30px; border: 3px solid #333; padding: 15px 30px; font-size: 1.4rem; font-weight: 900; box-shadow: 3px 4px 0px rgba(0,0,0,0.8); cursor: pointer;">
+                        ➕ Create New Post
+                    </button>
+                </div>
+
+                <div id="blog-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; justify-content:center; align-items:center;">
+                    <div style="background:white; padding:30px; border-radius:20px; border: 4px solid #333; width:90%; max-width:600px; position:relative; box-shadow: 8px 8px 0px rgba(0,0,0,0.8);">
+                        <button onclick="document.getElementById('blog-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:#ff5252; color:white; border:2px solid #333; border-radius:50%; width:35px; height:35px; font-weight:bold; cursor:pointer;">✖</button>
+                        <h3 style="margin-top:0; color:#2e7d32; font-size: 1.5rem;">✍️ Post a New Update</h3>
+                        <form method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:15px;">
+                            <input type="text" name="title" placeholder="Post Title" required style="padding:15px; border-radius:15px; border:2px solid #ccc; font-size:1.1rem;">
+                            <textarea name="content" placeholder="What's happening in the garden today?" required rows="5" style="padding:15px; border-radius:15px; border:2px solid #ccc; font-size:1.1rem;"></textarea>
+                            <div style="background:#f1f8e9; padding:15px; border-radius:15px; border: 2px dashed #a5d6a7;">
+                                <label style="font-weight:bold; color:#2e7d32; display:block; margin-bottom:8px;">📸 Attach Pictures (Select multiple!)</label>
+                                <input type="file" name="blog_images[]" accept="image/*" multiple>
+                            </div>
+                            <button type="submit" name="post_blog" style="background: #2e7d32; color: #fff; border-radius: 30px; border: 3px solid #333; padding: 15px; font-size: 1.2rem; font-weight: 900; box-shadow: 2px 3px 0px rgba(0,0,0,0.8); cursor: pointer;">Publish Post</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="edit-blog-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; justify-content:center; align-items:center;">
+                    <div style="background:white; padding:30px; border-radius:20px; border: 4px solid #333; width:90%; max-width:600px; position:relative; box-shadow: 8px 8px 0px rgba(0,0,0,0.8);">
+                        <button type="button" onclick="document.getElementById('edit-blog-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:#ff5252; color:white; border:2px solid #333; border-radius:50%; width:35px; height:35px; font-weight:bold; cursor:pointer;">✖</button>
+                        <h3 style="margin-top:0; color:#1565c0; font-size: 1.5rem;">✏️ Edit Post</h3>
+                        <form method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:15px;">
+                            <input type="hidden" name="blog_id" id="edit_blog_id">
+                            <input type="text" name="title" id="edit_blog_title" required style="padding:15px; border-radius:15px; border:2px solid #ccc; font-size:1.1rem;">
+                            <textarea name="content" id="edit_blog_content" required rows="5" style="padding:15px; border-radius:15px; border:2px solid #ccc; font-size:1.1rem;"></textarea>
+                            <div style="background:#e3f2fd; padding:15px; border-radius:15px; border: 2px dashed #90caf9;">
+                                <label style="font-weight:bold; color:#1565c0; display:block; margin-bottom:8px;">📸 Overwrite Pictures:</label>
+                                <input type="file" name="edit_blog_images[]" accept="image/*" multiple>
+                            </div>
+                            <button type="submit" name="edit_blog" style="background: #1565c0; color: #fff; border-radius: 30px; border: 3px solid #333; padding: 15px; font-size: 1.2rem; font-weight: 900; box-shadow: 2px 3px 0px rgba(0,0,0,0.8); cursor: pointer;">Save Changes</button>
+                        </form>
+                    </div>
+                </div>

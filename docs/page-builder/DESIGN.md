@@ -60,6 +60,21 @@ id can appear only once.
 template draws that element anymore. The weather outlook is the live weather block today, so
 `home.weather` is it. Bringing the map back would be a new section (open question 2).
 
+**How a section reuses today's code.** The home page and archive templates mark each block
+with `{% block name %}` tags, which print nothing. askama renders one block on its own
+(`#[template(path = "index.html", block = "home_news")]`). The post forms moved into
+`templates/post_editor.html`, which the news block includes, because askama cannot render a
+block nested inside another block. The gallery's body and `<head>` part are used whole. A
+golden test renders the whole template and the joined sections and compares them byte for
+byte. Another check confirmed that the edited templates, with the tags removed, equal the
+templates on `main`.
+
+**Forms in moved sections.** The guestbook, Logout and the post forms post to the page they
+are on. `/gallery.php` and `/page.php` now send such POSTs to the home page's own handler
+(`index::home_post`), and `/blog.php` does the same after its own buttons. Before, those POSTs
+were refused (gallery) or ignored. These three addresses also get the photo-upload body limit
+that the home page has, for the post editor.
+
 The page frame is not a section and stays as it is: header, menu, hero banner, footer
 (`layout.rs`, `layout.html`). Each page's outer wrapper (`<div class="page-content ...">`)
 and its page-wide scripts belong to the page "shell" (section 4.3).
@@ -208,7 +223,11 @@ CREATE TABLE IF NOT EXISTS page_builder_seen (
   `<data>/page-layouts/<page>-v<N>-<time>.json` (atomic write, `store.rs`), and the 200
   newest are kept. The old rows also stay in the table.
 - **Undo** inserts a copy of version N-1 as N+1, so history only grows and an undo can
-  itself be undone. **Reset** inserts the default layout.
+  itself be undone. **Reset** inserts the default layout. **Bring back** (the history list)
+  inserts any kept older version. Unsaved changes are dropped by Undo after a question.
+- The tables are made at start-up (`saved::ensure_tables`, like the site's other own
+  tables). `db/schema.sql` is left alone, because the database rework owns it. Adding the two
+  tables there is part of that rework (open question 5).
 - The current layouts are cached in memory and dropped on every save, undo or reset. A page
   view costs one database read only after a restart.
 
@@ -216,8 +235,9 @@ CREATE TABLE IF NOT EXISTS page_builder_seen (
 
 - Sections arrive with garden updates (new code). The garden also asks the author's
   GitHub repo whether newer releases bring sections it does not have yet.
-- It reads `https://raw.githubusercontent.com/netnovaops-training/garden-for-all/main/docs/page-builder/sections-manifest.json`
-  and `...json.sig`.
+- It reads `https://raw.githubusercontent.com/netnovaops-training/garden-for-all/main/rust/junsgarden/sections-manifest.json`
+  and `...json.sig`. The list sits inside the Rust crate, so a test can check that it matches
+  the registry (the usual `cargo test` command mounts only `rust/`).
 - The signature is Ed25519 (the same `ed25519-dalek` crate and hex format the signed
   `/app/config.json` uses). The signed message is `junsgarden-sections-v1\n` followed by the
   manifest bytes. The public key is pinned in code (`AUTHOR_SECTIONS_KEY`), and
@@ -254,4 +274,6 @@ CREATE TABLE IF NOT EXISTS page_builder_seen (
    CSP), or leave it out?
 3. **Signing key**: the author creates the Ed25519 key and puts its public half in
    `AUTHOR_SECTIONS_KEY`. Until then, the update check says "not set up".
-4. **Owner pages** (`/p/<name>`): should they show in the top menu?
+4. **Owner pages** (`/page.php?name=<name>`): should they show in the top menu?
+5. **`db/schema.sql`**: add `page_layouts` and `page_builder_seen` there as part of the
+   database rework?

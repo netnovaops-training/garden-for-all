@@ -52,6 +52,8 @@ rust/                     Cargo workspace (build from here)
     brain.rs              optional local AI (Ollama); fails quietly if absent
     guides.rs             the START-HERE guides as HTML for /help (pages/help.rs)
     pages/*.rs            one file per page or endpoint (catalog.rs = catalog.php)
+    pagebuilder/          the page builder: pages made of sections, owner-only editor
+                          (docs/page-builder/DESIGN.md; start with its mod.rs)
     orchestrator/         /streamlit/, the plant admin (was a Streamlit app); 14 tabs,
                           HTML built in Rust (no templates); start with its mod.rs
   junsgarden/templates/   the HTML, one file per page; {{ }} are the holes Rust fills
@@ -114,6 +116,8 @@ folder. Settings are environment variables only (never put them in code):
 | `JUNSGARDEN_AI_CACHE_DIR` | AI cache, default `<www>/cashe/AI` (sic, the PHP spelling) |
 | `JUNSGARDEN_GUIDES_DIR` | the guides (`START-HERE`) for the `/help` pages, default `/guides` (mounted read-only by `docker-compose.yml`) |
 | `TZ` | `America/New_York`; dates on pages depend on it |
+| `JUNSGARDEN_PAGE_OWNER` | who may edit pages with the page builder; default: the first JUNSGARDEN_USERS name |
+| `JUNSGARDEN_SECTIONS_KEY` | optional: the author's public key for the signed sections list (pagebuilder/updates.rs) |
 
 Keep the real values in an `.env` file next to the deploy scripts, never in
 the repo (`.gitignore` blocks `*.env`).
