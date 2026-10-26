@@ -13,6 +13,7 @@ import {
     getAttractsIcon
 } from './ui-widgets.js';
 import { initUserNotes, interceptCardClick, openNoteEditor, refreshNoteBadges, hasNote } from './user-notes.js';
+import { sourceLinkHTML } from './source-link.js';
 
 const config = window.GARDEN_CONFIG || {};
 window.plantData = window.plantData || {};
@@ -1178,6 +1179,7 @@ window.openTagGuide = function (p) {
                     <h2>${E(p.plant_name || p.botanical_name || 'Unknown')}</h2>
                     ${p.botanical_name ? `<div class="tg-bot">${E(p.botanical_name)}</div>` : ''}
                     ${p.company ? `<div class="tg-by">By ${E(p.company)}</div>` : ''}
+                    ${sourceLinkHTML(p.product_url, 'tg-source')}
                     ${(p.family || p.genus || p.species) ? `<div class="tg-tax">${tax}</div>` : ''}
                 </div>
                 ${config.isAdmin ? `<div class="tg-admin-actions">
@@ -2068,6 +2070,7 @@ async function loadPlants(reset = false) {
                                 <h3 class="svd-common">${_common}</h3>
                                 ${_bot ? `<div class="svd-bot">${_bot}</div>` : ''}
                                 ${_co  ? `<div class="svd-by">By ${_co}</div>` : ''}
+                                ${sourceLinkHTML(p.product_url, 'svd-source')}
                             </div>
                             <div class="svd-overview">
                                 ${_chips ? `<div class="svd-chips">${_chips}</div>` : ''}
@@ -2175,6 +2178,7 @@ async function loadPlants(reset = false) {
                             ${starHTML}
                         </div>
                         ${classificationTags ? `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom: 8px;">${classificationTags}</div>` : ''}
+                        ${sourceLinkHTML(p.product_url, 'card-source')}
                         ${attractsHTML ? `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom: 12px; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,0.08);">${attractsHTML}</div>` : ''}
                         <div style="flex-grow: 1;"></div>
                         <div class="data-grid" style="display:flex; flex-wrap: wrap; gap:10px; margin-bottom: 12px; align-items: center;">
@@ -2548,6 +2552,7 @@ window.editPlant = function(id, source) {
         'p_year_added': data.year_added, 'p_qty_edit': data.qty,
         'p_grow_months': data.grow_months, 'p_bloom_months': data.bloom_months, 'p_space': data.spacing,
         'p_maint': data.maintenance_notes, 'p_attracts': data.attracts, 'p_care': data.care_notes,
+        'p_product_url': data.product_url,
         'p_cleanup': data.cleanup_notes, 'p_cuttings': data.cuttings, 'p_admin_todo': data.admin_todo,
         'p_split': data.split_amt, 'p_botanical': data.botanical_name, 'p_soil_ph': data.soil_ph,
         'p_soil_type': data.soil_type, 'p_bloom_color': data.bloom_color, 'p_foliage_color': data.foliage_color,

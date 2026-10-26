@@ -340,6 +340,7 @@ CREATE TABLE `data_source` (
   `future_plant_id` int(11) DEFAULT NULL,
   `source_root` varchar(255) DEFAULT NULL,
   `source_url` varchar(500) DEFAULT NULL,
+  `product_url` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_future_plant_id` (`future_plant_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=510 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
@@ -658,6 +659,7 @@ CREATE TABLE `future_plants` (
   `date_added` timestamp NULL DEFAULT current_timestamp(),
   `source_root` varchar(255) DEFAULT NULL,
   `source_url` varchar(500) DEFAULT NULL,
+  `product_url` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_name_company` (`plant_name`,`company`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8023 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
