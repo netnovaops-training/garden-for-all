@@ -222,7 +222,14 @@ pub fn render(p: &Map<String, Value>, data: &Map<String, Value>, ctx: &FormCtx) 
         &[1, 1, 1, 1],
         vec![
             input(ctx, data, "botanical_name", "Botanical Name")
-                + &input(ctx, data, "company", "Company / Brand"),
+                + &input(ctx, data, "company", "Company / Brand")
+                // The grower's product page; checked by weblink::check on Save.
+                + &ui::text_input(
+                    "product_url",
+                    &lbl(ctx, data, "product_url", "Source"),
+                    &s(data, "product_url"),
+                    "https://...",
+                ),
             input(ctx, data, "family", "Family") + &input(ctx, data, "genus", "Genus"),
             input(ctx, data, "species", "Species")
                 + &select(
@@ -1036,6 +1043,14 @@ pub async fn save(state: &crate::AppState, f: &crate::formdata::FormData) -> Vec
     // `sets` is the list of (column, new value) pairs for one UPDATE.
     // Every column and its new value.
     let mut sets: Vec<(&str, Option<String>)> = Vec::new();
+    // The Source link: https only, empty = NULL. A bad address stops the whole
+    // save so nothing is half-written.
+    if f.has("product_url") {
+        match crate::weblink::check(f.str("product_url")) {
+            Ok(v) => sets.push(("product_url", v)),
+            Err(msg) => return vec![Flash::Error(msg.into())],
+        }
+    }
     // Text columns: write only those the form sent.
     for k in TEXT_FIELDS {
         if f.has(k) {

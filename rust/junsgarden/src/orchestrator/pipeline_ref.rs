@@ -56,6 +56,14 @@ const FIELD_DEFS: &[Def] = &[
     ("genus", "string", None, "Lavandula"),
     ("species", "string", None, "angustifolia"),
     ("company", "string", None, "Proven Winners"),
+    // The grower's product page ("Website" on the plant pages). Not source_url,
+    // which holds the image folder the pictures were taken from.
+    (
+        "product_url",
+        "string — https URL",
+        None,
+        "https://www.provenwinners.com/plants/...",
+    ),
     (
         "plant_type",
         "string — one of list",
@@ -459,6 +467,11 @@ pub fn schema_json() -> String {
         } else {
             p.insert("type".into(), serde_json::json!(["string", "null"]));
         }
+        // A link field: VS Code underlines anything that is not https:// (or empty).
+        if ty.contains("https URL") {
+            p.insert("pattern".into(), serde_json::json!("^(https://\\S+)?$"));
+            p.insert("maxLength".into(), serde_json::json!(500));
+        }
         // `if let Some(a) = a` runs only when the field has a list of allowed values.
         if let Some(a) = a {
             // Only plain drop-down fields get a strict list. Read-only, metadata,
@@ -515,5 +528,15 @@ mod tests {
         assert_eq!(lists.len(), 20);
         assert_eq!(lists[0], "plant_type");
         assert_eq!(lists[19], "fertilizer");
+    }
+
+    /// The VS Code schema carries product_url as an https-only string.
+    #[test]
+    fn schema_has_the_source_link() {
+        let v: serde_json::Value = serde_json::from_str(&super::schema_json()).unwrap();
+        let p = &v["items"]["properties"]["product_url"];
+        assert_eq!(p["type"], serde_json::json!(["string", "null"]));
+        assert_eq!(p["maxLength"], 500);
+        assert!(p["pattern"].as_str().unwrap().starts_with("^(https://"));
     }
 }
