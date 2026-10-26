@@ -58,3 +58,8 @@ tab.
   plant, as Streamlit did.
 - The wishlist import also shows the amber "proposed overwrites" table that
   Phase 3 has, and a Skip button.
+- New field `product_url`: the "Source" link to the vendor's product page, in the
+  plant editor, the wishlist editor, the JSON Pipeline and the Field Reference.
+  Only a full `https://` address is saved; anything else is refused with a message.
+  새 칸 `product_url`: 판매처 상품 페이지로 가는 "Source" 링크예요. `https://`로 시작하는
+  전체 주소만 저장되고, 다른 값은 안내 문구와 함께 거절돼요.

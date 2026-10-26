@@ -213,6 +213,9 @@ fn plant_json(
             }
         }
     }
+    // 7. The Source link goes out only when it is a good https address; an old or bad
+    // value becomes null, so the cards and the detail window draw no link for it.
+    crate::weblink::clean_json(m);
     v
 }
 

@@ -71,6 +71,7 @@ mod php;
 mod rowjson;
 mod session;
 mod store;
+mod weblink;
 
 // `use` brings a name into scope so it can be written short. `use std::path::PathBuf;`
 // lets the code say `PathBuf` instead of `std::path::PathBuf`.
@@ -347,6 +348,17 @@ async fn ensure_tables(db: &MySqlPool, users: &[accounts::Account]) -> anyhow::R
     ] {
         // `.execute(db).await?` sends the command to the database and waits for the answer.
         sqlx::query(sql).execute(db).await?;
+    }
+    // The plant "Website" link (the grower's product page), added 2026-10. Older installs
+    // lack the column; `ADD COLUMN IF NOT EXISTS` adds it once and keeps every row.
+    // A missing table (an empty database before schema.sql is loaded) only logs a warning.
+    for sql in [
+        "ALTER TABLE `data_source` ADD COLUMN IF NOT EXISTS product_url VARCHAR(500) DEFAULT NULL",
+        "ALTER TABLE `future_plants` ADD COLUMN IF NOT EXISTS product_url VARCHAR(500) DEFAULT NULL",
+    ] {
+        if let Err(e) = sqlx::query(sql).execute(db).await {
+            tracing::warn!("could not add the product_url column: {e}");
+        }
     }
     // The session and account tables are described in their own files.
     session::ensure_table(db).await?;

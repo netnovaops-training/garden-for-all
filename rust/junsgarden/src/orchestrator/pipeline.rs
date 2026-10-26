@@ -339,6 +339,39 @@ pub fn fills_table(new: &Map<String, Value>) -> String {
     format!("<table style='width:100%;border-collapse:collapse;font-size:13px'>{rows}</table>")
 }
 
+/// A `product_url` value from a JSON file, checked by `weblink::check`:
+/// null or "" becomes null, a good https address stays, anything else is the
+/// EN/KO error message.
+pub fn product_url_value(v: &Value) -> Result<Value, String> {
+    if v.is_null() {
+        return Ok(Value::Null);
+    }
+    let Value::String(raw) = v else {
+        return Err(crate::weblink::INVALID_MSG.into());
+    };
+    match crate::weblink::check(raw) {
+        Ok(Some(u)) => Ok(Value::String(u)),
+        Ok(None) => Ok(Value::Null),
+        Err(m) => Err(m.into()),
+    }
+}
+
+/// The red box shown above a record's review when its `product_url` would be
+/// refused, so the problem is seen before Commit (not silently dropped).
+/// Gives back "" when the record has no such problem.
+pub fn link_warning(rec: &Map<String, Value>) -> String {
+    match rec.get("product_url").map(product_url_value) {
+        Some(Err(m)) => ui::error(&format!(
+            "product_url: {m} ({})",
+            py_str(&rec["product_url"])
+                .chars()
+                .take(80)
+                .collect::<String>()
+        )),
+        _ => String::new(),
+    }
+}
+
 /// Write {field: value} to one row: only real columns, lists joined, months
 /// as the 12-letter code. `blank_null` is future_plants' '' -> NULL rule.
 /// Returns how many columns were written, or an error message.
@@ -352,6 +385,13 @@ pub async fn commit(
     fields: &Map<String, Value>,
     blank_null: bool,
 ) -> Result<usize, String> {
+    // The Source link must be a good https address (or empty = NULL); a bad one
+    // stops this record before anything is written.
+    let mut fields = fields.clone();
+    if let Some(v) = fields.get_mut("product_url") {
+        *v = product_url_value(v)?;
+    }
+    let fields = &fields;
     // Ask the database which columns this table really has (S-13 in DEVIATIONS.md).
     // DATABASE() means the database this connection uses.
     let cols: Vec<String> = sqlx::query_scalar("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?")
@@ -1164,7 +1204,10 @@ async fn phase3(state: &AppState, req: &Req) -> String {
                     id.clone()
                 }
             )),
-            Some(d) => review_body(&diff(rec, d), i, up, &name, 4, "jp_p3_commit"),
+            // A bad product_url is shown in red above the review (Commit would refuse it).
+            Some(d) => {
+                link_warning(rec) + &review_body(&diff(rec, d), i, up, &name, 4, "jp_p3_commit")
+            }
         };
         h.push_str(&ui::expander(
             &format!(
@@ -1545,6 +1588,29 @@ pub async fn action(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// product_url from a JSON file: good https kept, empty/null = NULL, the rest refused
+    /// and flagged in the review (not silently dropped).
+    #[test]
+    fn product_url_is_checked_on_import() {
+        use serde_json::json;
+        assert_eq!(
+            product_url_value(&json!("https://x.y/p")),
+            Ok(json!("https://x.y/p"))
+        );
+        assert_eq!(product_url_value(&json!("")), Ok(Value::Null));
+        assert_eq!(product_url_value(&Value::Null), Ok(Value::Null));
+        assert!(product_url_value(&json!("http://x.y/p")).is_err());
+        assert!(product_url_value(&json!(42)).is_err());
+        let rec: Map<String, Value> =
+            serde_json::from_str(r#"{"id":1,"product_url":"javascript:alert(1)"}"#).unwrap();
+        let w = link_warning(&rec);
+        assert!(w.contains("st-error") && w.contains("https://"), "{w}");
+        assert!(!w.contains("<script"));
+        let rec: Map<String, Value> =
+            serde_json::from_str(r#"{"id":1,"product_url":"https://x.y/p"}"#).unwrap();
+        assert_eq!(link_warning(&rec), "");
+    }
 
     /// The lock rule: filled DB values are kept unless they differ and are approved.
     #[test]
