@@ -18,3 +18,22 @@ scripts. `GARDEN_LAB=user@host bash walkthrough/source/run.sh <main sha>` builds
 main with the repo's sample data on a lab machine, takes the pictures (`shots.py`) and makes the
 PDFs (`build.py`, headless Chromium). The phone pictures come from the app test
 (`docs/rust-pages/app-matrix/matrix.sh`).
+
+## Adding a plant with the local plant AI / 로컬 식물 AI로 식물 추가하기
+
+The plant admin's short path: the Add plant tab (six boxes), watching the AI fill it in, the
+review (filled, needs review, still missing), Approve, the Receipt and Pictures tabs, "Export
+what's still missing" with its prompt, the JSON import under Advanced, and the desktop helper:
+
+- [streamlit/JunsGarden-Streamlit-guide-English.pdf](streamlit/JunsGarden-Streamlit-guide-English.pdf)
+- [streamlit/JunsGarden-Streamlit-guide-Korean.pdf](streamlit/JunsGarden-Streamlit-guide-Korean.pdf) (한국어)
+
+식물 관리 화면의 짧은 길: 식물 추가 탭(칸 여섯 개), AI가 채우는 것 지켜보기, 검토(채운 것, 검토 필요, 아직
+비어 있음), 승인, 영수증과 사진 탭, 프롬프트가 담긴 '아직 비어 있는 것 내보내기', 고급 아래의 JSON 가져오기,
+데스크톱 도우미.
+
+**Making them again**: `sh walkthrough/streamlit/run.sh` on any computer with Docker: a throwaway
+garden from this folder with the sample data (`lab.sh`, no published port), the pictures
+(`shots.py`; the desktop helper is played by a recorded sample run, `recorded-run.json`, sent
+through the helper's real conversation with the website, so no AI model runs), then the PDFs
+(`build.py`). `sh walkthrough/streamlit/run.sh pdf` remakes only the PDFs after a text edit.

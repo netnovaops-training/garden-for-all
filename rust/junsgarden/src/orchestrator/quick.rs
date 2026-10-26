@@ -353,6 +353,12 @@ async fn review(state: &AppState, req: &Req, pid: i64) -> String {
             let (pct, words) = progress(&j.0, &j.1, l);
             h.push_str(&bar(pct));
             h.push_str(&ui::markdown(&format!("**{}**", words)));
+            // The review comes when the answers are in; until then only the progress.
+            h.push_str(&ui::caption(l.t(
+                "The review (filled, needs review, still missing) and the Approve button appear here when the AI has finished.",
+                "AI가 끝나면 검토(채운 것, 검토 필요, 아직 비어 있음)와 승인 버튼이 여기에 나와요.",
+            )));
+            return h;
         }
         Some("failed") => {
             let e = job.as_ref().map(|j| j.error.clone()).unwrap_or_default();

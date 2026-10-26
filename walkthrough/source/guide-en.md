@@ -29,6 +29,10 @@ first.
 
 ## 3. Adding a plant
 
+*New: the first tab, **🌱 Add plant**, asks for six things and lets the local plant AI fill in the
+rest. It has its own picture guide: `walkthrough/streamlit/` (English and Korean). The steps below
+are the full form, now under **⚙️ Advanced → 🌱 Add Plant (full form)**.*
+
 1. Open the tab **🌱 Add Plant**. Type the plant's common name and its botanical name.
    @shot 05-add-plant
 2. Press **Enter**. The next step appears, with the button **📋 Create Record →**.
