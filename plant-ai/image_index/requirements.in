@@ -1,0 +1,13 @@
+# Libraries for the image index. Edit THIS file, then rebuild requirements.txt (exact versions
+# and checksums) with:
+#   docker run --rm -v "$PWD":/w -w /w python:3.12-slim sh -c \
+#     "pip install -q pip-tools && pip-compile --generate-hashes --strip-extras \
+#      --extra-index-url https://download.pytorch.org/whl/cpu -o requirements.txt requirements.in"
+#   numpy         the photo vectors and the cosine search (a matrix product)
+#   Pillow        opens the photos (.webp, .jpg) and shrinks them
+#   torch         runs the model on the CPU (the CPU-only build, no CUDA)
+#   transformers  loads the open model (DINOv2 / SigLIP / CLIP) from local files
+numpy==2.5.4
+Pillow==13.0.0
+torch==2.14.1
+transformers==5.21.0

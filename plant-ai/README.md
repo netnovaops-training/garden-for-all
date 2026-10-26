@@ -64,6 +64,10 @@ built in.
 
 Tests (no network, no Ollama): `python -m pytest plant-ai/tests -q`.
 
+**Find a plant from a photo:** `plant-ai/image_index/` builds a search index from the photos
+already in the garden's database and finds the best-matching plants for a new photo (CPU, in
+Docker, local only). See [image_index/README.md](image_index/README.md).
+
 ---
 
 ## 한국어
