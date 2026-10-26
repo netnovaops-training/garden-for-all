@@ -78,7 +78,7 @@ async fn tokens_belong_to_one_session() {
     let t = b.token("abc");
     assert_eq!(t.len(), 64);
     assert!(b.token_ok("abc", &t));
-    assert!(!b.token_ok("abd", &t));
+    assert!(!b.token_ok("xyz", &t));
     assert!(!b.token_ok("abc", ""));
     assert!(!b.token_ok("abc", &t[..63]));
 }
