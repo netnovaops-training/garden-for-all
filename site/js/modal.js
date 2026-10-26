@@ -1,6 +1,7 @@
 // js/modal.js
 import { applyScrollFadeEffects } from './effects.js';
 import { generateLeafSVG, generateFlowerSVG } from './plant-morphology-svg.js';
+import { sourceLinkHTML } from './source-link.js';
 import {
     getBannerState,
     generateStarHTML,
@@ -384,6 +385,7 @@ function renderSimpleCard(p, config, modal, body, foilCard) {
                 <h2 class="sv-common">${common}</h2>
                 ${botanical ? `<p class="sv-botanical">${botanical}</p>` : ''}
                 ${company   ? `<p class="sv-by">By ${company}</p>` : ''}
+                ${sourceLinkHTML(p.product_url, 'sv-source')}
                 ${(qty || bed) ? `<p class="sv-meta">${qty ? `🪴 Qty: <b>${qty}</b>` : ''}${(qty && bed) ? ' &nbsp;·&nbsp; ' : ''}${bed ? `🗺️ <b>${bed}</b>` : ''}</p>` : ''}
                 <div class="sv-months">
                     ${plantRange ? `<div class="sv-row sv-plant"><span class="sv-ico">🌱</span>Plant between <b>${plantRange[0]}</b> &ndash; <b>${plantRange[1]}</b></div>` : ''}
@@ -610,6 +612,7 @@ export function openModal(p) {
                 ${renderGroup('🧬 Taxonomy & Identity', `
                     ${pill('Location', p.flower_bed, 'icon-location')}
                     ${pill('Company/Brand', p.company, 'icon-botanical')}
+                    ${p.product_url && sourceLinkHTML(p.product_url) ? `<div class="dash-pill"><span class="pill-value">${sourceLinkHTML(p.product_url)}</span></div>` : ''}
                     ${config.isAdmin && p.died_year ? `<div class="dash-pill" style="background:#fce4ec;border:2px solid #e91e63;"><span class="pill-label">💀 Died Year</span><span class="pill-value">${p.died_year}</span></div>` : ''}
                     ${generatePlantTypeHTML(p.plant_type)}
                     ${pill('Family', getFamilyDisplayName(p.family), 'icon-family')}

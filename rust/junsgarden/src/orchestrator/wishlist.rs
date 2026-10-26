@@ -123,6 +123,8 @@ pub async fn wishlist(state: &AppState, req: &Req) -> String {
     let left = ui::subheader(&s(fp, "plant_name"))
         + &ui::markdown(&format!("**Botanical:** {}", shown("botanical_name")))
         + &ui::markdown(&format!("**Company:** {}", shown("company")))
+        // The "Source" link, only when the stored address passes the https check.
+        + &crate::weblink::link_html(fp.get("product_url").and_then(Value::as_str))
         + &ui::markdown(&format!("**Family:** {}", shown("family")))
         + &ui::markdown(&format!("**Added:** {}", shown("date_added")));
     // The key fields that should be filled in.
@@ -181,6 +183,8 @@ pub async fn wishlist(state: &AppState, req: &Req) -> String {
             t("plant_name", "Plant Name")
                 + &t("botanical_name", "Botanical Name")
                 + &t("company", "Company")
+                // The grower's product page; checked by weblink::check on Save.
+                + &ui::text_input("product_url", "Source", &s(fp, "product_url"), "https://...")
                 + &t("family", "Family")
                 + &t("genus", "Genus")
                 + &t("species", "Species")
@@ -434,6 +438,13 @@ pub async fn action(state: &AppState, act: &str, f: &crate::formdata::FormData) 
             .iter()
             .map(|k| (*k, Some(f.str(k).to_string()).filter(|v| !v.is_empty())))
             .collect();
+            // The Source link: https only, empty = NULL; a bad address saves nothing.
+            if f.has("product_url") {
+                match crate::weblink::check(f.str("product_url")) {
+                    Ok(v) => sets.push(("product_url", v)),
+                    Err(msg) => return vec![Flash::Error(msg.into())],
+                }
+            }
             // A chosen bed is written to both bed columns.
             if !f.str("bed").is_empty() {
                 sets.push(("flower_bed", Some(f.str("bed").to_string())));

@@ -363,7 +363,12 @@ async fn import_tab(state: &AppState, req: &Req) -> String {
         // Same review as Phase 3, with the wishlist's own words on the button.
         // The review HTML comes from pipeline.rs; the text below is replaced so the
         // forms use the wishlist's field names (`wup`, `wsub`) and wording.
-        let body = review_body(df, *i, wup, name, 5, "jp_wl_commit")
+        // A bad product_url is shown in red above the review (Commit would refuse it).
+        let warn = records
+            .get(*i)
+            .map(pipeline::link_warning)
+            .unwrap_or_default();
+        let body = warn + &review_body(df, *i, wup, name, 5, "jp_wl_commit")
             .replace("<input type=\"hidden\" name=\"up\"", "<input type=\"hidden\" name=\"wup\"")
             .replace("— fields that were empty in the DB:", "(was empty):")
             .replace("<strong>⚠️ Proposed overwrites</strong> — fields that already have a DB value:", "<strong>⚠️ Proposed overwrites:</strong>")

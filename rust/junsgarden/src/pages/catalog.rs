@@ -213,6 +213,9 @@ fn plant_json(
             }
         }
     }
+    // 7. The Source link goes out only when it is a good https address; an old or bad
+    // value becomes null, so the cards and the detail window draw no link for it.
+    crate::weblink::clean_json(m);
     v
 }
 
@@ -858,6 +861,17 @@ fn bind_value<'q>(
     }
 }
 
+/// The form's Source box (`product_url`), checked by `weblink::check`.
+/// `Ok(None)`: the box was not sent (an older page), so the column is left alone.
+/// `Ok(Some(None))`: sent empty, saved as NULL. `Ok(Some(Some(url)))`: a good address.
+/// `Err`: the EN/KO message for a bad address.
+fn form_product_url(f: &FormData) -> Result<Option<Option<String>>, &'static str> {
+    match f.get("product_url") {
+        None => Ok(None),
+        Some(raw) => crate::weblink::check(raw).map(Some),
+    }
+}
+
 /// `save_plant`: the Add / Edit Plant form, including promoting a wish-list
 /// plant into the garden when it is given a real bed.
 ///
@@ -897,6 +911,20 @@ async fn save_plant(state: &AppState, visitor: &Visitor, f: &FormData) -> Respon
         .map(str::trim)
         .filter(|s| !s.is_empty())
         .map(str::to_string);
+    // The Source link. A bad address stops the save before photos or rows are written.
+    let product_url = match form_product_url(f) {
+        Ok(v) => v,
+        Err(msg) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Html(format!(
+                    "<h2>⚠️ Error Saving</h2><p>{}</p>",
+                    crate::php::he(msg)
+                )),
+            )
+                .into_response()
+        }
+    };
 
     // 2. Save uploaded photos (only if this person may upload). The first becomes the main picture,
     // the rest go to the gallery.
@@ -963,6 +991,9 @@ async fn save_plant(state: &AppState, visitor: &Visitor, f: &FormData) -> Respon
                     if let Some(p) = &picture {
                         set("picture", json!(p));
                     }
+                    if let Some(u) = &product_url {
+                        set("product_url", json!(u));
+                    }
                     set("died", json!(0));
 
                     // Build `INSERT INTO data_source (cols) VALUES (?,?,...)` from the list and
@@ -998,6 +1029,9 @@ async fn save_plant(state: &AppState, visitor: &Visitor, f: &FormData) -> Respon
                 if new_year.is_some() {
                     sql.push_str(", year_added=?");
                 }
+                if product_url.is_some() {
+                    sql.push_str(", product_url=?");
+                }
                 sql.push_str(" WHERE id = ?");
                 let mut q = sqlx::query(sqlx::AssertSqlSafe(sql.as_str())).bind(&p_name);
                 if let Some(n) = new_qty {
@@ -1005,6 +1039,9 @@ async fn save_plant(state: &AppState, visitor: &Visitor, f: &FormData) -> Respon
                 }
                 if let Some(y) = &new_year {
                     q = q.bind(y);
+                }
+                if let Some(u) = &product_url {
+                    q = q.bind(u);
                 }
                 q.bind(id).execute(&state.db).await?;
             }
@@ -1048,20 +1085,28 @@ async fn save_plant(state: &AppState, visitor: &Visitor, f: &FormData) -> Respon
                     extra_binds.push(all_extra.into_iter().filter(|s| !s.is_empty() && s != "0").collect::<Vec<_>>().join(","));
                 }
             }
+            // The Source link last, so it is bound after the text values above.
+            if product_url.is_some() {
+                sql.push_str(", product_url=?");
+            }
             sql.push_str(" WHERE id=?");
             let mut q = sqlx::query(sqlx::AssertSqlSafe(sql.as_str())).bind(&bed_value).bind(&bed_value).bind(&p_name);
             for b in &extra_binds {
                 q = q.bind(b);
             }
+            if let Some(u) = &product_url {
+                q = q.bind(u);
+            }
             q.bind(id).execute(&state.db).await?;
         // 3c. No id: add a brand new plant.
         } else {
-            sqlx::query("INSERT INTO `data_source` (plant_name, flower_bed, garden_beds, picture, additional_pictures) VALUES (?, ?, ?, ?, ?)")
+            sqlx::query("INSERT INTO `data_source` (plant_name, flower_bed, garden_beds, picture, additional_pictures, product_url) VALUES (?, ?, ?, ?, ?, ?)")
                 .bind(&p_name)
                 .bind(&bed_value)
                 .bind(&bed_value)
                 .bind(&picture)
                 .bind(additional.join(","))
+                .bind(product_url.clone().flatten())
                 .execute(&state.db)
                 .await?;
         }
@@ -1527,6 +1572,37 @@ pub async fn catalog_post(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The edit form's Source box: missing = leave alone, empty = NULL, good https kept,
+    /// anything else refused with the EN/KO message.
+    #[test]
+    fn edit_form_source_link_is_checked() {
+        let form = |v: Option<&str>| {
+            let mut f = FormData::default();
+            if let Some(v) = v {
+                f.fields.insert("product_url".into(), v.into());
+            }
+            f
+        };
+        assert_eq!(form_product_url(&form(None)), Ok(None));
+        assert_eq!(form_product_url(&form(Some(""))), Ok(Some(None)));
+        assert_eq!(
+            form_product_url(&form(Some(" https://x.y/p "))),
+            Ok(Some(Some("https://x.y/p".into())))
+        );
+        for bad in [
+            "http://x.y/p",
+            "javascript:alert(1)",
+            "/p",
+            "https://x.y/a b",
+        ] {
+            assert_eq!(
+                form_product_url(&form(Some(bad))),
+                Err(crate::weblink::INVALID_MSG),
+                "{bad}"
+            );
+        }
+    }
 
     #[test]
     fn community_favourites_exclude_the_three_named_people() {
