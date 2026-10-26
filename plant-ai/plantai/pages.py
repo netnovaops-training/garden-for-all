@@ -17,6 +17,11 @@ MAX_CHARS = 6000
 IMG_EXT = re.compile(r"\.(jpe?g|png|webp)(\?|$)", re.IGNORECASE)
 
 
+def on_site(host: str, domain: str) -> bool:
+    """True for `domain` itself and its sub-names (www.domain, plants.domain)."""
+    return host == domain or host.endswith("." + domain)
+
+
 def _text(n) -> str:
     return re.sub(r"\s+", " ", n.text(separator=" ")).strip()
 
@@ -57,9 +62,11 @@ def read(url: str) -> dict | None:
             (t.css_first("title").text(strip=True) if t.css_first("title") else "")
     title = re.sub(r"\s+", " ", title)
     base = r["url"]
-    host = urlsplit(base).netloc.lower()
+    host = (urlsplit(base).hostname or "").lower()
+    # The site's own name, or one of its sub-names (never just "contains": evil-site.com/x.ncsu.edu).
+    pw = on_site(host, "provenwinners.com")
     imgs: list[str] = []
-    if "provenwinners.com" in host:
+    if pw:
         # The plant's own gallery ("View larger image" links); other plants only appear as <img>.
         imgs = [a.attributes.get("href") for a in t.css("a")
                 if "/ifa_upload/" in (a.attributes.get("href") or "")]
@@ -78,13 +85,13 @@ def read(url: str) -> dict | None:
                 imgs.append(urljoin(base, src))
     for n in t.css("script, style, noscript, svg, nav, header, footer, form, iframe"):
         n.decompose()
-    if "provenwinners.com" in host:
+    if pw:
         parts = t.css("div.fieldgroup")
         lines = [title] + [ln for p in parts for ln in _lines(p)]
     else:
         root = t.css_first("main") or t.css_first("article") or t.body
         lines = _lines(root) if root else []
-        if "ces.ncsu.edu" in host:
+        if on_site(host, "ces.ncsu.edu"):
             s = next((i for i, ln in enumerate(lines) if ln.startswith("Description")), 0)
             lines = lines[s:]
     size, out = 0, []
