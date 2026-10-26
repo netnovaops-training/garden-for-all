@@ -292,7 +292,7 @@ b8344601961710a3aab9653ebde9cc05bc96802e3d4be75352710705933585d7  docs/release-n
 b15cf296904aa8007dcaea9eed9d9f666561ead1e2ce47746ecfd4c0259668f3  docs/rust-pages/addr_test.py
 584724f3b350c1d90fab7bfc44097f1a0fd58db48b291344facea19d91b8ccd8  docs/rust-pages/app-matrix/MatrixTest.kt
 f279f5560e742bf567f2d1d95f8a22d5bb547452b43b2177d946d849e7bafd33  docs/rust-pages/app-matrix/OldMatrixTest.kt
-8caf9100673686b11e4f311f76d8185963e1a81dbbec538db53771e105b6f348  docs/rust-pages/app-matrix/matrix.sh
+96b915462adeee50e183ea17de06f3d3ae4142ba38e70c708f128fa4211b9b1e  docs/rust-pages/app-matrix/matrix.sh
 d4676e2e0e0fccb4439ed58123f1e99e5cd41bee17cbbdfe219515ebc4dfeab0  docs/rust-pages/app-matrix/overlay/src/debug/AndroidManifest.xml
 060221fe029d6bc7913a52692f42bac976a8ea319771029c58f86e4b0ce1c892  docs/rust-pages/app-matrix/overlay/src/debug/res/xml/test_network.xml
 c246441d8df656b60e8044656116905c5326c893362273cf1f82c13496d8461b  docs/rust-pages/app-matrix/patch.py

@@ -128,8 +128,7 @@ inst "3 old app's update check finds the new app; downloads it from the new name
 # The emulator sometimes drops off adb for a while right after the installer opens. Wait until
 # the phone answers again (and say so) instead of failing every later step on "device offline".
 ready() {
-    local i
-    for i in $(seq 90); do
+    for _ in $(seq 90); do
         [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && return 0
         sleep 2
     done
