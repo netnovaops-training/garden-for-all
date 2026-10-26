@@ -611,6 +611,23 @@ $btnLabels = Row-Button $rDone2 (Both "Labels: beds and plants"); $btnLabels.Min
 $btnApp.add_Click({ Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$Menu`" -Action open-app-setup" })
 $btnLabels.add_Click({ Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$Menu`" -Action open-labels" })
 [void](P-Text $pDone (Both "1. On the phone, open this page (or scan its codes from this screen):") -Small)
+# Change the web address later, in one step (the same as garden.sh webname and the labels page's
+# form): settings, front door, labels and the phone app's address together; the old name forwards.
+$tbNewAddr = P-Field $pDone (Both "New web name (like name.zapto.org)") 260
+$tbNewAddrFolder = P-Field $pDone (Both "Folder (like /garden; empty = the top of the web name)") 260
+$rDone3 = P-Row $pDone
+$btnAddr = Row-Button $rDone3 (Both "Change the web address"); $btnAddr.Margin = Pad 0 0 0 0; $btnAddr.MinimumSize = New-Object Drawing.Size((Px 220), (Px 48))
+$btnAddr.add_Click({
+    $n = $tbNewAddr.Text.Trim().ToLower()
+    $fo = $tbNewAddrFolder.Text.Trim().TrimEnd('/')
+    if ($n -notmatch '^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$' -or ($fo -and $fo -cnotmatch '^/[a-z0-9][a-z0-9_-]{0,39}$')) {
+        Show-Problem (Both "That does not look like a web name (like name.zapto.org) and an optional folder (like /garden).")
+        return
+    }
+    $a = "-NoExit -NoProfile -ExecutionPolicy Bypass -File `"$Menu`" -Action webname -WebName $n"
+    if ($fo) { $a += " -Folder $fo" }
+    Start-Process powershell.exe -ArgumentList $a
+})
 $lbLater = P-Text $pDone ""
 
 # ---------- the help for each page: the guide, at that exact question ----------------------

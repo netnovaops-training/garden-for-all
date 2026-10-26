@@ -38,8 +38,10 @@
 # If someone typed "sh garden.sh", start again with bash (this file needs bash).
 if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 set -uo pipefail
-# A login sets USER; cron, systemd and "docker exec" do not. Fill it in so the install works there too.
+# A login sets USER and HOME; cron, systemd and "docker exec" may not. Fill them in from the
+# account so every job works there too (the address watcher runs under systemd).
 : "${USER:=$(id -un)}"; export USER
+: "${HOME:=$(getent passwd "$USER" | cut -d: -f6)}"; export HOME
 
 HERE=$(cd "$(dirname "$(readlink -f "$0")")" && pwd)
 cd "$HERE" || exit 1
@@ -1053,6 +1055,8 @@ backup_schedule() {
     ( crontab -l 2>/dev/null | grep -v -e 'garden.sh backup' -e 'docker/backup.sh'; echo "$line" ) | crontab - \
         || { fail "the backup schedule was not saved"; return 1; }
     note "Scheduled: $line"
+    # The other background helper: the website's address form (labels page) needs it.
+    do_address_watch
 }
 
 # Install step 14: a 'Jun's Garden' icon in the app list and on the desktop.
@@ -1579,6 +1583,14 @@ apply_subdomains() {
     say "Writing Caddy's settings and the sign-in page's rules for your subdomains"
     write_authelia "$(env_get PUBLIC_NAME)"
     reload_signin
+    caddy_apply || return 1
+    do_addresses
+}
+
+# The front door's part alone: write Caddy's settings from .env, check them, reload Caddy (old
+# settings put back if they do not pass). Needs the administrator; the address watcher runs it
+# as root after the garden's owner did the rest (garden.sh caddy-apply).
+caddy_apply() {
     sudo cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak
     write_caddyfile "$(env_get PUBLIC_NAME)" "$(env_get GARDEN_USERS | cut -d= -f2 | cut -d, -f1)" \
         "$(env_get WIKI_NAME)" "$(case "$(env_get PUBLIC_NAME)" in *.test) echo 1 ;; *) echo 0 ;; esac)" | sudo tee /etc/caddy/Caddyfile >/dev/null
@@ -1591,7 +1603,6 @@ apply_subdomains() {
     fi
     run sudo systemctl reload-or-restart caddy
     note "Done. Each new address gets its padlock on the first visit (give it a minute)."
-    do_addresses
 }
 
 do_subdomains() {
@@ -4378,6 +4389,9 @@ do_webname() {   # do_webname [NEW-NAME]   (with a name: no questions)
     [ -n "$new" ] || { note "Nothing changed."; return 0; }
     [ "$new" = "$raw" ] || note "Using: $new   (http://, https://, www. and anything after / are left out)"
     valid_webname "$new" || { fail "\"$new\" does not look like a web name (like name.zapto.org)"; return 1; }
+    if [ -n "${GARDEN_FOLDER_NEW:-}" ] && ! [[ "$GARDEN_FOLDER_NEW" =~ ^/[a-z0-9][a-z0-9_-]{0,39}$ ]]; then
+        fail "a folder is / and then letters, numbers, - or _ (like /garden)"; return 1
+    fi
     [ "$new" != "$old" ] || { note "That is already the name. Nothing changed."; return 0; }
     for f in "${WEBNAME_FILES[@]}"; do [ -f "$f" ] && grep -qF "$old" "$f" && changed+=("$f"); done
     note "These files say $old and will say $new:"
@@ -4394,23 +4408,33 @@ do_webname() {   # do_webname [NEW-NAME]   (with a name: no questions)
     done
     note "Files changed. The old copies are in $keep (copy them back to undo)."
 
-    # Already installed? Then the settings and the running programs follow.
+    # Already installed? Then everything follows in this same step: the address the site
+    # publishes (labels, the app's signed config), the front door, the old name forwarding,
+    # the running website. Nothing is left for later.
     if [ -f .env ]; then
+        [ -z "${GARDEN_FOLDER_NEW+x}" ] || env_set PUBLIC_PATH "$GARDEN_FOLDER_NEW"
+        env_set PUBLIC_URL "https://$new$(env_get PUBLIC_PATH)"
+        # The old name keeps answering and forwards to the new one (old_name_blocks).
+        local olds; olds=$(env_get OLD_NAMES)
+        case ",$olds," in *",$old,"*) ;; *) env_set OLD_NAMES "${olds:+$olds,}$old" ;; esac
+        [ -n "$(env_get SIGNING_KEY)" ] || env_set SIGNING_KEY "$(openssl rand -hex 32)"
+        note "Settings (.env): the garden's address is now $(env_get PUBLIC_URL)."
         if [ "$(env_get PUBLIC_NAME)" = "$old" ]; then
-            env_set PUBLIC_NAME "$new"; env_set PUBLIC_URL "https://$new$(env_get PUBLIC_PATH)"
-            # The old name keeps answering and forwards to the new one (old_name_blocks).
-            local olds; olds=$(env_get OLD_NAMES)
-            case ",$olds," in *",$old,"*) ;; *) env_set OLD_NAMES "${olds:+$olds,}$old" ;; esac
-            [ -n "$(env_get SIGNING_KEY)" ] || env_set SIGNING_KEY "$(openssl rand -hex 32)"
-            note "Settings (.env): the web name is now $new."
-            if systemctl is-active --quiet caddy 2>/dev/null; then apply_subdomains; fi
+            env_set PUBLIC_NAME "$new"
+            if systemctl is-active --quiet caddy 2>/dev/null; then
+                # The address watcher (root) does the front door itself after this.
+                if [ -n "${GARDEN_NO_CADDY:-}" ]; then write_authelia "$new"; reload_signin
+                else apply_subdomains; fi
+            fi
         fi
-        if confirm "Rebuild the website now so it uses $new (a few minutes)?" y; then
-            # shellcheck disable=SC2046  # the profile list is meant to split into words
-            run dc $(profile_args) build && run dc up -d && wait_site
-        else
-            note "Later: menu M, then 7 (rebuild)."
+        say "Rebuilding the website so every page says $new (a few minutes)"
+        # shellcheck disable=SC2046  # the profile list is meant to split into words
+        if ! { run dc $(profile_args) build && run dc up -d && wait_site; }; then
+            address_status failed "$old" "$new" "the website did not start again; menu M, then 7 (rebuild)"
+            fail "the website did not start again with the new name. Menu M, then 7 (rebuild)."
+            return 1
         fi
+        address_status "done" "$old" "$new$(env_get PUBLIC_PATH)"
     fi
     if [ -d .git ]; then
         git add -- "${changed[@]}" && git commit -q -m "Changed the web name from $old to $new (menu M, 16)" -- "${changed[@]}" \
@@ -4420,9 +4444,80 @@ do_webname() {   # do_webname [NEW-NAME]   (with a name: no questions)
     L "   Phones set up with the app's QR code follow the new name by themselves."
     L "   Older phones (never set up with the QR code): open the app setup page and scan it once:"
     printf '      %s/app/setup\n' "$(env_get PUBLIC_URL)"
-    L "   New labels (optional, the old ones still work): print the labels page:"
-    printf '      %s/labels\n' "$(env_get PUBLIC_URL)"
     note "The file check (menu M, 11) will list these files as changed: that is expected."
+    # The labels, made again for the new address (the labels page draws every code from it).
+    do_labels
+}
+
+# The data folder (DATA_DIR in .env), where the website's own small files live.
+data_dir() { local d; d=$(env_get DATA_DIR || true); printf '%s' "${d:-./local/data}"; }
+
+# address_status done|failed OLD NEW [WHY]: the result of a web address change, for the
+# labels page (address-status.json in the data folder). The names are checked web names.
+address_status() {
+    local f; f="$(data_dir)/address-status.json"
+    [ -d "$(dirname "$f")" ] || return 0
+    printf '{"state":"%s","old":"%s","new":"%s","at":"%s","message":"%s"}\n' \
+        "$1" "$2" "$3" "$(date '+%Y-%m-%d %H:%M')" "${4:-}" > "$f.tmp" && mv -f "$f.tmp" "$f"
+}
+
+# garden.sh address-request: carry out a web address change asked for on the website's labels
+# page (it writes address-request.json in the data folder). Started by the address watcher
+# (systemd, as root): the garden's owner does the work, so every file stays theirs; only the
+# front door (Caddy, needs root) is done here afterwards. Run by hand it works the same.
+do_address_request() {
+    local f name folder old owner
+    f="$(data_dir)/address-request.json"
+    [ -f "$f" ] || return 0
+    # Read the two values as text (never run): they are checked before anything uses them.
+    name=$(sed -n 's/.*"name" *: *"\([^"]*\)".*/\1/p' "$f" | head -1)
+    folder=$(sed -n 's/.*"folder" *: *"\([^"]*\)".*/\1/p' "$f" | head -1)
+    rm -f "$f"
+    old=$(current_webname)
+    if ! valid_webname "$name" || ! { [ -z "$folder" ] || [[ "$folder" =~ ^/[a-z0-9][a-z0-9_-]{0,39}$ ]]; }; then
+        address_status failed "$old" "" "not a web name and folder"
+        fail "the address asked for on the website is not a web name and folder"; return 1
+    fi
+    if [ "$(id -u)" = 0 ]; then
+        owner=$(stat -c %U .)
+        runuser -u "$owner" -- env ASSUME_YES=1 GARDEN_NO_CADDY=1 bash garden.sh address-apply "$name" "$folder" || return 1
+        if [ -n "$(env_get PUBLIC_NAME)" ] && systemctl is-active --quiet caddy 2>/dev/null; then
+            caddy_apply || { address_status failed "$old" "$name$folder" "the front door (Caddy) did not take the new name"; return 1; }
+        fi
+    else
+        ASSUME_YES=1 do_address_apply "$name" "$folder"
+    fi
+}
+
+# garden.sh address-apply NAME FOLDER: the change itself, as the garden's owner.
+do_address_apply() {
+    local name=$1 folder=$2
+    if [ "$name" = "$(current_webname)" ]; then
+        # Only the folder changes.
+        env_set PUBLIC_PATH "$folder"; env_set PUBLIC_URL "https://$name$folder"
+        if run dc up -d && wait_site; then address_status "done" "$name$folder" "$name$folder"; do_labels
+        else address_status failed "$name" "$name$folder" "the website did not start again"; return 1; fi
+    else
+        GARDEN_FOLDER_NEW=$folder do_webname "$name"
+    fi
+}
+
+# garden.sh address-watch: set up the address watcher (the install does this). systemd starts
+# garden.sh address-request as soon as the website files a request; nothing runs otherwise.
+do_address_watch() {
+    local here data unit=/etc/systemd/system/junsgarden-address
+    command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ] || { warn "no systemd here: the website's address form needs it (garden.sh webname works anyway)"; return 0; }
+    here=$(pwd -P); data=$(cd "$(data_dir)" 2>/dev/null && pwd -P) || { warn "no data folder yet"; return 0; }
+    explain "The address watcher" \
+        "When you change the web address on the website (labels page), the website only leaves a note in its data folder. This small systemd rule sees the note and runs the change on this computer." \
+        "So the website itself can never change this computer: it can only ask, and garden.sh checks the name before doing anything." \
+        "https://www.freedesktop.org/software/systemd/man/latest/systemd.path.html"
+    printf '[Unit]\nDescription=Jun'"'"'s Garden: a web address change asked for on the website\n\n[Path]\nPathExists=%s/address-request.json\nUnit=junsgarden-address.service\n\n[Install]\nWantedBy=multi-user.target\n' \
+        "$data" | sudo tee "$unit.path" >/dev/null
+    printf '[Unit]\nDescription=Jun'"'"'s Garden: change the web address (garden.sh address-request)\n\n[Service]\nType=oneshot\nEnvironment=HOME=/root\nWorkingDirectory=%s\nExecStart=/bin/bash %s/garden.sh address-request\n' \
+        "$here" "$here" | sudo tee "$unit.service" >/dev/null
+    run sudo systemctl daemon-reload && run sudo systemctl enable --now junsgarden-address.path >/dev/null 2>&1 \
+        && note "On: the website's address form now changes the address on this computer."
 }
 
 # The folder the Windows wizard chose (GARDEN_FOLDER), if it is a proper one; else nothing.
@@ -4791,7 +4886,11 @@ case "${1:-menu}" in
     language)   choose_language ;;
     users)      do_users ;;
     lockdown)   do_lockdown ;;
-    webname)    do_webname "${2:-}" ;;
+    webname)    if [ -n "${3+x}" ]; then GARDEN_FOLDER_NEW=$3 do_webname "${2:-}"; else do_webname "${2:-}"; fi ;;
+    address-request) do_address_request ;;
+    address-apply)   do_address_apply "${2:-}" "${3:-}" ;;
+    address-watch)   do_address_watch ;;
+    caddy-apply)     caddy_apply ;;
     labels)     do_labels ;;
     app)        do_app_setup ;;
     folder)     do_folder "${2-ask}" ;;

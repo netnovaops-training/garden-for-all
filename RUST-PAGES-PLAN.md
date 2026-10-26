@@ -67,6 +67,12 @@ A lab on any Linux machine with Docker (`GARDEN_LAB=user@host sh docs/rust-pages
 - Windows wizard: folder field, phone-app and labels buttons (Korean from the same `lang/ko.tsv`).
 - `code-fingerprints.yml`: the robot proposes a pull request instead of pushing to main.
 - `pi-arm64.yml` (new): every image built on GitHub's arm64 machine; every pinned image has arm64.
+- After PR #31 (branch `address-one-step`): the web address changes in ONE step from three places
+  (`garden.sh webname NAME [/folder]`, the Windows wizard's last page, the labels page's form via the
+  address watcher `junsgarden-address.path`): settings, front door, old name forwarding, rebuilt
+  site, signed app config, labels page. Data files only through `store::file_in` (CodeQL clean).
+  Camera tools say "turned off" (503) when their part is not installed. `labels` stays inside a
+  folder. Jun's real data (a throwaway copy of the 2026-10-25 archive) walked on the new code.
 
 ## Pages
 | Address | Rust file | Status |

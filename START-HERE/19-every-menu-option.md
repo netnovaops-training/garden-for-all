@@ -278,6 +278,7 @@ after 4; see "Windows-only items" at the end. `0) Back` returns to the main menu
 - **What it installs or changes:** Those files (copies of the old ones go to `logs/web-name-change_DATE/`). If installed and online with the old name: `.env` and Caddy follow. Offers to rebuild the website, and saves the change in your git history.
 - **To undo it:** Run it again with the old name, or copy the old files back from `logs/web-name-change_DATE/`.
 - **The old name keeps working** while it still points to your garden (keep it at No-IP): pages and printed labels forward to the new name, and phones keep talking to it. Apps set up with the setup QR (More 20) move to the new name by themselves; older apps keep using the old name until they update.
+- **One step, from three places.** Here (`bash garden.sh webname new.name.org`, add `/garden` for a folder), the Windows setup wizard's last page ("Change the web address"), or the website's labels page (log in, open `/labels`, "Change the address"). Each does the same: the settings, the front door, the old name forwarding, the website restarted with the new name everywhere, the app's signed address, and the labels page's codes, all at once. The labels page then says when it changed. (The website's form only leaves a note; the address watcher the install set up, `junsgarden-address.path`, carries it out on this computer. `bash garden.sh address-watch` sets it up on an older install.)
 - **Command:** `bash garden.sh webname`. Guide: `04-go-public-no-ip-caddy.md`.
 
 > **Why use the menu for this, not File Explorer?**

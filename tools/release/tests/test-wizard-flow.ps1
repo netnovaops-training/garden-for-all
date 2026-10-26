@@ -181,6 +181,15 @@ Harness "custom" @'
     Check-It "garden-setup.json holds no password or key" (-not ($j.Contains("THEPW") -or $j.Contains("KGEMINI") -or $j.Contains("KWIKI") -or $j.Contains("KPERENUAL") -or $j.Contains("abcd")))
     $leak = @(Get-ChildItem $Root -Recurse -File | Where-Object { $_.Length -lt 5MB -and $_.Name -notlike "_test-*" -and $_.Name -ne "results.txt" -and ([IO.File]::ReadAllText($_.FullName)).Contains("THEPW") })
     Check-It "no file in the garden folder holds the password" ($leak.Count -eq 0)
+    # The last page: changing the web address later, in one step.
+    Show-Page "done"; [Windows.Forms.Application]::DoEvents()
+    $tbNewAddr.Text = "New.Example.org"; $tbNewAddrFolder.Text = "/garden/"; $script:launched = ""
+    $btnAddr.PerformClick(); [Windows.Forms.Application]::DoEvents()
+    Check-It "the web address button runs the one-step change (-Action webname, the name, the folder)" ($script:launched -match '-Action webname -WebName new\.example\.org -Folder /garden(\s|$)')
+    $tbNewAddr.Text = "not a name"; $script:launched = ""; $script:problems = @()
+    $btnAddr.PerformClick(); [Windows.Forms.Application]::DoEvents()
+    Check-It "a wrong web name is refused there (nothing started, a message shown)" (-not $script:launched -and $script:problems.Count -gt 0)
+    Check-It "the web address field is labelled in English and Korean" ((Both "New web name (like name.zapto.org)") -match " / .*$hangul")
     $out.Add("COMMAND-CUSTOM  " + (($c -replace '-File "[^"]*"', '-File "...\Garden-Menu.ps1"') -replace '-SecretsFile "[^"]*"', '-SecretsFile "...\garden-wizard-XXXX.txt"'))
 '@
 

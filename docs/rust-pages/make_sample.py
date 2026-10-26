@@ -108,7 +108,10 @@ def plant(i, future=False):
         "picture": f"plant-{i % 6}.png" if i % 4 else None,
         "additional_pictures": f"plant-{(i + 1) % 6}.png" if i % 5 == 0 else None,
     }
-    if not future:
+    if future:
+        # A fixed time: left out, each lab database would get its own load time (a false difference).
+        row["date_added"] = f"2026-03-{i:02d} 09:00:00"
+    else:
         row.update({"image_approved": i % 2, "photo_position": "50% 50%", "died_year": 2025 if died else None,
                     "barcode": f"0000000{i:05d}" if i % 7 == 0 else None})
     return row
