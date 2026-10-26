@@ -2552,6 +2552,7 @@ window.editPlant = function(id, source) {
         'p_year_added': data.year_added, 'p_qty_edit': data.qty,
         'p_grow_months': data.grow_months, 'p_bloom_months': data.bloom_months, 'p_space': data.spacing,
         'p_maint': data.maintenance_notes, 'p_attracts': data.attracts, 'p_care': data.care_notes,
+        'p_product_url': data.product_url,
         'p_cleanup': data.cleanup_notes, 'p_cuttings': data.cuttings, 'p_admin_todo': data.admin_todo,
         'p_split': data.split_amt, 'p_botanical': data.botanical_name, 'p_soil_ph': data.soil_ph,
         'p_soil_type': data.soil_type, 'p_bloom_color': data.bloom_color, 'p_foliage_color': data.foliage_color,
