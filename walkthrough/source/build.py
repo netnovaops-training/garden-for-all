@@ -42,8 +42,8 @@ def expand(md):
     def app(m):
         return f'\n<div class="app"><img src="{(APPS / (m.group(1) + ".png")).as_uri()}"></div>\n'
 
-    md = re.sub(r"^\s*@shot (\S+)\s*$", shot, md, flags=re.M)
-    return re.sub(r"^\s*@app (\S+)\s*$", app, md, flags=re.M)
+    md = re.sub(r"^\s*@shot (\S+)\s*$", shot, md, flags=re.MULTILINE)
+    return re.sub(r"^\s*@app (\S+)\s*$", app, md, flags=re.MULTILINE)
 
 
 with sync_playwright() as p:
