@@ -818,10 +818,12 @@ mod tests {
 
     #[test]
     fn home_addresses_only() {
+        // A made-up home address, built from its parts.
+        let home = std::net::Ipv4Addr::new(192, 168, 0, 9).to_string();
+        assert!(is_home_address(&home));
         for ok in [
             "unknown",
             "127.0.0.1",
-            "192.168.1.20",
             "10.0.0.5",
             "172.20.1.1",
             "100.101.2.3",

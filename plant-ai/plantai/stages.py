@@ -88,10 +88,10 @@ def do_fill(pset: str, pid: int, rec: dict) -> dict:
         if empty(ev):
             fills[fld] = j
             continue
-        evn, _ = norm.norm(fld, ev)
+        existing, _ = norm.norm(fld, ev)
         if fld in norm.FREE:
             continue  # free text: not compared word-for-word
-        if evn == j["v"]:
+        if existing == j["v"]:
             confirmed.append(fld)
         else:
             contra.append({"f": fld, "existing": ev, "source_value": j["v"], "sources": j["sources"],
