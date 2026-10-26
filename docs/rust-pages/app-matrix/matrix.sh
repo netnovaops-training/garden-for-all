@@ -25,8 +25,6 @@ SDK=$(cygpath -u "${ANDROID_HOME:-$LOCALAPPDATA/Android/Sdk}" 2>/dev/null || ech
 export JAVA_HOME=${JAVA_HOME:-"/c/Program Files/Android/Android Studio/jbr"}
 export ANDROID_HOME; ANDROID_HOME=$(cygpath -m "$SDK" 2>/dev/null || echo "$SDK")   # Gradle wants C:/...
 ADB="$SDK/platform-tools/adb"
-# ui.py runs in Windows Python, which needs the Windows form of adb's path.
-export ADB_FOR_PY; ADB_FOR_PY=$(cygpath -w "$ADB" 2>/dev/null || echo "$ADB")
 EMU="$SDK/emulator/emulator"
 AVD=gardentest
 # Its own emulator on a fixed port; every adb call (and ui.py's) goes to it alone.
@@ -41,7 +39,7 @@ ok()  { pass=$((pass+1)); echo "PASS $1"; }
 bad() { fail=$((fail+1)); echo "FAIL $1"; }
 lab() { ssh -o BatchMode=yes "$LAB" "cd ~/garden-rust-pages && $1"; }
 shot() { "$ADB" exec-out screencap -p > "$OUT/$1.png"; }
-ui() { ADB=$ADB_FOR_PY python "$here/ui.py" "$@"; }
+ui() { PATH="$SDK/platform-tools:$PATH" python "$here/ui.py" "$@"; }
 mkdir -p "$OUT/logs"
 
 # Run one instrumented test; PASS when it reports OK.
@@ -127,6 +125,18 @@ inst "3 old app's update check finds the new app; downloads it from the new name
 # the test's process ends, so the log is the proof, not a screenshot.)
 "$ADB" logcat -d | grep -q "vnd.android.package-archive" \
     && ok "the APK was handed to Android's installer" || bad "handed to the installer"
+# The emulator sometimes drops off adb for a while right after the installer opens. Wait until
+# the phone answers again (and say so) instead of failing every later step on "device offline".
+ready() {
+    local i
+    for i in $(seq 90); do
+        [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && return 0
+        sleep 2
+    done
+    return 1
+}
+"$ADB" get-state >/dev/null 2>&1 || echo "     (the emulator dropped off adb after the installer opened; waiting for it)"
+ready || { bad "emulator came back"; exit 1; }
 
 # --- 4. installed over the old one ------------------------------------------------------------------
 "$ADB" shell input keyevent KEYCODE_BACK

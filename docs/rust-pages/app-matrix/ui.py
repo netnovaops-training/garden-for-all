@@ -5,17 +5,18 @@
     python ui.py tap TEXT [TEXT ...]    tap the first of the texts found (exit 1 if none)
     python ui.py wait TEXT [...]        like has, but waits up to 40 s
     python ui.py tapfirstcard           tap the first plant card under the search box
-Uses $ADB (default: adb on PATH). The dump is read with plain patterns (no XML parser): it
-only ever needs each node's text, description, clickable flag and bounds.
+Uses the adb found on PATH (matrix.sh puts the SDK's platform-tools first, and sets
+ANDROID_SERIAL so adb talks to the test emulator only). The dump is read with plain patterns
+(no XML parser): it only ever needs each node's text, description, clickable flag and bounds.
 """
 import html
-import os
 import re
+import shutil
 import subprocess
 import sys
 import time
 
-ADB = os.environ.get("ADB", "adb")
+ADB = shutil.which("adb") or sys.exit("ui.py: adb is not on PATH")
 NODE = re.compile(r"<node\b[^>]*>")
 ATTR = re.compile(r'(\w[\w-]*)="([^"]*)"')
 
