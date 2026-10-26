@@ -486,8 +486,9 @@ pub fn path_url(f: &str) -> String {
         .join("/")
 }
 
-/// The 80px thumbnail Streamlit's tables showed, from the site's own
-/// resizer (`app_api.php?action=thumb`), or nothing.
+/// The small picture Streamlit's tables showed: the plant's ONE photo file, drawn small by the
+/// stylesheet (`.st-thumb`) and loaded only when it scrolls into view. No separate thumbnail file
+/// is asked for or made (until 2026-10 this used the site's resizer, which kept small copies).
 pub fn thumb(picture: &str) -> String {
     // Take the first picture in the comma list: trim spaces, skip empty items and the words none,
     // null and "[]".
@@ -495,14 +496,10 @@ pub fn thumb(picture: &str) -> String {
         .split(',')
         .map(str::trim)
         .find(|s| !s.is_empty() && !matches!(s.to_lowercase().as_str(), "none" | "null" | "[]"));
-    // Three cases: a photo in a sub-folder, a plain file name, or no photo at all.
     match first {
-        // The resizer reads only a file name, so a photo in a sub-folder
-        // (web/...) is shown from its own address instead.
-        Some(f) if f.contains('/') => format!("<img class=\"st-thumb\" loading=\"lazy\" src=\"/images/Database/{}\" alt=\"\">", path_url(f)),
         Some(f) => format!(
-            "<img class=\"st-thumb\" loading=\"lazy\" src=\"/app_api.php?action=thumb&amp;img={}&amp;w=80\" alt=\"\">",
-            crate::php::urlencode(f)
+            "<img class=\"st-thumb\" loading=\"lazy\" decoding=\"async\" src=\"/images/Database/{}\" alt=\"\">",
+            path_url(f)
         ),
         None => String::new(),
     }

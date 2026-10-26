@@ -349,6 +349,10 @@
 
 ## 6. 식물 더하기 {.part}
 
+*새로 생겼어요: 첫 번째 탭 **🌱 식물 추가**는 여섯 가지만 묻고 나머지는 로컬 식물 AI가 채워요. 따로 사진
+안내서가 있어요: `walkthrough/streamlit/` (영어와 한국어). 아래 단계는 전체 양식이고, 이제
+**⚙️ 고급 → 🌱 Add Plant (full form)** 아래에 있어요.*
+
 1. **🌱 Add Plant**(식물 더하기) 탭을 여세요. 식물의 보통 이름과 학명을 넣으세요.
    @shot 05-add-plant
 2. **Enter**를 누르세요. 다음 단계가 나오고 **📋 Create Record →**(기록 만들기) 버튼이 보여요.
@@ -389,8 +393,8 @@
 2. 양식은 열네 부분이에요: 1 이름과 분류(이름, 과, 속, 종, 회사, 종류, 토종인지), 2 자라는 크기·간격·화단,
    3 햇빛·물·흙·구역, 4 가격·수량·심은 해, 5 화단, 6 잎과 줄기, 7 꽃·향기·번식, 8 열매, 9 뿌리, 10 돌보기·위험·
    번식·함께 심기, 11 달력(자라는 달과 꽃 피는 달. 꽃이 없는 식물은 **🚫 Does not bloom**에 표시), 12 긴 메모(메모,
-   그리고 **⚠️ Flag Entry for Further Technical Review**: 다시 볼 것으로 표시), 13 사진, 14 확인 서명(제작자와
-   준의 승인, 10장).
+   그리고 **⚠️ Flag Entry for Further Technical Review**: 다시 볼 것으로 표시), 13 사진, 14 확인 서명(정원
+   주인이 승인했는지; 주인은 **✅ 승인** 버튼으로 승인해요, 10장).
 3. 맨 아래 **Save Changes**(저장)가 모든 부분을 한꺼번에 저장해요.
 4. 그 아래 **📊 Log a Quantity Event (optional)**(수량 변화 기록)은 산 것, 죽은 것, 뺀 것을 기록해요(8장).
 
@@ -458,10 +462,10 @@ AI 탭은 정원 컴퓨터에 설정한 무료 클라우드 AI를 써요(메뉴 
 1. **⚠️ Partials**(덜 채운 식물): 중요한 정보가 아직 빠진 식물 모두와 빠진 칸 목록. 표 아래에서 하나를 골라
    채우거나(**Edit a Partial Plant**), **📥 Go to JSON Import →**로 여러 개를 한꺼번에 채워요.
    @shot 52-admin-partials
-2. **🔍 Awaiting Approval**(승인 기다림): 정보는 다 채웠지만 제작자 그리고/또는 준의 승인을 기다리는 식물
-   (편집기의 14부분). 안쪽 탭 두 개: **🌷 Perennials**(여러해살이)와 **🌻 Annuals**(한해살이).
+2. **🔍 Awaiting Approval**(승인 기다림): 정보는 다 채웠지만 정원 주인의 **✅ 승인**을 기다리는 식물
+   (편집기 위의 버튼; 주인에게만 보여요). 안쪽 탭 두 개: **🌷 Perennials**(여러해살이)와 **🌻 Annuals**(한해살이).
    @shot 53-admin-awaiting
-3. **🏆 Fully Approved & Verified**(모두 승인됨): 정보가 다 있고 두 사람 모두 승인한 식물. 인쇄해도 되는
+3. **🏆 Fully Approved & Verified**(모두 승인됨): 정보가 다 있고 정원 주인이 승인한 식물. 인쇄해도 되는
    목록이에요. 같은 안쪽 탭 두 개.
    @shot 54-admin-approved
 4. **🚩 Flagged for Review**(다시 볼 식물): 편집기에서 누군가 **⚠️ Flag Entry for Further Technical Review**로

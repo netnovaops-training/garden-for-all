@@ -338,6 +338,8 @@ Renewed. The new passwords are only in .env.	새로 만들었어요. 새 비밀�
 Local AI on another computer (optional, advanced)	다른 컴퓨터의 로컬 AI(선택, 고급)
 Ollama runs AI models on a computer with a strong graphics card. The garden's AI boxes can ask it instead of a cloud service. NOT on this laptop: it is too small.	Ollama는 좋은 그래픽 카드가 있는 컴퓨터에서 AI 모델을 실행해요. 정원의 AI 상자는 클라우드 서비스 대신 Ollama에게 물어볼 수 있어요. 이 노트북에서는 안 돼요: 너무 작아요.
 Private and free once set up. Guide: START-HERE/15-local-ai.md	한 번 설정하면 비공개이고 무료예요. 안내서: START-HERE/15-local-ai.md
+The Add plant tab's AI helper (Local plant AI) is set up on a Windows PC with an NVIDIA card (12 GB or more): its setup wizard, or its menu (More, 22).	'식물 추가' 탭의 AI 도우미(로컬 식물 AI)는 NVIDIA 카드(12GB 이상)가 있는 Windows PC에서 설정해요: 그 PC의 설치 마법사나 메뉴(More, 22)에서요.
+This installer never installs AI models on this computer (guide 15, 'Local plant AI').	이 설치 프로그램은 이 컴퓨터에 AI 모델을 절대 설치하지 않아요 (안내서 15, '로컬 식물 AI').
 IP address of the AI computer (empty = turn local AI off)	AI 컴퓨터의 IP 주소(비우면 로컬 AI 끄기)
 Local AI is off.	로컬 AI가 꺼졌어요.
 Which model should the garden use	정원이 어떤 모델을 쓸까요

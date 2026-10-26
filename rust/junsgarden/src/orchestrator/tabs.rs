@@ -49,6 +49,9 @@ pub async fn render(state: &AppState, req: &Req) -> String {
         12 => bed_assign(state, req).await,
         13 => super::wishlist::wishlist(state, req).await,
         14 => super::wishlist::barcodes(state, req).await,
+        15 => super::quick::render_add(state, req).await,
+        16 => super::quick::render_receipt(state, req).await,
+        17 => super::quick::render_pictures(state, req).await,
         // A tab that has not been converted yet shows a short note. `super::TABS[n - 1]` is the
         // tab's name (lists count from 0).
         n => ui::info(&format!(
@@ -255,23 +258,20 @@ async fn flagged(state: &AppState, req: &Req) -> String {
 
 // ---- 🔍 Awaiting Approval / 🏆 Fully Approved (two files, one shape) -------
 
-/// True only when both the author and Jun have approved the plant. A value of 1, true or True counts as
-/// approved.
-fn approved_both(p: &Map<String, Value>) -> bool {
-    // A closure that tests one approval column.
-    let on = |k: &str| matches!(s(p, k).trim(), "1" | "true" | "True");
-    on("approved_jason") && on("approved_jun")
-}
-
 /// Tabs 7 and 8 share one shape. `done` false is "Awaiting Approval": plants that have no missing
-/// fields but are not approved by both. `done` true is "Fully Approved": complete plants approved
-/// by both. Two inner tabs split perennials from annuals.
+/// fields but are not approved yet. `done` true is "Fully Approved": complete plants the garden
+/// owner approved. Approval is the owner's alone (`plant_ai::is_approved`, the `approved_jun`
+/// column); the old second sign-off column is not asked for. Two inner tabs split perennials from
+/// annuals.
 async fn approval(state: &AppState, req: &Req, done: bool) -> String {
+    let l = req.lang;
     // Heading and description for the chosen tab.
     let mut h = if done {
-        ui::header("🏆 Fully Approved & Verified") + &ui::text("Browse the 100% completed, print-ready catalog. Both the author and Jun have verified this data.")
+        ui::header("🏆 Fully Approved & Verified")
+            + &ui::text(l.t("Browse the 100% completed, print-ready catalog. The garden owner approved this data.", "100% 완성된, 인쇄할 수 있는 목록이에요. 정원 주인이 이 정보를 승인했어요."))
     } else {
-        ui::header("🔍 Awaiting Approval") + &ui::text("These plants have 100% of their data complete, but are waiting on a sign-off from the author and/or Jun.")
+        ui::header("🔍 Awaiting Approval")
+            + &ui::text(l.t("These plants have 100% of their data complete and wait for the garden owner's Approve.", "이 식물들은 정보가 100% 채워졌고 정원 주인의 승인을 기다려요."))
     };
     // Inner tab 1 (perennials) or 2 (annuals).
     let sub = if req.get("sub") == "2" { 2 } else { 1 };
@@ -283,7 +283,7 @@ async fn approval(state: &AppState, req: &Req, done: bool) -> String {
     let list: Vec<Map<String, Value>> = rows(state, &format!("SELECT * FROM {view}"))
         .await
         .into_iter()
-        .filter(|p| opts::missing_fields(p).is_empty() && approved_both(p) == done)
+        .filter(|p| opts::missing_fields(p).is_empty() && crate::plant_ai::is_approved(p) == done)
         .collect();
     let kind = if sub == 1 { "perennial" } else { "annual" };
     // Nothing to show: a short note.
@@ -305,13 +305,7 @@ async fn approval(state: &AppState, req: &Req, done: bool) -> String {
             "spacing",
         ]
     } else {
-        &[
-            "Thumbnail",
-            "plant_name",
-            "botanical_name",
-            "approved_jason",
-            "approved_jun",
-        ]
+        &["Thumbnail", "plant_name", "botanical_name", "approved_jun"]
     };
     // The picker label.
     let label = if done {
@@ -319,8 +313,33 @@ async fn approval(state: &AppState, req: &Req, done: bool) -> String {
     } else {
         format!("Review & approve {kind}:")
     };
-    h.push_str(&list_and_edit(state, req, &list, cols, &label, &sub.to_string(), "").await);
+    // Awaiting Approval: the owner's Approve button for the chosen plant, above its editor.
+    let between = if done {
+        String::new()
+    } else {
+        approve_button(req, &s(chosen(req, &list), "id"))
+    };
+    h.push_str(&list_and_edit(state, req, &list, cols, &label, &sub.to_string(), &between).await);
     h
+}
+
+/// The Approve button (garden owner only; others see who can approve). The same action as the
+/// Add plant review (quick.rs, `pa_approve`).
+fn approve_button(req: &Req, id: &str) -> String {
+    let l = req.lang;
+    if !req.owner {
+        return ui::caption(l.t(
+            "Only the garden owner can approve.",
+            "승인은 정원 주인만 할 수 있어요.",
+        ));
+    }
+    format!(
+        "<form method=\"post\" action=\"/streamlit/\"><input type=\"hidden\" name=\"act\" value=\"pa_approve\"><input type=\"hidden\" name=\"tab\" value=\"{}\"><input type=\"hidden\" name=\"p\" value=\"{}\"><input type=\"hidden\" name=\"sub\" value=\"{}\">{}</form>",
+        req.tab,
+        he(id),
+        he(req.get("sub")),
+        ui::button("go", "1", l.t("✅ Approve", "✅ 승인"), true, false)
+    )
 }
 
 // ---- ⚠️ Partials (tab_partials.py) -----------------------------------------

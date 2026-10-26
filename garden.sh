@@ -3784,6 +3784,10 @@ do_ai() {
         "Ollama runs AI models on a computer with a strong graphics card. The garden's AI boxes can ask it instead of a cloud service. NOT on this laptop: it is too small." \
         "Private and free once set up. Guide: START-HERE/15-local-ai.md" \
         "https://docs.ollama.com/faq"
+    # The one thing the two installers do differently: the Add plant tab's AI helper is a
+    # Windows-PC-only part (windows/Garden-PlantAi.ps1); this script never installs models.
+    note "The Add plant tab's AI helper (Local plant AI) is set up on a Windows PC with an NVIDIA card (12 GB or more): its setup wizard, or its menu (More, 22)."
+    note "This installer never installs AI models on this computer (guide 15, 'Local plant AI')."
     local ip model url
     ip=$(ask "IP address of the AI computer (empty = turn local AI off)" "")
     if [ -z "$ip" ]; then env_set OLLAMA_URL ""; env_set OLLAMA_MODEL ""; run dc up -d site; note "Local AI is off."; return 0; fi
