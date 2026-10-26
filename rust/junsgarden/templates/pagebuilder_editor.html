@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Page builder · 페이지 편집기</title>
+    <link rel="icon" href="/favicon.svg">
+    <link rel="stylesheet" href="pagebuilder/editor.css?v={{ editor_css_v }}">
+</head>
+<body>
+<!-- Editing works on a computer only; phones and the app just show the pages. -->
+<div class="pb-narrow">
+    <p>✏️ The page builder works on a computer (a wider screen).<br>
+       페이지 편집기는 컴퓨터(넓은 화면)에서 쓸 수 있어요.</p>
+    <p><a href="index.php">Back to the garden · 정원으로 돌아가기</a></p>
+</div>
+
+<div id="pb-app" class="pb-app" data-page="{{ page }}" data-token="{{ token }}">
+    <header class="pb-top">
+        <strong class="pb-title" data-t="title">Page builder</strong>
+        <label class="pb-pagepick"><span data-t="page">Page</span>
+            <select id="pb-page"></select></label>
+        <button type="button" id="pb-newpage" data-t="newPage">New page</button>
+        <span class="pb-spacer"></span>
+        <button type="button" id="pb-undo" data-t="undo">Undo</button>
+        <button type="button" id="pb-reset" data-t="reset">Original page</button>
+        <button type="button" id="pb-save" class="pb-primary" data-t="save">Save</button>
+        <a id="pb-view" href="index.php" data-t="view">View page</a>
+        <button type="button" id="pb-lang" lang="ko">한국어</button>
+    </header>
+    <div id="pb-status" class="pb-status" role="status" aria-live="polite"></div>
+
+    <main class="pb-main">
+        <aside class="pb-panel" aria-labelledby="pb-panel-h">
+            <h2 id="pb-panel-h" data-t="sections">Sections</h2>
+            <p class="pb-hint" data-t="panelHint">Drag a section onto the page, or press Add.</p>
+            <div id="pb-updates" class="pb-updates"></div>
+            <p id="pb-update-state" class="pb-hint"></p>
+            <ul id="pb-list" class="pb-list"></ul>
+            <details class="pb-later">
+                <summary data-t="later">Coming with the database update</summary>
+                <ul id="pb-pending"></ul>
+            </details>
+        </aside>
+
+        <section class="pb-canvas" aria-labelledby="pb-canvas-h">
+            <h2 id="pb-canvas-h" data-t="canvas">Page</h2>
+            <div id="pb-rows" class="pb-rows"></div>
+            <button type="button" id="pb-add" class="pb-plus" aria-describedby="pb-add-hint">+</button>
+            <p id="pb-add-hint" class="pb-hint" data-t="plusHint">Drop a section here for a new row.</p>
+            <details id="pb-history" class="pb-history">
+                <summary data-t="history">Saved versions</summary>
+                <ol id="pb-history-list"></ol>
+            </details>
+        </section>
+
+        <section class="pb-preview" aria-labelledby="pb-preview-h">
+            <h2 id="pb-preview-h" data-t="preview">Live preview (as visitors see it)</h2>
+            <div id="pb-frame-box" class="pb-frame-box">
+                <iframe id="pb-frame" title="Preview · 미리보기" sandbox="allow-scripts allow-same-origin"></iframe>
+            </div>
+        </section>
+    </main>
+</div>
+<script src="pagebuilder/editor.js?v={{ editor_js_v }}" defer></script>
+</body>
+</html>

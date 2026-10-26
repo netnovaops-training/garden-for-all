@@ -109,7 +109,8 @@ fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-fn hex32(s: &str) -> Option<[u8; 32]> {
+/// 64 hex characters -> 32 bytes (a key). Also used by the page builder's signed sections list.
+pub(crate) fn hex32(s: &str) -> Option<[u8; 32]> {
     if s.len() != 64 {
         return None;
     }
@@ -124,7 +125,9 @@ fn hex32(s: &str) -> Option<[u8; 32]> {
 
 /// The site's own top-level names. Only links that start with one of these get the folder
 /// added, so links to other websites and to `//cdn...` are never touched.
-const OWN_PATHS: [&str; 30] = [
+const OWN_PATHS: [&str; 32] = [
+    "pagebuilder",
+    "page.php",
     "images/",
     "js/",
     "sections/",

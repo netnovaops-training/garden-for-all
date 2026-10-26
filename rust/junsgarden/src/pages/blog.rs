@@ -16,14 +16,13 @@ use std::sync::Arc;
 use askama::Template;
 use axum::{
     body::Bytes,
-    extract::{OriginalUri, State},
+    extract::{OriginalUri, Query, State},
     http::{header, HeaderMap, StatusCode},
     response::{Html, IntoResponse, Response},
     Extension,
 };
 
 use crate::formdata;
-use crate::layout::{self, Page};
 use crate::php::{he, nl2br, php_int, urlencode};
 use crate::session::{self, Visitor};
 use crate::AppState;
@@ -82,6 +81,7 @@ pub fn post_images(picture: &Option<String>) -> Vec<String> {
 
 /// One post as the page's template wants it: all text is ready to print.
 /// This is separate from `PostRow` so the template needs no logic of its own.
+#[derive(Clone)]
 struct PostView {
     id: i32,
     title: String,
@@ -97,6 +97,8 @@ struct PostView {
 
 /// The page's body template (`templates/blog.html`): the list of posts and
 /// whether the viewer is signed in (admins see the Delete Post button).
+/// Kept for the test that proves the page builder's pieces add up to this page.
+#[cfg(test)]
 #[derive(Template)]
 #[template(path = "blog.html")]
 struct BlogBody {
@@ -104,12 +106,40 @@ struct BlogBody {
     is_admin: bool,
 }
 
-/// Read all posts and build the whole blog page.
-/// Takes the app state and the visitor. Gives back the page as HTML.
-/// It is shared by the GET handler and by the POST handler, which has to show the
-/// page again if the posted action is not recognised.
+/// The page's opening wrapper (page shell; also used by the owner's own pages).
+#[derive(Template)]
+#[template(path = "blog.html", block = "shell_open")]
+struct BlogOpen;
+
+/// The page's closing wrapper (page shell).
+#[derive(Template)]
+#[template(path = "blog.html", block = "shell_close")]
+struct BlogClose;
+
+/// Section `blog.archive`.
+#[derive(Template)]
+#[template(path = "blog.html", block = "blog_archive")]
+struct BlogArchive {
+    posts: Vec<PostView>,
+    is_admin: bool,
+}
+
+/// Draw the whole blog page through the page builder (default layout = the page as before).
+async fn render(state: &Arc<AppState>, visitor: &Visitor) -> Html<String> {
+    Html(crate::pagebuilder::render_page(state, visitor, "blog", "").await)
+}
+
+/// The page shell: the archive's opening and closing wrappers.
+pub(crate) fn shell() -> (String, String) {
+    (
+        BlogOpen.render().unwrap_or_default(),
+        BlogClose.render().unwrap_or_default(),
+    )
+}
+
+/// Section `blog.archive`: read all posts and draw them.
 /// `async` means it can wait for the database; `.await` is where it waits.
-async fn render(state: &AppState, visitor: &Visitor) -> Html<String> {
+pub(crate) async fn section_archive(state: &AppState, visitor: &Visitor) -> String {
     // 1. Ask the database for every post, newest first. `query_as::<_, PostRow>`
     // tells sqlx to turn each row into a `PostRow`.
     let rows = sqlx::query_as::<_, PostRow>(
@@ -146,17 +176,13 @@ async fn render(state: &AppState, visitor: &Visitor) -> Html<String> {
         })
         .collect();
 
-    // 3. Render the template, then wrap it in the shared page frame.
-    let body = BlogBody {
+    // 3. Render the section's block.
+    BlogArchive {
         posts,
         is_admin: visitor.is_admin(),
     }
     .render()
-    .unwrap_or_default();
-    let mut page = Page::new(body);
-    page.title = "Garden Archives — Jun's & Kona's Garden".to_string();
-    page.show_hero = false;
-    Html(layout::render(state, page, visitor).await)
+    .unwrap_or_default()
 }
 
 /// Handler for `GET /blog.php`. Takes the state and visitor (both supplied by
@@ -176,6 +202,7 @@ pub async fn blog_post(
     State(state): State<Arc<AppState>>,
     Extension(visitor): Extension<Visitor>,
     OriginalUri(uri): OriginalUri,
+    Query(q): Query<std::collections::HashMap<String, String>>,
     headers: HeaderMap,
     body: Bytes,
 ) -> Response {
@@ -199,6 +226,56 @@ pub async fn blog_post(
         // Go back to the blog page so a refresh does not repeat the delete.
         return (StatusCode::FOUND, [(header::LOCATION, "blog.php")]).into_response();
     }
-    // 4. Anything else: show the page.
+    // 4. A form of a home-page section the owner placed on this page (guestbook, new post,
+    // delete a guestbook line): handled by the home page's own code.
+    if ["user_message", "post_blog", "edit_blog", "delete_comment"]
+        .iter()
+        .any(|k| f.has(k))
+    {
+        return crate::pages::index::shared_post(&state, &visitor, uri.path(), &q, &headers, &f)
+            .await;
+    }
+    // 5. Anything else: show the page.
     render(&state, &visitor).await.into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn view(id: i32, title: &str) -> PostView {
+        PostView {
+            id,
+            title: title.into(),
+            author: "Gardener".into(),
+            date: "October 5, 2026".into(),
+            images: post_images(&Some("a.webp,b.webp".into())),
+            content_html: nl2br(&he("one\n<two>")),
+            share_url: urlencode("https://example.test/"),
+            share_text: urlencode(title),
+        }
+    }
+
+    /// The page builder's promise for the archive: shell + section = the whole page.
+    #[test]
+    fn archive_shell_and_section_add_up_to_the_whole_page() {
+        for is_admin in [false, true] {
+            for posts in [
+                Vec::new(),
+                vec![view(2, "Tulips & <roses>"), view(1, "Rain")],
+            ] {
+                let whole = BlogBody {
+                    posts: posts.clone(),
+                    is_admin,
+                }
+                .render()
+                .unwrap();
+                let (open, close) = shell();
+                let archive = BlogArchive { posts, is_admin }.render().unwrap();
+                assert_eq!(format!("{open}{archive}{close}"), whole, "admin={is_admin}");
+                assert!(whole.starts_with("<div class=\"page-content\""));
+                assert!(whole.ends_with("</div>\n</div>\n"));
+            }
+        }
+    }
 }

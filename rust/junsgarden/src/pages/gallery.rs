@@ -25,7 +25,6 @@ use axum::{extract::State, response::Html, Extension};
 use rand::seq::SliceRandom;
 use serde_json::{json, Value};
 
-use crate::layout::{self, Page};
 use crate::AppState;
 
 /// Folder (as a web address) where gallery photos are served from.
@@ -220,6 +219,15 @@ pub async fn gallery(
     State(state): State<Arc<AppState>>,
     Extension(visitor): Extension<Visitor>,
 ) -> Html<String> {
+    // The page builder draws the layout; the default one is this page exactly as before.
+    Html(crate::pagebuilder::render_page(&state, &visitor, "gallery", "").await)
+}
+
+/// The gallery's style and script block for `<head>` (the section's head part).
+pub(crate) const GALLERY_HEAD: &str = include_str!("../../templates/gallery_head.html");
+
+/// Section `gallery.wall`: the photo wall's HTML (its `<head>` part is `GALLERY_HEAD`).
+pub(crate) async fn section_wall(state: &Arc<AppState>) -> String {
     let st = state.clone();
     let mut photos: Vec<Value> = crate::guard::off_thread(move || {
         let www = st.www.clone();
@@ -232,18 +240,12 @@ pub async fn gallery(
     })
     .await;
     photos.shuffle(&mut rand::rng());
-    let body = GalleryBody {
+    GalleryBody {
         total: photos.len(),
         photos_json: serde_json::to_string(&photos).unwrap_or_else(|_| "[]".to_string()),
     }
     .render()
-    .unwrap_or_default();
-
-    let mut page = Page::new(body);
-    page.title = "Gallery | Jun's and Kona's Garden".to_string();
-    page.show_hero = false;
-    page.extra_head = include_str!("../../templates/gallery_head.html").to_string();
-    Html(layout::render(&state, page, &visitor).await)
+    .unwrap_or_default()
 }
 
 // Tests run only with `cargo test`.

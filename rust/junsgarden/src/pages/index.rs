@@ -34,7 +34,6 @@ use serde_json::Value;
 use crate::formdata::{self, FormData};
 use crate::guard::off_thread;
 use crate::images;
-use crate::layout::{self, Page};
 use crate::pages::blog::{post_date, PostRow};
 use crate::php::{filemtime, he, htmlspecialchars_decode, nl2br, php_int, urlencode};
 use crate::session::{self, Visitor};
@@ -56,6 +55,7 @@ const MAX_MESSAGE_CHARS: usize = 100;
 
 /// One blog post as the home page's template shows it. Every field is already
 /// text ready to print, so the template needs no logic. `Vec<T>` is a list.
+#[derive(Clone)]
 struct PostCard {
     id: i32,
     theme: String,
@@ -82,6 +82,10 @@ struct WeatherBody {
 
 /// The whole home page template (`templates/index.html`). `#[derive(Template)]`
 /// is askama writing the code that fills the HTML holes, checked at compile time.
+/// The page itself is now drawn section by section (the structs below, one per named block,
+/// put together by the page builder); this whole-page form is kept for the test that proves
+/// the sections add up to exactly this page.
+#[cfg(test)]
 #[derive(Template)]
 #[template(path = "index.html")]
 struct IndexBody {
@@ -93,6 +97,65 @@ struct IndexBody {
     home_v: u64,
     is_admin: bool,
     current_user: String,
+}
+
+// One struct per named block of `templates/index.html` (`block = "..."` renders only that
+// block). Together, in page order, they print exactly what `IndexBody` prints.
+
+/// The page's opening wrapper (part of the page shell, not a section).
+#[derive(Template)]
+#[template(path = "index.html", block = "shell_open")]
+struct HomeOpen {
+    page_theme: String,
+}
+
+/// The page's closing wrapper and scripts (page shell).
+#[derive(Template)]
+#[template(path = "index.html", block = "shell_close")]
+struct HomeClose {
+    home_blog_v: u64,
+    home_v: u64,
+}
+
+/// Section `home.welcome`: log-in box, or welcome and Logout.
+#[derive(Template)]
+#[template(path = "index.html", block = "home_welcome")]
+struct HomeWelcome {
+    is_admin: bool,
+    current_user: String,
+}
+
+/// Section `home.weather`.
+#[derive(Template)]
+#[template(path = "index.html", block = "home_weather")]
+struct HomeWeather {
+    weather: String,
+}
+
+/// Section `home.tips`.
+#[derive(Template)]
+#[template(path = "index.html", block = "home_tips")]
+struct HomeTips;
+
+/// Section `home.news` (holds the post editor too, for signed-in people, as before).
+#[derive(Template)]
+#[template(path = "index.html", block = "home_news")]
+struct HomeNews {
+    posts: Vec<PostCard>,
+    is_admin: bool,
+}
+
+/// Section `admin.post_editor`: the same file the news section includes.
+#[derive(Template)]
+#[template(path = "post_editor.html")]
+struct PostEditor;
+
+/// Section `home.guestbook`.
+#[derive(Template)]
+#[template(path = "index.html", block = "home_guestbook")]
+struct HomeGuestbook {
+    comments: Vec<String>,
+    is_admin: bool,
 }
 
 /// Pick one of six colour themes at random (`bg-theme-0` to `bg-theme-5`).
@@ -295,27 +358,51 @@ fn post_cards(rows: &[PostRow]) -> Vec<PostCard> {
         .collect()
 }
 
-/// Build the whole home page.
-/// Takes the app state, the visitor and the `zip` text from `?zip=` (for weather).
-/// Gives back the page as HTML.
-async fn render_home(state: &AppState, visitor: &Visitor, zip: &str) -> Html<String> {
-    // 1. Read the 3 newest posts. On a database error, log it and show none.
-    let rows = sqlx::query_as::<_, PostRow>(
-        "SELECT id, author, title, content, picture, created_at
-         FROM garden_blog ORDER BY created_at DESC LIMIT 3",
-    )
-    .fetch_all(&state.db)
-    .await
-    .unwrap_or_else(|e| {
-        tracing::error!("home page posts query failed: {e}");
-        Vec::new()
-    });
+/// Build the whole home page: the page builder draws its layout (the owner's, or the default
+/// one, which is this page exactly as before) from the sections below.
+async fn render_home(state: &Arc<AppState>, visitor: &Visitor, zip: &str) -> Html<String> {
+    Html(crate::pagebuilder::render_page(state, visitor, "home", zip).await)
+}
 
-    // `sections/weather.php`: only a five-digit zip is accepted.
-    // 2. Weather box. Only a five-digit zip is accepted (letters and long text are
-    // dropped); anything else becomes an empty zip.
-    let zip = if zip.len() == 5 && zip.bytes().all(|b| b.is_ascii_digit()) {
+// --- the home page's sections (see pagebuilder/sections.rs) ---------------------------------
+// Each renders one named block of templates/index.html with the same data as before.
+
+/// The page shell: the opening and closing wrapper with the page's scripts. The `*_v` numbers
+/// are file modified times used in `?v=` on script addresses, so browsers fetch fresh scripts.
+pub(crate) fn shell(state: &AppState) -> (String, String) {
+    let open = HomeOpen {
+        page_theme: random_theme(),
+    }
+    .render()
+    .unwrap_or_default();
+    let close = HomeClose {
+        home_blog_v: filemtime(&state.www, "js/home-blog.js"),
+        home_v: filemtime(&state.www, "js/home.js"),
+    }
+    .render()
+    .unwrap_or_default();
+    (open, close)
+}
+
+/// `home.welcome`.
+pub(crate) fn section_welcome(visitor: &Visitor) -> String {
+    HomeWelcome {
+        is_admin: visitor.is_admin(),
+        current_user: visitor.username.clone(),
+    }
+    .render()
+    .unwrap_or_default()
+}
+
+/// `home.weather`. `sections/weather.php`: only a five-digit zip is accepted (letters and long
+/// text are dropped); anything else becomes an empty zip. `fallback` is the section's own zip
+/// setting, used when the address has none.
+pub(crate) fn section_weather(state: &AppState, zip: &str, fallback: &str) -> String {
+    let five = |z: &str| z.len() == 5 && z.bytes().all(|b| b.is_ascii_digit());
+    let zip = if five(zip) {
         zip
+    } else if zip.is_empty() && five(fallback) {
+        fallback
     } else {
         ""
     };
@@ -326,26 +413,49 @@ async fn render_home(state: &AppState, visitor: &Visitor, zip: &str) -> Html<Str
     }
     .render()
     .unwrap_or_default();
+    HomeWeather { weather }.render().unwrap_or_default()
+}
 
-    // 3. Fill the home template. The `*_v` numbers are file modified times used in
-    // `?v=` on script addresses, so browsers fetch fresh scripts after edits.
-    let body = IndexBody {
-        page_theme: random_theme(),
-        weather,
+/// `home.tips`.
+pub(crate) fn section_tips() -> String {
+    HomeTips.render().unwrap_or_default()
+}
+
+/// `home.news`: the `count` newest posts (3 on the default home page). On a database error,
+/// log it and show none.
+pub(crate) async fn section_news(state: &AppState, visitor: &Visitor, count: i64) -> String {
+    let rows = sqlx::query_as::<_, PostRow>(
+        "SELECT id, author, title, content, picture, created_at
+         FROM garden_blog ORDER BY created_at DESC LIMIT ?",
+    )
+    .bind(count.clamp(1, 12))
+    .fetch_all(&state.db)
+    .await
+    .unwrap_or_else(|e| {
+        tracing::error!("home page posts query failed: {e}");
+        Vec::new()
+    });
+    HomeNews {
         posts: post_cards(&rows),
-        comments: read_comments(state).await,
-        home_blog_v: filemtime(&state.www, "js/home-blog.js"),
-        home_v: filemtime(&state.www, "js/home.js"),
         is_admin: visitor.is_admin(),
-        current_user: visitor.username.clone(),
     }
     .render()
-    .unwrap_or_default();
+    .unwrap_or_default()
+}
 
-    // 4. Wrap the body in the shared page frame (header, footer, hero) and send it.
-    let mut page = Page::new(body);
-    page.title = "Jun's and Kona's Garden Dashboard".to_string();
-    Html(layout::render(state, page, visitor).await)
+/// `admin.post_editor`. The page builder only calls it for signed-in people.
+pub(crate) fn section_post_editor() -> String {
+    PostEditor.render().unwrap_or_default()
+}
+
+/// `home.guestbook`.
+pub(crate) async fn section_guestbook(state: &AppState, visitor: &Visitor) -> String {
+    HomeGuestbook {
+        comments: read_comments(state).await,
+        is_admin: visitor.is_admin(),
+    }
+    .render()
+    .unwrap_or_default()
 }
 
 /// Handler for `GET /` and `GET /index.php`. Takes the shared state, the visitor
@@ -499,19 +609,33 @@ pub async fn home_post(
     headers: HeaderMap,
     body: Bytes,
 ) -> Response {
-    // 1. Read the form. 2. Try the admin buttons. If one handled it, we are done.
     let f = formdata::parse(&headers, body).await;
-    if let Some(r) = handle_post(&state, &visitor, &f, uri.path()).await {
+    shared_post(&state, &visitor, uri.path(), &q, &headers, &f).await
+}
+
+/// The home page's forms (guestbook, Logout, the post buttons) wherever their section was
+/// placed: `/`, `/gallery.php` and owner pages post here directly, `/blog.php` after its own
+/// buttons. Takes the already-read form.
+pub(crate) async fn shared_post(
+    state: &Arc<AppState>,
+    visitor: &Visitor,
+    path: &str,
+    q: &HashMap<String, String>,
+    headers: &HeaderMap,
+    f: &FormData,
+) -> Response {
+    // 1. Try the admin buttons. If one handled it, we are done.
+    if let Some(r) = handle_post(state, visitor, f, path).await {
         return r;
     }
-    // 3. Otherwise it may be a guestbook message. Anyone can leave one, at most 5 per
+    // 2. Otherwise it may be a guestbook message. Anyone can leave one, at most 5 per
     // visitor address per 10 minutes (a flood is quietly dropped).
     let message = f.str("user_message");
     if php_empty(message) {
         // Not a guestbook post either: show the page, as the PHP did.
         return render_home(
-            &state,
-            &visitor,
+            state,
+            visitor,
             q.get("zip").map(String::as_str).unwrap_or(""),
         )
         .await
@@ -520,11 +644,11 @@ pub async fn home_post(
     if visitor.is_admin()
         || state
             .write_limit
-            .allow(&crate::accounts::client_ip(&headers))
+            .allow(&crate::accounts::client_ip(headers))
     {
-        add_comment(&state, f.str("user_name"), message).await;
+        add_comment(state, f.str("user_name"), message).await;
     }
-    // 4. Back to the guestbook with a GET (the PHP showed the page as the POST's answer, so a
+    // 3. Back to the guestbook with a GET (the PHP showed the page as the POST's answer, so a
     // refresh posted the same line again). The weather zip is kept.
     let zip = q
         .get("zip")
@@ -597,6 +721,130 @@ mod tests {
             "hi there x"
         );
         assert_eq!(strip_tags("a < b"), "a < b");
+    }
+
+    /// Two made-up posts (one with two photos and text that needs escaping).
+    fn sample_posts() -> Vec<PostCard> {
+        let rows = vec![
+            PostRow {
+                id: 7,
+                author: None,
+                title: "Tulips <up>".into(),
+                content: "Line one\nLine & two".into(),
+                picture: Some("a.webp,https://example.test/b.jpg".into()),
+                created_at: None,
+            },
+            PostRow {
+                id: 3,
+                author: Some("Gardener".into()),
+                title: "Rain".into(),
+                content: "Wet.".into(),
+                picture: None,
+                created_at: None,
+            },
+        ];
+        post_cards(&rows)
+    }
+
+    /// The page builder's promise: the home page's sections, joined in the default order,
+    /// print exactly what the whole template prints, for visitors and signed-in people, with
+    /// and without posts and guestbook lines.
+    #[test]
+    fn home_sections_add_up_to_the_whole_page() {
+        let lines = vec![
+            "<span class='c-date'>Oct 5</span> <strong>Ann:</strong> hi".to_string(),
+            "<span class='c-date'>Oct 4</span> <strong>Guest:</strong> &lt;b&gt;".to_string(),
+        ];
+        for is_admin in [false, true] {
+            for posts in [Vec::new(), sample_posts()] {
+                for comments in [Vec::new(), lines.clone()] {
+                    let user = if is_admin { "Gardener" } else { "" }.to_string();
+                    let whole = IndexBody {
+                        page_theme: "bg-theme-2".into(),
+                        weather: "<div>weather</div>".into(),
+                        posts: posts.clone(),
+                        comments: comments.clone(),
+                        home_blog_v: 11,
+                        home_v: 12,
+                        is_admin,
+                        current_user: user.clone(),
+                    }
+                    .render()
+                    .unwrap();
+                    let parts = [
+                        HomeOpen {
+                            page_theme: "bg-theme-2".into(),
+                        }
+                        .render()
+                        .unwrap(),
+                        HomeWelcome {
+                            is_admin,
+                            current_user: user.clone(),
+                        }
+                        .render()
+                        .unwrap(),
+                        HomeWeather {
+                            weather: "<div>weather</div>".into(),
+                        }
+                        .render()
+                        .unwrap(),
+                        HomeTips.render().unwrap(),
+                        HomeNews {
+                            posts: posts.clone(),
+                            is_admin,
+                        }
+                        .render()
+                        .unwrap(),
+                        HomeGuestbook {
+                            comments: comments.clone(),
+                            is_admin,
+                        }
+                        .render()
+                        .unwrap(),
+                        HomeClose {
+                            home_blog_v: 11,
+                            home_v: 12,
+                        }
+                        .render()
+                        .unwrap(),
+                    ];
+                    let (joined, grid) = crate::pagebuilder::layout::join_rows(
+                        parts.iter().map(|p| vec![p.clone()]).collect(),
+                    );
+                    assert!(!grid);
+                    assert_eq!(joined, whole, "admin={is_admin}");
+                    // The page starts and ends as it always did.
+                    assert!(whole.starts_with("    <div class=\"page-content bg-theme-2\""));
+                    assert!(whole.ends_with("<script src=\"js/home.js?v=12\" defer></script>"));
+                    assert!(!whole.contains("{%") && !whole.contains("{#"));
+                }
+            }
+        }
+    }
+
+    /// The post editor is the same block inside the news section and on its own.
+    #[test]
+    fn post_editor_section_is_the_news_sections_own_block() {
+        let editor = PostEditor.render().unwrap();
+        assert!(
+            editor.contains("id=\"blog-modal\"") && editor.contains("name=\"post_blog\""),
+            "{}",
+            &editor[..editor.len().min(300)]
+        );
+        let news = HomeNews {
+            posts: Vec::new(),
+            is_admin: true,
+        }
+        .render()
+        .unwrap();
+        assert!(news.contains(&editor));
+        let public = HomeNews {
+            posts: Vec::new(),
+            is_admin: false,
+        }
+        .render()
+        .unwrap();
+        assert!(!public.contains("blog-modal"));
     }
 
     // Checks that "" and "0" count as empty but "00" does not.
