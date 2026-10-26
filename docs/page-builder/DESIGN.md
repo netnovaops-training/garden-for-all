@@ -215,6 +215,14 @@ CREATE TABLE IF NOT EXISTS page_layouts (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY page_version (page, version)
 );
+CREATE TABLE IF NOT EXISTS page_layout_backups (   -- a copy before each save
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  page VARCHAR(64) NOT NULL,
+  version INT NOT NULL,
+  layout MEDIUMTEXT NOT NULL,
+  backed_up_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY page (page)
+);
 CREATE TABLE IF NOT EXISTS page_builder_seen (
   section_id VARCHAR(64) NOT NULL PRIMARY KEY,
   seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -225,16 +233,15 @@ CREATE TABLE IF NOT EXISTS page_builder_seen (
   uses the default layout.
 - **Save** inserts version N+1 inside a transaction. The client sends the version it
   started from, and a stale editor gets 409 instead of overwriting.
-- **Backup before each save.** Before writing, the saved layout being replaced goes to
-  `<data>/page-layouts/row-<row id>.json` (atomic write through `store::file_in`). The file
-  name uses only the database's row number, never request text. About the last 1000 are
-  kept. The old rows also stay in the table. A page still on its default layout needs no
-  backup: Reset always brings it back.
+- **Backup before each save.** In the same transaction, a copy of the layout being replaced
+  (the default one included) goes into its own table, `page_layout_backups`, which keeps the
+  newest 1000 copies. They go to the database, not to files, so no file path is ever built
+  from a page name. The database backups (`garden.sh`) cover the table too.
 - **Undo** inserts a copy of version N-1 as N+1, so history only grows and an undo can
   itself be undone. **Reset** inserts the default layout. **Bring back** (the history list)
   inserts any kept older version. Unsaved changes are dropped by Undo after a question.
 - The tables are made at start-up (`saved::ensure_tables`, like the site's other own
-  tables). `db/schema.sql` is left alone, because the database rework owns it. Adding the two
+  tables). `db/schema.sql` is left alone, because the database rework owns it. Adding the three
   tables there is part of that rework (open question 5).
 - The current layouts are cached in memory and dropped on every save, undo or reset. A page
   view costs one database read only after a restart.
@@ -296,5 +303,5 @@ CREATE TABLE IF NOT EXISTS page_builder_seen (
 3. **Signing key**: the author creates the Ed25519 key and puts its public half in
    `AUTHOR_SECTIONS_KEY`. Until then, the update check says "not set up".
 4. **Owner pages** (`/page.php?name=<name>`): should they show in the top menu?
-5. **`db/schema.sql`**: add `page_layouts` and `page_builder_seen` there as part of the
-   database rework?
+5. **`db/schema.sql`**: add `page_layouts`, `page_layout_backups` and `page_builder_seen`
+   there as part of the database rework?

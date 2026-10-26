@@ -1,5 +1,5 @@
-//! Saved layouts in the database: versions, undo, reset, and a backup file before each save
-//! (DESIGN.md section 6).
+//! Saved layouts in the database: versions, undo, reset, and a backup copy before each save
+//! (DESIGN.md section 6). Backups go to their own table, `page_layout_backups`, never to files.
 //!
 //! HOW TO READ THIS FILE. Every change (save, undo, reset) ADDS a new version row; nothing is
 //! overwritten. The newest version of a page is what the page shows; no row at all means the
@@ -13,11 +13,11 @@ use sqlx::Row;
 use super::layout::{self, Layout};
 use crate::AppState;
 
-/// Versions kept per page (older rows are removed), and backup files kept (all pages).
+/// Versions kept per page (older rows are removed), and backup copies kept (all pages).
 const KEEP_VERSIONS: i32 = 200;
-const KEEP_BACKUPS: i32 = 1000;
+const KEEP_BACKUPS: u64 = 1000;
 
-/// Create the two tables if they are not there yet (called at start-up).
+/// Create the three tables if they are not there yet (called at start-up).
 pub async fn ensure_tables(db: &sqlx::MySqlPool) -> Result<(), sqlx::Error> {
     for sql in [
         "CREATE TABLE IF NOT EXISTS `page_layouts` (
@@ -29,6 +29,14 @@ pub async fn ensure_tables(db: &sqlx::MySqlPool) -> Result<(), sqlx::Error> {
             note VARCHAR(40) NOT NULL DEFAULT 'save',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY page_version (page, version)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS `page_layout_backups` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            page VARCHAR(64) NOT NULL,
+            version INT NOT NULL,
+            layout MEDIUMTEXT NOT NULL,
+            backed_up_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            KEY page (page)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
         "CREATE TABLE IF NOT EXISTS `page_builder_seen` (
             section_id VARCHAR(64) NOT NULL PRIMARY KEY,
@@ -173,19 +181,32 @@ pub async fn save(
     .fetch_one(&mut *tx)
     .await?;
     let version = next_version(newest, base)?;
-    // Backup first: the saved layout that is about to be replaced. (Nothing to back up when
-    // the page still has its default layout: that one is in the code, and Reset brings it back.)
-    if newest > 0 {
-        let before = sqlx::query_as::<_, (i32, String)>(
-            "SELECT id, layout FROM page_layouts WHERE page = ? AND version = ?",
+    // Backup first: a copy of the layout that is about to be replaced (version 0 = the default),
+    // in the backup table, which keeps the newest `KEEP_BACKUPS` copies of all pages.
+    let before = if newest == 0 {
+        Some(serde_json::to_string(&layout::default_layout(page)).unwrap_or_default())
+    } else {
+        sqlx::query_scalar::<_, String>(
+            "SELECT layout FROM page_layouts WHERE page = ? AND version = ?",
         )
         .bind(page)
         .bind(newest)
         .fetch_optional(&mut *tx)
-        .await?;
-        if let Some((row, text)) = before {
-            backup(state, row, text).await;
-        }
+        .await?
+    };
+    if let Some(text) = before {
+        let id =
+            sqlx::query("INSERT INTO page_layout_backups (page, version, layout) VALUES (?, ?, ?)")
+                .bind(page)
+                .bind(newest)
+                .bind(text)
+                .execute(&mut *tx)
+                .await?
+                .last_insert_id();
+        sqlx::query("DELETE FROM page_layout_backups WHERE id <= ?")
+            .bind(id.saturating_sub(KEEP_BACKUPS))
+            .execute(&mut *tx)
+            .await?;
     }
     sqlx::query(
         "INSERT INTO page_layouts (page, version, layout, saved_by, note) VALUES (?, ?, ?, ?, ?)",
@@ -212,36 +233,6 @@ pub fn forget(state: &AppState, page: &str) {
     if let Ok(mut c) = state.pagebuilder.cache.lock() {
         c.remove(page);
     }
-}
-
-/// Write the stored row as `<data>/page-layouts/row-<row id>.json` (the JSON names its page)
-/// and remove the file `KEEP_BACKUPS` rows older, so at most that many are kept. The file name
-/// is made only of the database's own row number, never of anything a request sent.
-/// A failed backup is logged; it does not stop the save.
-async fn backup(state: &AppState, row: i32, text: String) {
-    let data = state.data.clone();
-    crate::guard::off_thread(move || {
-        let dir = match crate::store::file_in(&data, "page-layouts") {
-            Ok(d) => d,
-            Err(e) => return tracing::error!("page layout backup folder: {e}"),
-        };
-        if let Err(e) = std::fs::create_dir_all(dir.as_path()) {
-            return tracing::error!("page layout backup folder: {e}");
-        }
-        let file = |n: i32| crate::store::file_in(dir.as_path(), &format!("row-{n}.json"));
-        match file(row) {
-            Ok(p) => {
-                if let Err(e) = crate::store::write_atomic(&p, text.as_bytes()) {
-                    tracing::error!("page layout backup of row {row}: {e}");
-                }
-            }
-            Err(e) => tracing::error!("page layout backup of row {row}: {e}"),
-        }
-        if let Ok(old) = file(row - KEEP_BACKUPS) {
-            let _ = std::fs::remove_file(old.as_path());
-        }
-    })
-    .await
 }
 
 /// Section ids the owner has already been shown (no "new" badge).
