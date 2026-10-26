@@ -219,6 +219,7 @@
         } else {
             inp.type = 'text'; inp.maxLength = st.max_len; inp.value = cur;
             if (st.charset === 'digits') inp.inputMode = 'numeric';
+            if (st.charset === 'decimal') inp.inputMode = 'decimal';
             inp.addEventListener('change', function () { cell.settings[st.key] = inp.value; changed(false); });
         }
         lab.appendChild(inp);

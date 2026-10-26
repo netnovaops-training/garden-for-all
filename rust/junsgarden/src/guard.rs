@@ -29,13 +29,15 @@ use axum::{
 /// which version to attack. The last three are current practice and change nothing visible:
 /// no camera/microphone/location for any page, the page cannot be grabbed by a window
 /// another site opened, and the site's files cannot be embedded by other sites.
+/// `frame-src` adds one host to the PHP policy: the Windy map of the page builder's radar
+/// section (DEVIATIONS.md DEV-15). `'self'` keeps what `default-src` allowed before.
 const PAGE_HEADERS: [(&str, &str); 10] = [
     ("cache-control", "no-cache, must-revalidate"),
     ("expires", "Thu, 19 Nov 1981 08:52:00 GMT"),
     ("pragma", "no-cache"),
     (
         "content-security-policy",
-        "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://cdnjs.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+        "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://cdnjs.cloudflare.com; frame-src 'self' https://embed.windy.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
     ),
     ("referrer-policy", "strict-origin-when-cross-origin"),
     ("x-content-type-options", "nosniff"),

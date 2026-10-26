@@ -39,6 +39,8 @@ pub enum Kind {
 pub enum Charset {
     /// 0-9 only (a zip code).
     Digits,
+    /// 0-9, `.` and `-` (a latitude or longitude; parsed and range-checked when drawn).
+    Decimal,
     /// Letters (any language), digits, space and `-_.,!?()`. For the pending sections'
     /// text settings (DESIGN.md 3.2); no live section uses it yet.
     #[allow(dead_code)]
@@ -49,6 +51,7 @@ impl Charset {
     pub fn allows(self, c: char) -> bool {
         match self {
             Charset::Digits => c.is_ascii_digit(),
+            Charset::Decimal => c.is_ascii_digit() || c == '.' || c == '-',
             Charset::Plain => c.is_alphanumeric() || " -_.,!?()".contains(c),
         }
     }
@@ -116,6 +119,49 @@ pub const SECTIONS: &[SectionDef] = &[
                 default: "",
             },
         }],
+    },
+    SectionDef {
+        id: "home.radar",
+        name_en: "Rain radar map",
+        name_ko: "비 레이더 지도",
+        desc_en: "A live rain map (Windy) around one place. Set its latitude and longitude.",
+        desc_ko: "한 곳 주변의 실시간 비 지도(Windy). 위도와 경도를 넣어 주세요.",
+        version: 1,
+        since: "2026.11",
+        perm: Perm::Public,
+        max_per_page: 1,
+        settings: &[
+            Setting {
+                key: "lat",
+                label_en: "Latitude (for example 38.90)",
+                label_ko: "위도 (예: 38.90)",
+                kind: Kind::Text {
+                    max_len: 10,
+                    charset: Charset::Decimal,
+                    default: "",
+                },
+            },
+            Setting {
+                key: "lon",
+                label_en: "Longitude (for example -77.03)",
+                label_ko: "경도 (예: -77.03)",
+                kind: Kind::Text {
+                    max_len: 11,
+                    charset: Charset::Decimal,
+                    default: "",
+                },
+            },
+            Setting {
+                key: "zoom",
+                label_en: "Zoom (3 far away, 12 close)",
+                label_ko: "확대 (3 멀리, 12 가까이)",
+                kind: Kind::Int {
+                    min: 3,
+                    max: 12,
+                    default: 8,
+                },
+            },
+        ],
     },
     SectionDef {
         id: "home.tips",
@@ -265,6 +311,7 @@ mod tests {
         for c in ['<', '>', '"', '\'', '&', '/', '\\', '`', '='] {
             assert!(!Charset::Plain.allows(c), "{c}");
             assert!(!Charset::Digits.allows(c), "{c}");
+            assert!(!Charset::Decimal.allows(c), "{c}");
         }
     }
 }

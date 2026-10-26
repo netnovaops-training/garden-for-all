@@ -147,6 +147,16 @@ himself only, with password resets by email: that is `login.php` and
 (a plain username, with no proof needed on writes) is **not** restored:
 writes from the app need the key the app gets when it logs in.
 
+## DEV-15: the security policy allows one framed map (2026-10-26)
+
+The Content-Security-Policy gains `frame-src 'self' https://embed.windy.com`.
+Before, frames fell back to `default-src 'self'`, so `'self'` keeps that, and
+the only new host is Windy, for the page builder's rain radar section
+(`home.radar`, `docs/page-builder/DESIGN.md` 3.1), which the author asked to
+bring back. Nothing else changes: `connect-src` (the weather lookups noted
+above) is left as it was. The side-by-side lab (`docs/rust-pages/sbs.py`)
+will show this header as different from `main`.
+
 ## Observations about the live site, kept as they are
 
 - **Jun could not upload plant photos on the PHP site.** The uploader list

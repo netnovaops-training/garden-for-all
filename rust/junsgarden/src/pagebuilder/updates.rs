@@ -208,7 +208,7 @@ mod tests {
     const LIST: &str = r#"{"schema":1,"released":"2026.12","sections":[
         {"id":"home.tips","version":1,"since":"2026.11","name_en":"Tips","name_ko":"팁","desc_en":"d","desc_ko":"설명"},
         {"id":"home.news","version":2,"since":"2026.12","name_en":"News","name_ko":"소식","desc_en":"d","desc_ko":"설명"},
-        {"id":"home.radar","version":1,"since":"2026.12","name_en":"Radar","name_ko":"레이더","desc_en":"d","desc_ko":"설명"}
+        {"id":"home.frost","version":1,"since":"2026.12","name_en":"Frost","name_ko":"서리","desc_en":"d","desc_ko":"설명"}
     ]}"#;
 
     #[test]
@@ -219,7 +219,7 @@ mod tests {
         assert!(verify(LIST.as_bytes(), &sig, &vk));
         assert!(verify(LIST.as_bytes(), &format!("{sig}\n"), &vk));
         // One changed byte, a wrong key, a broken or empty signature: refused.
-        let changed = LIST.replace("Radar", "Rader");
+        let changed = LIST.replace("Frost", "Frosty");
         assert!(!verify(changed.as_bytes(), &sig, &vk));
         let other = SigningKey::from_bytes(&[9u8; 32]).verifying_key();
         assert!(!verify(LIST.as_bytes(), &sig, &other));
@@ -256,7 +256,7 @@ mod tests {
             .into_iter()
             .map(|s| s.id)
             .collect();
-        assert_eq!(ids, ["home.news", "home.radar"]);
+        assert_eq!(ids, ["home.news", "home.frost"]);
     }
 
     #[test]

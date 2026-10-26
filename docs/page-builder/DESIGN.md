@@ -56,9 +56,17 @@ id can appear only once.
 | `blog.archive` | Garden archive (all posts) / 정원 기록 보관소 | `templates/blog.html`, `pages/blog.rs` | public (delete buttons for people who are signed in) | none | 1 |
 | `gallery.wall` | Photo gallery / 사진 갤러리 | `templates/gallery_body.html` + `gallery_head.html`, `pages/gallery.rs` | public | none | 1 |
 
-**The radar.** `site/js/home.js` still looks for `#radarFrame` (a Windy map), but no
-template draws that element anymore. The weather outlook is the live weather block today, so
-`home.weather` is it. Bringing the map back would be a new section (open question 2).
+| `home.radar` | Rain radar map / 비 레이더 지도 | new (the Windy map `site/js/home.js` filled into `#radarFrame`); `sections::radar` | public | `lat`, `lon` text (digits `.` `-`, range-checked when drawn), `zoom` 3-12, default 8 | 1 |
+
+**The radar (decided 2026-10-26: it comes back).** `site/js/home.js` still looks for
+`#radarFrame`, but no template draws that element anymore, and its zip-to-place lookup is
+blocked by the CSP's `connect-src`. So `home.radar` does not use `home.js`: the owner types
+the latitude and longitude once, the server parses both as numbers, checks the range and
+builds the Windy address from the numbers only (same map options as `home.js`). The iframe is
+sandboxed (`allow-scripts allow-same-origin allow-popups`, no top navigation). It is not in
+any default layout, so today's pages are unchanged. Without a valid place, visitors see
+nothing and the owner sees a hint. The one CSP change: `frame-src 'self'
+https://embed.windy.com` (`guard.rs`; `rust-port/DEVIATIONS.md` DEV-15).
 
 **How a section reuses today's code.** The home page and archive templates mark each block
 with `{% block name %}` tags, which print nothing. askama renders one block on its own
@@ -158,7 +166,8 @@ SectionDef { id: "home.news", name_en: "Garden news", name_ko: "정원 소식",
 | **Owner** (signed in on the website, not the app) | Everything, plus the **Edit** button | Yes |
 
 The owner is `JUNSGARDEN_PAGE_OWNER` (a name on the GARDEN_USERS list). When it is unset,
-the owner is the first name on that list.
+the owner is the first name on that list, which is Jun. Decided 2026-10-26: only Jun (the
+owner) edits pages; other signed-in garden users do not.
 
 ### 5.3 Checks on the editor API (all under `/pagebuilder/`)
 
@@ -296,10 +305,9 @@ CREATE TABLE IF NOT EXISTS page_builder_seen (
 
 ## 9. Open questions for the author
 
-1. **Owner**: is "the first GARDEN_USERS name, or `JUNSGARDEN_PAGE_OWNER`" right, or
-   should every signed-in garden user be allowed to edit?
-2. **Radar**: bring the Windy radar map back as a section (it needs `frame-src` in the
-   CSP), or leave it out?
+1. ~~**Owner**~~ Answered 2026-10-26: only Jun (the owner) edits pages (section 5.2).
+2. ~~**Radar**~~ Answered 2026-10-26: it comes back as the `home.radar` section, with
+   `frame-src` for Windy only (section 3.1).
 3. **Signing key**: the author creates the Ed25519 key and puts its public half in
    `AUTHOR_SECTIONS_KEY`. Until then, the update check says "not set up".
 4. **Owner pages** (`/page.php?name=<name>`): should they show in the top menu?

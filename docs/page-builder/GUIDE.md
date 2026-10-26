@@ -40,6 +40,10 @@ page** in the bottom-left corner. Only you see that button.
 
 On a phone, sections that sit side by side are shown one under the other.
 
+**The rain radar map** shows a live rain map around one place. After adding it, type the
+place's **latitude** and **longitude** in its boxes (for example 38.90 and -77.03; a map site
+shows them when you click a spot). Until both are filled in, visitors see nothing there.
+
 ![A new page: the weather on top, the tips and the guestbook side by side](images/03-editor-new-page.png)
 
 ## 4. Save, undo, go back

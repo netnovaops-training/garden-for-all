@@ -294,6 +294,45 @@ async fn side_by_side_rows_get_the_grid_and_its_stylesheet() {
     assert!(!plain.contains("pb.css") && !plain.contains("pb-row"));
 }
 
+#[test]
+fn the_radar_map_is_built_from_numbers_only() {
+    let cell = |lat: &str, lon: &str| Cell {
+        section: "home.radar".into(),
+        settings: json!({"lat": lat, "lon": lon, "zoom": 9})
+            .as_object()
+            .unwrap()
+            .clone(),
+    };
+    let html = sections::radar(&cell("38.9", "-77.03"), false);
+    assert!(html
+        .contains("src=\"https://embed.windy.com/embed2.html?lat=38.9000&amp;lon=-77.0300&amp;"));
+    assert!(html.contains("zoom=9&amp;"));
+    // Out of range, not a number, or empty: no map; the owner gets a hint, visitors nothing.
+    for (lat, lon) in [("91", "0"), ("0", "-180.5"), ("1-2", "3"), ("", "")] {
+        assert_eq!(sections::radar(&cell(lat, lon), false), "", "{lat},{lon}");
+        assert!(sections::radar(&cell(lat, lon), true).contains("latitude"));
+    }
+}
+
+#[tokio::test]
+async fn radar_settings_with_markup_are_refused() {
+    let st = state();
+    let good = st.pagebuilder.token("sid-Owner");
+    let body = json!({"page":"p-test","layout":{"schema":1,"page":"p-test","rows":[
+        {"cols":[{"section":"home.radar","settings":{"lat":"1\"><script>","lon":"2"}}]}]}});
+    let (s, _) = send(
+        &app(&st, person("Owner")),
+        post(
+            "/pagebuilder/api/preview",
+            "application/json",
+            Some(&good),
+            body,
+        ),
+    )
+    .await;
+    assert!(s.is_client_error(), "{s}");
+}
+
 #[tokio::test]
 async fn a_preview_is_drawn_as_a_visitor_sees_it() {
     let st = state();
