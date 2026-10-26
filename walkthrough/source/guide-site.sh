@@ -13,7 +13,10 @@ rnd() { head -c "$1" /dev/urandom | od -An -tx1 | tr -d ' \n'; }
 case "${1:-}" in
 up)
     sha=${2:?main sha}
-    docker rm -f gp-guide >/dev/null 2>&1; rm -rf src www data cache sample
+    # The site writes photo thumbnails as its own user, so the old copy is removed from inside a
+    # container (a plain rm could leave half a folder, and cp would then copy into it).
+    docker rm -f gp-guide >/dev/null 2>&1
+    docker run --rm -v "$PWD:/w" alpine:3.22 rm -rf /w/src /w/www /w/data /w/cache /w/sample
     git clone -q https://github.com/netnovaops-training/garden-for-all src && git -C src checkout -q "$sha" || exit 1
     docker build -q --build-arg APP=junsgarden -t gardenlab/guide src/rust >/dev/null || exit 1
     python3 src/docs/rust-pages/make_sample.py sample >/dev/null || exit 1
