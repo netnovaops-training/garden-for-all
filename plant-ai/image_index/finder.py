@@ -107,6 +107,14 @@ class Index:
         with self.lock:  # one forward pass at a time: the model already uses every core
             return self.embedder.embed(arr[None])[0]
 
+    def plant_best(self, q):
+        """Look-alike score of every plant that has photos: (keys, names, scores)."""
+        with self.dlock:
+            self.refresh()
+            if not len(self.keys):
+                return [], [], np.zeros(0, np.float32)
+            return self.keys, self.info, np.maximum.reduceat(self.mat @ q, self.starts)
+
     def search_vector(self, q, k=5, hints=None):
         with self.dlock:
             self.refresh()

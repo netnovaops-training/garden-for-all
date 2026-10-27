@@ -1,6 +1,7 @@
 #!/bin/sh
 # Run the image index in Docker (nothing is installed on the computer itself).
-#   GFA_DATA=/path/to/_local-data sh plant-ai/image_index/index.sh build|status|eval|search FILE|serve|stop
+#   GFA_DATA=/path/to/_local-data sh plant-ai/image_index/index.sh \
+#       build [--model M]|status|eval|eval-names --model M|search FILE|verify FILE "Name"|serve|stop
 # GFA_DATA is the folder that holds the garden's own data (never in git):
 #   in/current.json, in/future.json        the two table exports
 #   in/current-photos/images/Database/     the garden's photos
@@ -32,11 +33,22 @@ case "$cmd" in
   status|eval)
     exec docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
       --network none -v "$(w "$INDEX"):/index" "$IMG" "$cmd" "$@" ;;
+  eval-names)  # reads the photos again: they must be mounted where the index remembers them
+    exec docker run --rm --cpus "$CPUS" --read-only --tmpfs /tmp --cap-drop ALL \
+      --security-opt no-new-privileges --network none \
+      -v "$(w "$GFA_DATA/in/current-photos/images/Database"):/photos/current:ro" \
+      -v "$(w "$GFA_DATA/images"):/photos/future:ro" -v "$(w "$INDEX"):/index" \
+      "$IMG" eval-names "$@" ;;
   search)
     f="$1"; shift
     exec docker run --rm --cpus "$CPUS" --read-only --tmpfs /tmp --cap-drop ALL \
       --security-opt no-new-privileges --network none -v "$(w "$INDEX"):/index" \
       -v "$(w "$(dirname "$f")"):/q:ro" "$IMG" search "/q/$(basename "$f")" "$@" ;;
+  verify)  # verify FILE "Botanical name" [--model bioclip-2]
+    f="$1"; shift
+    exec docker run --rm --cpus "$CPUS" --read-only --tmpfs /tmp --cap-drop ALL \
+      --security-opt no-new-privileges --network none -v "$(w "$INDEX"):/index" \
+      -v "$(w "$(dirname "$f")"):/q:ro" "$IMG" verify-name "/q/$(basename "$f")" "$@" ;;
   serve)
     docker rm -f plant-image-index >/dev/null 2>&1 || true
     if [ -n "${NETWORK:-}" ]; then
@@ -51,5 +63,6 @@ case "$cmd" in
       -p "127.0.0.1:${PORT:-8099}:8099" -e IMAGE_INDEX_IN_DOCKER=1 \
       -v "$(w "$INDEX"):/index" "$IMG" serve --bind 0.0.0.0 --port 8099 ;;
   stop) exec docker rm -f plant-image-index ;;
-  *) echo "usage: index.sh build|status|eval|search FILE|serve|stop" >&2; exit 2 ;;
+  *) echo "usage: index.sh build|status|eval|eval-names|search FILE|verify FILE NAME|serve|stop" >&2
+     exit 2 ;;
 esac

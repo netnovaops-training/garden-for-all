@@ -2,6 +2,7 @@
 
     POST /search?k=5&hints=text   body = the picture's bytes   ->  {"results": [...], "ms": 12}
     GET  /status                                               ->  counts, model, last build
+    POST /verify?name=Salvia+nemorosa   body = the picture    ->  {"result": {match_score, ...}}
 
 No password: it only answers this computer. The bind address must be a loopback address
 (127.0.0.1 or ::1). One exception: inside Docker the program must listen on 0.0.0.0 so the
@@ -69,8 +70,8 @@ class Handler(BaseHTTPRequestHandler):
         if not self._guard():
             return
         url = urlparse(self.path)
-        if url.path != "/search":
-            return self._send(404, {"error": "use GET /status or POST /search"})
+        if url.path not in ("/search", "/verify"):
+            return self._send(404, {"error": "use GET /status, POST /search or POST /verify"})
         q = parse_qs(url.query)
         try:
             k = max(1, min(50, int(q.get("k", ["5"])[0])))
@@ -82,6 +83,8 @@ class Handler(BaseHTTPRequestHandler):
                               {"error": f"send the picture bytes (up to {MAX_BODY >> 20} MB)"})
         body = self.rfile.read(n)
         t0 = time.time()
+        if url.path == "/verify":
+            return self._verify(body, q, t0)
         try:
             res = finder.search(body, k, out_dir=self.out_dir, hints=q.get("hints") or None)
         except ValueError as e:  # not a picture
@@ -89,6 +92,20 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:  # noqa: BLE001  keep serving; say what failed
             return self._send(500, {"error": type(e).__name__})
         self._send(200, {"results": res, "ms": round((time.time() - t0) * 1000)})
+
+    def _verify(self, body, q, t0):
+        name = (q.get("name") or [""])[0].strip()[:200]
+        if not name:
+            return self._send(400, {"error": "give ?name=<botanical name>"})
+        from .verify import verify_name  # loads the name-checking model on first use
+        try:
+            res = verify_name(body, name, out_dir=self.out_dir,
+                              model=os.environ.get("IMAGE_INDEX_VERIFY_MODEL") or None)
+        except ValueError as e:
+            return self._send(400, {"error": str(e)})
+        except Exception as e:  # noqa: BLE001
+            return self._send(500, {"error": type(e).__name__})
+        self._send(200, {"result": res, "ms": round((time.time() - t0) * 1000)})
 
     def log_message(self, fmt, *args):  # one short line per request, no picture data
         sys.stderr.write(f"{self.command} {urlparse(self.path).path}\n")

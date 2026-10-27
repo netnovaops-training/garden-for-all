@@ -13,11 +13,13 @@ COPY image_index/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir --require-hashes -r /tmp/requirements.txt \
     --extra-index-url https://download.pytorch.org/whl/cpu
 
-# Models: MODELS is a space-separated list of "name=huggingface-id@revision" (see models.py).
-# Changing the default means re-running the evaluation (README, "How good is it").
+# Models: MODELS is a space-separated list of names from models.py (each is downloaded at its
+# pinned revision). The default image carries only the default model; the plant-trained ones:
+#   --build-arg MODELS="dinov2-small plantclef-b14-336 bioclip-2"   (adds about 2 GB)
+# PlantCLEF weights are CC BY-NC 4.0 (README, "Plant-trained models").
 COPY image_index/models.py image_index/fetch_models.py /app/image_index/
 ARG MODELS="dinov2-small"
-RUN python -m image_index.fetch_models $MODELS && rm -rf /root/.cache
+RUN python -m image_index.fetch_models $MODELS && rm -rf /root/.cache && chmod -R a+rX /models
 
 COPY image_index /app/image_index
 ENV HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1

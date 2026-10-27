@@ -27,10 +27,21 @@ COLORS = {"red": (220, 30, 30), "green": (30, 200, 40), "blue": (30, 40, 220),
 
 class FakeEmbedder:
     """Colour layout of the picture as the vector (4x4 grid of mean colours)."""
-    spec = models.MODELS["dinov2-small"]
+    def logit_scale(self):  # a BioCLIP-style model has one; here a fixed number
+        return 50.0
 
     def __init__(self, name, threads=None, feature=None):
-        pass
+        self.spec = models.MODELS[name]
+
+    def text_embed(self, prompts):
+        """A name 'looks like' its colour: the same vector a picture of that colour gets."""
+        word_color = {"rosa": "red", "hosta": "green", "iris": "blue", "rudbeckia": "yellow"}
+        out = []
+        for p in prompts:
+            c = next((COLORS[v] for k, v in word_color.items() if k in p.lower()), COLORS["white"])
+            img = np.zeros((1, 224, 224, 3), np.uint8) + np.array(c, np.uint8)
+            out.append(self.embed(img)[0])
+        return np.stack(out)
 
     def embed(self, batch):
         n, s = batch.shape[0], batch.shape[1] // 4
@@ -156,6 +167,39 @@ def test_text_hint_reranks(garden):
 
 def test_words_ignore_filler_and_accents():
     assert finder.words("The Éclat Tree, Rosa x hybrida") == ["eclat", "rosa", "hybrida"]
+
+
+def test_taxon_spellings():
+    from image_index.taxon import taxon
+    assert taxon("Salvia nemorosa 'Violet Profusion'") == ("salvia", "nemorosa")
+    assert taxon("Abelia � grandiflora 'Sherwoodii'") == ("abelia", "grandiflora")
+    assert taxon("Abelia x grandiflora") == ("abelia", "grandiflora")
+    assert taxon("Allium 'Millennium'") == ("allium", None)  # a cultivar is not a species
+    assert taxon("Lactuca virosa L.") == ("lactuca", "virosa")
+    assert taxon("") == (None, None)
+
+
+def test_verify_name_zero_shot(garden, monkeypatch):
+    """The name check with a stand-in model whose text side knows four colours."""
+    monkeypatch.setitem(models.MODELS, "fake-bio", models.Spec(
+        "x/y", "", 224, models.CLIP, "bioclip", feature=""))
+    indexer.build(garden.dirs, garden.db, garden.out, workers=2, log=lambda *_: None)
+    from image_index import verify
+    verify._cache.clear()
+    q = garden.tmp / "q.jpg"
+    _jpg(q, COLORS["green"], 5)
+    ok = verify.verify_name(str(q), "Hosta sieboldiana", out_dir=garden.out, model="fake-bio")
+    assert ok["covered"] and ok["rank"] == 1 and ok["match_score"] > 0.9
+    assert ok["genus_score"] >= ok["match_score"] and ok["top"][0]["name"] == "Hosta sieboldiana"
+    bad = verify.verify_name(str(q), "Iris versicolor 'Blue Flag'", out_dir=garden.out,
+                             model="fake-bio")
+    assert bad["match_score"] < 0.1 and bad["rank"] > 1
+    cultivar_only = verify.verify_name(str(q), "Hosta 'Frances Williams'", out_dir=garden.out,
+                                       model="fake-bio")
+    assert cultivar_only["species"] is None and cultivar_only["match_score"] == \
+        cultivar_only["genus_score"]
+    with pytest.raises(ValueError):
+        verify.verify_name(b"junk", "Hosta sieboldiana", out_dir=garden.out, model="fake-bio")
 
 
 def test_server_local_only(garden):

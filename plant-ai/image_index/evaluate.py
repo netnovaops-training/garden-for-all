@@ -138,7 +138,8 @@ def _hint_test(out_dir, n_max=300):
         pid = idx.keys[gi][1]
         name = idx.info[gi]["botanical"]
         typo = name[:-1] if len(name) > 6 else name
-        def hit(found, upto):
+
+        def hit(found, upto, pid=pid):
             return any((x["set"], x["plant_id"]) == ("current", pid) for x in found[:upto])
 
         base = idx.search_vector(saved, 5)

@@ -133,12 +133,79 @@ it). To measure the real number, have the
 scan queue keep which suggestion the person confirmed; after about 50 scans the true top-1 / top-5
 is known and `confidence` can be fitted on it.
 
+## Plant-trained models, and checking a name
+
+Three more backends can be chosen with `build --model NAME` (changing it rebuilds the index) and
+are baked into the image with `--build-arg MODELS="dinov2-small plantclef-b14-336 bioclip-2"`.
+The default stays `dinov2-small`.
+
+**Photo-to-photo search**, one index of 2,710 photos per model, the same two tests as above:
+
+| model | licence | size | build img/s* | ms per photo* | photo-out top-1 / top-5 | visit-out top-1 / top-5 |
+|---|---|---|---|---|---|---|
+| **dinov2-small (default)** | Apache-2.0 | 88 MB | 8.1 | 91 | 0.56 / 0.85 | 0.23 / 0.57 |
+| PlantCLEF-2024 ViT-B/14, 518 px | CC BY-NC 4.0 | 370 MB | 1.9 | n/m | **0.69 / 0.92** | **0.38 / 0.81** |
+| **PlantCLEF-2024 ViT-B/14, 336 px** | CC BY-NC 4.0 | 370 MB | 4.2 | 247 | 0.65 / 0.90 | 0.36 / 0.70 |
+| BioCLIP 2 (ViT-L/14) | MIT | 1.7 GB | 2.6 | 345 | 0.55 / 0.86 | 0.21 / 0.54 |
+| BioCLIP (ViT-B/16) | MIT | 600 MB | 11.2 | n/m | 0.57 / 0.86 | 0.19 / 0.57 |
+
+*8 to 20 CPUs while the PC was busy with other work; n/m = not measured. The visit-out test has
+only 138 photos, so differences of a few points there are noise. The PlantCLEF model is a DINOv2
+ViT-B/14 that the PlantCLEF-2024 organisers trained on 1.4 million plant photos (7,806
+south-west-European species) and published on Zenodo / Hugging Face. It is clearly better at
+finding the same plant (at 336 px: +9 points top-1, +14 points visit-out top-5). BioCLIP does not
+beat plain DINOv2 at photo-to-photo search. The licence of the PlantCLEF weights is
+non-commercial: fine for a private garden, not for anything sold or handed out as a product, so
+the default was left alone. To use it for the garden: `build --model plantclef-b14-336`.
+
+**Checking a name** (`verify-name`: does this photo match the botanical name in the database?),
+zero-shot, no photo of the plant needed. A fixed random sample of 800 of the garden's own photos
+is scored against the 1,201 species names in the database (BioCLIP: the text "a photo of Genus
+species"; PlantCLEF: its species classifier, over the names it knows). The name is hidden, so
+top-1 / top-5 say how often the right species is first / among the first five. The wrong-name
+test gives the same photo a wrong name (hard: another species of the same genus; any: another
+species) and asks how often the true name scores higher (auc), and how many true names pass a
+cut-off that lets 5 in 100 wrong names through.
+
+| model | all 800 photos: top-1 / top-5 / right genus | the 286 photos of species PlantCLEF knows: top-1 / top-5 | hard wrong name on those 286: auc / true names passed | any wrong name: auc |
+|---|---|---|---|---|
+| BioCLIP 2 | 0.56 / 0.79 / 0.73 | 0.70 / 0.86 | 0.91 / 0.75 | 0.99 |
+| BioCLIP | 0.48 / 0.70 / 0.61 | 0.64 / 0.83 | 0.94 / 0.69 | 0.99 |
+| PlantCLEF 336 px | only those 286 | **0.89 / 0.96** | **0.95 / 0.92** | 0.99 |
+| PlantCLEF 518 px | only those 286 | 0.90 / 0.96 | 0.95 / 0.92 | 0.99 |
+
+The catch: **PlantCLEF knows the species of only 36% of the garden's photos** (wild south-west
+European plants; most garden cultivars, hybrids and exotics are not among its 7,806). For the
+other 64% only BioCLIP can check a name, and BioCLIP 2 gets about 0.49 top-1 there (worked out
+from the rows above). So: BioCLIP 2 for every name, PlantCLEF as well where it knows the species
+(`covered: false` in its answer means it does not). A high `genus_score` with a low `match_score`
+means right genus, species unsure. `match_score` is the named species' share among the candidate
+names, not the chance that the label is right. On all 800 photos with a same-genus wrong name,
+BioCLIP 2 passes only about half the true names (cut-off about 0.5) when it lets 5 in 100 wrong
+names through; PlantCLEF passes 9 in 10 (cut-off about 0.13), but only on the species it knows.
+Use it as a cheap extra vote next to the vision-language check, not as a verdict. Not tested:
+BioCLIP 2.5 ViT-H/14 (newer, bigger).
+
+```
+sh plant-ai/image_index/index.sh verify photo.jpg "Salvia nemorosa 'Violet Profusion'" [--model plantclef-b14-336]
+python -m image_index verify-name photo.jpg "Salvia nemorosa" [--out INDEX] [--model bioclip-2]
+POST /verify?name=Salvia+nemorosa   (body = the picture)   ->  {"result": {...}, "ms": n}
+sh plant-ai/image_index/index.sh eval-names --model bioclip-2 [--limit 800]
+```
+
+The answer: `{name, genus, species, model, method, match_score, genus_score, rank, of, covered,
+top: [best three names]}`. Species names come from the database's botanical names (author names
+and cultivar names in quotes are ignored; a cultivar-only name checks the genus). The first call
+loads the model and embeds all names (about a minute for BioCLIP 2, then cached in the index
+folder); later calls take well under a second in the service (`IMAGE_INDEX_VERIFY_MODEL` picks the
+model it uses, default `bioclip-2`).
+
 ## Files
 
 `catalog.py` which photo is which plant, `decode.py` open and shrink a photo, `embed.py` the model,
 `models.py` the model list (pinned), `store.py` the SQLite index, `indexer.py` build,
-`finder.py` search and the text hook, `evaluate.py` the accuracy test, `server.py` the local
-service, `cli.py`, `Dockerfile`, `requirements.txt` (exact versions and checksums, rebuild steps
+`finder.py` search and the text hook, `evaluate.py` the accuracy test, `verify.py` + `taxon.py`
+the name check, `names_eval.py` its accuracy test, `server.py` the local service, `cli.py`, `Dockerfile`, `requirements.txt` (exact versions and checksums, rebuild steps
 in `requirements.in`), `index.sh`. Tests (no model needed): `python -m pytest plant-ai/tests/test_image_index.py -q`.
 
 ---
@@ -157,5 +224,9 @@ in `requirements.in`), `index.sh`. Tests (no model needed): `python -m pytest pl
 * 정확도(솔직하게): 같은 식물의 다른 사진을 찾기 어렵게 한 공정한 시험에서 1순위 약 23%, 5순위 안에
   약 57%. 정원의 현재 사진은 대부분 판매처/웹 사진이라, **정원에서 폰으로 찍은 사진은 이 시험으로 잴 수
   없어요.** 예상은 1순위 15~30%, 5순위 안 35~55%: "정답"이 아니라 "후보 목록"으로 쓰세요.
+* 식물 전용 모델: PlantCLEF-2024 모델(`build --model plantclef-b14-336`)이 같은 식물 찾기에서 훨씬 좋아요
+  (1순위 0.56 → 0.65, 다른 날 사진 5순위 0.57 → 0.70). 하지만 라이선스가 비상업용(CC BY-NC)이라 기본값은
+  그대로 두었어요. `verify-name`은 사진이 DB의 학명과 맞는지 알려 줘요 (BioCLIP 2는 모든 이름에, PlantCLEF는
+  아는 종(정원 사진의 36%)에서 더 정확). 점수는 판결이 아니라 참고용 한 표예요.
 * 서비스는 이 컴퓨터(127.0.0.1)에서만 답하고 비밀번호가 없어요. 이 PC에서는 8099 포트를 다른 컨테이너가
   이미 쓰고 있어서 `PORT=8199` 같은 다른 포트나 Docker 네트워크 이름을 써요.

@@ -45,6 +45,13 @@ def load(src, size=224, mode="crop"):
         return None
 
 
+def decode_many(paths, size, mode, workers):
+    """Yield (path, array or None) in order, opening the photos in separate processes."""
+    from multiprocessing import get_context
+    with get_context("spawn").Pool(workers) as pool:
+        yield from pool.imap(load_path, [(str(p), size, mode) for p in paths], chunksize=8)
+
+
 def load_path(args):
     """Pool entry point: (path, size, mode) -> (path, array or None)."""
     path, size, mode = args
