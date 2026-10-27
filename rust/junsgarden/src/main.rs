@@ -60,6 +60,7 @@ mod accounts;
 mod address;
 mod brain;
 mod formdata;
+mod gallery_thumbs;
 mod guard;
 mod guides;
 mod images;
@@ -87,7 +88,6 @@ use axum::{
     Json, Router,
 };
 use serde_json::json;
-use sqlx::mysql::MySqlPoolOptions;
 use sqlx::MySqlPool;
 use tower_http::services::ServeDir;
 
@@ -155,6 +155,8 @@ impl AppState {
         if let Ok(mut c) = self.widget_cache.lock() {
             *c = None;
         }
+        // A plant changed: the cached per-plant gallery JSON is stale too.
+        gallery_thumbs::invalidate_all();
     }
 }
 
@@ -376,11 +378,11 @@ async fn run() -> anyhow::Result<()> {
 
     // The database address is required; the program stops here with an error if missing.
     let db_url = common::env_required("JUNSGARDEN_DATABASE_URL")?;
-    // Open a pool of at most 8 connections to the database.
-    let db = MySqlPoolOptions::new()
-        .max_connections(8)
-        .connect(&db_url)
-        .await?;
+    // Open the connection pool. Size and timeouts come from JUNSGARDEN_DB_* settings
+    // (defaults: 8 connections at most, 1 kept ready, 5 s to wait for a free one); see gallery_thumbs.rs.
+    let pool = gallery_thumbs::PoolSettings::from_env();
+    tracing::info!("database pool: {pool:?}");
+    let db = pool.options().connect(&db_url).await?;
     // Who may log in. `env_or` reads the setting, or uses the fallback written in the code.
     // Anyone running a copy must set JUNSGARDEN_USERS themselves (see the top of this file).
     let users = accounts::parse_users(&common::env_or("JUNSGARDEN_USERS", accounts::DEFAULT_USERS));
@@ -528,6 +530,8 @@ async fn run() -> anyhow::Result<()> {
         )
         // The guides, for people logged in (help.rs): /help, /help/images/...
         .merge(help::routes())
+        // The paged gallery (thumbnails from the `photo`/`photo_tags` tables): /api/gallery.
+        .merge(gallery_thumbs::routes())
         // Labels, short QR paths, and the app's address and setup page (address.rs).
         .merge(address::routes())
         // Layers wrap every route above them; the LAST one added is the OUTERMOST. So, in
