@@ -211,6 +211,9 @@ mod tests {
             ListingBody.render().unwrap(),
             "the page itself must not change"
         );
+        // The old file's last newline is dropped by askama: the body ends with ONE.
+        assert!(section_results(true).ends_with("</div>\n"));
+        assert!(!section_results(true).ends_with("</div>\n\n"));
         let (after_header, class) = frame();
         assert!(
             after_header.contains("id=\"list-search-box\"") && after_header.contains("autofocus")

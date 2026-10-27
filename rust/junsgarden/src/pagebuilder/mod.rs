@@ -271,10 +271,10 @@ pub async fn draw(
     crate::layout::render(state, p, visitor).await
 }
 
-/// The owner's Edit button (fixed in a corner; hidden on phones, where editing is off).
+/// The owner's Edit button (fixed in a corner; on a phone it opens the editor's simple mode).
 fn edit_button(page: &str) -> String {
     format!(
-        "\n<a class=\"pb-edit-button\" href=\"pagebuilder.php?page={}\" style=\"position:fixed; left:20px; bottom:20px; z-index:99997; background:#FFD700; color:#333; border:3px solid #333; border-radius:20px; padding:10px 18px; font-weight:900; text-decoration:none; box-shadow:3px 3px 0 rgba(0,0,0,0.6);\">✏️ Edit page · 페이지 편집</a>\n<style>@media (max-width: 900px) {{ .pb-edit-button {{ display:none; }} }}</style>\n",
+        "\n<a class=\"pb-edit-button\" href=\"pagebuilder.php?page={}\" style=\"position:fixed; left:20px; bottom:20px; z-index:99997; background:#FFD700; color:#333; border:3px solid #333; border-radius:20px; padding:10px 18px; font-weight:900; text-decoration:none; box-shadow:3px 3px 0 rgba(0,0,0,0.6);\">✏️ Edit page · 페이지 편집</a>\n",
         he(page)
     )
 }

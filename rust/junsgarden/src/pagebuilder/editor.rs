@@ -143,6 +143,9 @@ struct EditorPage {
     token: String,
     editor_js_v: u64,
     editor_css_v: u64,
+    logic_js_v: u64,
+    pages_js_v: u64,
+    packs_js_v: u64,
 }
 
 /// `GET /pagebuilder.php?page=home`: the editor. Visitors are sent to the login.
@@ -168,6 +171,9 @@ async fn editor_page(
         token: state.pagebuilder.token(&visitor.sid),
         editor_js_v: filemtime(&state.www, "pagebuilder/editor.js"),
         editor_css_v: filemtime(&state.www, "pagebuilder/editor.css"),
+        logic_js_v: filemtime(&state.www, "pagebuilder/logic.js"),
+        pages_js_v: filemtime(&state.www, "pagebuilder/editor-pages.js"),
+        packs_js_v: filemtime(&state.www, "pagebuilder/editor-packs.js"),
     };
     match t.render() {
         Ok(html) => Html(html).into_response(),

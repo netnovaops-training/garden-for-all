@@ -9,13 +9,8 @@
     <link rel="stylesheet" href="pagebuilder/editor.css?v={{ editor_css_v }}">
 </head>
 <body>
-<!-- Editing works on a computer only; phones and the app just show the pages. -->
-<div class="pb-narrow">
-    <p>✏️ The page builder works on a computer (a wider screen).<br>
-       페이지 편집기는 컴퓨터(넓은 화면)에서 쓸 수 있어요.</p>
-    <p><a href="index.php">Back to the garden · 정원으로 돌아가기</a></p>
-</div>
-
+<!-- On a computer: the whole editor (sidebar, drag and drop, live preview). On a phone: the
+     simple mode (same page, one column, buttons only, no preview). -->
 <div id="pb-app" class="pb-app" data-page="{{ page }}" data-token="{{ token }}">
     <header class="pb-top">
         <strong class="pb-title" data-t="title">Page builder</strong>
@@ -23,36 +18,71 @@
             <select id="pb-page"></select></label>
         <button type="button" id="pb-newpage" data-t="newPage">New page</button>
         <span class="pb-spacer"></span>
-        <button type="button" id="pb-undo" data-t="undo">Undo</button>
-        <button type="button" id="pb-reset" data-t="reset">Original page</button>
-        <button type="button" id="pb-save" class="pb-primary" data-t="save">Save</button>
+        <button type="button" id="pb-undo" data-t="undoEdit">Undo</button>
+        <button type="button" id="pb-redo" data-t="redoEdit">Redo</button>
+        <button type="button" id="pb-draft" data-t="saveDraft">Save draft</button>
+        <button type="button" id="pb-save" class="pb-primary" data-t="publish">Publish</button>
         <a id="pb-view" href="index.php" data-t="view">View page</a>
         <button type="button" id="pb-lang" lang="ko">한국어</button>
     </header>
     <div id="pb-status" class="pb-status" role="status" aria-live="polite"></div>
 
     <main class="pb-main">
-        <aside class="pb-panel" aria-labelledby="pb-panel-h">
-            <h2 id="pb-panel-h" data-t="sections">Sections</h2>
-            <p class="pb-hint" data-t="panelHint">Drag a section onto the page, or press Add.</p>
-            <div id="pb-updates" class="pb-updates"></div>
-            <p id="pb-update-state" class="pb-hint"></p>
-            <ul id="pb-list" class="pb-list"></ul>
-            <details class="pb-later">
-                <summary data-t="later">Coming with the database update</summary>
-                <ul id="pb-pending"></ul>
-            </details>
+        <aside class="pb-panel" aria-label="Sidebar · 사이드바">
+            <div class="pb-tabs" role="tablist">
+                <button type="button" role="tab" id="pb-tab-sections" aria-controls="pb-pane-sections" aria-selected="true" data-t="tabSections">Sections</button>
+                <button type="button" role="tab" id="pb-tab-page" aria-controls="pb-pane-page" aria-selected="false" data-t="tabPage">Page</button>
+                <button type="button" role="tab" id="pb-tab-features" aria-controls="pb-pane-features" aria-selected="false" data-t="tabFeatures">Features</button>
+            </div>
+
+            <div id="pb-pane-sections" role="tabpanel" aria-labelledby="pb-tab-sections">
+                <p class="pb-hint" data-t="panelHint">Drag a section onto the page, or press Add.</p>
+                <div id="pb-updates" class="pb-updates"></div>
+                <p id="pb-update-state" class="pb-hint"></p>
+                <ul id="pb-list" class="pb-list"></ul>
+                <details class="pb-later">
+                    <summary data-t="later">Coming with the database update</summary>
+                    <ul id="pb-pending"></ul>
+                </details>
+            </div>
+
+            <div id="pb-pane-page" role="tabpanel" aria-labelledby="pb-tab-page" hidden>
+                <h2 data-t="pageSettings">This page</h2>
+                <label class="pb-field"><span data-t="titleEn">Name (English)</span>
+                    <input type="text" id="pb-title-en" maxlength="40" autocomplete="off"></label>
+                <label class="pb-field"><span data-t="titleKo">Name (Korean)</span>
+                    <input type="text" id="pb-title-ko" maxlength="40" autocomplete="off" lang="ko"></label>
+                <label class="pb-check"><input type="checkbox" id="pb-in-menu"> <span data-t="inMenu">Show in the top menu</span></label>
+                <label class="pb-field"><span data-t="banner">Banner (the photo strip at the top)</span>
+                    <select id="pb-hero">
+                        <option value="" data-t="bannerDefault">As the page normally has it</option>
+                        <option value="1" data-t="bannerOn">Show it</option>
+                        <option value="0" data-t="bannerOff">Hide it</option>
+                    </select></label>
+                <p class="pb-actions">
+                    <button type="button" id="pb-prev" data-t="prevVersion">Go back to the previous published version</button>
+                    <button type="button" id="pb-reset" data-t="reset">Original page</button>
+                    <button type="button" id="pb-remove-page" class="pb-danger" data-t="removePage">Remove this page</button>
+                </p>
+                <details id="pb-history" class="pb-history">
+                    <summary data-t="history">Published versions</summary>
+                    <ol id="pb-history-list"></ol>
+                </details>
+                <details id="pb-removed" class="pb-history">
+                    <summary data-t="removedPages">Removed pages</summary>
+                    <ul id="pb-removed-list"></ul>
+                </details>
+            </div>
+
+            <div id="pb-pane-features" role="tabpanel" aria-labelledby="pb-tab-features" hidden></div>
         </aside>
 
         <section class="pb-canvas" aria-labelledby="pb-canvas-h">
             <h2 id="pb-canvas-h" data-t="canvas">Page</h2>
+            <p id="pb-draft-note" class="pb-draft-note" hidden></p>
             <div id="pb-rows" class="pb-rows"></div>
             <button type="button" id="pb-add" class="pb-plus" aria-describedby="pb-add-hint">+</button>
             <p id="pb-add-hint" class="pb-hint" data-t="plusHint">Drop a section here for a new row.</p>
-            <details id="pb-history" class="pb-history">
-                <summary data-t="history">Saved versions</summary>
-                <ol id="pb-history-list"></ol>
-            </details>
         </section>
 
         <section class="pb-preview" aria-labelledby="pb-preview-h">
@@ -63,6 +93,9 @@
         </section>
     </main>
 </div>
+<script src="pagebuilder/logic.js?v={{ logic_js_v }}" defer></script>
 <script src="pagebuilder/editor.js?v={{ editor_js_v }}" defer></script>
+<script src="pagebuilder/editor-pages.js?v={{ pages_js_v }}" defer></script>
+<script src="pagebuilder/editor-packs.js?v={{ packs_js_v }}" defer></script>
 </body>
 </html>

@@ -1,10 +1,10 @@
 {#- Page builder: the whole body is the one section `search.results`. Block tags print nothing,
-    so the page is unchanged. -#}{% block search_results %}
+    so the page is unchanged. (askama drops the one newline that ends a template file, so the
+    block ends one newline earlier than the old file did.) -#}{% block search_results %}
 <div class="qs-container">
     <div id="qs-grid" class="qs-grid"></div>
     <div id="qs-trigger" style="text-align:center; padding:20px;">
         <div class="spinner" style="border-width:4px; width:30px; height:30px;"></div>
     </div>
 </div>
-
 {% endblock %}

@@ -2078,7 +2078,7 @@ mod tests {
         ];
         assert_eq!(parts.concat(), whole);
         assert!(whole.starts_with("<div class=\"data-page-container\">"));
-        assert!(whole.contains("js/chart-compare.js?v=7"));
+        assert!(whole.ends_with("js/chart-compare.js?v=7\"></script>\n\n"));
         assert!(!whole.contains("{%") && !whole.contains("{#"));
     }
 }

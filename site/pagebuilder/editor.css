@@ -1,4 +1,5 @@
-/* The page builder's editor (pagebuilder.php). Desktop only: below 900 px only a note shows. */
+/* The page builder's editor (pagebuilder.php). Wide screens: sidebar, page, live preview.
+   Below 900 px (a phone): the simple mode, one column, buttons only, no preview. */
 :root {
     --pb-green: #2e7d32;
     --pb-green-soft: #e8f5e9;
@@ -13,28 +14,35 @@ body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans 
 button, select, input { font: inherit; }
 button { cursor: pointer; border: 2px solid #333; border-radius: 10px; background: #fff; padding: 6px 12px; font-weight: 700; }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
-button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #1565c0; outline-offset: 2px; }
-
-.pb-narrow { display: none; padding: 40px 20px; text-align: center; font-size: 1.1rem; }
-@media (max-width: 900px) {
-    .pb-narrow { display: block; }
-    .pb-app { display: none; }
-}
+button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 3px solid #1565c0; outline-offset: 2px; }
+[hidden] { display: none !important; }
 
 .pb-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 16px; background: var(--pb-green); color: #fff; }
 .pb-top a { color: #fff; font-weight: 700; }
 .pb-title { font-size: 1.15rem; margin-right: 8px; }
 .pb-pagepick { display: flex; align-items: center; gap: 6px; }
-.pb-pagepick select { padding: 5px 8px; border-radius: 8px; border: 2px solid #333; }
+.pb-pagepick select { padding: 5px 8px; border-radius: 8px; border: 2px solid #333; max-width: 220px; }
 .pb-spacer { flex: 1; }
 .pb-primary { background: var(--pb-yellow); }
+.pb-danger { background: #ffebee; border-color: var(--pb-red); color: #b71c1c; }
 .pb-status { min-height: 1.6em; padding: 4px 16px; font-weight: 600; color: var(--pb-green); }
 .pb-status.pb-bad { color: var(--pb-red); }
 
-.pb-main { display: grid; grid-template-columns: 280px minmax(320px, 1fr) minmax(360px, 1.2fr); gap: 14px; padding: 0 14px 14px; height: calc(100vh - 100px); }
+.pb-main { display: grid; grid-template-columns: 300px minmax(320px, 1fr) minmax(360px, 1.2fr); gap: 14px; padding: 0 14px 14px; height: calc(100vh - 100px); }
 .pb-main > * { overflow: auto; background: #fff; border: 2px solid var(--pb-line); border-radius: 14px; padding: 12px; }
 .pb-main h2 { margin: 0 0 8px; font-size: 1.05rem; color: var(--pb-green); }
 .pb-hint { color: var(--pb-muted); font-size: 0.85rem; margin: 4px 0 10px; }
+
+/* The sidebar's tabs */
+.pb-tabs { display: flex; gap: 4px; margin-bottom: 10px; border-bottom: 2px solid var(--pb-line); padding-bottom: 8px; }
+.pb-tabs button { flex: 1; padding: 5px 4px; font-size: 0.9rem; border-radius: 8px; }
+.pb-tabs button[aria-selected="true"] { background: var(--pb-green); color: #fff; border-color: var(--pb-green); }
+.pb-field { display: flex; flex-direction: column; gap: 3px; margin: 8px 0; font-size: 0.85rem; font-weight: 700; }
+.pb-field input, .pb-field select { padding: 6px 8px; border: 2px solid var(--pb-line); border-radius: 8px; font-weight: 400; width: 100%; }
+.pb-check { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-weight: 700; font-size: 0.9rem; }
+.pb-actions { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.pb-actions button { text-align: left; }
+.pb-draft-note { margin: 0 0 10px; padding: 8px; border: 2px dashed #333; border-radius: 10px; background: #fffde7; font-weight: 600; font-size: 0.9rem; }
 
 .pb-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .pb-item { border: 2px solid var(--pb-line); border-radius: 10px; padding: 8px; background: var(--pb-green-soft); }
@@ -49,13 +57,16 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .pb-badge { font-size: 0.7rem; font-weight: 800; border-radius: 8px; padding: 1px 6px; }
 .pb-new { background: var(--pb-yellow); border: 1px solid #333; }
 .pb-lock { background: #ffe0b2; border: 1px solid #e65100; }
+.pb-pack { background: #e1f5fe; border: 1px solid #0277bd; }
 .pb-updates p { margin: 0 0 6px; font-size: 0.85rem; font-weight: 700; }
 .pb-updates:not(:empty) { border: 2px dashed #333; border-radius: 10px; padding: 8px; margin-bottom: 10px; background: #fffde7; }
 .pb-later { margin-top: 12px; font-size: 0.85rem; }
 
-.pb-rows { display: flex; flex-direction: column; gap: 10px; }
+.pb-rows { display: flex; flex-direction: column; }
 .pb-row { display: grid; gap: 8px; padding: 8px; border: 2px dashed var(--pb-line); border-radius: 12px; min-height: 60px; }
 .pb-row.pb-over, .pb-plus.pb-over { border-color: var(--pb-green); background: var(--pb-green-soft); }
+.pb-gap { height: 10px; border-radius: 6px; transition: height 0.1s; }
+.pb-gap.pb-over { height: 34px; background: var(--pb-green-soft); border: 2px dashed var(--pb-green); }
 .pb-cell { border: 2px solid #333; border-radius: 10px; padding: 8px; background: #fff; cursor: grab; min-width: 0; }
 .pb-cell-admin { background: #fff8e1; }
 .pb-cell-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
@@ -74,3 +85,29 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .pb-preview { padding: 12px; display: flex; flex-direction: column; }
 .pb-frame-box { position: relative; flex: 1; overflow: hidden; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
 .pb-frame-box iframe { position: absolute; top: 0; left: 0; width: 1280px; border: 0; transform-origin: 0 0; }
+
+/* Features tab (editor-packs.js) */
+.pb-feat { border: 2px solid var(--pb-line); border-radius: 10px; padding: 8px; margin: 8px 0; background: #fff; }
+.pb-feat h3 { margin: 0 0 4px; font-size: 0.95rem; }
+.pb-feat dl { margin: 6px 0; font-size: 0.8rem; }
+.pb-feat dt { font-weight: 800; }
+.pb-feat dd { margin: 0 0 4px; overflow-wrap: anywhere; }
+.pb-feat code { font-size: 0.75rem; }
+.pb-pass { color: var(--pb-green); font-weight: 800; }
+.pb-fail { color: #b71c1c; font-weight: 800; }
+.pb-art { max-width: 100%; border: 1px solid #ddd; border-radius: 6px; background: #f5f5f5; }
+.pb-warn { border: 2px solid var(--pb-red); background: #ffebee; border-radius: 8px; padding: 6px 8px; font-weight: 700; font-size: 0.85rem; }
+
+/* Phones: the simple mode. One column; the page first, then the sidebar; no preview. */
+@media (max-width: 900px) {
+    .pb-main { display: flex; flex-direction: column-reverse; height: auto; padding: 0 8px 14px; }
+    .pb-main > * { overflow: visible; }
+    .pb-preview { display: none; }
+    .pb-top { padding: 8px; gap: 6px; }
+    .pb-top .pb-title { display: none; }
+    .pb-top button, .pb-top a { padding: 8px 10px; }
+    .pb-moves button, .pb-minus { padding: 8px 14px; }
+    .pb-gap { display: none; }
+    .pb-row { grid-template-columns: minmax(0, 1fr) !important; }
+    .pb-cell { cursor: default; }
+}

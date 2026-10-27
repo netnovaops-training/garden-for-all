@@ -1780,6 +1780,8 @@ mod tests {
             assert!(whole.starts_with("<div class=\"page-content page-garden-bg\""));
             assert!(whole.contains("id=\"plant-feed\"") && whole.contains("js/app.js?v=11"));
             assert_eq!(whole.contains("id=\"plantForm\""), is_admin);
+            // The old file's last newline is dropped by askama: the page ends with ONE.
+            assert!(whole.ends_with("search.js?v=12\"></script>\n"));
             assert!(!whole.contains("{%") && !whole.contains("{#"));
         }
     }
