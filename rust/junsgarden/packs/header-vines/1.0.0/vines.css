@@ -1,0 +1,31 @@
+/* Growing vines: each vine draws itself downward (or upward), then its leaves open and
+   sway a little. Nothing moves for people who ask their device for less motion. */
+@keyframes pk-header-vines-grow { from { stroke-dashoffset: 100 } to { stroke-dashoffset: 0 } }
+@keyframes pk-header-vines-pop { from { transform: scale(0) } to { transform: scale(1) } }
+@keyframes pk-header-vines-sway { from { transform: rotate(-6deg) } to { transform: rotate(6deg) } }
+
+.pk-header-vines-vine { stroke-dasharray: 100; stroke-dashoffset: 100; animation: pk-header-vines-grow 3.5s ease-out forwards }
+.pk-header-vines-leaf { transform-box: fill-box; transform-origin: 0% 50%; transform: scale(0); animation: pk-header-vines-pop 0.9s ease-out forwards, pk-header-vines-sway 6s ease-in-out infinite alternate }
+
+.pk-header-vines-vine.pk-header-vines-d1 { animation-delay: 0.1s }
+.pk-header-vines-vine.pk-header-vines-d2 { animation-delay: 0.3s }
+.pk-header-vines-vine.pk-header-vines-d3 { animation-delay: 0.5s }
+.pk-header-vines-vine.pk-header-vines-d4 { animation-delay: 0.7s }
+.pk-header-vines-vine.pk-header-vines-d5 { animation-delay: 0.9s }
+.pk-header-vines-vine.pk-header-vines-d6 { animation-delay: 1.1s }
+.pk-header-vines-vine.pk-header-vines-d7 { animation-delay: 1.3s }
+.pk-header-vines-vine.pk-header-vines-d8 { animation-delay: 1.5s }
+
+.pk-header-vines-leaf.pk-header-vines-d1 { animation-delay: 1.6s, 2.5s }
+.pk-header-vines-leaf.pk-header-vines-d2 { animation-delay: 1.8s, 2.7s }
+.pk-header-vines-leaf.pk-header-vines-d3 { animation-delay: 2s, 2.9s }
+.pk-header-vines-leaf.pk-header-vines-d4 { animation-delay: 2.2s, 3.1s }
+.pk-header-vines-leaf.pk-header-vines-d5 { animation-delay: 2.4s, 3.3s }
+.pk-header-vines-leaf.pk-header-vines-d6 { animation-delay: 2.6s, 3.5s }
+.pk-header-vines-leaf.pk-header-vines-d7 { animation-delay: 2.8s, 3.7s }
+.pk-header-vines-leaf.pk-header-vines-d8 { animation-delay: 3s, 3.9s }
+
+@media (prefers-reduced-motion: reduce) {
+  .pk-header-vines-vine { animation: none; stroke-dashoffset: 0 }
+  .pk-header-vines-leaf { animation: none; transform: scale(1) }
+}

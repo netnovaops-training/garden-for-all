@@ -190,6 +190,7 @@ fn invalid(en: impl Into<String>, ko: impl Into<String>) -> Invalid {
 
 /// Check a layout before it is saved or previewed, and fill in missing settings with their
 /// defaults. Everything not in the registry is refused.
+#[cfg(test)]
 pub fn validate(layout: &mut Layout, page: &str) -> Result<(), Invalid> {
     validate_with(layout, page, &Extra::new())
 }
@@ -403,6 +404,7 @@ fn short(k: &str) -> String {
 
 /// A layout read back from the database, made safe to draw: cells whose section no longer
 /// exists (or whose settings no longer fit) are dropped, never shown half-checked.
+#[cfg(test)]
 pub fn sanitize(layout: Layout, page: &str) -> Layout {
     sanitize_with(layout, page, &Extra::new())
 }

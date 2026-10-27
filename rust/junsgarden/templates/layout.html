@@ -23,7 +23,7 @@
     </script>
 
     <script src="js/site-theme.js?v={{ site_theme_v }}" defer></script>
-    {{ extra_head|safe }}
+    {{ extra_head|safe }}{{ pack_head|safe }}
 </head>
 <body class="{{ body_class }}">
 
@@ -81,7 +81,7 @@
     <!-- Wavy bottom edge of the hero — seamlessly tiling 2-crest paths.
          Both paths start AND end at the same y so the two SVG tiles
          join without a visible seam/jagged edge during the scroll loop. -->
-    <div class="hero-wave" aria-hidden="true">
+    {% if art_hero.is_empty() %}<div class="hero-wave" aria-hidden="true">
         <div class="hero-wave__layer hero-wave__layer--back">
             <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,32 C240,8 480,56 720,32 C960,8 1200,56 1440,32 V60 H0 Z"/></svg>
             <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,32 C240,8 480,56 720,32 C960,8 1200,56 1440,32 V60 H0 Z"/></svg>
@@ -90,7 +90,7 @@
             <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,30 C240,54 480,6 720,30 C960,54 1200,6 1440,30 V60 H0 Z"/></svg>
             <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,30 C240,54 480,6 720,30 C960,54 1200,6 1440,30 V60 H0 Z"/></svg>
         </div>
-    </div>
+    </div>{% else %}{{ art_hero|safe }}{% endif %}
 </div>
 {% endif %}
 

@@ -150,6 +150,12 @@ struct LayoutTemplate {
     after_header: String,
     /// The top menu's page links (made by `pagebuilder::menu`).
     nav_pages: String,
+    /// Header, footer and banner art from the feature pack that is picked (empty = the
+    /// site's own waves), and its styles for `<head>`.
+    art_top: String,
+    art_bottom: String,
+    art_hero: String,
+    pack_head: String,
     is_admin: bool,
     plan_ok: bool,
     app_version: String,
@@ -258,17 +264,30 @@ fn body_class(is_admin: bool, own: &str) -> String {
 /// Wrap a page body in the shared frame and return the full HTML.
 pub async fn render(state: &AppState, page: Page, visitor: &Visitor) -> String {
     let files = state.frame.get(&state.www).await;
-    let nav = crate::pagebuilder::menu::nav(state).await;
-    fill(state, page, visitor, &files, &nav)
+    let extras = Extras {
+        nav: crate::pagebuilder::menu::nav(state).await,
+        active: crate::pagebuilder::site::active(state).await,
+    };
+    fill(state, page, visitor, &files, &extras)
 }
 
-/// `render` for code that is not async (the help pages): the menu links as last read, or the
-/// old ones.
+/// `render` for code that is not async (the help pages): the menu links and pack choices as
+/// last read, or the old ones.
 pub fn render_now(state: &AppState, page: Page, visitor: &Visitor) -> String {
     let files = state.frame.get_now(&state.www);
-    let nav = crate::pagebuilder::menu::cached(state)
-        .unwrap_or_else(|| Arc::new(crate::pagebuilder::menu::DEFAULT_NAV.to_string()));
-    fill(state, page, visitor, &files, &nav)
+    let extras = Extras {
+        nav: crate::pagebuilder::menu::cached(state)
+            .unwrap_or_else(|| Arc::new(crate::pagebuilder::menu::DEFAULT_NAV.to_string())),
+        active: crate::pagebuilder::site::cached(state).unwrap_or_default(),
+    };
+    fill(state, page, visitor, &files, &extras)
+}
+
+/// What the page builder adds to the frame: the menu's page links, and what feature packs have
+/// switched on (header art, styles).
+struct Extras {
+    nav: Arc<String>,
+    active: Arc<crate::pagebuilder::site::Active>,
 }
 
 fn fill(
@@ -276,7 +295,7 @@ fn fill(
     page: Page,
     visitor: &Visitor,
     files: &FrameFiles,
-    nav_pages: &str,
+    extras: &Extras,
 ) -> String {
     // The hero images only matter when the page shows the banner; a new random order each load.
     let mut images = if page.show_hero {
@@ -307,7 +326,11 @@ fn fill(
         extra_head: page.extra_head,
         body_class: body_class(is_admin, &page.body_class),
         after_header: page.after_header,
-        nav_pages: nav_pages.to_string(),
+        nav_pages: extras.nav.to_string(),
+        art_top: extras.active.top.clone().unwrap_or_default(),
+        art_bottom: extras.active.bottom.clone().unwrap_or_default(),
+        art_hero: extras.active.hero.clone().unwrap_or_default(),
+        pack_head: extras.active.head.clone(),
         is_admin,
         plan_ok: visitor.plan_ok(state),
         app_version: files.app_version.clone(),

@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 60">
+  <!-- Under the top bar: two green bands with a soft edge, and vines that grow down from it. -->
+  <path d="M0,0 H1440 V22 C1200,34 960,16 720,26 C480,36 240,18 0,24 Z" fill="var(--site-wave-back, #4a7c59)" opacity="0.5"/>
+  <path d="M0,0 H1440 V15 C1100,28 900,10 720,19 C500,29 260,12 0,17 Z" fill="var(--site-wave-front, #2e7d32)"/>
+  <g class="pk-header-vines-set">
+    <path class="pk-header-vines-vine pk-header-vines-d1" pathLength="100" d="M26,15 C11,26 40,38 24,49" fill="none" stroke="#3e7c3a" stroke-width="2.8" stroke-linecap="round"/>
+    <g transform="translate(22 25) rotate(139)"><ellipse class="pk-header-vines-leaf pk-header-vines-d1" cx="10.2" rx="10.2" ry="4.7" fill="#8bc34a"/></g>
+    <g transform="translate(26 34) rotate(-3)"><ellipse class="pk-header-vines-leaf pk-header-vines-d1" cx="10.3" rx="10.3" ry="4.8" fill="#9ccc65"/></g>
+    <g transform="translate(29 42) rotate(143)"><ellipse class="pk-header-vines-leaf pk-header-vines-d1" cx="8.3" rx="8.3" ry="3.8" fill="#689f38"/></g>
+    <g transform="translate(24 49) rotate(144)"><ellipse class="pk-header-vines-leaf pk-header-vines-d1" cx="5" rx="5" ry="2.4" fill="#7cb342"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d2" pathLength="100" d="M123,15 C140,28 108,42 126,55" fill="none" stroke="#3e7c3a" stroke-width="2.8" stroke-linecap="round"/>
+    <g transform="translate(128 27) rotate(156)"><ellipse class="pk-header-vines-leaf pk-header-vines-d2" cx="11.9" rx="11.9" ry="5.5" fill="#689f38"/></g>
+    <g transform="translate(123 37) rotate(53)"><ellipse class="pk-header-vines-leaf pk-header-vines-d2" cx="12.0" rx="12.0" ry="5.5" fill="#7cb342"/></g>
+    <g transform="translate(120 47) rotate(146)"><ellipse class="pk-header-vines-leaf pk-header-vines-d2" cx="8.4" rx="8.4" ry="3.8" fill="#689f38"/></g>
+    <g transform="translate(126 55) rotate(38)"><ellipse class="pk-header-vines-leaf pk-header-vines-d2" cx="5" rx="5" ry="2.4" fill="#689f38"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d3" pathLength="100" d="M208,15 C226,29 193,42 211,57" fill="none" stroke="#3e7c3a" stroke-width="2.8" stroke-linecap="round"/>
+    <g transform="translate(213 27) rotate(159)"><ellipse class="pk-header-vines-leaf pk-header-vines-d3" cx="9.7" rx="9.7" ry="4.5" fill="#8bc34a"/></g>
+    <g transform="translate(208 38) rotate(50)"><ellipse class="pk-header-vines-leaf pk-header-vines-d3" cx="10.2" rx="10.2" ry="4.7" fill="#7cb342"/></g>
+    <g transform="translate(206 48) rotate(138)"><ellipse class="pk-header-vines-leaf pk-header-vines-d3" cx="11.2" rx="11.2" ry="5.2" fill="#8bc34a"/></g>
+    <g transform="translate(211 57) rotate(38)"><ellipse class="pk-header-vines-leaf pk-header-vines-d3" cx="5" rx="5" ry="2.4" fill="#8bc34a"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d4" pathLength="100" d="M310,15 C324,25 297,34 312,44" fill="none" stroke="#3e7c3a" stroke-width="3.6" stroke-linecap="round"/>
+    <g transform="translate(314 24) rotate(48)"><ellipse class="pk-header-vines-leaf pk-header-vines-d4" cx="11.1" rx="11.1" ry="5.1" fill="#7cb342"/></g>
+    <g transform="translate(310 31) rotate(191)"><ellipse class="pk-header-vines-leaf pk-header-vines-d4" cx="10.1" rx="10.1" ry="4.6" fill="#7cb342"/></g>
+    <g transform="translate(308 38) rotate(19)"><ellipse class="pk-header-vines-leaf pk-header-vines-d4" cx="9.7" rx="9.7" ry="4.5" fill="#9ccc65"/></g>
+    <g transform="translate(312 44) rotate(34)"><ellipse class="pk-header-vines-leaf pk-header-vines-d4" cx="5" rx="5" ry="2.4" fill="#8bc34a"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d5" pathLength="100" d="M394,15 C405,29 384,42 396,56" fill="none" stroke="#3e7c3a" stroke-width="3.6" stroke-linecap="round"/>
+    <g transform="translate(397 27) rotate(163)"><ellipse class="pk-header-vines-leaf pk-header-vines-d5" cx="11.8" rx="11.8" ry="5.4" fill="#689f38"/></g>
+    <g transform="translate(394 37) rotate(50)"><ellipse class="pk-header-vines-leaf pk-header-vines-d5" cx="10.7" rx="10.7" ry="4.9" fill="#689f38"/></g>
+    <g transform="translate(392 48) rotate(144)"><ellipse class="pk-header-vines-leaf pk-header-vines-d5" cx="10.6" rx="10.6" ry="4.9" fill="#8bc34a"/></g>
+    <g transform="translate(396 56) rotate(50)"><ellipse class="pk-header-vines-leaf pk-header-vines-d5" cx="5" rx="5" ry="2.4" fill="#8bc34a"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d6" pathLength="100" d="M463,15 C450,25 474,35 461,45" fill="none" stroke="#3e7c3a" stroke-width="2.8" stroke-linecap="round"/>
+    <g transform="translate(459 24) rotate(140)"><ellipse class="pk-header-vines-leaf pk-header-vines-d6" cx="11.7" rx="11.7" ry="5.4" fill="#689f38"/></g>
+    <g transform="translate(463 31) rotate(-6)"><ellipse class="pk-header-vines-leaf pk-header-vines-d6" cx="9.0" rx="9.0" ry="4.2" fill="#8bc34a"/></g>
+    <g transform="translate(465 39) rotate(154)"><ellipse class="pk-header-vines-leaf pk-header-vines-d6" cx="11.1" rx="11.1" ry="5.1" fill="#8bc34a"/></g>
+    <g transform="translate(461 45) rotate(143)"><ellipse class="pk-header-vines-leaf pk-header-vines-d6" cx="5" rx="5" ry="2.4" fill="#8bc34a"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d7" pathLength="100" d="M552,15 C570,29 536,43 555,57" fill="none" stroke="#3e7c3a" stroke-width="3.2" stroke-linecap="round"/>
+    <g transform="translate(557 28) rotate(50)"><ellipse class="pk-header-vines-leaf pk-header-vines-d7" cx="10.9" rx="10.9" ry="5.0" fill="#689f38"/></g>
+    <g transform="translate(552 38) rotate(175)"><ellipse class="pk-header-vines-leaf pk-header-vines-d7" cx="11.9" rx="11.9" ry="5.5" fill="#8bc34a"/></g>
+    <g transform="translate(549 49) rotate(16)"><ellipse class="pk-header-vines-leaf pk-header-vines-d7" cx="9.9" rx="9.9" ry="4.6" fill="#7cb342"/></g>
+    <g transform="translate(555 57) rotate(37)"><ellipse class="pk-header-vines-leaf pk-header-vines-d7" cx="5" rx="5" ry="2.4" fill="#689f38"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d8" pathLength="100" d="M650,15 C661,25 639,36 651,47" fill="none" stroke="#3e7c3a" stroke-width="2.8" stroke-linecap="round"/>
+    <g transform="translate(653 24) rotate(172)"><ellipse class="pk-header-vines-leaf pk-header-vines-d8" cx="8.4" rx="8.4" ry="3.8" fill="#8bc34a"/></g>
+    <g transform="translate(649 32) rotate(56)"><ellipse class="pk-header-vines-leaf pk-header-vines-d8" cx="11.7" rx="11.7" ry="5.4" fill="#7cb342"/></g>
+    <g transform="translate(647 40) rotate(144)"><ellipse class="pk-header-vines-leaf pk-header-vines-d8" cx="8.8" rx="8.8" ry="4.0" fill="#7cb342"/></g>
+    <g transform="translate(651 47) rotate(41)"><ellipse class="pk-header-vines-leaf pk-header-vines-d8" cx="5" rx="5" ry="2.4" fill="#7cb342"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d1" pathLength="100" d="M729,15 C746,29 714,43 732,58" fill="none" stroke="#3e7c3a" stroke-width="2.8" stroke-linecap="round"/>
+    <g transform="translate(734 28) rotate(51)"><ellipse class="pk-header-vines-leaf pk-header-vines-d1" cx="10.3" rx="10.3" ry="4.8" fill="#8bc34a"/></g>
+    <g transform="translate(729 39) rotate(178)"><ellipse class="pk-header-vines-leaf pk-header-vines-d1" cx="11.8" rx="11.8" ry="5.4" fill="#9ccc65"/></g>
+    <g transform="translate(726 49) rotate(26)"><ellipse class="pk-header-vines-leaf pk-header-vines-d1" cx="8.5" rx="8.5" ry="3.9" fill="#689f38"/></g>
+    <g transform="translate(732 58) rotate(40)"><ellipse class="pk-header-vines-leaf pk-header-vines-d1" cx="5" rx="5" ry="2.4" fill="#7cb342"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d2" pathLength="100" d="M802,15 C813,24 792,33 804,42" fill="none" stroke="#3e7c3a" stroke-width="3.6" stroke-linecap="round"/>
+    <g transform="translate(805 23) rotate(160)"><ellipse class="pk-header-vines-leaf pk-header-vines-d2" cx="8.6" rx="8.6" ry="4.0" fill="#9ccc65"/></g>
+    <g transform="translate(802 30) rotate(63)"><ellipse class="pk-header-vines-leaf pk-header-vines-d2" cx="11.8" rx="11.8" ry="5.4" fill="#8bc34a"/></g>
+    <g transform="translate(800 37) rotate(150)"><ellipse class="pk-header-vines-leaf pk-header-vines-d2" cx="8.2" rx="8.2" ry="3.8" fill="#689f38"/></g>
+    <g transform="translate(804 42) rotate(38)"><ellipse class="pk-header-vines-leaf pk-header-vines-d2" cx="5" rx="5" ry="2.4" fill="#689f38"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d3" pathLength="100" d="M906,15 C916,29 896,43 907,58" fill="none" stroke="#3e7c3a" stroke-width="3.2" stroke-linecap="round"/>
+    <g transform="translate(908 28) rotate(155)"><ellipse class="pk-header-vines-leaf pk-header-vines-d3" cx="11.7" rx="11.7" ry="5.4" fill="#8bc34a"/></g>
+    <g transform="translate(906 38) rotate(38)"><ellipse class="pk-header-vines-leaf pk-header-vines-d3" cx="10.3" rx="10.3" ry="4.7" fill="#9ccc65"/></g>
+    <g transform="translate(904 49) rotate(135)"><ellipse class="pk-header-vines-leaf pk-header-vines-d3" cx="10.1" rx="10.1" ry="4.6" fill="#8bc34a"/></g>
+    <g transform="translate(907 58) rotate(54)"><ellipse class="pk-header-vines-leaf pk-header-vines-d3" cx="5" rx="5" ry="2.4" fill="#689f38"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d4" pathLength="100" d="M974,15 C991,25 958,34 976,44" fill="none" stroke="#3e7c3a" stroke-width="2.8" stroke-linecap="round"/>
+    <g transform="translate(978 24) rotate(50)"><ellipse class="pk-header-vines-leaf pk-header-vines-d4" cx="8.7" rx="8.7" ry="4.0" fill="#7cb342"/></g>
+    <g transform="translate(973 31) rotate(183)"><ellipse class="pk-header-vines-leaf pk-header-vines-d4" cx="11.0" rx="11.0" ry="5.1" fill="#9ccc65"/></g>
+    <g transform="translate(971 38) rotate(23)"><ellipse class="pk-header-vines-leaf pk-header-vines-d4" cx="10.7" rx="10.7" ry="4.9" fill="#7cb342"/></g>
+    <g transform="translate(976 44) rotate(29)"><ellipse class="pk-header-vines-leaf pk-header-vines-d4" cx="5" rx="5" ry="2.4" fill="#9ccc65"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d5" pathLength="100" d="M1065,15 C1046,24 1082,34 1062,44" fill="none" stroke="#3e7c3a" stroke-width="2.8" stroke-linecap="round"/>
+    <g transform="translate(1060 23) rotate(12)"><ellipse class="pk-header-vines-leaf pk-header-vines-d5" cx="9.7" rx="9.7" ry="4.5" fill="#8bc34a"/></g>
+    <g transform="translate(1065 31) rotate(117)"><ellipse class="pk-header-vines-leaf pk-header-vines-d5" cx="9.5" rx="9.5" ry="4.4" fill="#9ccc65"/></g>
+    <g transform="translate(1068 38) rotate(48)"><ellipse class="pk-header-vines-leaf pk-header-vines-d5" cx="9.1" rx="9.1" ry="4.2" fill="#8bc34a"/></g>
+    <g transform="translate(1062 44) rotate(154)"><ellipse class="pk-header-vines-leaf pk-header-vines-d5" cx="5" rx="5" ry="2.4" fill="#8bc34a"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d6" pathLength="100" d="M1137,15 C1153,24 1124,33 1140,43" fill="none" stroke="#3e7c3a" stroke-width="2.8" stroke-linecap="round"/>
+    <g transform="translate(1142 23) rotate(175)"><ellipse class="pk-header-vines-leaf pk-header-vines-d6" cx="11.4" rx="11.4" ry="5.2" fill="#9ccc65"/></g>
+    <g transform="translate(1137 30) rotate(80)"><ellipse class="pk-header-vines-leaf pk-header-vines-d6" cx="8.4" rx="8.4" ry="3.9" fill="#8bc34a"/></g>
+    <g transform="translate(1135 37) rotate(142)"><ellipse class="pk-header-vines-leaf pk-header-vines-d6" cx="9.6" rx="9.6" ry="4.4" fill="#9ccc65"/></g>
+    <g transform="translate(1140 43) rotate(31)"><ellipse class="pk-header-vines-leaf pk-header-vines-d6" cx="5" rx="5" ry="2.4" fill="#7cb342"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d7" pathLength="100" d="M1225,15 C1209,24 1239,33 1222,42" fill="none" stroke="#3e7c3a" stroke-width="2.8" stroke-linecap="round"/>
+    <g transform="translate(1220 23) rotate(129)"><ellipse class="pk-header-vines-leaf pk-header-vines-d7" cx="10.3" rx="10.3" ry="4.7" fill="#9ccc65"/></g>
+    <g transform="translate(1225 30) rotate(-5)"><ellipse class="pk-header-vines-leaf pk-header-vines-d7" cx="10.3" rx="10.3" ry="4.7" fill="#9ccc65"/></g>
+    <g transform="translate(1227 37) rotate(148)"><ellipse class="pk-header-vines-leaf pk-header-vines-d7" cx="9.1" rx="9.1" ry="4.2" fill="#8bc34a"/></g>
+    <g transform="translate(1222 42) rotate(150)"><ellipse class="pk-header-vines-leaf pk-header-vines-d7" cx="5" rx="5" ry="2.4" fill="#9ccc65"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d8" pathLength="100" d="M1301,15 C1287,23 1313,32 1299,40" fill="none" stroke="#3e7c3a" stroke-width="3.6" stroke-linecap="round"/>
+    <g transform="translate(1297 23) rotate(13)"><ellipse class="pk-header-vines-leaf pk-header-vines-d8" cx="9.1" rx="9.1" ry="4.2" fill="#7cb342"/></g>
+    <g transform="translate(1301 29) rotate(108)"><ellipse class="pk-header-vines-leaf pk-header-vines-d8" cx="9.3" rx="9.3" ry="4.3" fill="#689f38"/></g>
+    <g transform="translate(1303 35) rotate(48)"><ellipse class="pk-header-vines-leaf pk-header-vines-d8" cx="8.1" rx="8.1" ry="3.7" fill="#689f38"/></g>
+    <g transform="translate(1299 40) rotate(149)"><ellipse class="pk-header-vines-leaf pk-header-vines-d8" cx="5" rx="5" ry="2.4" fill="#8bc34a"/></g>
+    <path class="pk-header-vines-vine pk-header-vines-d1" pathLength="100" d="M1417,15 C1429,23 1406,32 1419,40" fill="none" stroke="#3e7c3a" stroke-width="2.8" stroke-linecap="round"/>
+    <g transform="translate(1420 23) rotate(45)"><ellipse class="pk-header-vines-leaf pk-header-vines-d1" cx="10.3" rx="10.3" ry="4.7" fill="#689f38"/></g>
+    <g transform="translate(1417 29) rotate(174)"><ellipse class="pk-header-vines-leaf pk-header-vines-d1" cx="9.8" rx="9.8" ry="4.5" fill="#7cb342"/></g>
+    <g transform="translate(1415 35) rotate(13)"><ellipse class="pk-header-vines-leaf pk-header-vines-d1" cx="9.3" rx="9.3" ry="4.3" fill="#9ccc65"/></g>
+    <g transform="translate(1419 40) rotate(34)"><ellipse class="pk-header-vines-leaf pk-header-vines-d1" cx="5" rx="5" ry="2.4" fill="#8bc34a"/></g>
+  </g>
+</svg>

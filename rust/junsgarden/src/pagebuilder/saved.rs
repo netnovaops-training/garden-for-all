@@ -62,6 +62,8 @@ pub async fn current(state: &AppState, page: &str) -> Option<(i32, Layout)> {
     {
         return hit;
     }
+    // The sections of feature packs that are on stay in the drawn layout; others are dropped.
+    let active = super::site::active(state).await;
     let row = sqlx::query(
         "SELECT version, layout FROM page_layouts WHERE page = ? ORDER BY version DESC LIMIT 1",
     )
@@ -73,7 +75,7 @@ pub async fn current(state: &AppState, page: &str) -> Option<(i32, Layout)> {
             let v: i32 = r.try_get("version").ok()?;
             let text: String = r.try_get("layout").ok()?;
             let l: Layout = serde_json::from_str(&text).ok()?;
-            Some((v, layout::sanitize(l, page)))
+            Some((v, layout::sanitize_with(l, page, &active.extra)))
         }),
         // No table, or the database is away: show the default page, do not cache.
         Err(e) => {
@@ -100,7 +102,8 @@ pub async fn at(state: &AppState, page: &str, version: i32) -> Option<Layout> {
             .await
             .ok()??;
     let l: Layout = serde_json::from_str(&text).ok()?;
-    Some(layout::sanitize(l, page))
+    let active = super::site::active(state).await;
+    Some(layout::sanitize_with(l, page, &active.extra))
 }
 
 /// The newest 20 versions of a page, for the editor's history list.
@@ -231,7 +234,8 @@ pub async fn draft(state: &AppState, page: &str) -> Option<(i32, Layout)> {
     let note: String = row.try_get("note").ok()?;
     let base: i32 = note.strip_prefix("draft:")?.parse().ok()?;
     let l: Layout = serde_json::from_str(&text).ok()?;
-    Some((base, layout::sanitize(l, page)))
+    let active = super::site::active(state).await;
+    Some((base, layout::sanitize_with(l, page, &active.extra)))
 }
 
 /// Throw the page's drafts away (after publishing, or when the owner asks).

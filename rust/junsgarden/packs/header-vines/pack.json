@@ -1,0 +1,12 @@
+{
+  "id": "header-vines",
+  "version": "1.0.0",
+  "name_en": "Header: growing vines",
+  "name_ko": "머리글: 자라는 덩굴",
+  "desc_en": "Vines grow down from the top bar and up from the footer, and along the photo banner. Still for people who prefer less motion.",
+  "desc_ko": "맨 위 막대에서 아래로, 바닥글에서 위로, 사진 배너를 따라 덩굴이 자라요. 움직임을 줄이고 싶은 사람에게는 멈춰 있어요.",
+  "provides": [
+    {"type": "header", "id": "vines", "name_en": "Growing vines", "name_ko": "자라는 덩굴",
+     "top": "top.svg", "bottom": "bottom.svg", "hero": "hero.svg", "css": "vines.css"}
+  ]
+}

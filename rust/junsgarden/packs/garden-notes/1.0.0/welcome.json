@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "blocks": [
+    {"type": "heading", "en": "Welcome to the garden", "ko": "정원에 오신 것을 환영해요"},
+    {"type": "text", "en": "Look around, search for a plant, and come back as the seasons change.", "ko": "둘러보고, 식물을 찾아보고, 계절이 바뀌면 또 들러 주세요."},
+    {"type": "list", "items": [
+      {"en": "Quick Search finds a plant by name.", "ko": "빠른 검색으로 이름으로 식물을 찾아요."},
+      {"en": "The Full Catalog shows every plant.", "ko": "전체 카탈로그에는 모든 식물이 있어요."}
+    ]},
+    {"type": "link", "href": "catalog.php", "en": "Open the Full Catalog", "ko": "전체 카탈로그 열기"}
+  ]
+}

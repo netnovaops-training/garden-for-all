@@ -59,7 +59,7 @@
 
     {{ after_header|safe }}
 
-    <!-- Flowing green wave — animated, hangs slightly over the hero -->
+    {% if art_top.is_empty() %}<!-- Flowing green wave — animated, hangs slightly over the hero -->
     <div class="edge-wave edge-wave--header" aria-hidden="true">
         <div class="edge-wave__layer edge-wave__layer--back">
             <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,0 H1440 V32 C1200,6 960,58 720,32 C480,6 240,58 0,32 Z"/></svg>
@@ -69,5 +69,5 @@
             <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,0 H1440 V30 C1140,52 1020,8 720,30 C420,52 300,8 0,30 Z"/></svg>
             <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,0 H1440 V30 C1140,52 1020,8 720,30 C420,52 300,8 0,30 Z"/></svg>
         </div>
-    </div>
+    </div>{% else %}{{ art_top|safe }}{% endif %}
 </header>

@@ -28,7 +28,7 @@ use serde_json::{json, Value};
 
 use super::layout::{self, Layout};
 use super::pages::{self, Meta};
-use super::{registry, saved, updates};
+use super::{features, registry, saved, updates};
 use crate::php::{filemtime, urlencode};
 use crate::session::Visitor;
 use crate::AppState;
@@ -47,11 +47,51 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/pagebuilder/api/draft", post(api_draft))
         .route("/pagebuilder/api/discard-draft", post(api_discard_draft))
         .route("/pagebuilder/api/seen", post(api_seen))
+        .route("/pagebuilder/api/features", get(features::api_features))
+        .route("/pagebuilder/api/features/check", post(features::api_check))
+        .route(
+            "/pagebuilder/api/features/import",
+            post(features::api_import),
+        )
+        .route(
+            "/pagebuilder/api/features/download",
+            post(features::api_download),
+        )
+        .route(
+            "/pagebuilder/api/features/review",
+            get(features::api_review),
+        )
+        .route(
+            "/pagebuilder/api/features/install",
+            post(features::api_install),
+        )
+        .route(
+            "/pagebuilder/api/features/rollback",
+            post(features::api_rollback),
+        )
+        .route(
+            "/pagebuilder/api/features/discard",
+            post(features::api_discard),
+        )
+        .route(
+            "/pagebuilder/api/features/remove",
+            post(features::api_remove),
+        )
+        .route(
+            "/pagebuilder/api/features/verify",
+            post(features::api_verify),
+        )
+        .route(
+            "/pagebuilder/api/features/sources",
+            post(features::api_sources),
+        )
+        .route("/pagebuilder/api/site/save", post(features::api_site_save))
+        .route("/pagebuilder/api/site/undo", post(features::api_site_undo))
         .layer(DefaultBodyLimit::max(layout::MAX_JSON))
 }
 
 /// A refusal or error as JSON, in both languages.
-fn fail(status: StatusCode, en: &str, ko: &str) -> Response {
+pub(super) fn fail(status: StatusCode, en: &str, ko: &str) -> Response {
     (status, Json(json!({ "error": en, "error_ko": ko }))).into_response()
 }
 
@@ -64,7 +104,7 @@ fn not_owner() -> Response {
 }
 
 /// GET gate: the owner on a website session.
-fn owner_only(state: &AppState, visitor: &Visitor) -> Result<(), Response> {
+pub(super) fn owner_only(state: &AppState, visitor: &Visitor) -> Result<(), Response> {
     if state.pagebuilder.is_owner(visitor) {
         Ok(())
     } else {
@@ -74,7 +114,11 @@ fn owner_only(state: &AppState, visitor: &Visitor) -> Result<(), Response> {
 
 /// POST gate: the owner, a JSON body (a plain HTML form cannot send one), and the token.
 /// (Cross-site posts were already refused by `guard::same_site_posts`.)
-fn owner_post(state: &AppState, visitor: &Visitor, headers: &HeaderMap) -> Result<(), Response> {
+pub(super) fn owner_post(
+    state: &AppState,
+    visitor: &Visitor,
+    headers: &HeaderMap,
+) -> Result<(), Response> {
     owner_only(state, visitor)?;
     let ctype = headers
         .get(header::CONTENT_TYPE)
@@ -102,7 +146,7 @@ fn owner_post(state: &AppState, visitor: &Visitor, headers: &HeaderMap) -> Resul
 }
 
 /// Read a JSON body into `T`, refusing anything that does not fit.
-fn body<T: for<'de> Deserialize<'de>>(bytes: &Bytes) -> Result<T, Response> {
+pub(super) fn body<T: for<'de> Deserialize<'de>>(bytes: &Bytes) -> Result<T, Response> {
     serde_json::from_slice(bytes).map_err(|_| {
         fail(
             StatusCode::BAD_REQUEST,
@@ -125,15 +169,19 @@ fn page_arg(page: &str) -> Result<String, Response> {
     }
 }
 
-/// A layout from the request, checked against the registry (and its defaults filled in).
-fn checked(mut l: Layout, page: &str) -> Result<Layout, Response> {
-    layout::validate(&mut l, page).map(|_| l).map_err(|e| {
-        (
-            StatusCode::BAD_REQUEST,
-            Json(json!({ "error": e.en, "error_ko": e.ko })),
-        )
-            .into_response()
-    })
+/// A layout from the request, checked against the registry and the sections of the feature
+/// packs that are on (and its defaults filled in).
+async fn checked(state: &AppState, mut l: Layout, page: &str) -> Result<Layout, Response> {
+    let extra = super::site::active(state).await.extra.clone();
+    layout::validate_with(&mut l, page, &extra)
+        .map(|_| l)
+        .map_err(|e| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(json!({ "error": e.en, "error_ko": e.ko })),
+            )
+                .into_response()
+        })
 }
 
 #[derive(Template)]
@@ -201,7 +249,7 @@ async fn api_registry(
         }
         other => other,
     };
-    let sections: Vec<Value> = registry::SECTIONS
+    let mut sections: Vec<Value> = registry::SECTIONS
         .iter()
         .map(|s| {
             let mut v = serde_json::to_value(s).unwrap_or_default();
@@ -209,6 +257,18 @@ async fn api_registry(
             v
         })
         .collect();
+    // The sections of the feature packs that are on (plain text and links; no settings).
+    let active = super::site::active(&state).await;
+    let mut pack_sections: Vec<_> = active.sections.iter().collect();
+    pack_sections.sort_by(|a, b| a.0.cmp(b.0));
+    for (id, s) in pack_sections {
+        sections.push(json!({
+            "id": id, "name_en": s.name_en, "name_ko": s.name_ko,
+            "desc_en": s.desc_en, "desc_ko": s.desc_ko, "version": 1, "since": "pack",
+            "perm": "public", "max_per_page": layout::PACK_MAX_PER_PAGE, "settings": [],
+            "pack": true, "new": false,
+        }));
+    }
     Json(json!({ "sections": sections, "pending": registry::PENDING })).into_response()
 }
 
@@ -305,7 +365,7 @@ async fn api_preview(
     let run = async {
         let b: PreviewBody = body(&bytes)?;
         let page = page_arg(&b.page)?;
-        let l = checked(b.layout, &page)?;
+        let l = checked(&state, b.layout, &page).await?;
         let html = super::draw(&state, &Visitor::default(), &page, &l, "", true).await;
         Ok::<_, Response>(Json(json!({ "html": html })).into_response())
     };
@@ -357,7 +417,7 @@ async fn api_save(
     let run = async {
         let b: SaveBody = body(&bytes)?;
         let page = page_arg(&b.page)?;
-        let l = checked(b.layout, &page)?;
+        let l = checked(&state, b.layout, &page).await?;
         too_many_pages(&state, &page, b.base).await?;
         let ids: Vec<&str> = l
             .rows
@@ -416,7 +476,7 @@ async fn api_draft(
     let run = async {
         let b: DraftBody = body(&bytes)?;
         let page = page_arg(&b.page)?;
-        let l = checked(b.layout, &page)?;
+        let l = checked(&state, b.layout, &page).await?;
         match saved::save_draft(&state, &page, &l, b.base, &visitor.username).await {
             Ok(()) => Ok::<_, Response>(Json(json!({ "ok": true })).into_response()),
             Err(e) => {

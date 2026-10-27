@@ -1,0 +1,11 @@
+{
+  "id": "header-waves",
+  "version": "1.0.0",
+  "name_en": "Header: waves (the current look)",
+  "name_ko": "머리글: 물결 (지금 모습)",
+  "desc_en": "The site's own flowing green waves. Pick this to go back from another header.",
+  "desc_ko": "사이트 기본의 흐르는 초록 물결. 다른 머리글에서 돌아오려면 이것을 고르세요.",
+  "provides": [
+    {"type": "header", "id": "waves", "name_en": "Waves", "name_ko": "물결", "builtin": true}
+  ]
+}

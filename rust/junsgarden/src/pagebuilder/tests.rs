@@ -63,11 +63,15 @@ async fn the_owner_is_the_first_garden_user_unless_named() {
     let st = state();
     assert_eq!(st.pagebuilder.owner, "Owner");
     let users = st.users.clone();
-    assert_eq!(super::Builder::new(&users, "helper", "").owner, "Helper");
+    let none = super::PackSettings::default();
+    assert_eq!(
+        super::Builder::new(&users, "helper", "", &none).owner,
+        "Helper"
+    );
     // A name that is not on the list makes nobody the owner.
-    assert_eq!(super::Builder::new(&users, "Stranger", "").owner, "");
-    assert_eq!(super::Builder::new(&[], "", "").owner, "");
-    let b = super::Builder::new(&[], "", "");
+    assert_eq!(super::Builder::new(&users, "Stranger", "", &none).owner, "");
+    assert_eq!(super::Builder::new(&[], "", "", &none).owner, "");
+    let b = super::Builder::new(&[], "", "", &none);
     assert!(!b.is_owner(&person("")));
 }
 

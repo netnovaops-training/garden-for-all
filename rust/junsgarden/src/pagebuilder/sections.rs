@@ -84,6 +84,11 @@ pub fn allowed(perm: Perm, visitor: &Visitor) -> bool {
 
 /// Draw one (already validated) cell.
 pub async fn render(ctx: &Ctx<'_>, cell: &Cell) -> Piece {
+    // What the feature packs that are on have switched on: their sections, and the catalog layout.
+    let active = super::site::active(ctx.state).await;
+    if let Some(s) = active.sections.get(&cell.section) {
+        return Piece::html(s.html.clone());
+    }
     let Some(def) = registry::find(&cell.section) else {
         return Piece::default();
     };
@@ -128,7 +133,13 @@ pub async fn render(ctx: &Ctx<'_>, cell: &Cell) -> Piece {
                 "catalog.manage" => catalog::section_manage(state, visitor),
                 "catalog.stats" => catalog::section_stats(state).await,
                 "catalog.search" => catalog::section_search(visitor),
-                _ => catalog::section_browse(),
+                // A picked catalog layout fences its styles to this wrapper.
+                _ => match &active.catalog_class {
+                    Some(c) => {
+                        format!("<div class=\"{c}\">\n{}</div>\n", catalog::section_browse())
+                    }
+                    None => catalog::section_browse(),
+                },
             };
             return Piece {
                 html,

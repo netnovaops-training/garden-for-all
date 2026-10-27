@@ -1,6 +1,6 @@
 </main><!-- /#main-content -->
 <footer>
-    <!-- Flowing green wave — matches the header, mirrored on top of the footer -->
+    {% if art_bottom.is_empty() %}<!-- Flowing green wave — matches the header, mirrored on top of the footer -->
     <div class="edge-wave edge-wave--footer" aria-hidden="true">
         <div class="edge-wave__layer edge-wave__layer--back">
             <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,0 H1440 V32 C1200,6 960,58 720,32 C480,6 240,58 0,32 Z"/></svg>
@@ -10,7 +10,7 @@
             <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,0 H1440 V30 C1140,52 1020,8 720,30 C420,52 300,8 0,30 Z"/></svg>
             <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,0 H1440 V30 C1140,52 1020,8 720,30 C420,52 300,8 0,30 Z"/></svg>
         </div>
-    </div>
+    </div>{% else %}{{ art_bottom|safe }}{% endif %}
     <div>Envisioned by the author, Jun, and AI, Horticultured by Jun and Kona, all images are related to the owners. I take no copyright on images! {{ year }} Jun's and Kona's Garden</div>
     <div class="footer-disclaimer">
         Disclaimer: Images are owned by their respective owners, and items are not for sale.

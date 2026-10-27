@@ -1,0 +1,11 @@
+{
+  "id": "catalog-table",
+  "version": "1.0.0",
+  "name_en": "Catalog: compact list",
+  "name_ko": "카탈로그: 간단한 목록",
+  "desc_en": "Shows the catalog as one plant per line instead of big cards. Only the plant cards change.",
+  "desc_ko": "카탈로그를 큰 카드 대신 한 줄에 식물 하나씩 보여 줘요. 식물 카드만 바뀌어요.",
+  "provides": [
+    {"type": "catalog_layout", "id": "compact", "name_en": "Compact list", "name_ko": "간단한 목록", "css": "compact.css"}
+  ]
+}

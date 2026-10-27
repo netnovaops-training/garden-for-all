@@ -1,0 +1,20 @@
+/* Compact list: one plant per line (small photo, name, the short facts) instead of big cards.
+   Only the catalog's plant-cards section is affected; the rest of the page is untouched. */
+.plant-grid { grid-template-columns: 1fr; gap: 8px; margin-top: 15px }
+.plant-card.sv-grid-card .svd-card { align-items: center; min-height: 0 }
+.plant-card.sv-grid-card .svd-photo { flex: 0 0 72px; max-width: 72px; height: 72px }
+.plant-card.sv-grid-card .svd-photo img { width: 72px; height: 72px; min-height: 0; object-fit: cover }
+.plant-card.sv-grid-card .svd-body { flex-direction: row; align-items: center; flex: 1 1 auto; min-width: 0 }
+.plant-card.sv-grid-card .svd-header-green { flex: 1 1 38%; padding: 8px 16px; border-radius: 0 }
+.plant-card.sv-grid-card .svd-header-green h3 { font-size: 1.02rem; margin: 0 }
+.plant-card.sv-grid-card .svd-overview { flex: 1 1 55%; padding: 8px 16px; border-radius: 0; font-size: 0.85rem }
+.plant-card.sv-grid-card .svd-rows { display: none }
+.plant-card.sv-grid-card .svd-months { display: none }
+.plant-card.sv-grid-card .svd-desc { display: none }
+.plant-card.sv-grid-card .svd-chips { display: flex; flex-wrap: wrap; gap: 4px }
+@media (max-width: 560px) {
+  .plant-card.sv-grid-card .svd-body { flex-direction: column; align-items: stretch }
+  .plant-card.sv-grid-card .svd-photo { flex: 0 0 56px; max-width: 56px; height: 56px }
+  .plant-card.sv-grid-card .svd-photo img { width: 56px; height: 56px }
+  .plant-card.sv-grid-card .svd-overview { display: none }
+}

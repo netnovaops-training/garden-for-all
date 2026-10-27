@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "channel": "garden-for-all",
+  "serial": 2,
+  "released": "2026.12",
+  "packs": [
+    {
+      "id": "catalog-table",
+      "version": "1.0.0",
+      "name_en": "Catalog: compact list",
+      "name_ko": "카탈로그: 간단한 목록",
+      "desc_en": "Shows the catalog as one plant per line instead of big cards. Only the plant cards change.",
+      "desc_ko": "카탈로그를 큰 카드 대신 한 줄에 식물 하나씩 보여 줘요. 식물 카드만 바뀌어요.",
+      "provides": [
+        {
+          "type": "catalog_layout",
+          "id": "compact",
+          "name_en": "Compact list",
+          "name_ko": "간단한 목록",
+          "css": "compact.css"
+        }
+      ],
+      "files": [
+        {
+          "path": "compact.css",
+          "sha256": "16370fc7b493ad89e013c899f4ae59c6996d41684e8a889bcf9de4730e7ea858",
+          "bytes": 1502
+        }
+      ]
+    },
+    {
+      "id": "garden-notes",
+      "version": "1.0.0",
+      "name_en": "Garden notes",
+      "name_ko": "정원 메모",
+      "desc_en": "A welcome note section you can place on any page. Plain text and links only.",
+      "desc_ko": "어느 페이지에나 놓을 수 있는 환영 메모 섹션. 글과 링크만 있어요.",
+      "provides": [
+        {
+          "type": "section",
+          "id": "welcome-note",
+          "name_en": "Welcome note",
+          "name_ko": "환영 메모",
+          "desc_en": "A short welcome with a list and a link.",
+          "desc_ko": "목록과 링크가 있는 짧은 환영 인사.",
+          "template": "welcome.json"
+        }
+      ],
+      "files": [
+        {
+          "path": "welcome.json",
+          "sha256": "d4626acdd48199f7b808daee5c32c45d37bb81e6fb7db21d87f584271f0b4ae2",
+          "bytes": 711
+        }
+      ]
+    },
+    {
+      "id": "header-vines",
+      "version": "1.0.0",
+      "name_en": "Header: growing vines",
+      "name_ko": "머리글: 자라는 덩굴",
+      "desc_en": "Vines grow down from the top bar and up from the footer, and along the photo banner. Still for people who prefer less motion.",
+      "desc_ko": "맨 위 막대에서 아래로, 바닥글에서 위로, 사진 배너를 따라 덩굴이 자라요. 움직임을 줄이고 싶은 사람에게는 멈춰 있어요.",
+      "provides": [
+        {
+          "type": "header",
+          "id": "vines",
+          "name_en": "Growing vines",
+          "name_ko": "자라는 덩굴",
+          "top": "top.svg",
+          "bottom": "bottom.svg",
+          "hero": "hero.svg",
+          "css": "vines.css"
+        }
+      ],
+      "files": [
+        {
+          "path": "top.svg",
+          "sha256": "dbee5c113d64bb56f10390a1d68b78ad14f8db0cbb11e948eaf573c45a48d61a",
+          "bytes": 13998
+        },
+        {
+          "path": "bottom.svg",
+          "sha256": "88e5498b78f211a3cd6e236e23789e21b505536c6e58d3c5eba33b67668808dc",
+          "bytes": 10805
+        },
+        {
+          "path": "hero.svg",
+          "sha256": "425db65af5f90c7c3be83798788f4a114535f47a0909e9857bd851112a0d2619",
+          "bytes": 9268
+        },
+        {
+          "path": "vines.css",
+          "sha256": "6c1297c638a6f323aa078b749894a9b2a23dd797eca4806069e7db73e0413e32",
+          "bytes": 2091
+        }
+      ]
+    },
+    {
+      "id": "header-waves",
+      "version": "1.0.0",
+      "name_en": "Header: waves (the current look)",
+      "name_ko": "머리글: 물결 (지금 모습)",
+      "desc_en": "The site's own flowing green waves. Pick this to go back from another header.",
+      "desc_ko": "사이트 기본의 흐르는 초록 물결. 다른 머리글에서 돌아오려면 이것을 고르세요.",
+      "provides": [
+        {
+          "type": "header",
+          "id": "waves",
+          "name_en": "Waves",
+          "name_ko": "물결",
+          "builtin": true
+        }
+      ],
+      "files": []
+    }
+  ]
+}

@@ -367,6 +367,7 @@ async fn ensure_tables(db: &MySqlPool, users: &[accounts::Account]) -> anyhow::R
     session::ensure_table(db).await?;
     accounts::ensure_tables(db, users).await?;
     pagebuilder::saved::ensure_tables(db).await?;
+    pagebuilder::packs::store::ensure_tables(db).await?;
     Ok(())
 }
 
@@ -420,6 +421,13 @@ async fn run() -> anyhow::Result<()> {
         &users,
         &common::env_or("JUNSGARDEN_PAGE_OWNER", ""),
         &common::env_or("JUNSGARDEN_SECTIONS_KEY", ""),
+        // Feature packs: the author's key, and where to look (empty = the author's Gitea
+        // and no Drive link yet).
+        &pagebuilder::PackSettings {
+            key: common::env_or("JUNSGARDEN_PACKS_KEY", ""),
+            gitea: common::env_or("JUNSGARDEN_PACKS_SOURCE", ""),
+            drive: common::env_or("JUNSGARDEN_PACKS_DRIVE", ""),
+        },
     );
     // Build the shared state. `Arc::new` wraps it so all handlers can share it.
     let state = Arc::new(AppState {

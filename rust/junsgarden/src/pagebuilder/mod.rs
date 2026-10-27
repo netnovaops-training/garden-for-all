@@ -14,12 +14,15 @@
 //!   page (home, archive, gallery, search, catalog, data) and every owner page goes through.
 
 pub mod editor;
+pub mod features;
 pub mod layout;
 pub mod menu;
+pub mod packs;
 pub mod pages;
 pub mod registry;
 pub mod saved;
 pub mod sections;
+pub mod site;
 #[cfg(test)]
 mod tests;
 pub mod updates;
@@ -52,12 +55,33 @@ pub struct Builder {
     pub updates: Mutex<Option<(Instant, serde_json::Value)>>,
     /// The author's public key for the sections list (none = check not set up).
     pub sections_key: Option<ed25519_dalek::VerifyingKey>,
+    /// What feature packs have switched on, worked out (None = not read yet).
+    pub site: Mutex<Option<Arc<site::Active>>>,
+    /// The author's public key for packs (none = every pack is "unsigned").
+    pub packs_key: Option<ed25519_dalek::VerifyingKey>,
+    /// The checked list of the last "look for new features", for the download step.
+    pub checked: Mutex<Option<(Instant, Arc<packs::source::Checked>)>>,
+    /// Where packs come from unless the owner saved other sources.
+    pub default_sources: Vec<packs::source::Source>,
+}
+
+/// The settings for feature packs (JUNSGARDEN_PACKS_KEY / _SOURCE / _DRIVE).
+#[derive(Default)]
+pub struct PackSettings {
+    pub key: String,
+    pub gitea: String,
+    pub drive: String,
 }
 
 impl Builder {
     /// `owner_setting` is JUNSGARDEN_PAGE_OWNER; empty means the first GARDEN_USERS name.
     /// `key_setting` is JUNSGARDEN_SECTIONS_KEY (empty: the key pinned in updates.rs).
-    pub fn new(users: &[crate::accounts::Account], owner_setting: &str, key_setting: &str) -> Self {
+    pub fn new(
+        users: &[crate::accounts::Account],
+        owner_setting: &str,
+        key_setting: &str,
+        packs: &PackSettings,
+    ) -> Self {
         let owner = match owner_setting.trim() {
             "" => users.first().map(|a| a.name.clone()).unwrap_or_default(),
             name => users
@@ -73,16 +97,23 @@ impl Builder {
             menu: Mutex::new(None),
             updates: Mutex::new(None),
             sections_key: updates::key_from(key_setting),
+            site: Mutex::new(None),
+            packs_key: packs::key_from(&packs.key),
+            checked: Mutex::new(None),
+            default_sources: packs::source::default_sources(&packs.gitea, &packs.drive),
         }
     }
 
-    /// For tests: no database is there, so the menu links start out as the default ones
-    /// (otherwise every page drawn would wait for a database that never answers).
+    /// For tests: no database is there, so the menu links and the pack choices start out as
+    /// the defaults (otherwise every page drawn would wait for a database that never answers).
     #[cfg(test)]
     pub fn new_for_tests(users: &[crate::accounts::Account]) -> Self {
-        let b = Builder::new(users, "", "");
+        let b = Builder::new(users, "", "", &PackSettings::default());
         if let Ok(mut m) = b.menu.lock() {
             *m = Some(Arc::new(menu::DEFAULT_NAV.to_string()));
+        }
+        if let Ok(mut s) = b.site.lock() {
+            *s = Some(Arc::new(site::Active::default()));
         }
         b
     }
