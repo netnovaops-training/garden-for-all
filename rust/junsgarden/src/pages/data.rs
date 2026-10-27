@@ -36,7 +36,6 @@ use axum::{
 use serde_json::{json, Map, Value};
 
 use crate::brain;
-use crate::layout::{self, Page};
 use crate::normalise::{garden_clean, garden_normalise, year_in_range};
 use crate::pages::widgets;
 use crate::php::{filemtime, php_float, php_int, php_round};
@@ -1746,7 +1745,11 @@ struct DataHead {
 }
 
 /// Data for `templates/data.html`: the year list for the year picker, a script version number, and
-/// the HTML of the ten cards drawn on the server (made by `widgets.rs`).
+/// the HTML of the ten cards drawn on the server (made by `widgets.rs`). The page is now drawn
+/// section by section (the structs below, one per named block, put together by the page
+/// builder); this whole-page form is kept for the test that proves the sections add up to
+/// exactly this page.
+#[cfg(test)]
 #[derive(Template)]
 #[template(path = "data.html")]
 struct DataBody {
@@ -1764,16 +1767,89 @@ struct DataBody {
     w_iot_water_use: String,
 }
 
-/// Draw the Data page itself (used when no `?something` matched).
-///
-/// Asks `widgets::render_all` for the server-drawn cards, fills the two templates, and wraps them
-/// in the site layout. Takes the app data and the visitor; gives an HTML `Response`.
-async fn render_page(state: &AppState, visitor: &Visitor) -> Response {
-    let ws = widgets::render_all(state, false).await;
-    let body = DataBody {
-        // Years from this year down to 2020 for the year picker (`rev` reverses the order).
+// One struct per named block of `templates/data.html` (see pagebuilder/sections.rs).
+
+/// The page's opening wrapper (page shell).
+#[derive(Template)]
+#[template(path = "data.html", block = "shell_open")]
+struct DataOpen;
+
+/// The page's closing wrapper (page shell).
+#[derive(Template)]
+#[template(path = "data.html", block = "shell_close")]
+struct DataClose;
+
+/// Section `data.stats`.
+#[derive(Template)]
+#[template(path = "data.html", block = "data_stats")]
+struct DataStats;
+
+/// Section `data.picker`.
+#[derive(Template)]
+#[template(path = "data.html", block = "data_picker")]
+struct DataPicker;
+
+/// Section `data.compare`.
+#[derive(Template)]
+#[template(path = "data.html", block = "data_compare")]
+struct DataCompare {
+    years: Vec<i32>,
+}
+
+/// Section `data.widgets`.
+#[derive(Template)]
+#[template(path = "data.html", block = "data_widgets")]
+struct DataWidgets {
+    w_ai_insights: String,
+    w_weather_forecast: String,
+    w_iot_current: String,
+    w_plant_weather: String,
+    w_garden_intelligence: String,
+    w_iot_heatgrid: String,
+    w_iot_moisture: String,
+    w_iot_soil: String,
+    w_iot_weather: String,
+    w_iot_water_use: String,
+}
+
+/// The data page's end-of-body script (loaded once when any data section is on a page).
+#[derive(Template)]
+#[template(path = "data.html", block = "data_kit")]
+struct DataKit {
+    chart_compare_v: u64,
+}
+
+/// The page shell: opening and closing wrapper.
+pub(crate) fn shell() -> (String, String) {
+    (
+        DataOpen.render().unwrap_or_default(),
+        DataClose.render().unwrap_or_default(),
+    )
+}
+
+/// `data.stats`.
+pub(crate) fn section_stats() -> String {
+    DataStats.render().unwrap_or_default()
+}
+
+/// `data.picker`.
+pub(crate) fn section_picker() -> String {
+    DataPicker.render().unwrap_or_default()
+}
+
+/// `data.compare`: the year list runs from this year down to 2020 (`rev` reverses the order).
+pub(crate) fn section_compare() -> String {
+    DataCompare {
         years: (2020..=common::current_year()).rev().collect(),
-        chart_compare_v: filemtime(&state.www, "js/chart-compare.js"),
+    }
+    .render()
+    .unwrap_or_default()
+}
+
+/// `data.widgets`: asks `widgets::render_all` for the server-drawn cards.
+pub(crate) async fn section_widgets(state: &AppState) -> String {
+    let ws = widgets::render_all(state, false).await;
+    DataWidgets {
         w_ai_insights: ws.ai_insights,
         w_weather_forecast: ws.weather_forecast,
         w_iot_current: ws.iot_current,
@@ -1786,18 +1862,33 @@ async fn render_page(state: &AppState, visitor: &Visitor) -> Response {
         w_iot_water_use: ws.iot_water_use,
     }
     .render()
-    .unwrap_or_default();
-    let mut page = Page::new(body);
-    page.title = "Garden Data - Analytics".to_string();
-    page.show_hero = false;
-    page.extra_head = DataHead {
+    .unwrap_or_default()
+}
+
+/// What every data section needs in `<head>` (the chart libraries and the page's scripts).
+pub(crate) fn head(state: &AppState) -> String {
+    DataHead {
         chart_theme_v: filemtime(&state.www, "js/chart-theme.js"),
         data_widgets_v: filemtime(&state.www, "js/data-widgets.js"),
         widget_loader_v: filemtime(&state.www, "js/widget-loader.js"),
     }
     .render()
-    .unwrap_or_default();
-    Html(layout::render(state, page, visitor).await).into_response()
+    .unwrap_or_default()
+}
+
+/// The script that goes after the page (the compare tool's).
+pub(crate) fn kit(state: &AppState) -> String {
+    DataKit {
+        chart_compare_v: filemtime(&state.www, "js/chart-compare.js"),
+    }
+    .render()
+    .unwrap_or_default()
+}
+
+/// Draw the Data page itself (used when no `?something` matched): the page builder draws its
+/// layout (the owner's, or the default one, which is this page exactly as before).
+async fn render_page(state: &Arc<AppState>, visitor: &Visitor) -> Response {
+    Html(crate::pagebuilder::render_page(state, visitor, "data", "").await).into_response()
 }
 
 /// Route handler for `GET /data.php`.
@@ -1935,5 +2026,59 @@ mod tests {
         assert_eq!(php_key("007"), json!("007"));
         assert_eq!(php_key("6.5"), json!("6.5"));
         assert_eq!(php_key("Full Sun"), json!("Full Sun"));
+    }
+
+    /// The data page's sections, joined in page order, are exactly the whole page template
+    /// (the page the way it was before the page builder), and the kit follows the shell.
+    #[test]
+    fn the_sections_add_up_to_the_whole_data_page() {
+        let w = |n: &str| format!("<p>{n}</p>");
+        let whole = DataBody {
+            years: vec![2026, 2025, 2024],
+            chart_compare_v: 7,
+            w_ai_insights: w("ai"),
+            w_weather_forecast: w("wf"),
+            w_iot_current: w("ic"),
+            w_plant_weather: w("pw"),
+            w_garden_intelligence: w("gi"),
+            w_iot_heatgrid: w("hg"),
+            w_iot_moisture: w("im"),
+            w_iot_soil: w("is"),
+            w_iot_weather: w("iw"),
+            w_iot_water_use: w("wu"),
+        }
+        .render()
+        .unwrap();
+        let (open, close) = shell();
+        let parts = [
+            open,
+            section_stats(),
+            section_picker(),
+            DataCompare {
+                years: vec![2026, 2025, 2024],
+            }
+            .render()
+            .unwrap(),
+            DataWidgets {
+                w_ai_insights: w("ai"),
+                w_weather_forecast: w("wf"),
+                w_iot_current: w("ic"),
+                w_plant_weather: w("pw"),
+                w_garden_intelligence: w("gi"),
+                w_iot_heatgrid: w("hg"),
+                w_iot_moisture: w("im"),
+                w_iot_soil: w("is"),
+                w_iot_weather: w("iw"),
+                w_iot_water_use: w("wu"),
+            }
+            .render()
+            .unwrap(),
+            close,
+            DataKit { chart_compare_v: 7 }.render().unwrap(),
+        ];
+        assert_eq!(parts.concat(), whole);
+        assert!(whole.starts_with("<div class=\"data-page-container\">"));
+        assert!(whole.contains("js/chart-compare.js?v=7"));
+        assert!(!whole.contains("{%") && !whole.contains("{#"));
     }
 }

@@ -1,4 +1,5 @@
-
+{#- Page builder: the whole body is the one section `search.results`. Block tags print nothing,
+    so the page is unchanged. -#}{% block search_results %}
 <div class="qs-container">
     <div id="qs-grid" class="qs-grid"></div>
     <div id="qs-trigger" style="text-align:center; padding:20px;">
@@ -6,3 +7,4 @@
     </div>
 </div>
 
+{% endblock %}

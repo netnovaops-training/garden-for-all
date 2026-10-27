@@ -144,6 +144,8 @@ async fn posts_need_the_owner_json_and_the_token() {
     for path in [
         "/pagebuilder/api/save",
         "/pagebuilder/api/restore",
+        "/pagebuilder/api/draft",
+        "/pagebuilder/api/discard-draft",
         "/pagebuilder/api/preview",
         "/pagebuilder/api/seen",
     ] {
@@ -190,7 +192,7 @@ async fn posts_need_the_owner_json_and_the_token() {
     // With everything right, a bad layout is still refused before anything is stored.
     let owner = app(&st, person("Owner"));
     let save = |body: Value| post("/pagebuilder/api/save", json, Some(&good), body);
-    let bad = json!({"page":"home","base":0,"layout":{"schema":1,"page":"home","rows":[{"cols":[{"section":"data.widgets"}]}]}});
+    let bad = json!({"page":"home","base":0,"layout":{"schema":1,"page":"home","rows":[{"cols":[{"section":"data.table"}]}]}});
     let (s, body) = send(&owner, save(bad)).await;
     assert_eq!(s, StatusCode::BAD_REQUEST);
     assert!(body.contains("database") && body.contains("error_ko"));
@@ -205,11 +207,9 @@ async fn posts_need_the_owner_json_and_the_token() {
 }
 
 fn one_per_row(ids: &[&str]) -> Layout {
-    Layout {
-        schema: 1,
-        page: "p-test".into(),
-        rows: ids
-            .iter()
+    Layout::new(
+        "p-test",
+        ids.iter()
             .map(|id| Row {
                 cols: vec![Cell {
                     section: id.to_string(),
@@ -217,7 +217,7 @@ fn one_per_row(ids: &[&str]) -> Layout {
                 }],
             })
             .collect(),
-    }
+    )
 }
 
 /// Admin sections check their own permission whenever they are drawn, on any page.
@@ -235,6 +235,7 @@ async fn admin_sections_show_nothing_to_visitors_wherever_they_are_placed() {
             let ctx = Ctx {
                 state: &st,
                 visitor: &who,
+                page: "p-test",
                 zip: "",
                 preview,
             };
@@ -269,10 +270,9 @@ async fn admin_sections_show_nothing_to_visitors_wherever_they_are_placed() {
 #[tokio::test]
 async fn side_by_side_rows_get_the_grid_and_its_stylesheet() {
     let st = state();
-    let l = Layout {
-        schema: 1,
-        page: "p-test".into(),
-        rows: vec![Row {
+    let l = Layout::new(
+        "p-test",
+        vec![Row {
             cols: vec![
                 Cell {
                     section: "home.tips".into(),
@@ -284,7 +284,7 @@ async fn side_by_side_rows_get_the_grid_and_its_stylesheet() {
                 },
             ],
         }],
-    };
+    );
     let html = super::draw(&st, &person(""), "p-test", &l, "", false).await;
     assert!(html.contains("<div class=\"pb-row pb-cols-2\">"));
     assert!(html.contains("pagebuilder/pb.css"));

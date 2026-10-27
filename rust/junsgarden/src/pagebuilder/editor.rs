@@ -27,6 +27,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 
 use super::layout::{self, Layout};
+use super::pages::{self, Meta};
 use super::{registry, saved, updates};
 use crate::php::{filemtime, urlencode};
 use crate::session::Visitor;
@@ -43,6 +44,8 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/pagebuilder/api/preview", post(api_preview))
         .route("/pagebuilder/api/save", post(api_save))
         .route("/pagebuilder/api/restore", post(api_restore))
+        .route("/pagebuilder/api/draft", post(api_draft))
+        .route("/pagebuilder/api/discard-draft", post(api_discard_draft))
         .route("/pagebuilder/api/seen", post(api_seen))
         .layer(DefaultBodyLimit::max(layout::MAX_JSON))
 }
@@ -220,21 +223,49 @@ async fn api_layout(
     let (version, l) = saved::current(&state, &page)
         .await
         .unwrap_or_else(|| (0, layout::default_layout(&page)));
-    let mut pages = vec![
-        "home".to_string(),
-        "blog".to_string(),
-        "gallery".to_string(),
-    ];
-    pages.extend(saved::custom_pages(&state).await);
+    // An unpublished draft is offered only while it started from the published version that
+    // is still the newest (otherwise another window published in between).
+    let draft = saved::draft(&state, &page)
+        .await
+        .filter(|(base, _)| *base == version)
+        .map(|(base, l)| json!({ "base": base, "layout": l }));
     Json(json!({
         "page": page,
         "version": version,
         "layout": l,
+        "draft": draft,
         "history": saved::history(&state, &page).await,
-        "pages": pages,
+        "pages": page_list(&state).await,
+        "removed": saved::removed_pages(&state).await,
         "view": super::page_href(&page),
     }))
     .into_response()
+}
+
+/// Every page the owner can pick: the site's own, then the owner's, each with its names, its
+/// address and whether the top menu lists it.
+async fn page_list(state: &AppState) -> Vec<Value> {
+    let metas: HashMap<String, Meta> = saved::page_metas(state)
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .collect();
+    let mut ids: Vec<String> = pages::BUILTIN.iter().map(|b| b.id.to_string()).collect();
+    ids.extend(saved::custom_pages(state).await);
+    ids.iter()
+        .map(|id| {
+            let m = metas.get(id).cloned().unwrap_or_default();
+            let (name_en, name_ko) = m.names(id);
+            json!({
+                "id": id,
+                "builtin": pages::builtin(id).is_some(),
+                "name_en": name_en,
+                "name_ko": name_ko,
+                "href": pages::href(id),
+                "in_menu": m.in_menu(id),
+            })
+        })
+        .collect()
 }
 
 /// `GET /pagebuilder/api/updates`: the signed sections list (updates.rs).
@@ -321,6 +352,7 @@ async fn api_save(
         let b: SaveBody = body(&bytes)?;
         let page = page_arg(&b.page)?;
         let l = checked(b.layout, &page)?;
+        too_many_pages(&state, &page, b.base).await?;
         let ids: Vec<&str> = l
             .rows
             .iter()
@@ -333,6 +365,88 @@ async fn api_save(
             saved::mark_seen(&state, &ids).await;
         }
         Ok::<_, Response>(saved_answer(r))
+    };
+    run.await.unwrap_or_else(|r| r)
+}
+
+/// Most owner pages there can be (removed ones count: they can be brought back).
+const MAX_OWNER_PAGES: usize = 30;
+
+/// A new owner page (its first save, `base` 0) is refused when there are already too many.
+async fn too_many_pages(state: &AppState, page: &str, base: i32) -> Result<(), Response> {
+    if base != 0 || layout::custom_slug(page).is_none() {
+        return Ok(());
+    }
+    let have = saved::custom_pages(state).await.len() + saved::removed_pages(state).await.len();
+    if have >= MAX_OWNER_PAGES {
+        return Err(fail(
+            StatusCode::BAD_REQUEST,
+            "There are already 30 pages of your own. Remove one first.",
+            "직접 만든 페이지가 이미 30개예요. 먼저 하나를 지워 주세요.",
+        ));
+    }
+    Ok(())
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DraftBody {
+    page: String,
+    base: i32,
+    layout: Layout,
+}
+
+/// `POST /pagebuilder/api/draft`: keep unpublished work on the server (the page does not
+/// change). The layout is checked like a save, so a draft can always be published.
+async fn api_draft(
+    State(state): State<Arc<AppState>>,
+    Extension(visitor): Extension<Visitor>,
+    headers: HeaderMap,
+    bytes: Bytes,
+) -> Response {
+    if let Err(r) = owner_post(&state, &visitor, &headers) {
+        return r;
+    }
+    let run = async {
+        let b: DraftBody = body(&bytes)?;
+        let page = page_arg(&b.page)?;
+        let l = checked(b.layout, &page)?;
+        match saved::save_draft(&state, &page, &l, b.base, &visitor.username).await {
+            Ok(()) => Ok::<_, Response>(Json(json!({ "ok": true })).into_response()),
+            Err(e) => {
+                tracing::error!("draft not saved: {e}");
+                Err(fail(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "The draft was not saved: the database did not answer.",
+                    "초안을 저장하지 못했어요: 데이터베이스가 응답하지 않아요.",
+                ))
+            }
+        }
+    };
+    run.await.unwrap_or_else(|r| r)
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PageBody {
+    page: String,
+}
+
+/// `POST /pagebuilder/api/discard-draft`: throw the page's draft away.
+async fn api_discard_draft(
+    State(state): State<Arc<AppState>>,
+    Extension(visitor): Extension<Visitor>,
+    headers: HeaderMap,
+    bytes: Bytes,
+) -> Response {
+    if let Err(r) = owner_post(&state, &visitor, &headers) {
+        return r;
+    }
+    let run = async {
+        let b: PageBody = body(&bytes)?;
+        let page = page_arg(&b.page)?;
+        saved::discard_draft(&state, &page).await;
+        Ok::<_, Response>(Json(json!({ "ok": true })).into_response())
     };
     run.await.unwrap_or_else(|r| r)
 }
@@ -431,7 +545,9 @@ pub async fn owner_page(
     Query(q): Query<HashMap<String, String>>,
 ) -> Response {
     let id = format!("p-{}", q.get("name").map(String::as_str).unwrap_or(""));
-    if !layout::page_id_ok(&id) || saved::current(&state, &id).await.is_none() {
+    // A page that was never saved, or was removed, is not there.
+    let live = matches!(saved::current(&state, &id).await, Some((_, l)) if l.removed != Some(true));
+    if !layout::page_id_ok(&id) || !live {
         return (
             StatusCode::NOT_FOUND,
             Html("<!DOCTYPE html><meta charset=\"utf-8\"><p>No such page. · 그런 페이지는 없어요. <a href=\"index.php\">Home · 처음으로</a></p>"),

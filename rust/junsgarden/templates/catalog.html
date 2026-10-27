@@ -1,6 +1,9 @@
-<div class="page-content page-garden-bg" style="margin-top:0; min-height:100vh;">
+{#- Page builder: the named blocks are the page shell, four sections (`catalog.manage`,
+    `catalog.stats`, `catalog.search`, `catalog.browse`) and the page kit (`catalog_kit`: the
+    plant window and the scripts). Block tags print nothing, so the whole page is unchanged. -#}
+{% block shell_open %}<div class="page-content page-garden-bg" style="margin-top:0; min-height:100vh;">
     <div class="catalog-container">
-        <div class="admin-bar" style="border: none; text-align: center;">
+{% endblock %}{% block catalog_manage %}        <div class="admin-bar" style="border: none; text-align: center;">
             {% if !is_admin %}
                 <div style="display:inline-block; background:rgba(255,255,255,0.8); border-radius:20px; padding:30px 40px; border:2px dashed rgba(46,125,50,0.4); box-shadow:0 10px 30px rgba(0,0,0,0.05); max-width:380px; width:100%; box-sizing:border-box;">
                     <h3 style="margin:0 0 16px 0; font-size:1.1rem;">🔐 Login</h3>
@@ -247,19 +250,19 @@
             {% endif %}
         </div>
 
-        <div class="stats-pill-container" style="text-align:center; margin: 15px 0 20px 0;">
+{% endblock %}{% block catalog_stats %}        <div class="stats-pill-container" style="text-align:center; margin: 15px 0 20px 0;">
             <span style="display:inline-block; background: #e8f5e9; color: #2e7d32; padding: 10px 25px; border-radius: 50px; font-weight: bold; border: 1px solid #c8e6c9; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                 🌻 You have {{ plant_count }} plants (across {{ variety_count }} varieties) LOOK AT YOU GROW!
             </span>
         </div>
 
-        <div class="search-container" style="text-align:center; margin-bottom:20px;">
+{% endblock %}{% block catalog_search %}        <div class="search-container" style="text-align:center; margin-bottom:20px;">
             <input type="text" id="search-box" placeholder="Search plants..." style="width:100%; max-width:500px; padding:12px; border-radius:25px; border:1px solid #ccc;">
         </div>
               
         {% include "catalog_search.html" %}
 
-        <div class="plant-grid" id="plant-feed"></div>
+{% endblock %}{% block catalog_browse %}        <div class="plant-grid" id="plant-feed"></div>
         <div id="loading-trigger" style="text-align:center; padding: 40px;">
             <div class="spinner"></div><p>Loading garden...</p>
         </div>
@@ -268,10 +271,10 @@
             <span style="font-weight:bold; color:#333;">Plants Selected</span>
             <button onclick="toggleBulkMode()" class="btn btn-red" style="border:2px solid #000;">✕ Cancel</button>
         </div><!-- /#bulk-floater -->
-    </div><!-- /.catalog-container -->
+{% endblock %}{% block shell_close %}    </div><!-- /.catalog-container -->
 </div><!-- /.page-content -->
 
-<!-- ============================================================ -->
+{% endblock %}{% block catalog_kit %}<!-- ============================================================ -->
 <!-- Plant Detail Modal                                           -->
 <!-- ============================================================ -->
 <div id="plant-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; overflow-y:auto;">
@@ -293,3 +296,4 @@
 <script type="module" src="js/app.js?v={{ app_v }}"></script>
 <script type="module" src="js/search.js?v={{ search_v }}"></script>
 
+{% endblock %}

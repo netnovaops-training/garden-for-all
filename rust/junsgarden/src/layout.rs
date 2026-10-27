@@ -148,6 +148,8 @@ struct LayoutTemplate {
     extra_head: String,
     body_class: String,
     after_header: String,
+    /// The top menu's page links (made by `pagebuilder::menu`).
+    nav_pages: String,
     is_admin: bool,
     plan_ok: bool,
     app_version: String,
@@ -256,16 +258,26 @@ fn body_class(is_admin: bool, own: &str) -> String {
 /// Wrap a page body in the shared frame and return the full HTML.
 pub async fn render(state: &AppState, page: Page, visitor: &Visitor) -> String {
     let files = state.frame.get(&state.www).await;
-    fill(state, page, visitor, &files)
+    let nav = crate::pagebuilder::menu::nav(state).await;
+    fill(state, page, visitor, &files, &nav)
 }
 
-/// `render` for code that is not async (the help pages).
+/// `render` for code that is not async (the help pages): the menu links as last read, or the
+/// old ones.
 pub fn render_now(state: &AppState, page: Page, visitor: &Visitor) -> String {
     let files = state.frame.get_now(&state.www);
-    fill(state, page, visitor, &files)
+    let nav = crate::pagebuilder::menu::cached(state)
+        .unwrap_or_else(|| Arc::new(crate::pagebuilder::menu::DEFAULT_NAV.to_string()));
+    fill(state, page, visitor, &files, &nav)
 }
 
-fn fill(state: &AppState, page: Page, visitor: &Visitor, files: &FrameFiles) -> String {
+fn fill(
+    state: &AppState,
+    page: Page,
+    visitor: &Visitor,
+    files: &FrameFiles,
+    nav_pages: &str,
+) -> String {
     // The hero images only matter when the page shows the banner; a new random order each load.
     let mut images = if page.show_hero {
         files.hero.clone()
@@ -295,6 +307,7 @@ fn fill(state: &AppState, page: Page, visitor: &Visitor, files: &FrameFiles) -> 
         extra_head: page.extra_head,
         body_class: body_class(is_admin, &page.body_class),
         after_header: page.after_header,
+        nav_pages: nav_pages.to_string(),
         is_admin,
         plan_ok: visitor.plan_ok(state),
         app_version: files.app_version.clone(),

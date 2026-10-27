@@ -15,11 +15,7 @@
         </div>
         <nav>
             <ul>
-                <li><a href="index.php">Home</a></li>
-                <li><a href="plant_listing.php">Quick Search</a></li> 
-		<li><a href="catalog.php">Full Catalog</a></li>
-		<li><a href="data.php">Data</a></li>
-		<li><a href="gallery.php">Gallery</a></li>
+                {{ nav_pages|safe }}
                 <li><a href="https://wiki.junsgarden.duckdns.org/"
                        title="The garden encyclopedia">Wiki</a></li>
 {% if plan_ok %}

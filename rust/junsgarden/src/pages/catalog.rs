@@ -42,7 +42,6 @@ use sqlx::Row;
 use crate::formdata::{self, FormData};
 use crate::guard::off_thread;
 use crate::images;
-use crate::layout::{self, Page};
 use crate::php::{date_ymd, filemtime, php_int, preg_quote, search_norm};
 use crate::rowjson::row_to_json;
 use crate::session::{self, Visitor};
@@ -54,6 +53,11 @@ use crate::AppState;
 /// `u64` and `usize` are whole numbers that cannot be negative, `bool` is true or false, and
 /// `String` is text this struct owns. The `Template` derive (askama) checks at build time that
 /// every name the HTML file uses exists here, so a typo fails the build instead of the page.
+///
+/// The page is now drawn section by section (the structs below, one per named block, put
+/// together by the page builder); this whole-page form is kept for the test that proves the
+/// sections add up to exactly this page.
+#[cfg(test)]
 #[derive(Template)]
 #[template(path = "catalog.html")]
 struct CatalogBody {
@@ -64,6 +68,124 @@ struct CatalogBody {
     is_admin: bool,
     current_user: String,
     can_upload: bool,
+}
+
+// One struct per named block of `templates/catalog.html` (see pagebuilder/sections.rs).
+
+/// The page's opening wrapper (page shell).
+#[derive(Template)]
+#[template(path = "catalog.html", block = "shell_open")]
+struct CatalogOpen;
+
+/// The page's closing wrapper (page shell).
+#[derive(Template)]
+#[template(path = "catalog.html", block = "shell_close")]
+struct CatalogClose;
+
+/// Section `catalog.manage`: the sign-in box, or the add/edit plant form.
+#[derive(Template)]
+#[template(path = "catalog.html", block = "catalog_manage")]
+struct CatalogManage {
+    is_admin: bool,
+    current_user: String,
+    can_upload: bool,
+}
+
+/// Section `catalog.stats`.
+#[derive(Template)]
+#[template(path = "catalog.html", block = "catalog_stats")]
+struct CatalogStats {
+    plant_count: i64,
+    variety_count: usize,
+}
+
+/// Section `catalog.search`.
+#[derive(Template)]
+#[template(path = "catalog.html", block = "catalog_search")]
+struct CatalogSearch {
+    current_user: String,
+}
+
+/// Section `catalog.browse`.
+#[derive(Template)]
+#[template(path = "catalog.html", block = "catalog_browse")]
+struct CatalogBrowse;
+
+/// The plant window and the page's scripts (loaded once when any catalog section is on a page).
+#[derive(Template)]
+#[template(path = "catalog.html", block = "catalog_kit")]
+struct CatalogKit {
+    is_admin: bool,
+    current_user: String,
+    app_v: u64,
+    search_v: u64,
+}
+
+/// The page shell: opening and closing wrapper.
+pub(crate) fn shell() -> (String, String) {
+    (
+        CatalogOpen.render().unwrap_or_default(),
+        CatalogClose.render().unwrap_or_default(),
+    )
+}
+
+/// `catalog.manage`.
+pub(crate) fn section_manage(state: &AppState, visitor: &Visitor) -> String {
+    CatalogManage {
+        is_admin: visitor.is_admin(),
+        current_user: visitor.username.clone(),
+        can_upload: visitor.can_upload(state),
+    }
+    .render()
+    .unwrap_or_default()
+}
+
+/// `catalog.stats`.
+pub(crate) async fn section_stats(state: &AppState) -> String {
+    let (plant_count, variety_count) = plant_stats(state).await;
+    CatalogStats {
+        plant_count,
+        variety_count,
+    }
+    .render()
+    .unwrap_or_default()
+}
+
+/// `catalog.search`.
+pub(crate) fn section_search(visitor: &Visitor) -> String {
+    CatalogSearch {
+        current_user: visitor.username.clone(),
+    }
+    .render()
+    .unwrap_or_default()
+}
+
+/// `catalog.browse`.
+pub(crate) fn section_browse() -> String {
+    CatalogBrowse.render().unwrap_or_default()
+}
+
+/// After the page: the plant window, the page settings and the two scripts.
+pub(crate) fn kit(state: &AppState, visitor: &Visitor) -> String {
+    CatalogKit {
+        is_admin: visitor.is_admin(),
+        current_user: visitor.username.clone(),
+        app_v: filemtime(&state.www, "js/app.js"),
+        search_v: filemtime(&state.www, "js/search.js"),
+    }
+    .render()
+    .unwrap_or_default()
+}
+
+/// What every catalog section needs in `<head>`: the notes editor and its stylesheet (the PHP
+/// busts the cache with the current time on every request).
+pub(crate) fn head() -> String {
+    let now = common::now_local().unix_timestamp();
+    format!(
+        "\n<link href=\"https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css\" rel=\"stylesheet\">\n\
+         <script src=\"https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js\" defer></script>\n\
+         <link rel=\"stylesheet\" href=\"user-notes.css?v={now}\">\n"
+    )
 }
 
 /// Send a JSON answer to the browser.
@@ -1353,32 +1475,8 @@ async fn plant_stats(state: &AppState) -> (i64, usize) {
 /// Fills the template with counts, cache-busting version numbers for the two scripts (their file
 /// modified time, so browsers reload them after a change), and whether the visitor is admin. Then
 /// wraps it in the site layout and adds the Quill note editor files.
-async fn render_page(state: &AppState, visitor: &Visitor) -> Response {
-    let (plant_count, variety_count) = plant_stats(state).await;
-    let body = CatalogBody {
-        plant_count,
-        variety_count,
-        app_v: filemtime(&state.www, "js/app.js"),
-        search_v: filemtime(&state.www, "js/search.js"),
-        is_admin: visitor.is_admin(),
-        current_user: visitor.username.clone(),
-        can_upload: visitor.can_upload(state),
-    }
-    .render()
-    .unwrap_or_default();
-
-    let mut page = Page::new(body);
-    page.title = "Jun's and Kona's Garden Catalog".to_string();
-    page.show_hero = false;
-    // The notes editor and its stylesheet; the PHP busts the cache with the
-    // current time on every request.
-    let now = common::now_local().unix_timestamp();
-    page.extra_head = format!(
-        "\n<link href=\"https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css\" rel=\"stylesheet\">\n\
-         <script src=\"https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js\" defer></script>\n\
-         <link rel=\"stylesheet\" href=\"user-notes.css?v={now}\">\n"
-    );
-    Html(layout::render(state, page, visitor).await).into_response()
+async fn render_page(state: &Arc<AppState>, visitor: &Visitor) -> Response {
+    Html(crate::pagebuilder::render_page(state, visitor, "catalog", "").await).into_response()
 }
 
 /// Every GET, in the PHP's order.
@@ -1386,7 +1484,7 @@ async fn render_page(state: &AppState, visitor: &Visitor) -> Response {
 /// One `if` per `?something` on the address; the first match answers and `return` ends the
 /// function. Admin-only switches check `admin` first. If nothing matched, the full page is drawn.
 async fn dispatch_get(
-    state: &AppState,
+    state: &Arc<AppState>,
     visitor: &Visitor,
     q: &HashMap<String, String>,
 ) -> Response {
@@ -1628,5 +1726,61 @@ mod tests {
     #[test]
     fn weeks_snap_like_php() {
         assert_eq!(week_parts("2026-10-05"), (41, 10, 2026));
+    }
+
+    /// The catalog's sections, joined in page order (for a visitor, and for a signed-in
+    /// uploader), are exactly the whole page template: the page as it was before the page
+    /// builder. The kit (the plant window and scripts) follows the closing wrapper.
+    #[test]
+    fn the_sections_add_up_to_the_whole_catalog_page() {
+        for (is_admin, user, can_upload) in [(false, "", false), (true, "Gardener", true)] {
+            let whole = CatalogBody {
+                plant_count: 321,
+                variety_count: 45,
+                app_v: 11,
+                search_v: 12,
+                is_admin,
+                current_user: user.into(),
+                can_upload,
+            }
+            .render()
+            .unwrap();
+            let parts = [
+                CatalogOpen.render().unwrap(),
+                CatalogManage {
+                    is_admin,
+                    current_user: user.into(),
+                    can_upload,
+                }
+                .render()
+                .unwrap(),
+                CatalogStats {
+                    plant_count: 321,
+                    variety_count: 45,
+                }
+                .render()
+                .unwrap(),
+                CatalogSearch {
+                    current_user: user.into(),
+                }
+                .render()
+                .unwrap(),
+                CatalogBrowse.render().unwrap(),
+                CatalogClose.render().unwrap(),
+                CatalogKit {
+                    is_admin,
+                    current_user: user.into(),
+                    app_v: 11,
+                    search_v: 12,
+                }
+                .render()
+                .unwrap(),
+            ];
+            assert_eq!(parts.concat(), whole, "admin={is_admin}");
+            assert!(whole.starts_with("<div class=\"page-content page-garden-bg\""));
+            assert!(whole.contains("id=\"plant-feed\"") && whole.contains("js/app.js?v=11"));
+            assert_eq!(whole.contains("id=\"plantForm\""), is_admin);
+            assert!(!whole.contains("{%") && !whole.contains("{#"));
+        }
     }
 }

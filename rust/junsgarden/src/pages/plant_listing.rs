@@ -25,7 +25,6 @@ use axum::{
 use serde_json::{json, Value};
 use sqlx::mysql::MySqlRow;
 
-use crate::layout::{self, Page};
 use crate::php::filemtime;
 use crate::rowjson::row_to_json;
 use crate::session::Visitor;
@@ -37,10 +36,50 @@ const IMG_BASE: &str = "/images/Database/";
 
 /// The page body, filled in from `templates/plant_listing.html`. The struct has
 /// no fields because the page has no holes to fill; `#[derive(Template)]` is
-/// askama writing the rendering code for us at compile time.
+/// askama writing the rendering code for us at compile time. The page is drawn by the page
+/// builder as the one section `search.results` (the block below); this whole-page form is
+/// kept for the test that proves they are the same.
+#[cfg(test)]
 #[derive(Template)]
 #[template(path = "plant_listing.html")]
 struct ListingBody;
+
+/// Section `search.results`.
+#[derive(Template)]
+#[template(path = "plant_listing.html", block = "search_results")]
+struct SearchResults;
+
+/// The search box. On this page it sits in the page frame, between the header bar and the
+/// wave (`Page::after_header`); on another page the section draws it itself.
+const SEARCH_BAR: &str = "\n<div class=\"qs-search-bar\">\n    <input type=\"text\" id=\"list-search-box\" class=\"qs-search-input\" placeholder=\"Quick search plants...\" autofocus>\n</div>";
+
+/// The frame's `after_header` and `body_class` for the Quick Search page itself.
+pub(crate) fn frame() -> (String, String) {
+    (SEARCH_BAR.to_string(), "plant-listing-page".to_string())
+}
+
+/// `search.results`. On another page than the Quick Search page the section brings its own
+/// search box (without the autofocus, so the page does not jump to it).
+pub(crate) fn section_results(own_page: bool) -> String {
+    let grid = SearchResults.render().unwrap_or_default();
+    if own_page {
+        grid
+    } else {
+        format!(
+            "<div class=\"qs-search-bar\">\n    <input type=\"text\" id=\"list-search-box\" class=\"qs-search-input\" placeholder=\"Quick search plants...\">\n</div>{grid}"
+        )
+    }
+}
+
+/// What the section needs in `<head>`: the page's settings and its script (`?v=` plus the
+/// file's modified time makes browsers fetch a fresh copy after the file changes).
+pub(crate) fn head(state: &AppState) -> String {
+    format!(
+        "<script>window.PLANT_LISTING_CONFIG={{imgBase:\"{IMG_BASE}\"}};</script>\
+         <script type=\"module\" src=\"js/plant-listing.js?v={}\"></script>",
+        filemtime(&state.www, "js/plant-listing.js")
+    )
+}
 
 /// `preg_replace("/[^a-zA-Z0-9\s]/", " ")` then collapse runs of whitespace
 /// and trim, so "Lil Kim" finds "Lil' Kim". PHP works on bytes here, which
@@ -154,29 +193,33 @@ pub async fn plant_listing(
             .into_response();
     }
 
-    // Case 2: a normal visit. Render the template, then wrap it in the shared
-    // page frame (header, footer) via `layout::render`.
-    let body = ListingBody.render().unwrap_or_default();
-    let mut page = Page::new(body);
-    // The settings below tell the frame what is special about this page.
-    page.title = "Quick Search - Jun's Garden".to_string();
-    page.show_hero = false;
-    page.body_class = "plant-listing-page".to_string();
-    // Load the page's script. `?v=` plus the file's modified time makes browsers
-    // fetch a fresh copy after the file changes.
-    page.extra_head = format!(
-        "<script>window.PLANT_LISTING_CONFIG={{imgBase:\"{IMG_BASE}\"}};</script>\
-         <script type=\"module\" src=\"js/plant-listing.js?v={}\"></script>",
-        filemtime(&state.www, "js/plant-listing.js")
-    );
-    page.after_header = "\n<div class=\"qs-search-bar\">\n    <input type=\"text\" id=\"list-search-box\" class=\"qs-search-input\" placeholder=\"Quick search plants...\" autofocus>\n</div>".to_string();
-    Html(layout::render(&state, page, &visitor).await).into_response()
+    // Case 2: a normal visit. The page builder draws the layout (the owner's, or the default
+    // one, which is this page exactly as before) inside the shared page frame.
+    Html(crate::pagebuilder::render_page(&state, &visitor, "search", "").await).into_response()
 }
 
 // Tests run only with `cargo test`; they are not part of the live site.
 #[cfg(test)]
 mod tests {
-    use super::normalise;
+    use super::*;
+
+    /// The one section is the whole page body; on another page it brings its own search box.
+    #[test]
+    fn the_section_is_the_whole_quick_search_body() {
+        assert_eq!(
+            section_results(true),
+            ListingBody.render().unwrap(),
+            "the page itself must not change"
+        );
+        let (after_header, class) = frame();
+        assert!(
+            after_header.contains("id=\"list-search-box\"") && after_header.contains("autofocus")
+        );
+        assert_eq!(class, "plant-listing-page");
+        let other = section_results(false);
+        assert!(other.contains("id=\"list-search-box\"") && !other.contains("autofocus"));
+        assert!(other.ends_with(&ListingBody.render().unwrap()));
+    }
 
     // This test feeds `normalise` messy text and checks the cleaned result.
     #[test]

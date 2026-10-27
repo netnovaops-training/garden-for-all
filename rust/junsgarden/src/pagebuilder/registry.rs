@@ -244,16 +244,106 @@ pub const SECTIONS: &[SectionDef] = &[
         max_per_page: 1,
         settings: &[],
     },
+    plain(
+        "search.results",
+        "Quick search results",
+        "빠른 검색 결과",
+        "The quick search box and its list of plants.",
+        "빠른 검색 상자와 식물 목록.",
+    ),
+    plain(
+        "catalog.manage",
+        "Catalog: sign-in and plant form",
+        "카탈로그: 로그인과 식물 양식",
+        "The sign-in box, or for signed-in people the add/edit plant form.",
+        "로그인 상자, 로그인한 사람에게는 식물 추가·수정 양식.",
+    ),
+    plain(
+        "catalog.stats",
+        "Catalog: plant count",
+        "카탈로그: 식물 수",
+        "The line that counts the plants and varieties.",
+        "식물과 품종 수를 세는 한 줄.",
+    ),
+    plain(
+        "catalog.search",
+        "Catalog: search and A-Z",
+        "카탈로그: 검색과 A-Z",
+        "The search box, the A-Z bar and the quick filters.",
+        "검색 상자, A-Z 막대, 빠른 필터.",
+    ),
+    plain(
+        "catalog.browse",
+        "Catalog: plant cards",
+        "카탈로그: 식물 카드",
+        "The plant cards. The other catalog parts need this one.",
+        "식물 카드. 다른 카탈로그 부분은 이 섹션이 있어야 해요.",
+    ),
+    plain(
+        "data.stats",
+        "Data: plant count line",
+        "데이터: 식물 수 한 줄",
+        "The line at the top of the data page.",
+        "데이터 페이지 맨 위의 한 줄.",
+    ),
+    plain(
+        "data.picker",
+        "Data: widget picker",
+        "데이터: 위젯 고르기",
+        "The bar where you choose which charts to show.",
+        "보여 줄 차트를 고르는 막대.",
+    ),
+    plain(
+        "data.compare",
+        "Data: cross-reference tool",
+        "데이터: 교차 비교 도구",
+        "Pick two things and see how they line up.",
+        "두 가지를 골라 서로 어떻게 맞물리는지 보는 도구.",
+    ),
+    plain(
+        "data.widgets",
+        "Data: garden charts",
+        "데이터: 정원 차트",
+        "All the garden charts and weather cards.",
+        "모든 정원 차트와 날씨 카드.",
+    ),
 ];
+
+/// A section with no settings that is public, one per page (most of them).
+const fn plain(
+    id: &'static str,
+    name_en: &'static str,
+    name_ko: &'static str,
+    desc_en: &'static str,
+    desc_ko: &'static str,
+) -> SectionDef {
+    SectionDef {
+        id,
+        name_en,
+        name_ko,
+        desc_en,
+        desc_ko,
+        version: 1,
+        since: "2026.12",
+        perm: Perm::Public,
+        max_per_page: 1,
+        settings: &[],
+    }
+}
+
+/// The section that must be on the same page (its script looks for that section's elements).
+pub fn requires(id: &str) -> Option<&'static str> {
+    match id {
+        "catalog.manage" | "catalog.stats" | "catalog.search" => Some("catalog.browse"),
+        "data.stats" | "data.picker" | "data.compare" => Some("data.widgets"),
+        _ => None,
+    }
+}
 
 /// Planned sections that wait for the database rework (DESIGN.md 3.2). Not placeable yet; a
 /// layout naming one is refused with a clear message.
 pub const PENDING: &[&str] = &[
-    "catalog.browse",
     "catalog.cards",
-    "search.quick",
-    "data.widgets",
-    "data.compare",
     "data.table",
     "admin.plant_admin",
     "beds.planner",

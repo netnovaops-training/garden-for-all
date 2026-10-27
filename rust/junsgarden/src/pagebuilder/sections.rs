@@ -1,14 +1,21 @@
 //! Drawing one section. Every section calls the page code that drew it before the page builder
-//! (`pages/index.rs`, `pages/blog.rs`, `pages/gallery.rs`): nothing is copied or forked.
+//! (`pages/index.rs`, `pages/blog.rs`, `pages/gallery.rs`, `pages/catalog.rs`, `pages/data.rs`,
+//! `pages/plant_listing.rs`): nothing is copied or forked.
 //!
 //! The permission check is HERE, for every section, every time it is drawn, whatever page it
 //! sits on: an admin section drawn for a visitor is an empty string.
+//!
+//! THE SECTION CONTRACT. A section draws inside its own markup and says what it needs besides:
+//! `head` (styles and scripts for `<head>`) and `tail` (a script or window that belongs after
+//! the page). Both carry an id, so two sections of one family load them once per page. On the
+//! section's own page these are exactly what the page had before; on another page they make
+//! the section work there too.
 
 use std::sync::Arc;
 
 use super::layout::Cell;
 use super::registry::{self, Perm};
-use crate::pages::{blog, gallery, index};
+use crate::pages::{blog, catalog, data, gallery, index, plant_listing};
 use crate::php::he;
 use crate::session::Visitor;
 use crate::AppState;
@@ -25,12 +32,23 @@ pub const IMPLEMENTED: &[&str] = &[
     "admin.post_editor",
     "blog.archive",
     "gallery.wall",
+    "search.results",
+    "catalog.manage",
+    "catalog.stats",
+    "catalog.search",
+    "catalog.browse",
+    "data.stats",
+    "data.picker",
+    "data.compare",
+    "data.widgets",
 ];
 
 /// What a section is drawn for.
 pub struct Ctx<'a> {
     pub state: &'a Arc<AppState>,
     pub visitor: &'a Visitor,
+    /// The page being drawn (`home`, `catalog`, `p-roses`...).
+    pub page: &'a str,
     /// The `?zip=` of the address (the weather section reads it, as the home page did).
     pub zip: &'a str,
     /// The editor's preview: drawn as a visitor sees it, admin sections shown as a labelled
@@ -38,11 +56,22 @@ pub struct Ctx<'a> {
     pub preview: bool,
 }
 
-/// One drawn section: its HTML, and what it needs in `<head>` (added once per page).
+/// One drawn section: its HTML, and what it needs in `<head>` and after the page (each added
+/// once per page, by id).
 #[derive(Default)]
 pub struct Piece {
     pub html: String,
-    pub head: Option<(&'static str, &'static str)>,
+    pub head: Option<(&'static str, String)>,
+    pub tail: Option<(&'static str, String)>,
+}
+
+impl Piece {
+    pub fn html(html: String) -> Self {
+        Piece {
+            html,
+            ..Piece::default()
+        }
+    }
 }
 
 /// May this visitor see a section with this permission?
@@ -68,7 +97,7 @@ pub async fn render(ctx: &Ctx<'_>, cell: &Cell) -> Piece {
         } else {
             String::new()
         };
-        return Piece { html, head: None };
+        return Piece::html(html);
     }
     let (state, visitor) = (ctx.state, ctx.visitor);
     let html = match def.id {
@@ -83,12 +112,46 @@ pub async fn render(ctx: &Ctx<'_>, cell: &Cell) -> Piece {
         "gallery.wall" => {
             return Piece {
                 html: gallery::section_wall(state).await,
-                head: Some(("gallery.wall", gallery::GALLERY_HEAD)),
+                head: Some(("gallery.wall", gallery::GALLERY_HEAD.to_string())),
+                tail: None,
             }
+        }
+        "search.results" => {
+            return Piece {
+                html: plant_listing::section_results(ctx.page == "search"),
+                head: Some(("search", plant_listing::head(state))),
+                tail: None,
+            }
+        }
+        "catalog.manage" | "catalog.stats" | "catalog.search" | "catalog.browse" => {
+            let html = match def.id {
+                "catalog.manage" => catalog::section_manage(state, visitor),
+                "catalog.stats" => catalog::section_stats(state).await,
+                "catalog.search" => catalog::section_search(visitor),
+                _ => catalog::section_browse(),
+            };
+            return Piece {
+                html,
+                head: Some(("catalog", catalog::head())),
+                tail: Some(("catalog", catalog::kit(state, visitor))),
+            };
+        }
+        "data.stats" | "data.picker" | "data.compare" | "data.widgets" => {
+            let html = match def.id {
+                "data.stats" => data::section_stats(),
+                "data.picker" => data::section_picker(),
+                "data.compare" => data::section_compare(),
+                _ => data::section_widgets(state).await,
+            };
+            return Piece {
+                html,
+                head: Some(("data", data::head(state))),
+                tail: Some(("data", data::kit(state))),
+            };
         }
         _ => String::new(),
     };
-    Piece { html, head: None }
+    Piece::html(html)
 }
 
 /// A latitude/longitude setting as a number, or None if it is not one or out of range.

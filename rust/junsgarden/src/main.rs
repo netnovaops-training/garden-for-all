@@ -594,7 +594,7 @@ fn main() -> anyhow::Result<()> {
 pub fn test_state(guides: PathBuf, users: Vec<accounts::Account>) -> Arc<AppState> {
     let tmp = |name: &str| std::env::temp_dir().join(name); // nosemgrep: rust.lang.security.temp-dir.temp-dir (test only: a path that is never created)
     Arc::new(AppState {
-        pagebuilder: pagebuilder::Builder::new(&users, "", ""),
+        pagebuilder: pagebuilder::Builder::new_for_tests(&users),
         db: sqlx::mysql::MySqlPoolOptions::new()
             .connect_lazy("mysql://test@127.0.0.1:9/test")
             .unwrap(),

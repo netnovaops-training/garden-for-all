@@ -1,11 +1,14 @@
-<div class="data-page-container">
+{#- Page builder: the named blocks are the page shell, four sections (`data.stats`,
+    `data.picker`, `data.compare`, `data.widgets`) and the page kit (`data_kit`: the compare
+    script). Block tags print nothing, so the whole page is unchanged. -#}
+{% block shell_open %}<div class="data-page-container">
 
-    <!-- Stats header -->
+{% endblock %}{% block data_stats %}    <!-- Stats header -->
     <div class="stats-header">
         🌿 You have 0 plants across 0 varieties — look at you grow!
     </div>
 
-    <!-- ── Widget picker bar ─────────────────────────────────── -->
+{% endblock %}{% block data_picker %}    <!-- ── Widget picker bar ─────────────────────────────────── -->
     <div class="widget-picker-bar">
         <div class="picker-bar-title">📊 Choose Your Widgets</div>
         <div class="picker-actions">
@@ -31,7 +34,7 @@
         <div class="picker-chips" id="picker-chips"></div>
     </div>
 
-    <!-- ── Cross-Tab Compare Tool ────────────────────────────── -->
+{% endblock %}{% block data_compare %}    <!-- ── Cross-Tab Compare Tool ────────────────────────────── -->
     <details class="compare-tool-wrap" id="compare-tool">
         <summary class="compare-summary">🔬 Cross-Reference Data — pick dimensions to find patterns</summary>
         <div class="compare-controls">
@@ -160,7 +163,7 @@
         <div id="compare-insights"></div>
     </details>
 
-    <!-- ── AI Insights (hidden — data powers Plant Weather Detective instead) ── -->
+{% endblock %}{% block data_widgets %}    <!-- ── AI Insights (hidden — data powers Plant Weather Detective instead) ── -->
     <div id="ww-ai-insights" style="display:none;">
         {{ w_ai_insights|safe }}
     </div>
@@ -202,8 +205,8 @@
 
     </div><!-- /.widget-grid -->
 
-</div><!-- /.data-page-container -->
+{% endblock %}{% block shell_close %}</div><!-- /.data-page-container -->
 
-<script src="js/chart-compare.js?v={{ chart_compare_v }}"></script>
+{% endblock %}{% block data_kit %}<script src="js/chart-compare.js?v={{ chart_compare_v }}"></script>
 
-
+{% endblock %}

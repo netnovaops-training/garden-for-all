@@ -11,11 +11,14 @@ use serde_json::{json, Value};
 use sqlx::Row;
 
 use super::layout::{self, Layout};
+use super::pages::Meta;
 use crate::AppState;
 
-/// Versions kept per page (older rows are removed), and backup copies kept (all pages).
+/// Versions kept per page (older rows are removed), backup copies kept (all pages), and
+/// drafts kept per page.
 const KEEP_VERSIONS: i32 = 200;
 const KEEP_BACKUPS: u64 = 1000;
+const KEEP_DRAFTS: i32 = 3;
 
 /// Create the three tables if they are not there yet (called at start-up).
 pub async fn ensure_tables(db: &sqlx::MySqlPool) -> Result<(), sqlx::Error> {
@@ -122,17 +125,124 @@ pub async fn history(state: &AppState, page: &str) -> Vec<Value> {
     .collect()
 }
 
-/// The owner's own pages that have been saved at least once (`p-...`).
-pub async fn custom_pages(state: &AppState) -> Vec<String> {
-    sqlx::query_scalar::<_, String>(
-        "SELECT DISTINCT page FROM page_layouts WHERE page LIKE 'p-%' ORDER BY page",
+/// What every saved page says about itself (titles, menu switch, removed), oldest page first.
+/// Pages never saved are not in the list (they have the defaults). None when the database
+/// does not answer. Drafts are not pages and are left out.
+pub async fn page_metas(state: &AppState) -> Option<Vec<(String, Meta)>> {
+    let rows = sqlx::query(
+        "SELECT l.page AS page, l.layout AS layout FROM page_layouts l
+         JOIN (SELECT page, MAX(version) AS v, MIN(id) AS first
+               FROM page_layouts WHERE page NOT LIKE 'draft:%' GROUP BY page) m
+           ON l.page = m.page AND l.version = m.v
+         ORDER BY m.first",
     )
     .fetch_all(&state.db)
     .await
-    .unwrap_or_default()
-    .into_iter()
-    .filter(|p| layout::page_id_ok(p))
-    .collect()
+    .map_err(|e| tracing::warn!("page list not read: {e}"))
+    .ok()?;
+    Some(
+        rows.iter()
+            .filter_map(|r| {
+                let page: String = r.try_get("page").ok()?;
+                let text: String = r.try_get("layout").ok()?;
+                let l: Layout = serde_json::from_str(&text).ok()?;
+                layout::page_id_ok(&page).then(|| (page, Meta::of(&l)))
+            })
+            .collect(),
+    )
+}
+
+/// The owner's own pages that are saved and not removed (`p-...`), oldest first.
+pub async fn custom_pages(state: &AppState) -> Vec<String> {
+    page_metas(state)
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|(id, m)| layout::custom_slug(id).is_some() && !m.removed)
+        .map(|(id, _)| id)
+        .collect()
+}
+
+/// The owner's pages that were removed (they can be brought back), oldest first.
+pub async fn removed_pages(state: &AppState) -> Vec<String> {
+    page_metas(state)
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|(id, m)| layout::custom_slug(id).is_some() && m.removed)
+        .map(|(id, _)| id)
+        .collect()
+}
+
+// ---------------------------------------------------------------- drafts
+
+/// Drafts are saved in the same table under the page name `draft:<page>`; `note` says which
+/// published version the draft started from (`draft:<base>`). Only the newest 3 are kept.
+fn draft_key(page: &str) -> String {
+    format!("draft:{page}")
+}
+
+/// Keep the editor's unpublished work on the server, so a closed tab or another computer
+/// does not lose it. The page itself does not change.
+pub async fn save_draft(
+    state: &AppState,
+    page: &str,
+    l: &Layout,
+    base: i32,
+    user: &str,
+) -> Result<(), sqlx::Error> {
+    let key = draft_key(page);
+    let json = serde_json::to_string(l).unwrap_or_default();
+    let mut tx = state.db.begin().await?;
+    let newest: i32 = sqlx::query_scalar(
+        "SELECT COALESCE(MAX(version), 0) FROM page_layouts WHERE page = ? FOR UPDATE",
+    )
+    .bind(&key)
+    .fetch_one(&mut *tx)
+    .await?;
+    sqlx::query(
+        "INSERT INTO page_layouts (page, version, layout, saved_by, note) VALUES (?, ?, ?, ?, ?)",
+    )
+    .bind(&key)
+    .bind(newest + 1)
+    .bind(&json)
+    .bind(user)
+    .bind(format!("draft:{base}"))
+    .execute(&mut *tx)
+    .await?;
+    sqlx::query("DELETE FROM page_layouts WHERE page = ? AND version <= ?")
+        .bind(&key)
+        .bind(newest + 1 - KEEP_DRAFTS)
+        .execute(&mut *tx)
+        .await?;
+    tx.commit().await
+}
+
+/// The newest draft of a page and the published version it started from.
+pub async fn draft(state: &AppState, page: &str) -> Option<(i32, Layout)> {
+    let row = sqlx::query(
+        "SELECT layout, note FROM page_layouts WHERE page = ? ORDER BY version DESC LIMIT 1",
+    )
+    .bind(draft_key(page))
+    .fetch_optional(&state.db)
+    .await
+    .ok()??;
+    let text: String = row.try_get("layout").ok()?;
+    let note: String = row.try_get("note").ok()?;
+    let base: i32 = note.strip_prefix("draft:")?.parse().ok()?;
+    let l: Layout = serde_json::from_str(&text).ok()?;
+    Some((base, layout::sanitize(l, page)))
+}
+
+/// Throw the page's drafts away (after publishing, or when the owner asks).
+pub async fn discard_draft(state: &AppState, page: &str) {
+    if let Err(e) = sqlx::query("DELETE FROM page_layouts WHERE page = ?")
+        .bind(draft_key(page))
+        .execute(&state.db)
+        .await
+    {
+        tracing::warn!("draft of {page} not removed: {e}");
+    }
 }
 
 /// Why a save did not happen.
@@ -223,15 +333,23 @@ pub async fn save(
         .bind(version - KEEP_VERSIONS)
         .execute(&mut *tx)
         .await?;
+    // Publishing replaces the page's drafts.
+    sqlx::query("DELETE FROM page_layouts WHERE page = ?")
+        .bind(draft_key(page))
+        .execute(&mut *tx)
+        .await?;
     tx.commit().await?;
     forget(state, page);
     Ok(version)
 }
 
-/// Drop the cached layout of a page (after any change).
+/// Drop the cached layout of a page and the cached menu (after any change).
 pub fn forget(state: &AppState, page: &str) {
     if let Ok(mut c) = state.pagebuilder.cache.lock() {
         c.remove(page);
+    }
+    if let Ok(mut m) = state.pagebuilder.menu.lock() {
+        *m = None;
     }
 }
 

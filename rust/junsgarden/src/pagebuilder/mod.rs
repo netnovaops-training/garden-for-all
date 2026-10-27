@@ -4,15 +4,19 @@
 //! HOW TO READ THIS FOLDER.
 //! * `registry.rs`  every section: names (EN/KO), version, permission, settings.
 //! * `layout.rs`    the layout JSON, the default layouts (= the pages as they were), checks.
+//! * `pages.rs`     the site's own pages, and what a layout says about its page (title, menu).
+//! * `menu.rs`      the top menu's page links, made from the saved pages.
 //! * `sections.rs`  draws one section with the page code that drew it before.
-//! * `saved.rs`     layouts in the database: versions, undo, reset, backup files.
+//! * `saved.rs`     layouts in the database: versions, undo, reset, drafts, backup copies.
 //! * `updates.rs`   the author's signed list of sections (the "new" badges).
 //! * `editor.rs`    the editor page and its API, for the owner only.
 //! * this file      `Builder` (the builder's part of `AppState`) and `render_page`, which every
-//!   built-in page (home, archive, gallery) and every owner page goes through.
+//!   page (home, archive, gallery, search, catalog, data) and every owner page goes through.
 
 pub mod editor;
 pub mod layout;
+pub mod menu;
+pub mod pages;
 pub mod registry;
 pub mod saved;
 pub mod sections;
@@ -27,11 +31,12 @@ use std::time::Instant;
 use sha2::{Digest, Sha256};
 
 use crate::layout::Page;
-use crate::pages::{blog, index};
+use crate::pages::{blog, catalog, data, index, plant_listing};
 use crate::php::{filemtime, he};
 use crate::session::Visitor;
 use crate::AppState;
 use layout::Layout;
+use pages::Meta;
 
 /// The page builder's part of the shared state.
 pub struct Builder {
@@ -41,6 +46,8 @@ pub struct Builder {
     secret: [u8; 32],
     /// The newest layout of each page (None = default), dropped on every change.
     pub cache: Mutex<HashMap<String, Option<(i32, Layout)>>>,
+    /// The top menu's page links (None = not read yet), dropped on every change.
+    pub menu: Mutex<Option<Arc<String>>>,
     /// The last answer of the signed sections check, and when it was fetched.
     pub updates: Mutex<Option<(Instant, serde_json::Value)>>,
     /// The author's public key for the sections list (none = check not set up).
@@ -63,9 +70,21 @@ impl Builder {
             owner,
             secret: rand::random(),
             cache: Mutex::new(HashMap::new()),
+            menu: Mutex::new(None),
             updates: Mutex::new(None),
             sections_key: updates::key_from(key_setting),
         }
+    }
+
+    /// For tests: no database is there, so the menu links start out as the default ones
+    /// (otherwise every page drawn would wait for a database that never answers).
+    #[cfg(test)]
+    pub fn new_for_tests(users: &[crate::accounts::Account]) -> Self {
+        let b = Builder::new(users, "", "");
+        if let Ok(mut m) = b.menu.lock() {
+            *m = Some(Arc::new(menu::DEFAULT_NAV.to_string()));
+        }
+        b
     }
 
     /// Is this the owner, signed in on the website (an app key never edits pages)?
@@ -104,59 +123,78 @@ struct Shell {
     show_hero: bool,
     open: String,
     close: String,
+    /// The frame's `after_header` and `body_class` (the Quick Search page's search box).
+    after_header: String,
+    body_class: String,
 }
 
-fn shell(state: &AppState, page: &str) -> Shell {
-    match page {
-        "home" => {
-            let (open, close) = index::shell(state);
-            Shell {
-                title: "Jun's and Kona's Garden Dashboard".into(),
-                show_hero: true,
-                open,
-                close,
-            }
-        }
-        "blog" => {
-            let (open, close) = blog::shell();
-            Shell {
-                title: "Garden Archives — Jun's & Kona's Garden".into(),
-                show_hero: false,
-                open,
-                close,
-            }
-        }
-        "gallery" => Shell {
-            title: "Gallery | Jun's and Kona's Garden".into(),
-            show_hero: false,
-            open: String::new(),
-            close: String::new(),
-        },
-        // The owner's own pages: the archive's plain green wrapper, no hero.
-        other => {
-            let (open, close) = blog::shell();
-            Shell {
-                title: format!(
-                    "{} | {}",
-                    layout::custom_slug(other).unwrap_or(other),
-                    crate::layout::DEFAULT_TITLE
-                ),
-                show_hero: false,
-                open,
-                close,
-            }
+impl Shell {
+    fn plain(title: &str, show_hero: bool, wrap: (String, String)) -> Shell {
+        Shell {
+            title: title.to_string(),
+            show_hero,
+            open: wrap.0,
+            close: wrap.1,
+            after_header: String::new(),
+            body_class: String::new(),
         }
     }
+}
+
+fn shell(state: &AppState, page: &str, meta: &Meta) -> Shell {
+    let mut sh = match page {
+        "home" => Shell::plain(
+            "Jun's and Kona's Garden Dashboard",
+            true,
+            index::shell(state),
+        ),
+        "blog" => Shell::plain(
+            "Garden Archives — Jun's & Kona's Garden",
+            false,
+            blog::shell(),
+        ),
+        "gallery" => Shell::plain(
+            "Gallery | Jun's and Kona's Garden",
+            false,
+            (String::new(), String::new()),
+        ),
+        "search" => {
+            let (after_header, body_class) = plant_listing::frame();
+            Shell {
+                after_header,
+                body_class,
+                ..Shell::plain(
+                    "Quick Search - Jun's Garden",
+                    false,
+                    (String::new(), String::new()),
+                )
+            }
+        }
+        "catalog" => Shell::plain("Jun's and Kona's Garden Catalog", false, catalog::shell()),
+        "data" => Shell::plain("Garden Data - Analytics", false, data::shell()),
+        // The owner's own pages: the archive's plain green wrapper, no hero.
+        other => {
+            let name = if meta.title_en.is_empty() {
+                layout::custom_slug(other).unwrap_or(other)
+            } else {
+                &meta.title_en
+            };
+            Shell::plain(
+                &format!("{} | {}", name, crate::layout::DEFAULT_TITLE),
+                false,
+                blog::shell(),
+            )
+        }
+    };
+    if let Some(hero) = meta.hero {
+        sh.show_hero = hero;
+    }
+    sh
 }
 
 /// The address of a page, relative to the site (pages and the editor live at the top level).
 pub fn page_href(page: &str) -> String {
-    match page {
-        "home" => "index.php".into(),
-        "blog" => "blog.php".into(),
-        "gallery" => "gallery.php".into(),
-        other => format!("page.php?name={}", layout::custom_slug(other).unwrap_or("")),
-    }
+    pages::href(page)
 }
 
 /// Draw a page from its saved layout (or the default one, which is the page as it was).
@@ -186,18 +224,22 @@ pub async fn draw(
     let ctx = sections::Ctx {
         state,
         visitor,
+        page,
         zip,
         preview,
     };
     let mut rows = Vec::with_capacity(l.rows.len());
-    let mut heads: Vec<(&str, &str)> = Vec::new();
+    let mut heads: Vec<(&str, String)> = Vec::new();
+    let mut tails: Vec<(&str, String)> = Vec::new();
     for row in &l.rows {
         let mut cols = Vec::with_capacity(row.cols.len());
         for cell in &row.cols {
             let piece = sections::render(&ctx, cell).await;
-            if let Some((id, head)) = piece.head {
-                if !heads.iter().any(|(h, _)| *h == id) {
-                    heads.push((id, head));
+            for (list, extra) in [(&mut heads, piece.head), (&mut tails, piece.tail)] {
+                if let Some((id, html)) = extra {
+                    if !list.iter().any(|(have, _)| *have == id) {
+                        list.push((id, html));
+                    }
                 }
             }
             cols.push(piece.html);
@@ -205,12 +247,15 @@ pub async fn draw(
         rows.push(cols);
     }
     let (body, grid) = layout::join_rows(rows);
-    let sh = shell(state, page);
+    let sh = shell(state, page, &Meta::of(l));
     let mut html = format!("{}{}{}", sh.open, body, sh.close);
+    for (_, tail) in &tails {
+        html.push_str(tail);
+    }
     if !preview && state.pagebuilder.is_owner(visitor) {
         html.push_str(&edit_button(page));
     }
-    let mut extra_head: String = heads.iter().map(|(_, h)| *h).collect();
+    let mut extra_head: String = heads.iter().map(|(_, h)| h.as_str()).collect();
     if grid || preview {
         extra_head.push_str(&format!(
             "\n<link rel=\"stylesheet\" href=\"pagebuilder/pb.css?v={}\">\n",
@@ -221,6 +266,8 @@ pub async fn draw(
     p.title = sh.title;
     p.show_hero = sh.show_hero;
     p.extra_head = extra_head;
+    p.after_header = sh.after_header;
+    p.body_class = sh.body_class;
     crate::layout::render(state, p, visitor).await
 }
 
