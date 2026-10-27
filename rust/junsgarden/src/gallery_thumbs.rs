@@ -81,7 +81,7 @@ pub enum Bind {
     Int(i32),
 }
 
-const COLS: &str = "p.id, p.filename, p.plant_id, p.set_name, p.full_rel, p.thumb_rel";
+const COLS: &str = "p.id, p.filename, p.plant_id, p.set_name, p.full_rel, p.thumb_rel, p.media";
 
 /// The SQL and its values. One more row than `limit` is requested so the caller can tell whether a next page exists.
 /// Tags are ANDed: the first tag drives the index scan (`photo_tags(tag, photo_id)`), the others are `EXISTS` probes
@@ -169,6 +169,8 @@ pub struct Item {
     pub plant_id: Option<i32>,
     pub thumb: String,
     pub full: String,
+    /// `image`, `gif` or `video`. A video has no thumbnail (`thumb` is empty): the page shows a placeholder.
+    pub media: String,
 }
 
 /// Build an item from the database columns. A picture with no thumbnail uses the original as its own thumbnail.
@@ -203,7 +205,17 @@ pub fn item(
         plant_id,
         thumb,
         full,
+        media: "image".to_string(),
     }
+}
+
+/// Set the media type; a video that has no thumbnail gets an empty `thumb` instead of its own address.
+pub fn with_media(mut it: Item, media: &str) -> Item {
+    if media == "video" && it.thumb == it.full {
+        it.thumb = String::new();
+    }
+    it.media = media.to_string();
+    it
 }
 
 /// A page of items and the `after` value for the next page (None on the last page).
@@ -242,7 +254,7 @@ pub async fn fetch_page(db: &MySqlPool, urls: &Urls, q: &PageQuery) -> Result<Pa
     let rows = query.fetch_all(db).await?;
     let mut items = Vec::with_capacity(rows.len());
     for r in &rows {
-        items.push(item(
+        let it = item(
             urls,
             r.try_get::<u32, _>("id")?,
             &r.try_get::<String, _>("filename")?,
@@ -250,7 +262,8 @@ pub async fn fetch_page(db: &MySqlPool, urls: &Urls, q: &PageQuery) -> Result<Pa
             &r.try_get::<String, _>("set_name")?,
             &r.try_get::<String, _>("full_rel")?,
             r.try_get::<Option<String>, _>("thumb_rel")?.as_deref(),
-        ));
+        );
+        items.push(with_media(it, &r.try_get::<String, _>("media")?));
     }
     Ok(finish_page(items, q.limit))
 }
@@ -470,7 +483,7 @@ mod tests {
         let (sql, b) = build_page(&q(&[], None));
         assert_eq!(
             sql,
-            "SELECT p.id, p.filename, p.plant_id, p.set_name, p.full_rel, p.thumb_rel FROM photo p \
+            "SELECT p.id, p.filename, p.plant_id, p.set_name, p.full_rel, p.thumb_rel, p.media FROM photo p \
              WHERE p.status = 'active' AND p.id > ? ORDER BY p.id LIMIT ?"
         );
         assert_eq!(b, vec![Bind::Num(0), Bind::Num(49)]);
@@ -490,7 +503,7 @@ mod tests {
     fn tag_search_drives_from_the_first_tag_and_probes_the_rest() {
         let (sql, b) = build_page(&q(&["pink", "hydrangea"], Some(3)));
         assert_eq!(sql.matches('?').count(), b.len());
-        assert!(sql.starts_with("SELECT p.id, p.filename, p.plant_id, p.set_name, p.full_rel, p.thumb_rel FROM photo_tags t0 JOIN photo p"));
+        assert!(sql.starts_with("SELECT p.id, p.filename, p.plant_id, p.set_name, p.full_rel, p.thumb_rel, p.media FROM photo_tags t0 JOIN photo p"));
         assert!(sql.contains("WHERE t0.tag = ? AND t0.photo_id > ? AND p.status = 'active' AND p.plant_id = ? AND EXISTS"));
         assert!(sql.ends_with("GROUP BY t0.photo_id ORDER BY t0.photo_id LIMIT ?"));
         assert_eq!(
@@ -564,6 +577,23 @@ mod tests {
             None,
         );
         assert_eq!(no_thumb.thumb, no_thumb.full);
+        assert_eq!(no_thumb.media, "image");
+    }
+
+    #[test]
+    fn a_video_without_thumbnail_has_an_empty_thumb_but_a_gif_keeps_its_own() {
+        let urls = Urls {
+            thumbs: "/t".into(),
+            full: "/f".into(),
+        };
+        let v = with_media(item(&urls, 1, "c.mp4", None, "s", "c.mp4", None), "video");
+        assert_eq!((v.thumb.as_str(), v.media.as_str()), ("", "video"));
+        assert_eq!(v.full, "/f/s/c.mp4");
+        let g = with_media(
+            item(&urls, 2, "a.gif", None, "s", "a.gif", Some("s/a.webp")),
+            "gif",
+        );
+        assert_eq!((g.thumb.as_str(), g.media.as_str()), ("/t/s/a.webp", "gif"));
     }
 
     #[test]
