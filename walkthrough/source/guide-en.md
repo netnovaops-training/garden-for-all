@@ -355,6 +355,10 @@ the Full Catalog, so the tips above work here too. Wish-list plants have a purpl
 
 ## 6. Adding a plant {.part}
 
+*New: the first tab, **🌱 Add plant**, asks for six things and lets the local plant AI fill in the
+rest. It has its own picture guide: `walkthrough/streamlit/` (English and Korean). The steps below
+are the full form, now under **⚙️ Advanced → 🌱 Add Plant (full form)**.*
+
 1. Open the tab **🌱 Add Plant**. Type the plant's common name and its botanical name.
    @shot 05-add-plant
 2. Press **Enter**. The next step appears, with the button **📋 Create Record →**.
@@ -402,7 +406,8 @@ see chapter 19.*
    9 Root Systems, 10 Care, Hazards, Propagation & Companions, 11 Growth Calendars (the grow and bloom
    months; tick **🚫 Does not bloom** for a plant without flowers), 12 Long-Form Journals (the notes,
    and **⚠️ Flag Entry for Further Technical Review**), 13 Photos, 14 Validation Signing Authority
-   (the author's and Jun's sign-off, chapter 10).
+   (whether the garden owner has approved the plant; the owner approves with the **✅ Approve**
+   button, chapter 10).
 3. **Save Changes** at the bottom saves every section at once.
 4. Under it, **📊 Log a Quantity Event (optional)** records a purchase, a death or a removal (chapter 8).
 
@@ -471,10 +476,11 @@ say so. **Nothing the AI suggests is saved until you approve it.**
    Pick one below the table to fill it in (**Edit a Partial Plant**), or **📥 Go to JSON Import →** to
    fill many at once.
    @shot 52-admin-partials
-2. **🔍 Awaiting Approval:** plants whose facts are complete but that wait for the sign-off of the
-   author and/or Jun (section 14 of the editor). Two inner tabs: **🌷 Perennials** and **🌻 Annuals**.
+2. **🔍 Awaiting Approval:** plants whose facts are complete but that wait for the garden owner's
+   **✅ Approve** (the button above the editor; only the owner sees it). Two inner tabs:
+   **🌷 Perennials** and **🌻 Annuals**.
    @shot 53-admin-awaiting
-3. **🏆 Fully Approved & Verified:** the complete plants that both have signed off: the print-ready
+3. **🏆 Fully Approved & Verified:** the complete plants the owner has approved: the print-ready
    catalogue. The same two inner tabs.
    @shot 54-admin-approved
 4. **🚩 Flagged for Review:** plants someone marked with **⚠️ Flag Entry for Further Technical Review**

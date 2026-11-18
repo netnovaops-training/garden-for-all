@@ -41,6 +41,7 @@ try {
 $Root = Split-Path -Parent $PSScriptRoot          # the garden folder
 $Menu = Join-Path $PSScriptRoot "Garden-Menu.ps1"  # the program that does the work
 . (Join-Path $PSScriptRoot "Garden-Network.ps1")  # this PC's address; find computers at home
+. (Join-Path $PSScriptRoot "Garden-PlantAi.ps1")  # Local plant AI on this PC: the card check, the key file
 $Progress = $null                                   # where the install writes its steps
 
 # ---------- first: not inside OneDrive -------------------------------------------
@@ -454,8 +455,11 @@ $PartsNow = @(
     @("email", "Email (Gmail) for 'forgot password' links", "Your garden sends password links through Gmail. Needs a Gmail app password (16 letters)."),
     @("keys", "AI keys (Google Gemini, OpenRouter)", "Your own free keys for the AI boxes: reading plant tags, identifying, diagnosing."),
     @("plantdata", "Plant data key (Perenual)", "Plant facts for the plant admin's lookup (free plan)."),
-    @("network", "A reserved address in your router", "So the garden computer keeps the same address (needed later for going online, and for SSH).")
+    @("network", "A reserved address in your router", "So the garden computer keeps the same address (needed later for going online, and for SSH)."),
+    @("plantai", "Local plant AI on THIS PC (Windows, NVIDIA card with 12 GB or more)", "Fills in new plants by itself: phi4 finds the facts, gemma4:12b checks them and the photos. Runs on this PC's graphics card only.")
 )
+# Local plant AI is offered only on a PC whose graphics card can run it (Garden-PlantAi.ps1).
+$PlantAiHw = Get-PlantAiHardware
 $PartsLater = @(
     @("frontdoor", "The front door: HTTPS, your sign-in page, your web name", "Puts the garden on the internet safely (Caddy, Authelia, No-IP, router ports 80 and 443).", "More, then 1", "a free web name (No-IP), your router's admin login, about an hour"),
     @("nas", "Backup copies on your NAS (network drive)", "A second copy of every backup on a network drive at home.", "6 (Backups), then 4", "the NAS's address, a shared folder and a user on the NAS"),
@@ -476,6 +480,12 @@ foreach ($row in $PartsNow) { $PartBoxes[$row[0]] = P-Choice $pParts CheckBox $r
 foreach ($row in $PartsLater) { $PartBoxes[$row[0]] = P-Choice $pParts CheckBox $row[1] $row[2] }
 $PartBoxes["beds"].Checked = $true
 $lbNetWsl = P-Text $pParts "" 26 -Small
+# No card for it: the Local plant AI box is hidden, with one line saying why (English and Korean).
+if (-not $PlantAiHw.Ok) {
+    $PartBoxes["plantai"].Checked = $false; $PartBoxes["plantai"].Enabled = $false; $PartBoxes["plantai"].Visible = $false
+    foreach ($c in @($pParts.Controls)) { if ($c -is [Windows.Forms.Label] -and $c.Text -like "Fills in new plants by itself*") { $c.Visible = $false } }
+    [void](P-Text $pParts (PaT "Local plant AI is not offered on this PC: it needs an NVIDIA graphics card with 12 GB or more (like an RTX 4070 Ti).") 0 -Small)
+}
 
 # ---------- pages: one for each part ---------------------------------------------------------
 $pBeds = New-Page "part-beds" "Garden tools (/beds)" "Garden tools"
@@ -526,6 +536,16 @@ $pNet = New-Page "part-network" "A reserved address in your router" "Reserved ad
     "card's fixed ID), and how to reserve that address in your router, so it never changes. You then say whether it is done."))
 [void](P-Text $pNet "You need your router's admin login (often on a sticker on the router). Nothing to type here.")
 [void](P-Link $pNet "Reserve your IP (guide 14)" "START-HERE/14-reserve-your-ip.md")
+
+# Local plant AI on THIS PC (only offered when the card can run it; Garden-PlantAi.ps1 does the work).
+$pPlantAi = New-Page "part-plantai" "Local plant AI on this PC" "Local plant AI"
+[void](P-Text $pPlantAi (PlantAi-Plan $PlantAiHw))
+[void](P-Text $pPlantAi (PaT "What gets installed here: Ollama (runs the AI models, starts with Windows, answers on this PC only), the two models (about 18 GB of downloads), Python and the small helper program. Windows asks for permission once."))
+[void](P-Text $pPlantAi (PaT "The helper asks your garden website for new plants every minute, through its usual address. Nothing is opened on this PC or on the garden computer. While this PC is off, new plants wait in a queue."))
+$tbPaSite = P-Field $pPlantAi "Your garden's address, as you open it at home (like https://name.zapto.org)" 360
+$tbPaKey = P-Field $pPlantAi "Helper key (on the website: Add plant, Desktop helper, Make a helper key). Empty = add it later: menu, More, 22" 420 -Secret
+[void](P-Text $pPlantAi (PaT "The key is saved in plant-ai\worker-key.txt, readable by your Windows user only. It is never shown or sent anywhere else.") -Small)
+[void](P-Link $pPlantAi "Local plant AI (guide 15)" "START-HERE/15-local-ai.md")
 
 foreach ($row in $PartsLater) {
     $short = $row[1].Split(":")[0].Split("(")[0].Trim()
@@ -753,6 +773,7 @@ function Show-Page($id) {
     $btnNext.Visible = ($id -ne "install" -and $id -ne "done")
     $btnNext.Text = $(if ($id -eq "summary") { "Looks right  >" } else { "Next  >" })
     if ($id -eq "pdfs") { Pdf-Default }
+    if ($id -eq "part-plantai" -and -not $tbPaSite.Text) { $tbPaSite.Text = "https://" + (Web-Name) + $tbFolder.Text.Trim().TrimEnd('/') }
     if ($id -eq "summary") { Build-Summary }
     if ($id -eq "done") { Build-Done }
     Draw-Steps
@@ -804,6 +825,11 @@ function Page-OK($id) {
             if ($tbSmtpUser.Text -notmatch '^[^@\s"''`$;&|<>]+@[^@\s"''`$;&|<>]+\.[A-Za-z]{2,}$') { Show-Problem "The Gmail address does not look right."; return $false }
             if (($tbSmtpPw.Text -replace '\s', '') -notmatch '^[A-Za-z]{16}$') { Show-Problem "The app password is 16 letters (Google shows it in four groups of four). Or go Back and untick Email."; return $false }
         }
+        "part-plantai" {
+            $tbPaSite.Text = $tbPaSite.Text.Trim()
+            if (-not (Test-PlantAiSite $tbPaSite.Text)) { Show-Problem "Your garden's address: like https://name.zapto.org (http:// only with an address at home)."; return $false }
+            if ($tbPaKey.Text -and $tbPaKey.Text.Trim() -notmatch '^gw_[0-9a-f]{40}$') { Show-Problem "The helper key starts with gw_ followed by 40 letters and numbers (or leave it empty)."; return $false }
+        }
         "passwords" {
             if ($tbPw.Text.Length -lt 10) { Show-Problem "Your password: at least 10 characters."; return $false }
             if ($tbPw.Text -ne $tbPw2.Text) { Show-Problem "The two passwords are not the same."; return $false }
@@ -837,6 +863,7 @@ function Build-Summary {
         if ($PartBoxes["email"].Checked) { $o.Add("EMAIL          $($tbSmtpUser.Text), app password " + (Set-Or-Not $tbSmtpPw)) }
         if ($PartBoxes["keys"].Checked) { $o.Add("AI KEYS        Gemini " + (Set-Or-Not $tbGemini) + "; OpenRouter " + (Set-Or-Not $tbOpenRouter)) }
         if ($PartBoxes["plantdata"].Checked) { $o.Add("PLANT DATA     Perenual " + (Set-Or-Not $tbPerenual)) }
+        if ($PlantAiHw.Ok -and $PartBoxes["plantai"].Checked) { $o.Add("PLANT AI       on this PC ($($PlantAiHw.Gpu)): Ollama, phi4, gemma4:12b; asks $($tbPaSite.Text); helper key " + (Set-Or-Not $tbPaKey)) }
         $o.Add("PASSWORD       " + (Set-Or-Not $tbPw) + "   (website + sign-in page)")
         $o.Add("DATABASE       " + $(if ($tbDbPw.Text) { "password set (typed here)" } else { "a strong password made for you" }))
     } else {
@@ -844,6 +871,8 @@ function Build-Summary {
         $o.Add("PASSWORD       asked in the install window (hidden while you type)")
     }
     $o.Add("PDF GUIDES     " + (Pdf-Words) + $(if ((Pdf-Code) -ne "none") { " (download while the install runs; never slows it)" } else { "" }))
+    if (-not $PlantAiHw.Ok) { $o.Add("PLANT AI       not offered on this PC: $($PlantAiHw.Why) (12 GB or more, like an RTX 4070 Ti)") }
+    elseif (-not $custom) { $o.Add("PLANT AI       this PC can run it: CUSTOM, or later the menu (More, 22)") }
     $o.Add("")
     $o.Add("ANSWERED FOR YOU (questions that only matter once):")
     $o.Add("  - the garden's folder: $GardenDir (the install window does not ask again)")
@@ -886,6 +915,7 @@ function Save-Record {
         parts_now   = @(Chosen $PartsNow | ForEach-Object { $_[0] })
         parts_later = @(Chosen $PartsLater | ForEach-Object { $_[0] })
         email_user  = $tbSmtpUser.Text
+        plant_ai_site = $tbPaSite.Text
     }
     $json = ($r | ConvertTo-Json -Depth 5) -replace "`r`n", "`n"
     try { [IO.File]::WriteAllText($RecordFile, $json + "`n", (New-Object Text.UTF8Encoding($false))) } catch { }
@@ -910,6 +940,7 @@ function Load-Record {
         }
         foreach ($k in $PartOrder) { $PartBoxes[$k].Checked = ((@($r.parts_now) + @($r.parts_later)) -contains $k) }
         $tbSmtpUser.Text = [string]$r.email_user
+        $tbPaSite.Text = [string]$r.plant_ai_site
         if ($r.pdf_guides) {
             $script:pdfTouched = $true
             switch ([string]$r.pdf_guides) { "ko" { $rbPdfKo.Checked = $true } "both" { $rbPdfBoth.Checked = $true } "none" { $rbPdfNone.Checked = $true } default { $rbPdfEn.Checked = $true } }
@@ -1001,8 +1032,14 @@ $script:installing = $false
 $btnGo.add_Click({
     $secrets = Write-Secrets
     $a = Install-Command $secrets
+    # Local plant AI runs on THIS PC, whatever computer runs the garden: its key goes straight
+    # into its own private file here (never to the garden computer), and its set-up gets a
+    # black window of its own.
+    $plantAi = ($rbCustom.Checked -and $PlantAiHw.Ok -and $PartBoxes["plantai"].Checked)
+    if ($plantAi -and $tbPaKey.Text) { Save-PlantAiKey $tbPaKey.Text }
     # Typed passwords and keys are not kept in this window any longer.
-    foreach ($tb in @($tbPw, $tbPw2, $tbDbPw, $tbWikiPw, $tbWikiPw2, $tbGemini, $tbOpenRouter, $tbPerenual, $tbSmtpPw)) { $tb.Text = "" }
+    foreach ($tb in @($tbPw, $tbPw2, $tbDbPw, $tbWikiPw, $tbWikiPw2, $tbGemini, $tbOpenRouter, $tbPerenual, $tbSmtpPw, $tbPaKey)) { $tb.Text = "" }
+    if ($plantAi) { Start-Process powershell.exe -ArgumentList "-NoExit -NoProfile -ExecutionPolicy Bypass -File `"$Menu`" -Action plant-ai -SiteUrl $($tbPaSite.Text.Trim())" }
     $script:status = "installing"; Save-Record
     # A fresh start: the black window writes RUNNING, then RESTART, FAILED or DONE.
     Remove-Item (Join-Path $Root "logs\windows-install-status.txt") -ErrorAction SilentlyContinue

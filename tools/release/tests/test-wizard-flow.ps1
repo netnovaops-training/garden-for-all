@@ -28,10 +28,15 @@ $results = Join-Path $tmp "results.txt"
 $PW = "Garden-test-" + [guid]::NewGuid().ToString("N").Substring(0, 10)   # made up here, never a real one
 $KEYS = @{ wiki = "Wiki-test-pass-123"; gemini = "AIzaTESTKEY0123456789"; perenual = "sk-perenual-test-42"; smtp = "abcd efgh ijkl mnop" }
 
-function Harness($name, $drive) {
+function Harness($name, $drive, $card = "") {
     $src = Get-Content (Join-Path $tmp "windows\Garden-Setup.ps1") -Raw
     $stub = 'function Start-Process { $script:launched = ($args -join " ") }' + "`n"
     $src = $src.Replace('$Root = Split-Path -Parent $PSScriptRoot', $stub + '$Root = Split-Path -Parent $PSScriptRoot')
+    # -card: a made-up graphics card in place of this PC's own (the Local plant AI check).
+    if ($card) {
+        $plant = '. (Join-Path $PSScriptRoot "Garden-PlantAi.ps1")'
+        $src = $src.Replace($plant, $plant + "`nfunction Get-PlantAiHardware { return $card }")
+    }
     $pre = @'
 function Show-Problem($m) { $script:problems += $m }
 function Ask-YesNo($m) { $script:asked += $m; return $script:answer }
@@ -205,6 +210,34 @@ Harness "resume" @'
     Check-It "and it says so on the first page" ($lbResumed.Text -like "Carried on*")
     Check-It "the step list shows the earlier steps as done" (@($steps.Controls | Where-Object { $_.Text -like ([string][char]0x2713 + "*") }).Count -eq 8)
 '@
+
+# ---- 4. Local plant AI: offered with a 12 GB card, hidden (with a reason) without -----------
+Remove-Item (Join-Path $tmp "garden-setup.json") -ErrorAction SilentlyContinue
+Harness "plantai-yes" @'
+    Show-Page "level"; $rbCustom.Checked = $true; Show-Page "parts"; [Windows.Forms.Application]::DoEvents()
+    Check-It "a 12 GB card: the Local plant AI box is offered" ($PartBoxes["plantai"].Visible -and $PartBoxes["plantai"].Enabled)
+    $PartBoxes["plantai"].Checked = $true; [Windows.Forms.Application]::DoEvents()
+    Check-It "ticked: its own page comes after the other parts" ((Get-Path) -contains "part-plantai")
+    Show-Page "part-plantai"; [Windows.Forms.Application]::DoEvents()
+    Check-It "the page says what will run on this card, in English and Korean" ((@(All-Controls $pPlantAi | Where-Object { $_.Text -like "This PC: Test card RTX, 12 GB*" -and $_.Text -match "[$([char]0xAC00)-$([char]0xD7A3)]" })).Count -eq 1)
+    Check-It "the garden's address is filled in from the web name" ($tbPaSite.Text -eq "https://junsgarden.zapto.org")
+    $tbPaKey.Text = "not-a-key"; Go-Next
+    Check-It "a wrong helper key stops Next" ($script:page -eq "part-plantai" -and $script:problems.Count -eq 1)
+    $tbPaSite.Text = "http://8.8.8.8"; $tbPaKey.Text = ""; Go-Next
+    Check-It "plain http to an address that is not at home stops Next" ($script:page -eq "part-plantai")
+    $tbPaSite.Text = "https://junsgarden.zapto.org"; $tbPaKey.Text = "gw_" + ("0123456789abcdef0123456789abcdef01234567"); Go-Next
+    Check-It "a good address and key: Next goes on" ($script:page -ne "part-plantai")
+    Show-Page "summary"; Check-It "the summary names the plant AI and its card, never the key" ($tbSummary.Text -match "PLANT AI       on this PC \(Test card RTX\)" -and $tbSummary.Text -notmatch "0123456789abcdef")
+'@ '@{ Ok = $true; Gpu = "Test card RTX"; VramGb = 12; RamGb = 32; Why = "" }'
+Remove-Item (Join-Path $tmp "garden-setup.json") -ErrorAction SilentlyContinue
+Harness "plantai-no" @'
+    Show-Page "level"; $rbCustom.Checked = $true; Show-Page "parts"; [Windows.Forms.Application]::DoEvents()
+    Check-It "an 8 GB card: the Local plant AI box is hidden" (-not $PartBoxes["plantai"].Visible -and -not $PartBoxes["plantai"].Enabled)
+    Check-It "with one line saying why, in English and Korean" ((@(All-Controls $pParts | Where-Object { $_.Text -like "Local plant AI is not offered on this PC*" -and $_.Text -match "[$([char]0xAC00)-$([char]0xD7A3)]" })).Count -eq 1)
+    $PartBoxes["plantai"].Checked = $true; [Windows.Forms.Application]::DoEvents()
+    Check-It "and even ticked by an old record, it never gets a page" (-not ((Get-Path) -contains "part-plantai"))
+    Show-Page "summary"; Check-It "the summary says why it is not offered" ($tbSummary.Text -match "PLANT AI       not offered on this PC: the graphics card has 8 GB")
+'@ '@{ Ok = $false; Gpu = "Small card"; VramGb = 8; RamGb = 16; Why = "the graphics card has 8 GB; 12 GB or more is needed" }'
 
 Get-ChildItem $env:TEMP -Filter "garden-wizard-*.txt" -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -gt (Get-Date).AddMinutes(-10) } | Remove-Item -Force
 if (Test-Path $results) { Get-Content $results -Encoding UTF8 } else { "FAIL  no results were written" }

@@ -1,0 +1,16 @@
+# The libraries the plant AI helper needs from outside Python itself. Edit THIS file, then rebuild
+# requirements.txt (every library with its exact version and checksum) with:
+#   docker run --rm -v "$PWD":/w -w /w python:3.13-slim sh -c \
+#     "pip install -q pip-tools && pip-compile --generate-hashes --strip-extras -o requirements.txt requirements.in"
+#   httpx       web requests (pages, photos, Ollama on this computer, the garden website)
+#   certifi     the usual list of trusted certificate roots
+#   selectolax  reads web pages into lines of text
+#   Pillow      opens photos, measures sharpness, writes .webp
+#   ImageHash   spots the same photo twice (perceptual hash)
+#   ddgs        DuckDuckGo web search (no key needed)
+httpx==0.28.1
+certifi
+selectolax==0.3.29
+Pillow==13.0.0
+ImageHash==4.3.2
+ddgs

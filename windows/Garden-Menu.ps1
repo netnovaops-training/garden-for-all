@@ -45,7 +45,9 @@ param(
     [ValidateSet("", "off", "on")][string]$KeepRunning = "",
     # A private file with the passwords and keys typed in the wizard (only this
     # Windows user can read it). Handed to the garden computer, then deleted here.
-    [string]$SecretsFile = ""
+    [string]$SecretsFile = "",
+    # Local plant AI on this PC (-Action plant-ai): the garden's address the helper asks for work.
+    [string]$SiteUrl = ""
 )
 
 $PartsGiven = $PSBoundParameters.ContainsKey('Parts')   # was -Parts given? (read here: inside a function it would mean that function's own options)
@@ -72,6 +74,7 @@ $TunnelPort = 18030                               # this PC's end of the SSH tun
 $DefaultDistro = "JunsGarden"                     # the WSL Ubuntu made for the garden
 Set-Location $Root
 . (Join-Path $PSScriptRoot "Garden-Network.ps1")  # this PC's address; find computers at home
+. (Join-Path $PSScriptRoot "Garden-PlantAi.ps1")  # Local plant AI on this PC (More, 22)
 try { $Host.UI.RawUI.WindowTitle = "Jun's Garden" } catch { }
 
 # ---------- small helpers ------------------------------------------------------
@@ -1104,6 +1107,7 @@ function Show-More {
   19) Reach the garden from anywhere, privately (Tailscale): on / off
   20) Rename or move a file or folder (every place that uses it follows)
   21) Find the garden computer again (if its address changed)
+  22) Local plant AI on THIS PC (NVIDIA card, 12 GB or more): set up, helper key, off
 
    0) Back
 "@
@@ -1130,6 +1134,7 @@ function Show-More {
             "19" { Invoke-Garden "tailscale" | Out-Null; Note "On this PC too: install Tailscale from https://tailscale.com/download and sign in with the same account." }
             "20" { Invoke-Garden "rename" | Out-Null; Sync-Renamed-Here }
             "21" { Find-Garden-Again }
+            "22" { Show-PlantAi }
             "0"  { return }
             default { Note "Please type one of the numbers shown." }
         }
@@ -1163,6 +1168,10 @@ switch ($Action) {
     # page's form): settings, front door, old name forwarding, restart, then the new labels.
     "webname" { Change-Address }
     "copy-newest-quiet" { Copy-Newest-Quiet }
+    # Local plant AI on THIS PC (Garden-PlantAi.ps1): the set-up the wizard starts, and its one
+    # administrator step (started by the set-up itself, with Windows' permission).
+    "plant-ai" { Do-PlantAi $SiteUrl "" }
+    "plant-ai-service" { Install-PlantAiService }
     default   { exit (Invoke-Garden $Action) }
 }
 # Something said STOPPED? Then end with an error code, so a task or a script

@@ -1,0 +1,13 @@
+# Local plant AI (windows/Garden-PlantAi.ps1 and the setup wizard's "Local plant AI" part): Korean
+# 로컬 식물 AI(windows/Garden-PlantAi.ps1, 설치 마법사의 '로컬 식물 AI')의 한국어 번역이에요.
+# Format: English<TAB>Korean, UTF-8, one sentence per line. {gpu}, {vram} and {ram} are filled in.
+This PC: {gpu}, {vram} GB of graphics memory, {ram} GB of memory. It will run phi4 (about 9 GB) to fill in plant facts and gemma4:12b (about 8 GB) to check them, one at a time.	이 PC: {gpu}, 그래픽 메모리 {vram}GB, 메모리 {ram}GB. 식물 정보를 채우는 phi4(약 9GB)와 그것을 확인하는 gemma4:12b(약 8GB)를 하나씩 번갈아 돌려요.
+Only {ram} GB of memory: it works, but more slowly (16 GB or more is better).	메모리가 {ram}GB뿐이에요: 돌아가지만 더 느려요 (16GB 이상이 좋아요).
+The AI that fills in new plants runs here, on this PC's graphics card. Nothing is opened on this PC or on the garden computer.	새 식물을 채우는 AI가 여기, 이 PC의 그래픽 카드에서 돌아가요. 이 PC에도 정원 컴퓨터에도 새로 여는 것이 없어요.
+It needs an NVIDIA card with 12 GB of graphics memory or more (like an RTX 4070 Ti). The rest of the garden works without it.	그래픽 메모리 12GB 이상의 NVIDIA 카드(예: RTX 4070 Ti)가 필요해요. 정원의 나머지는 이것 없이도 돌아가요.
+No helper key yet. On the website: Add plant, Desktop helper, Make a helper key. Then: this menu, More, 22, and paste it.	아직 도우미 키가 없어요. 웹사이트에서: 식물 추가, 데스크톱 도우미, 도우미 키 만들기. 그다음: 이 메뉴, More, 22에서 붙여 넣으세요.
+Done. Add a plant on the website (Add plant tab): the helper fills it in within a few minutes while this PC is on.	끝났어요. 웹사이트에서 식물을 추가하세요('식물 추가' 탭): 이 PC가 켜져 있으면 몇 분 안에 도우미가 채워요.
+Local plant AI is not offered on this PC: it needs an NVIDIA graphics card with 12 GB or more (like an RTX 4070 Ti).	이 PC에서는 로컬 식물 AI를 쓸 수 없어요: 12GB 이상의 NVIDIA 그래픽 카드(예: RTX 4070 Ti)가 필요해요.
+What gets installed here: Ollama (runs the AI models, starts with Windows, answers on this PC only), the two models (about 18 GB of downloads), Python and the small helper program. Windows asks for permission once.	여기에 설치되는 것: Ollama(AI 모델을 돌려요, Windows와 함께 시작하고, 이 PC 안에서만 응답해요), 모델 두 개(약 18GB 내려받기), Python, 작은 도우미 프로그램. Windows가 한 번 허락을 물어봐요.
+The helper asks your garden website for new plants every minute, through its usual address. Nothing is opened on this PC or on the garden computer. While this PC is off, new plants wait in a queue.	도우미는 1분마다 정원 웹사이트의 평소 주소로 새 식물이 있는지 물어봐요. 이 PC에도 정원 컴퓨터에도 새로 여는 것이 없어요. 이 PC가 꺼져 있는 동안 새 식물은 대기열에서 기다려요.
+The key is saved in plant-ai\worker-key.txt, readable by your Windows user only. It is never shown or sent anywhere else.	키는 plant-ai\worker-key.txt에 저장되고, 내 Windows 사용자만 읽을 수 있어요. 다른 곳에 보이거나 보내지 않아요.
