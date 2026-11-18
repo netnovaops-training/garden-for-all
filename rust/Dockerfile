@@ -59,7 +59,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
     && cp "/build/target/release/$APP" /build/app
 
 # --- run ---------------------------------------------------------------------
-FROM debian:bookworm-slim@sha256:7ff6ba31527b9e336162fa061746c366c4b2032f4d2cff2078bea43f78efe3f8
+FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
 # ca-certificates: any outbound HTTPS.
 # tzdata:  without it every date in the app is UTC, silently. The apps read TZ
