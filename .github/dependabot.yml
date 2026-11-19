@@ -1,165 +1,85 @@
-# Dependabot version updates.
-#
-# All update pull requests go to the `fixes` branch, never straight to main: they are looked at
-# there and reach main with the rest of the fixes. (Dependabot's separate SECURITY updates ignore
-# target-branch and still go to the default branch; the code-fingerprints workflow keeps the public
-# list right when one of those is merged.)
-# Once a week, Monday 05:00 Pacific time. Minor and patch updates of one folder arrive together
-# in a single pull request; a major update is its own pull request.
-# Python: beds/requirements.txt and .github/requirements/*.txt are pip-compile files (versions AND
-# checksums), made from the .in files next to them; Dependabot updates both together.
+# One Dependabot PR per repo per month: every ecosystem in one multi-ecosystem group,
+# 00:00 New York on the 1st (before the 6 AM pull). Owner's rule 2026-11-19: few, large PRs.
+# Made by Scratchpad tools/dependabot_one_pr.py; edit the ecosystem list here, keep the group.
 version: 2
-
+multi-ecosystem-groups:
+  all-dependencies:
+    schedule:
+      interval: monthly
+      time: "00:00"
+      timezone: America/New_York
 updates:
-  - package-ecosystem: pip
-    directories: ["/beds", "/.github/requirements"]
-    target-branch: fixes
-    # wait a week after a version is published: brand-new releases are where bad packages hide
-    cooldown:
-      default-days: 7
-    schedule:
-      interval: weekly
-      day: monday
-      time: "00:00"
-      timezone: America/New_York
-    open-pull-requests-limit: 5
-    labels: [dependencies, python]
-    groups:
-      pip-minor-and-patch:
-        update-types: [minor, patch]
-
-  - package-ecosystem: cargo
-    directory: /rust
-    target-branch: fixes
-    # wait a week after a version is published: brand-new releases are where bad packages hide
-    cooldown:
-      default-days: 7
-    schedule:
-      interval: weekly
-      day: monday
-      time: "00:00"
-      timezone: America/New_York
-    open-pull-requests-limit: 5
-    labels: [dependencies, rust]
-    groups:
-      cargo-minor-and-patch:
-        update-types: [minor, patch]
-
-  - package-ecosystem: gradle
-    directory: /android-app
-    target-branch: fixes
-    # wait a week after a version is published: brand-new releases are where bad packages hide
-    cooldown:
-      default-days: 7
-    schedule:
-      interval: weekly
-      day: monday
-      time: "00:00"
-      timezone: America/New_York
-    open-pull-requests-limit: 5
-    labels: [dependencies, android]
-    groups:
-      gradle-minor-and-patch:
-        update-types: [minor, patch]
-
-  - package-ecosystem: docker
-    directory: /rust
-    target-branch: fixes
-    # wait a week after a version is published: brand-new releases are where bad packages hide
-    cooldown:
-      default-days: 7
-    schedule:
-      interval: weekly
-      day: monday
-      time: "00:00"
-      timezone: America/New_York
-    open-pull-requests-limit: 5
-    labels: [dependencies, docker]
-    groups:
-      docker-minor-and-patch:
-        update-types: [minor, patch]
-
-  - package-ecosystem: docker
-    directory: /beds
-    target-branch: fixes
-    # wait a week after a version is published: brand-new releases are where bad packages hide
-    cooldown:
-      default-days: 7
-    schedule:
-      interval: weekly
-      day: monday
-      time: "00:00"
-      timezone: America/New_York
-    open-pull-requests-limit: 5
-    labels: [dependencies, docker]
-    groups:
-      docker-minor-and-patch:
-        update-types: [minor, patch]
-
-  - package-ecosystem: docker
-    directory: /docker/tools
-    target-branch: fixes
-    # wait a week after a version is published: brand-new releases are where bad packages hide
-    cooldown:
-      default-days: 7
-    schedule:
-      interval: weekly
-      day: monday
-      time: "00:00"
-      timezone: America/New_York
-    open-pull-requests-limit: 5
-    labels: [dependencies, docker]
-    groups:
-      docker-minor-and-patch:
-        update-types: [minor, patch]
-
-  - package-ecosystem: docker
-    directory: /docker/wiki
-    target-branch: fixes
-    # wait a week after a version is published: brand-new releases are where bad packages hide
-    cooldown:
-      default-days: 7
-    schedule:
-      interval: weekly
-      day: monday
-      time: "00:00"
-      timezone: America/New_York
-    open-pull-requests-limit: 5
-    labels: [dependencies, docker]
-    groups:
-      docker-minor-and-patch:
-        update-types: [minor, patch]
-
-  - package-ecosystem: docker-compose
-    directory: /
-    target-branch: fixes
-    # wait a week after a version is published: brand-new releases are where bad packages hide
-    cooldown:
-      default-days: 7
-    schedule:
-      interval: weekly
-      day: monday
-      time: "00:00"
-      timezone: America/New_York
-    open-pull-requests-limit: 5
-    labels: [dependencies, docker]
-    groups:
-      compose-minor-and-patch:
-        update-types: [minor, patch]
-
-  - package-ecosystem: github-actions
-    directory: /
-    target-branch: fixes
-    # wait a week after a version is published: brand-new releases are where bad packages hide
-    cooldown:
-      default-days: 7
-    schedule:
-      interval: weekly
-      day: monday
-      time: "00:00"
-      timezone: America/New_York
-    open-pull-requests-limit: 5
-    labels: [dependencies, github-actions]
-    groups:
-      actions-minor-and-patch:
-        update-types: [minor, patch]
+- package-ecosystem: pip
+  directories:
+  - /beds
+  - /.github/requirements
+  labels:
+  - dependencies
+  - python
+  patterns:
+  - '*'
+  multi-ecosystem-group: all-dependencies
+- package-ecosystem: cargo
+  directory: /rust
+  labels:
+  - dependencies
+  - rust
+  patterns:
+  - '*'
+  multi-ecosystem-group: all-dependencies
+- package-ecosystem: gradle
+  directory: /android-app
+  labels:
+  - dependencies
+  - android
+  patterns:
+  - '*'
+  multi-ecosystem-group: all-dependencies
+- package-ecosystem: docker
+  directory: /rust
+  labels:
+  - dependencies
+  - docker
+  patterns:
+  - '*'
+  multi-ecosystem-group: all-dependencies
+- package-ecosystem: docker
+  directory: /beds
+  labels:
+  - dependencies
+  - docker
+  patterns:
+  - '*'
+  multi-ecosystem-group: all-dependencies
+- package-ecosystem: docker
+  directory: /docker/tools
+  labels:
+  - dependencies
+  - docker
+  patterns:
+  - '*'
+  multi-ecosystem-group: all-dependencies
+- package-ecosystem: docker
+  directory: /docker/wiki
+  labels:
+  - dependencies
+  - docker
+  patterns:
+  - '*'
+  multi-ecosystem-group: all-dependencies
+- package-ecosystem: docker-compose
+  directory: /
+  labels:
+  - dependencies
+  - docker
+  patterns:
+  - '*'
+  multi-ecosystem-group: all-dependencies
+- package-ecosystem: github-actions
+  directory: /
+  labels:
+  - dependencies
+  - github-actions
+  patterns:
+  - '*'
+  multi-ecosystem-group: all-dependencies
