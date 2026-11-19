@@ -18,12 +18,16 @@
 # The @sha256 digest pins the exact image (Dependabot's docker updates keep it current).
 FROM python:3.14-alpine@sha256:601e99e090cb08c2784a42395487709500bc39930307fe72f3f11a8f3c430762
 
+# Distro package versions are not pinned (hadolint DL3018): the base image is pinned by digest and
+# kept current by Dependabot; pinned package versions break the build when the mirror drops them.
+# hadolint ignore=DL3018
 RUN apk add --no-cache mariadb-client
 
 COPY wiki_setup.py /usr/local/bin/wiki_setup.py
 
 # Run as a normal user, not root: this job needs no special powers.
-RUN adduser -D -H wikisetup
-USER wikisetup
+# uid 1000 is the one adduser picked by itself before; now written down, and USER by number (hadolint DL3066).
+RUN adduser -D -H -u 1000 wikisetup
+USER 1000
 
 ENTRYPOINT ["python3", "-u", "/usr/local/bin/wiki_setup.py"]

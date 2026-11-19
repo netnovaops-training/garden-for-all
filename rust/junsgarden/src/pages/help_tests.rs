@@ -16,11 +16,14 @@ use crate::AppState;
 
 /// A small guides folder: one guide in both languages, a picture, a registry.
 fn fixture() -> PathBuf {
+    // Semgrep reads nosemgrep on the line of the finding or the line before it; on the closing line
+    // (where it was) the alert stayed open.
+    // nosemgrep: rust.lang.security.temp-dir.temp-dir (test only: a per-process throwaway folder, or a path that is never created)
     let dir = std::env::temp_dir().join(format!(
         "jg-help-{}-{}",
         std::process::id(),
         rand::random::<u32>()
-    )); // nosemgrep: rust.lang.security.temp-dir.temp-dir (test only: a per-process throwaway folder, or a path that is never created)
+    ));
     std::fs::create_dir_all(dir.join("ko")).unwrap();
     std::fs::create_dir_all(dir.join("images")).unwrap();
     std::fs::write(
