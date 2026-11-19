@@ -9,7 +9,11 @@ guide expects (MUST_CONTAIN below). Writes the full list to
 link-check-report.txt next to this package folder.
 Nothing here is needed to RUN the garden.
 """
-import concurrent.futures as cf, pathlib, re, subprocess, sys
+import concurrent.futures as cf
+import pathlib
+import re
+import subprocess
+import sys
 
 PKG = pathlib.Path(__file__).resolve().parents[2]
 REPORT = PKG.parent / "link-check-report.txt"

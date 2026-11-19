@@ -10,7 +10,12 @@ Needs: a Python that can make symbolic links (Linux, or Windows with Developer M
 symbolic-link cases are skipped, and said so, when it cannot. To use the Python of the service:
     docker run --rm -v "<repo>:/r:ro" python:3.12-slim python /r/tools/release/tests/test_tag_photo_path.py
 """
-import importlib.abc, importlib.machinery, io, os, shutil, sys, tempfile
+import importlib.abc
+import importlib.machinery
+import io
+import os
+import sys
+import tempfile
 from unittest import mock
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -70,7 +75,7 @@ os.environ["GARDEN_PHOTO_DIR"] = photos
 os.environ["BEDS_ALLOWED_EMAILS"] = "tester@example.com"
 sys.meta_path.insert(0, _Stub())
 sys.path.insert(0, BEDS)
-import service  # noqa: E402  (the real file)
+import service  # the real file
 
 
 class Req(service.Handler):

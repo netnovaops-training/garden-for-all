@@ -12,12 +12,22 @@ Cases: main mode ALL MATCH; one tampered file; one extra file; one missing file;
 spaces, brackets and Korean; the old fixed-commit mode (a real old commit if this repository has one, and
 a made-up one); a fixed commit that has the list; a damaged CODE-SOURCE.txt; and the same for PowerShell.
 """
-import hashlib, http.server, io, os, shutil, subprocess, sys, tarfile, tempfile, threading, zipfile
+import hashlib
+import http.server
+import io
+import os
+import shutil
+import subprocess
+import sys
+import tarfile
+import tempfile
+import threading
+import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 sys.path.insert(0, os.path.join(ROOT, "tools", "release"))
-import make_fingerprints as mf          # noqa: E402
+import make_fingerprints as mf
 
 REPO = "testowner/testrepo"
 LIST = mf.LIST_NAME

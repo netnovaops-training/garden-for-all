@@ -13,7 +13,15 @@ Chrome (or Microsoft Edge) to print the pages, and python-markdown:
     pip install markdown
 Nothing here is needed to RUN the garden; it only makes the PDF copies.
 """
-import html, os, re, shutil, subprocess, sys, tempfile, pathlib
+import html
+import os
+import pathlib
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+
 import markdown
 
 PKG = pathlib.Path(__file__).resolve().parents[2]
@@ -112,7 +120,7 @@ def find_browser():
 def quick_part(text):
     """Only the title and the "Quick version" (or "짧은 버전") section."""
     title = text.split("\n", 1)[0]
-    m = re.search(r"^## (Quick version|짧은 버전)\n(.*?)(?=^---\s*$|^## )", text, re.S | re.M)
+    m = re.search(r"^## (Quick version|짧은 버전)\n(.*?)(?=^---\s*$|^## )", text, re.DOTALL | re.MULTILINE)
     return f"{title}\n\n{m.group(0)}" if m else None
 
 
@@ -123,7 +131,8 @@ WATERMARK = os.environ.get("GARDEN_WATERMARK") or os.environ.get("GARDEN_LOGO", 
 def faint_image_uri(path, opacity=0.16):
     """The watermark image, made faint: wrapped in a small SVG at low opacity
     (works for any picture type), as a data URI."""
-    import base64, mimetypes
+    import base64
+    import mimetypes
     mime = mimetypes.guess_type(path)[0] or "image/png"
     data = base64.b64encode(open(path, "rb").read()).decode()
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100">'
@@ -148,7 +157,7 @@ def to_pdf(md_text, src_path, pdf_path, label, browser, tmp, step=""):
     base = src_path.parent
     body = markdown.markdown(md_text, extensions=["tables", "fenced_code", "sane_lists"])
     # The Quick version sits in a soft box of the step's colour.
-    body = re.sub(r'(<h2>(?:Quick version|짧은 버전)</h2>.*?)(<hr\s*/?>|$)', r'<div class="quick">\1</div>\2', body, count=1, flags=re.S)
+    body = re.sub(r'(<h2>(?:Quick version|짧은 버전)</h2>.*?)(<hr\s*/?>|$)', r'<div class="quick">\1</div>\2', body, count=1, flags=re.DOTALL)
     a, soft, line = STEP_COLOURS.get(step.split("단계")[0].replace("Step ", "").split(" ")[0].strip(), STEP_COLOURS["3"])
     if "단계" in step and step.split("단계")[0].strip() == "6b":
         a, soft, line = STEP_COLOURS["6b"]

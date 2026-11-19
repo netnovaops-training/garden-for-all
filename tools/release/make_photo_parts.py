@@ -24,7 +24,14 @@
   rewrites the list so each part names its file id on that host (IDS.txt: "<part name> <id>" per
   line). Run it once the parts are uploaded.
 """
-import argparse, hashlib, json, os, secrets, subprocess, sys, threading
+import argparse
+import hashlib
+import json
+import os
+import secrets
+import subprocess
+import sys
+import threading
 
 ITER = 10000
 
@@ -163,7 +170,7 @@ def main():
     print(f"{n} parts of about {a.part_mb:g} MB in {a.out}; list: {os.path.join(a.out, a.manifest)}")
     print("Next: copy the list into the program as PHOTO-PARTS.json; upload the parts to each host;")
     print("put the key into the data zip (never anywhere else):")
-    print(f"  GARDEN_PHOTOS_KEY=<key folder>/photos.key python tools/release/make_zip.py OUT/junsgarden-for-jun.zip")
+    print("  GARDEN_PHOTOS_KEY=<key folder>/photos.key python tools/release/make_zip.py OUT/junsgarden-for-jun.zip")
     return 0
 
 

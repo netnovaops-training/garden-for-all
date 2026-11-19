@@ -39,7 +39,17 @@ installer (tools/get-pdfs.py). With --pdf-english / --pdf-korean (the folders th
 were built in) step 5b builds those two zips into OUT_FOLDER/pdf, prints their SHA-256
 and checks they are the ones PDF-GUIDES-SHA256.txt (in the public code) names.
 """
-import argparse, hashlib, io, os, pathlib, shutil, subprocess, sys, tarfile, urllib.request, zipfile
+import argparse
+import hashlib
+import io
+import os
+import pathlib
+import shutil
+import subprocess
+import sys
+import tarfile
+import urllib.request
+import zipfile
 
 HERE = pathlib.Path(__file__).resolve().parent
 PKG = HERE.parents[1]
@@ -62,7 +72,10 @@ OUT = pathlib.Path(A.out).resolve()
 STAGE = OUT / "build" / "junsgarden-for-jun"
 CRLF_EXT = (".cmd", ".ps1", ".bat")
 sys.path.insert(0, str(HERE))
-from make_fingerprints import OFF_GITHUB      # the files kept off GitHub on purpose (never on CODE-FINGERPRINTS.txt)
+from make_fingerprints import (
+    OFF_GITHUB,  # the files kept off GitHub on purpose (never on CODE-FINGERPRINTS.txt)
+)
+
 STARTERS = ["Start-Here-Ubuntu.sh", "Start-Here-Windows.cmd", "Garden-Menu-Windows.cmd",
             "tools/get-code.py", "tools/get-code.ps1"]
 
@@ -183,7 +196,8 @@ if check.exists():
     shutil.rmtree(check)
 with zipfile.ZipFile(OUT / "junsgarden-for-jun.zip") as z:
     z.extractall(check)
-import importlib.util      # the zip's own get-code.py, loaded from the extracted zip (its folder is then the garden folder)
+import importlib.util  # the zip's own get-code.py, loaded from the extracted zip (its folder is then the garden folder)
+
 spec = importlib.util.spec_from_file_location("zip_get_code", check / "junsgarden-for-jun" / "tools" / "get-code.py")
 zip_get_code = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(zip_get_code)

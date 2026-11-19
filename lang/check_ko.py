@@ -26,7 +26,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 TSV = HERE / "ko.tsv"
 sys.path.insert(0, str(HERE))
-import extract_strings  # noqa: E402
+import extract_strings
 
 
 def read_tsv():

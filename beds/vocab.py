@@ -42,7 +42,8 @@ from __future__ import annotations
 
 import difflib
 import re
-from dataclasses import dataclass, field as dc_field
+from dataclasses import dataclass
+from dataclasses import field as dc_field
 
 # Fields worth policing. Open-ended text -- notes, names, descriptions -- is
 # deliberately absent: there is nothing to normalise "care_notes" ONTO, and

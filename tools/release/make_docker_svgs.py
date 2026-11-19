@@ -2,6 +2,7 @@
 Picture 1: a VM = a whole second computer inside your computer (heavy).
 Picture 2: Docker = small boxes, one program each, sharing one computer (light)."""
 import os
+
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "START-HERE", "images")
 
 T = {

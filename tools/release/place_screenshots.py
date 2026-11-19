@@ -6,7 +6,7 @@ Each entry: guide file, the exact heading text (English, Korean), and the
 pictures with a plain caption. A picture already in a guide is not added again,
 so this can be run again after the pictures are retaken.
 """
-import io, pathlib
+import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[2] / "START-HERE"
 
@@ -78,7 +78,7 @@ PLACES = [
 def place(path, heading, pics, prefix, ko):
     if not path.exists() or heading is None:
         return 0
-    s = io.open(path, encoding="utf-8", newline="").read()
+    s = open(path, encoding="utf-8", newline="").read()
     nl = "\r\n" if "\r\n" in s else "\n"
     lines = s.split(nl)
     try:
@@ -97,7 +97,7 @@ def place(path, heading, pics, prefix, ko):
     if i + 1 < len(lines) and lines[i + 1].strip() == "":
         add = add[:-1]          # the guide already has an empty line here
     lines[i + 1:i + 1] = [""] + add
-    io.open(path, "w", encoding="utf-8", newline="").write(nl.join(lines))
+    open(path, "w", encoding="utf-8", newline="").write(nl.join(lines))
     return len(add) // 2
 
 

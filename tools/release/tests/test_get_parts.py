@@ -7,7 +7,18 @@ key outside every repo. Nothing real is touched, nothing goes on the internet.
 
     python tools/release/tests/test_get_parts.py
 """
-import hashlib, http.server, json, os, shutil, socket, subprocess, sys, tempfile, threading, time, zipfile
+import hashlib
+import http.server
+import json
+import os
+import shutil
+import socket
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 PY = sys.executable

@@ -1,7 +1,13 @@
 """Test-only: a small copy of the garden data, so a full install test is quick.
 Same database (all plants), ~40 photos per folder, 40 wiki pages.
 Writes into the scratchpad; the real package is untouched."""
-import gzip, hashlib, io, json, os, sys, tarfile
+import gzip
+import hashlib
+import io
+import json
+import os
+import sys
+import tarfile
 
 # Run from anywhere:  python tools/release/make_small_test.py [OUTPUT-FOLDER]
 PKG = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

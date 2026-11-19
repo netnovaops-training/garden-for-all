@@ -47,7 +47,6 @@ never appears - which is the worst failure available here."
 from __future__ import annotations
 
 import hashlib
-import json
 import uuid
 
 SCHEMA = [

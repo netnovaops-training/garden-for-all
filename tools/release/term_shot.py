@@ -10,7 +10,13 @@ Marks for the guides: text between ⟦ and ⟧ gets an orange ring around it,
 and ⟦text⟧{a note} also writes "← a note" next to it, so a reader sees at once
 where to look or what to type.
 """
-import html, os, re, subprocess, sys, tempfile, pathlib
+import html
+import os
+import pathlib
+import re
+import subprocess
+import sys
+import tempfile
 
 COLORS = {30: "#3b4252", 31: "#e06c75", 32: "#8fd19b", 33: "#e5c07b", 34: "#7aa2f7", 35: "#c49ce4",
           36: "#7dcfff", 37: "#e6e6e6", 90: "#7f8794", 91: "#ff7b85", 92: "#a6e3a1", 93: "#f2d58b",

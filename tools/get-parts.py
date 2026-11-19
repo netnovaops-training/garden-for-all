@@ -40,7 +40,17 @@ How it works
 Exit codes: 0 done or already up to date; 1 failed (nothing was written); 2 with
 --is-current: not up to date; 4 key missing or wrong; 5 openssl missing.
 """
-import hashlib, json, os, shutil, subprocess, sys, tempfile, threading, time, urllib.parse, urllib.request
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+import urllib.parse
+import urllib.request
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # the garden folder
 STATE_DIR = ".garden-downloads"

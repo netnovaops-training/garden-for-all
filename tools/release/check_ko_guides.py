@@ -8,7 +8,9 @@ never differ between languages: the web links, the commands and code in
 other does not. A Korean guide that is only a short version (it says so and
 links to the English) is checked on its links and pictures only.
 """
-import pathlib, re, sys
+import pathlib
+import re
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2] / "START-HERE"
 
@@ -34,14 +36,14 @@ def normal(x):
 def facts(text):
     text = re.sub(r"\*\*", "", text)                      # bold marks are not part of a link
     urls = {normal(u.rstrip(".,);:")) for u in re.findall(r"https?://[A-Za-z0-9._~:/?#\[\]@!$&'*+,;=%-]+", text)}
-    blocks = re.findall(r"```.*?\n(.*?)```", text, re.S)
+    blocks = re.findall(r"```.*?\n(.*?)```", text, re.DOTALL)
     code = set()
     for b in blocks:
         for l in b.split("\n"):
             l = re.sub(r"\s+#\s.*$", "", l).strip()       # a comment after the command may be translated
             if l and re.search(r"[A-Za-z0-9]", l) and not re.search(r"[가-힣]", l):
                 code.add(normal(l))
-    inline = {normal(c) for c in re.findall(r"`([^`\n]+)`", re.sub(r"```.*?```", "", text, flags=re.S))}
+    inline = {normal(c) for c in re.findall(r"`([^`\n]+)`", re.sub(r"```.*?```", "", text, flags=re.DOTALL))}
     pics = {normal(p) for p in re.findall(r"images/([\w.-]+\.(?:png|svg|jpg))", text)}
     return urls, code, inline, pics
 

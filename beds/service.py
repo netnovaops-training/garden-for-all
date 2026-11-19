@@ -43,33 +43,29 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-import pymysql
-
 # These four are imported by their short names because service.py runs as a
 # script from inside the package folder (see the Dockerfile CMD).
 import dedupe
 import freeai
+import garden_ingest as gi
 import gemini
+import pymysql
 import tagphotos
 import tagqueue
-
-import garden_ingest as gi
-from garden_ingest import lookup as lk
-from garden_ingest import identify as ident
-from garden_ingest import semantic, vocab
 from garden_ingest import beds as bd
 from garden_ingest import checkup as cu
-from garden_ingest import wikidraft as wdft
+from garden_ingest import identify as ident
+from garden_ingest import lookup as lk
 from garden_ingest import purchases as pur
-from garden_ingest import wikiapply
-from garden_ingest import wikijs
-from garden_ingest.review_page import REVIEW_HTML
-from garden_ingest.plan_page import PLAN_HTML
+from garden_ingest import semantic, vocab, wikiapply, wikijs
+from garden_ingest import wikidraft as wdft
 from garden_ingest.checkup_page import CHECKUP_HTML
-from garden_ingest.spend_page import SPEND_HTML
 from garden_ingest.diagnose_page import DIAGNOSE_HTML
-from garden_ingest.tagscan_page import TAGSCAN_HTML
+from garden_ingest.plan_page import PLAN_HTML
 from garden_ingest.queue_page import QUEUE_HTML
+from garden_ingest.review_page import REVIEW_HTML
+from garden_ingest.spend_page import SPEND_HTML
+from garden_ingest.tagscan_page import TAGSCAN_HTML
 
 PORT = int(os.environ.get("PORT", "8025"))
 TABLE = os.environ.get("GARDEN_TABLE", "data_source")
@@ -821,9 +817,9 @@ class Handler(BaseHTTPRequestHandler):
             # Kept rather than resolved: where the two sides of one tag
             # printed different things, somebody should look.
             "conflicts": conflicts or {},
-            "note": ("Added as \"{}\" and waiting for approval.".format(name)
+            "note": (f"Added as \"{name}\" and waiting for approval."
                      if created else
-                     ("Updated {} -- it was already in the garden.".format(name)
+                     (f"Updated {name} -- it was already in the garden."
                       if plant_id else
                       "Read the tag but found no name, so nothing was added.")),
         })
@@ -1486,7 +1482,6 @@ class Handler(BaseHTTPRequestHandler):
 
     def log_message(self, *a):
         """Silence the default one-line-per-request log (it is noisy)."""
-        pass
 
 
 _DRAIN_LOCK = threading.Lock()

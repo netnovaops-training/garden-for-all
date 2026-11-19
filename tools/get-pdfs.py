@@ -23,7 +23,13 @@ The garden runs without them. A failure is not an install failure: it prints
 what happened in plain words and exits 1; the garden menu (P) tries again.
 Needs only Python 3. No git, no extra programs.
 """
-import hashlib, importlib.util, os, shutil, sys, tempfile, zipfile
+import hashlib
+import importlib.util
+import os
+import shutil
+import sys
+import tempfile
+import zipfile
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # the garden folder
 _spec = importlib.util.spec_from_file_location("get_parts", os.path.join(os.path.dirname(os.path.abspath(__file__)), "get-parts.py"))

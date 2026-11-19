@@ -25,7 +25,14 @@ zip are never replaced. If anything does not match, nothing is changed.
 
 Needs only Python 3, which Ubuntu has. No git, no extra programs.
 """
-import hashlib, io, os, re, sys, tarfile, tempfile, urllib.request
+import hashlib
+import io
+import os
+import re
+import sys
+import tarfile
+import tempfile
+import urllib.request
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # the garden folder
 CRLF_EXT = (".cmd", ".ps1", ".bat")      # Windows files get Windows line endings, like the zip had

@@ -9,7 +9,10 @@ with its answer after it, exactly as the screen shows it when a person types.
 Marks ⟦..⟧{note} draw the orange rings (term_shot.py). Any email address in the
 output is replaced by the sample you@example.com.
 """
-import io, re, subprocess, sys, pathlib
+import pathlib
+import re
+import subprocess
+import sys
 
 if len(sys.argv) < 2:
     sys.exit("give the folder capture-menus.sh wrote")
@@ -22,7 +25,7 @@ EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
 
 
 def text(name):
-    t = io.open(S / name, encoding="utf-8", errors="replace").read().replace("\r", "")
+    t = open(S / name, encoding="utf-8", errors="replace").read().replace("\r", "")
     return EMAIL.sub("you@example.com", ESC.sub("", t))
 
 

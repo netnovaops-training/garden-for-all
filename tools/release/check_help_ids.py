@@ -13,7 +13,10 @@ Fails (exit 1) when:
  - tags are not 2 to 4 words starting with #, or a brief is missing;
  - with --handbook: a page lacks #help-ID or #help-ID-ko.
 """
-import pathlib, re, sys
+import pathlib
+import re
+import sys
+
 import markdown
 from markdown.extensions.toc import slugify_unicode
 

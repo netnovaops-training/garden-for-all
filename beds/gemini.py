@@ -137,7 +137,7 @@ def _post(body: bytes, model: str | None = None) -> dict:
             last = e.read()[:240].decode("utf-8", "replace")
             if e.code not in RETRY_ON:
                 raise GeminiUnavailable(
-                    "Gemini said {}: {}".format(e.code, last))
+                    f"Gemini said {e.code}: {last}")
             code = e.code
         except Exception as e:  # noqa: BLE001
             last, code = str(e)[:200], 0
@@ -145,7 +145,7 @@ def _post(body: bytes, model: str | None = None) -> dict:
             time.sleep(wait)
             wait *= 2
     raise GeminiUnavailable(
-        "Gemini unavailable after {} tries: {}".format(RETRIES, last))
+        f"Gemini unavailable after {RETRIES} tries: {last}")
 
 
 def enrich(record: dict, model: str | None = None) -> dict:

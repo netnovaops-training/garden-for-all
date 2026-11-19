@@ -37,7 +37,12 @@ it from there, in one of two ways (written into CODE-SOURCE.txt):
 Test-only: SMALL_DIR swaps in a small backup and a small wiki seed, so a full
 install test is quick. The program files are exactly the same.
 """
-import hashlib, io, os, shutil, sys, tarfile, zipfile
+import hashlib
+import io
+import os
+import sys
+import tarfile
+import zipfile
 
 # Run from anywhere:  python tools/release/make_zip.py [OUTPUT.zip]
 # The three zips are written next to OUTPUT (default: next to this package folder).
@@ -146,7 +151,7 @@ with zipfile.ZipFile(PHOTOS, "w", zipfile.ZIP_STORED, allowZip64=True) as z:
         "이 파일은 압축을 풀지 마세요. Home 폴더(Ubuntu)나 바탕 화면(Windows)에 두세요.\n"
         "설치가 알아서 찾아요. 나중에, 또는 사진을 다시 넣으려면: 메뉴 6, 그다음 11\n"
         "(또는: bash garden.sh photos). 이미 있는 사진은 그대로 둬요.\n"
-        "메뉴가 쓰기 전에 지문(fingerprint)을 확인해요.\n").encode("utf-8"))
+        "메뉴가 쓰기 전에 지문(fingerprint)을 확인해요.\n").encode())
 photos_sha = h.hexdigest()
 
 # The starter backup without photos: same pieces, new MANIFEST and SHA256SUMS.
@@ -184,7 +189,7 @@ with zipfile.ZipFile(WIKI, "w", zipfile.ZIP_STORED) as z:
         "위키를 켤 때만 필요해요. 이 파일은 압축을 풀지 말고 Home 폴더(Ubuntu)나\n"
         "바탕 화면(Windows)에 두세요. 그다음 메뉴에서: 9(Parts)로 위키를 켜거나,\n"
         "이미 켜져 있으면:  bash garden.sh wiki\n"
-        "메뉴가 쓰기 전에 지문(fingerprint)을 확인해요.\n").encode("utf-8"))
+        "메뉴가 쓰기 전에 지문(fingerprint)을 확인해요.\n").encode())
 
 # ---- 3. The main zip ---------------------------------------------------------
 if CODE_REF:

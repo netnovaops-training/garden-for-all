@@ -117,7 +117,7 @@ def save(data_url: str, plant_id=None, side: str = "front") -> tuple:
     name = "{}-{}-{}.jpg".format(
         time.strftime("%Y%m%d-%H%M%S"), side, uuid.uuid4().hex[:8])
     im.save(folder / name, "JPEG", quality=88, optimize=True)
-    return "{}/{}".format(folder.name, name), im.width, im.height
+    return f"{folder.name}/{name}", im.width, im.height
 
 
 def record(cur, plant_id, side, rel_path, width, height, who):

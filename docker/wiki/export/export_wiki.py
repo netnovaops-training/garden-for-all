@@ -141,7 +141,7 @@ def main():
         "format": "junsgarden-wiki-seed/1",
         "about": "Pages of the Jun's Garden wiki. Content only: no users, "
                  "passwords, keys, sign-in settings or history.",
-        "exportedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+        "exportedAt": datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds"),
         "pageCount": len(seed_pages),
         "pages": seed_pages,
         "tags": tags,

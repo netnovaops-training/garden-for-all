@@ -7,7 +7,10 @@ them there), so marks are always drawn on a clean copy and never pile up. Run it
 again after shoot-wizard.ps1 retakes the pictures: it refreshes the clean copy
 first when the picture is newer.
 """
-import json, pathlib, shutil
+import json
+import pathlib
+import shutil
+
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]

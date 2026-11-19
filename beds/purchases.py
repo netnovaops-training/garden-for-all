@@ -118,7 +118,7 @@ def read_receipt(text, ask):
         raw = ask(READ_RECEIPT.format(text=text[:14000]))
     except Exception:
         return {"store": "", "date": "", "lines": []}
-    m = re.search(r"\{.*\}", raw, re.S)
+    m = re.search(r"\{.*\}", raw, re.DOTALL)
     if not m:
         return {"store": "", "date": "", "lines": []}
     try:
@@ -179,7 +179,7 @@ def match_line(line_text, catalogue_names, ask):
         raw = ask(MATCH_LINE.format(names=listed, line=line_text))
     except Exception:
         return "", 0.0
-    m = re.search(r"\{.*\}", raw, re.S)
+    m = re.search(r"\{.*\}", raw, re.DOTALL)
     if not m:
         return "", 0.0
     try:
