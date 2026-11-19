@@ -41,6 +41,7 @@ Exit codes: 0 done or already up to date; 1 failed (nothing was written); 2 with
 --is-current: not up to date; 4 key missing or wrong; 5 openssl missing.
 """
 import hashlib
+import http.client
 import json
 import os
 import shutil
@@ -90,13 +91,14 @@ def load_hosts(path, overrides=()):
     placeholder ("-" or PLACEHOLDER...) is not set up and is left out."""
     hosts = {}
     if path and os.path.isfile(path):
-        for line in open(path, encoding="utf-8"):
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            parts = line.split(None, 1)
-            if len(parts) == 2:
-                hosts[parts[0]] = parts[1].strip()
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                parts = line.split(None, 1)
+                if len(parts) == 2:
+                    hosts[parts[0]] = parts[1].strip()
     for o in overrides:
         k, _, v = o.partition("=")
         hosts[k.strip()] = v.strip()
@@ -136,7 +138,8 @@ def holders_of(entries):
 
 
 def load_manifest(path):
-    m = json.load(open(path, encoding="utf-8"))
+    with open(path, encoding="utf-8") as fh:
+        m = json.load(fh)
     if m.get("format") != 1 or not m.get("parts"):
         raise ValueError("damaged list")
     parts = []
@@ -188,9 +191,14 @@ class HostWrong(Exception):
 def open_url(url, start, token=""):
     """(response-like, offset the bytes really start at). file:// is read from the disk (tests)."""
     if url.startswith("file://"):
-        f = open(urllib.request.url2pathname(urllib.parse.urlparse(url).path), "rb")
+        # Returned open on purpose: the caller reads it like a web reply and closes it (_fetch_one's finally).
+        f = open(urllib.request.url2pathname(urllib.parse.urlparse(url).path), "rb")  # noqa: SIM115
         f.seek(start)
         return f, start
+    # Past this point only web addresses: a host pattern with another scheme (ftp:, data:, ...) is refused
+    # here instead of being handed to urllib.
+    if not url.lower().startswith(("https://", "http://")):
+        raise HostWrong("not a web address")
     headers = {"User-Agent": "garden-get-parts"}
     if start:
         headers["Range"] = f"bytes={start}-"
@@ -199,7 +207,7 @@ def open_url(url, start, token=""):
         headers["Accept"] = "application/vnd.github.raw"
         r = urllib.request.build_opener(_KeepTokenHome).open(urllib.request.Request(url, headers=headers), timeout=TIMEOUT)
     else:
-        r = urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=TIMEOUT)
+        r = urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=TIMEOUT)  # http(s) only, checked above  # nosec B310
     if "text/html" in (r.headers.get("Content-Type") or "").lower():
         r.close()
         raise HostWrong("it answered with a web page, not the file")
@@ -350,7 +358,9 @@ def _fetch_one(url, part, cache, progress, token=""):
         resp, offset = open_url(url, start, token)
     except HostWrong:
         raise
-    except Exception as e:      # only the kind of error and the HTTP code are kept: never the address or the headers
+    # Every way opening a download fails: network, DNS, TLS, timeout, HTTP error (all OSError), a broken
+    # reply (HTTPException), a bad address (ValueError). Was `except Exception`, which also hid bugs.
+    except (OSError, ValueError, http.client.HTTPException) as e:      # only the kind of error and the HTTP code are kept: never the address or the headers
         raise HostWrong(f"{e.__class__.__name__}" + (f" HTTP {e.code}" if hasattr(e, "code") else ""), retry=not hasattr(e, "code")) from None
     try:
         mode = "ab" if offset else "wb"
@@ -361,7 +371,7 @@ def _fetch_one(url, part, cache, progress, token=""):
             while got < part.size:
                 try:
                     block = resp.read(min(CHUNK, part.size - got))
-                except Exception as e:
+                except (OSError, ValueError, http.client.HTTPException) as e:   # timeout, reset, IncompleteRead
                     raise HostWrong(f"cut off ({e.__class__.__name__})", retry=True) from None
                 if not block:
                     break
@@ -502,7 +512,8 @@ def write_record(dest, setname, version, **extra):
 def read_key(path):
     """(key file ok?, key id) without ever showing the key. Line 1 is the key, line 2 is id=<8 hex>."""
     try:
-        lines = open(path, encoding="utf-8").read().splitlines()
+        with open(path, encoding="utf-8") as fh:
+            lines = fh.read().splitlines()
     except OSError:
         return False, ""
     if len(lines) < 1 or len(lines[0].strip()) < 32:
@@ -560,7 +571,9 @@ def photos_main(opts):
     manifest = opts.get("--manifest") or os.path.join(HERE, "PHOTO-PARTS.json")
     try:
         pset = load_manifest(manifest)
-    except Exception:
+    # Missing/unreadable (OSError), not JSON or "damaged list" (ValueError), a field missing or of the wrong
+    # type (KeyError, TypeError, AttributeError). Was `except Exception`.
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
         say("PHOTO-PARTS.json is damaged or missing. Nothing was written.",
             "PHOTO-PARTS.json 파일이 손상됐거나 없어요. 아무것도 쓰지 않았어요.")
         return 1
@@ -603,7 +616,8 @@ def photos_main(opts):
     token = ""                      # the access file for the private backup host; never printed, never copied anywhere
     token_path = opts.get("--token") or os.path.join(HERE, TOKEN_FILE)
     try:
-        token = open(token_path, encoding="utf-8").readline().strip()
+        with open(token_path, encoding="utf-8") as fh:
+            token = fh.readline().strip()
     except OSError:
         pass
     mb = pset.total // 1000000

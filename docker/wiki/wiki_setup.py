@@ -57,6 +57,9 @@ DB_NAME = os.environ.get("WIKI_DB_NAME", "junsgarden_wiki")
 DB_USER = os.environ.get("WIKI_DB_USER", "wikijs")
 DB_PASSWORD = os.environ.get("WIKI_DB_PASSWORD", "")
 DONE_KEY = "junsgardenSeed"      # the name of the "done" note in the settings table
+if not WIKI_URL.lower().startswith(("http://", "https://")):
+    # urllib would also open file:// and other schemes; the wiki is only ever reached over HTTP (Bandit B310).
+    raise SystemExit(f"WIKI_URL must start with http:// or https://, not {WIKI_URL!r}")
 
 
 def say(text):
@@ -104,7 +107,7 @@ class Wiki:
         if self.token:
             req.add_header("Authorization", "Bearer " + self.token)
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:  # WIKI_URL checked to be http(s) at start  # nosec B310
                 # The wiki hands out a fresh ticket when the old one gets
                 # old (after 30 minutes). Keep the newest one.
                 fresh = resp.headers.get("new-jwt")
@@ -295,7 +298,9 @@ def rerender_all(wiki):
 
 def restore_dates(pages):
     say("Putting back each page's original dates")
-    lines = [f"UPDATE pages SET createdAt={sql_text(p['createdAt'])}, updatedAt={sql_text(p['updatedAt'])} "
+    # The mariadb command line takes SQL on stdin and has no %s parameters, so every value goes through
+    # sql_text() (quotes and backslashes doubled; the connection is utf8mb4).
+    lines = [f"UPDATE pages SET createdAt={sql_text(p['createdAt'])}, updatedAt={sql_text(p['updatedAt'])} "  # values via sql_text()  # nosec B608
              f"WHERE localeCode={sql_text(p['locale'])} AND path={sql_text(p['path'])};"
              for p in pages if p.get("createdAt") and p.get("updatedAt")]
     sql("\n".join(lines))
@@ -338,7 +343,7 @@ def main():
     say(f"Waiting for the wiki at {WIKI_URL}")
     mode = wiki.wait()
 
-    if mode == "ready" and sql(f"SELECT COUNT(*) FROM settings WHERE `key`='{DONE_KEY}'") == "1":
+    if mode == "ready" and sql(f"SELECT COUNT(*) FROM settings WHERE `key`='{DONE_KEY}'") == "1":  # DONE_KEY is a constant  # nosec B608
         say("Your wiki is already set up. Nothing to do.")
         print(f"   Open it at {SITE_URL}")
         return
@@ -383,7 +388,7 @@ def main():
     restore_menu_and_title(wiki, seed)
 
     note = json.dumps({"v": f"{len(pages)} pages from {seed.get('exportedAt', '?')}"})
-    sql(f"INSERT INTO settings (`key`, value, updatedAt) VALUES ('{DONE_KEY}', {sql_text(note)}, "
+    sql(f"INSERT INTO settings (`key`, value, updatedAt) VALUES ('{DONE_KEY}', {sql_text(note)}, "  # constant key, values via sql_text()  # nosec B608
         f"{sql_text(time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()))}) "
         "ON DUPLICATE KEY UPDATE value=VALUES(value), updatedAt=VALUES(updatedAt);")
 

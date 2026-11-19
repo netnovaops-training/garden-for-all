@@ -26,6 +26,7 @@ zip are never replaced. If anything does not match, nothing is changed.
 Needs only Python 3, which Ubuntu has. No git, no extra programs.
 """
 import hashlib
+import http.client
 import io
 import os
 import re
@@ -46,6 +47,12 @@ NOT_LISTED_OK = {"README.md", "FILES-FROM-AUTHOR.txt", "DOWNLOADS-SHA256.txt"}
 BASE = os.environ.get("GARDEN_CODE_BASE", "https://codeload.github.com").rstrip("/")
 
 
+def read_bytes(path):
+    """The whole file, closed again at once (a bare open(...).read() left closing to the garbage collector)."""
+    with open(path, "rb") as fh:
+        return fh.read()
+
+
 def say(en, ko):
     print("   " + en)
     print("   " + ko)
@@ -55,10 +62,11 @@ def read_source():
     """CODE-SOURCE.txt -> (repo, ref, fixed). `ref=main` (or another branch name) or a 40-hex commit
     (`commit=<hex>`, the old one-line format, or `ref=<hex>`). fixed is True for a commit."""
     values = {}
-    for line in open(os.path.join(HERE, "CODE-SOURCE.txt"), encoding="utf-8"):
-        if "=" in line and not line.startswith("#"):
-            k, v = line.strip().split("=", 1)
-            values[k.strip()] = v.strip()
+    with open(os.path.join(HERE, "CODE-SOURCE.txt"), encoding="utf-8") as fh:
+        for line in fh:
+            if "=" in line and not line.startswith("#"):
+                k, v = line.strip().split("=", 1)
+                values[k.strip()] = v.strip()
     repo, commit, ref = values.get("repo", ""), values.get("commit", ""), values.get("ref", "")
     if not re.fullmatch(r"[A-Za-z0-9._-]+/[A-Za-z0-9._-]+", repo) or (commit and ref):
         sys.exit("CODE-SOURCE.txt is damaged (repo, or both commit and ref). Download the zip again.")
@@ -73,10 +81,11 @@ def read_source():
 def read_list(minimum=100):
     """FILES-FROM-AUTHOR.txt -> {relative path: sha256}."""
     want = {}
-    for line in open(os.path.join(HERE, "FILES-FROM-AUTHOR.txt"), encoding="utf-8"):
-        line = line.rstrip("\n")
-        if len(line) > 68 and line[64:68] == "  ./":
-            want[line[68:]] = line[:64]
+    with open(os.path.join(HERE, "FILES-FROM-AUTHOR.txt"), encoding="utf-8") as fh:
+        for line in fh:
+            line = line.rstrip("\n")
+            if len(line) > 68 and line[64:68] == "  ./":
+                want[line[68:]] = line[:64]
     if len(want) < minimum:
         sys.exit("FILES-FROM-AUTHOR.txt is damaged. Download the zip again.")
     return want
@@ -197,7 +206,7 @@ def check_archive(path):
     _, _, fixed = read_source()
     want = read_list(5)
     odd = []
-    files, _tops = code_files(open(path, "rb").read(), odd)
+    files, _tops = code_files(read_bytes(path), odd)
     return verify(files, odd, want, zip_files_present(want), fixed)[0]
 
 
@@ -215,7 +224,7 @@ def main():
     want = read_list(5)
     present = zip_files_present(want)
     # The files that came in the zip must themselves match the list.
-    bad = [rel for rel in present if rel not in SETTINGS and hashlib.sha256(open(os.path.join(HERE, rel), "rb").read()).hexdigest() != want[rel]]
+    bad = [rel for rel in present if rel not in SETTINGS and hashlib.sha256(read_bytes(os.path.join(HERE, rel))).hexdigest() != want[rel]]
     if bad:
         say(f"These files from the zip do not match their fingerprints: {', '.join(bad[:5])}",
             f"zip에서 나온 이 파일들의 지문이 맞지 않아요: {', '.join(bad[:5])}")
@@ -228,11 +237,17 @@ def main():
     else:
         say(f"Getting the program from GitHub ({ref} branch): {url}",
             f"GitHub에서 프로그램을 가져와요 ({ref} 브랜치).")
+    # Web addresses only: GARDEN_CODE_BASE (test-only) must not turn this into a file:// or other-scheme read.
+    # Real runs use https://codeload.github.com; the tests use http://127.0.0.1 (test_get_code.py: all PASS).
+    if not url.lower().startswith(("https://", "http://")):
+        sys.exit(f"Not a web address: {url}")
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "garden-get-code"})
-        with urllib.request.urlopen(req, timeout=120) as r:
+        with urllib.request.urlopen(req, timeout=120) as r:  # scheme checked just above  # nosec B310
             archive = r.read()
-    except Exception as e:
+    except (OSError, ValueError, http.client.HTTPException) as e:
+        # Every way a download fails: no network, DNS, TLS, timeout, HTTP error (all OSError), a reply
+        # cut off (HTTPException), a bad address (ValueError). Was `except Exception`, which also hid bugs.
         say(f"Could not reach GitHub ({e.__class__.__name__}). Check the internet connection and run this again.",
             "GitHub에 연결할 수 없어요. 인터넷 연결을 확인하고 다시 실행하세요.")
         sys.exit(1)

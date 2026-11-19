@@ -38,6 +38,7 @@ import base64
 import binascii
 import json
 import os
+import re
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -69,6 +70,10 @@ from garden_ingest.tagscan_page import TAGSCAN_HTML
 
 PORT = int(os.environ.get("PORT", "8025"))
 TABLE = os.environ.get("GARDEN_TABLE", "data_source")
+# TABLE goes into the SQL text below (a table name cannot be a %s parameter; every VALUE is one), so it
+# must be a plain name. Stops a bad GARDEN_TABLE at start instead of letting it reach a query (Bandit B608).
+if not re.fullmatch(r"[A-Za-z0-9_]+", TABLE):
+    raise SystemExit(f"GARDEN_TABLE must be letters, digits and _ only, not {TABLE!r}")
 
 # WHO MAY USE THIS SERVICE. A comma-separated list of email addresses, for
 # example "jun@example.com,friend@example.com". Compared in lower case.
@@ -316,7 +321,7 @@ class Handler(BaseHTTPRequestHandler):
             q = (parse_qs(p.query).get("q") or [""])[0].strip()
             with db() as cx, cx.cursor() as cur:
                 bd.ensure(cur)
-                sql = (
+                sql = (  # TABLE checked at start; the search words go in as %s parameters  # nosec B608
                     "SELECT id, plant_name, botanical_name, plant_type, "
                     "       picture, flower_bed, bloom_color, foliage_color, "
                     "       bloom_months, grow_months, sun_exposure, "
@@ -615,7 +620,7 @@ class Handler(BaseHTTPRequestHandler):
                     with db() as cx, cx.cursor() as cur:
                         cur.execute("UPDATE tag_queue SET status='waiting', note=%s "
                                     "WHERE id=%s", (str(b)[:500], qid))
-                except Exception:  # noqa: BLE001
+                except Exception:  # noqa: BLE001, S110  best effort: the row stays as it was and is retried
                     pass
                 return
             except Exception as e:  # noqa: BLE001
@@ -623,7 +628,7 @@ class Handler(BaseHTTPRequestHandler):
                     with db() as cx, cx.cursor() as cur:
                         tagqueue.finish(cur, qid, "failed",
                                         note=str(e)[:500])
-                except Exception:  # noqa: BLE001
+                except Exception:  # noqa: BLE001, S110  best effort: the worker must keep running
                     pass
 
     def _read_one_tag(self, shots, who):
@@ -649,7 +654,7 @@ class Handler(BaseHTTPRequestHandler):
                 "plant_name": tag.get("plant_name") or name,
                 "botanical_name": tag.get("botanical_name") or "",
                 "company": tag.get("company") or ""})
-        except Exception:  # noqa: BLE001
+        except Exception:  # noqa: BLE001, S110  enrichment is optional: the tag's own fields are used
             pass
         merged = lk.merge(tag, {"fields": enriched, "sources": ["Gemini"]})
 
@@ -661,9 +666,9 @@ class Handler(BaseHTTPRequestHandler):
                 batch = build_proposal(cur, merged, pid, "tag queue")
                 save_proposals(cur, batch, pid)
                 return {"status": "duplicate", "plant_id": pid,
-                        "note": "already in the garden as %r (%.0f%% match)"
-                                % ((seen.get("match") or {}).get("plant_name"),
-                                   seen["score"] * 100)}
+                        "note": "already in the garden as {!r} ({:.0f}% match)".format(
+                                (seen.get("match") or {}).get("plant_name"),
+                                seen["score"] * 100)}
             cur.execute(
                 "INSERT INTO " + TABLE + " (plant_name, needs_review) "
                 "VALUES (%s, 1)", (name,))
@@ -671,8 +676,7 @@ class Handler(BaseHTTPRequestHandler):
             batch = build_proposal(cur, merged, pid, "tag queue")
             ids = save_proposals(cur, batch, pid)
         return {"status": "done", "plant_id": pid,
-                "note": "added %r, %d field(s) waiting for approval"
-                        % (name, len(ids))}
+                "note": f"added {name!r}, {len(ids)} field(s) waiting for approval"}
 
     # ---- the camera tools --------------------------------------------------
     def _tag(self, who):
@@ -1071,7 +1075,7 @@ class Handler(BaseHTTPRequestHandler):
             # Say so plainly rather than returning an empty reading that
             # looks like a clean bill of health.
             return self._send(502, {"error":
-                                    "the AI did not answer: %s" % e})
+                                    f"the AI did not answer: {e}"})
         if not (out.get("raw") or "").strip():
             return self._send(502, {"error": "the AI did not answer. Try "
                                     "again in a minute."})
@@ -1269,7 +1273,7 @@ class Handler(BaseHTTPRequestHandler):
             raise
         except Exception as e:  # noqa: BLE001
             return self._send(502, {
-                "error": "the AI did not answer: %s" % e})
+                "error": f"the AI did not answer: {e}"})
 
         if plant:
             with db() as cx, cx.cursor() as cur:
