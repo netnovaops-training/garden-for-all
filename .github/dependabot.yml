@@ -20,8 +20,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: "05:00"
-      timezone: America/Los_Angeles
+      time: "00:00"
+      timezone: America/New_York
     open-pull-requests-limit: 5
     labels: [dependencies, python]
     groups:
@@ -37,8 +37,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: "05:00"
-      timezone: America/Los_Angeles
+      time: "00:00"
+      timezone: America/New_York
     open-pull-requests-limit: 5
     labels: [dependencies, rust]
     groups:
@@ -54,8 +54,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: "05:00"
-      timezone: America/Los_Angeles
+      time: "00:00"
+      timezone: America/New_York
     open-pull-requests-limit: 5
     labels: [dependencies, android]
     groups:
@@ -71,8 +71,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: "05:00"
-      timezone: America/Los_Angeles
+      time: "00:00"
+      timezone: America/New_York
     open-pull-requests-limit: 5
     labels: [dependencies, docker]
     groups:
@@ -88,8 +88,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: "05:00"
-      timezone: America/Los_Angeles
+      time: "00:00"
+      timezone: America/New_York
     open-pull-requests-limit: 5
     labels: [dependencies, docker]
     groups:
@@ -105,8 +105,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: "05:00"
-      timezone: America/Los_Angeles
+      time: "00:00"
+      timezone: America/New_York
     open-pull-requests-limit: 5
     labels: [dependencies, docker]
     groups:
@@ -122,8 +122,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: "05:00"
-      timezone: America/Los_Angeles
+      time: "00:00"
+      timezone: America/New_York
     open-pull-requests-limit: 5
     labels: [dependencies, docker]
     groups:
@@ -139,8 +139,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: "05:00"
-      timezone: America/Los_Angeles
+      time: "00:00"
+      timezone: America/New_York
     open-pull-requests-limit: 5
     labels: [dependencies, docker]
     groups:
@@ -156,8 +156,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: "05:00"
-      timezone: America/Los_Angeles
+      time: "00:00"
+      timezone: America/New_York
     open-pull-requests-limit: 5
     labels: [dependencies, github-actions]
     groups:
