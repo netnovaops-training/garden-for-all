@@ -78,7 +78,8 @@ def run_menu():
         for mode in ("ko", "both"):
             (copy / ".garden-lang").write_text(mode + "\n", encoding="utf-8", newline="\n")
             r = subprocess.run([bash, "garden.sh"], cwd=copy, input=b"0\n",
-                               capture_output=True, timeout=60)
+                               capture_output=True, timeout=60,
+                               check=False)   # the exit code is printed below, not raised
             out = r.stdout.decode("utf-8", "replace")
             print(f"\n===== menu with .garden-lang = {mode}  (exit code {r.returncode}) =====")
             print(out)

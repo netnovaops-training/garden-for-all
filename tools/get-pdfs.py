@@ -47,14 +47,15 @@ def say(en, ko):
 def read_list(path):
     """PDF-GUIDES-SHA256.txt -> (url base, {lang code: (file name, sha256, bytes, hosts)})."""
     base, files = "", {}
-    for line in open(path, encoding="utf-8"):
-        line = line.strip()
-        if line.startswith("url="):
-            base = line[4:].strip().rstrip("/")
-        elif len(line) > 66 and line[64:66] == "  " and not line.startswith("#"):
-            fields = line[66:].split()
-            sha, name, size, code = (line[:64], *fields)[:4]
-            files[code] = (name, sha, int(size), fields[3] if len(fields) > 3 else "github")
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if line.startswith("url="):
+                base = line[4:].strip().rstrip("/")
+            elif len(line) > 66 and line[64:66] == "  " and not line.startswith("#"):
+                fields = line[66:].split()
+                sha, name, size, code = (line[:64], *fields)[:4]
+                files[code] = (name, sha, int(size), fields[3] if len(fields) > 3 else "github")
     if not base or set(files) != set(LANGS):
         sys.exit("PDF-GUIDES-SHA256.txt is damaged. / PDF-GUIDES-SHA256.txt 파일이 손상됐어요.")
     return base, files
@@ -62,7 +63,7 @@ def read_list(path):
 
 def problems_in(zip_path, folder, want):
     """Reasons this zip must not be used (empty = fine)."""
-    name, sha, size = want[:3]
+    _name, sha, size = want[:3]
     bad = []
     if os.path.getsize(zip_path) != size:
         bad.append("wrong size")
@@ -106,7 +107,9 @@ def set_status(dest, folder, state, detail=""):
     lines = {}
     path = os.path.join(root, "STATUS.txt")
     if os.path.isfile(path):
-        for ln in open(path, encoding="utf-8").read().splitlines():
+        with open(path, encoding="utf-8") as fh:
+            old = fh.read().splitlines()
+        for ln in old:
             if ": " in ln and ln.split(": ", 1)[0] in LANGS.values():
                 lines[ln.split(": ", 1)[0]] = ln.split(": ", 1)[1]
     if state == "none" and lines.get(folder, "").startswith("ready"):
@@ -122,12 +125,14 @@ def set_status(dest, folder, state, detail=""):
         f = os.path.join(d, name)
         if keep:
             tmp = f + ".part"
-            open(tmp, "w", encoding="utf-8", newline="\n").write(note[state])
+            with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
+                fh.write(note[state])
             os.replace(tmp, f)
         elif os.path.isfile(f):
             os.remove(f)
     tmp = path + ".part"
-    open(tmp, "w", encoding="utf-8", newline="\n").write(body)
+    with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(body)
     os.replace(tmp, path)
 
 
@@ -184,9 +189,9 @@ def main(argv):
     if any(c not in LANGS for c in codes):
         print("Choose en, ko or both. / en, ko, both 중에서 고르세요.")
         return 1
-    for c in LANGS:
+    for c, lang_folder in LANGS.items():
         if c not in codes:
-            set_status(dest, LANGS[c], "none")
+            set_status(dest, lang_folder, "none")
     tag = os.path.basename(base.rstrip("/"))             # the version name comes from the list, not from a test address
     base = (opts.get("--url-base") or base).rstrip("/")
     hosts = parts.load_hosts(os.path.join(HERE, "DOWNLOAD-HOSTS.txt"))
@@ -207,7 +212,7 @@ def main(argv):
     if "--is-current" in opts:
         return 0 if all(current(c) for c in codes) else 2
     for code in codes:
-        name, sha, size = files[code][:3]
+        name, _sha, size = files[code][:3]
         folder = LANGS[code]
         if not again and current(code):
             say(f"The {folder} PDF guides are already up to date; nothing was fetched.",

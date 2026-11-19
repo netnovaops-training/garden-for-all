@@ -105,12 +105,12 @@ class Vocabulary:
         self.values = values                      # canonical -> row count
         self.aliases = aliases                    # canon_key(raw) -> canonical
         self._by_key: dict[str, str] = {}
-        for v in values:
+        for v, count in values.items():
             # A column that ALREADY contains two spellings of one thing keeps
             # the more common one as canonical. Counts are the only honest
             # tie-breaker available without asking somebody.
             k = canon_key(v)
-            if k not in self._by_key or values[v] > values[self._by_key[k]]:
+            if k not in self._by_key or count > values[self._by_key[k]]:
                 self._by_key[k] = v
 
     def resolve(self, raw: str) -> Decision:
@@ -185,7 +185,7 @@ def learn(cursor, table: str, fields=None, min_count: int = 1) -> dict:
                 f"GROUP BY `{f}` HAVING c >= %s ORDER BY c DESC",
                 (min_count,),
             )
-        except Exception:
+        except Exception:  # noqa: BLE001, S112  the database driver's error for a missing column; see below
             # A column this install does not have is not an error. The
             # product ships one field list and meets many schemas.
             continue
@@ -199,7 +199,7 @@ def load_aliases(cursor) -> dict:
     try:
         cursor.execute(
             "SELECT field_name, raw_key, canonical FROM vocab_alias")
-    except Exception:
+    except Exception:  # noqa: BLE001  the database driver's error for a missing table
         return aliases          # table not created yet; nothing learned yet
     for r in cursor.fetchall():
         aliases.setdefault(r["field_name"], {})[r["raw_key"]] = r["canonical"]

@@ -25,7 +25,7 @@ EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
 
 
 def text(name):
-    t = open(S / name, encoding="utf-8", errors="replace").read().replace("\r", "")
+    t = (S / name).read_text(encoding="utf-8", errors="replace").replace("\r", "")
     return EMAIL.sub("you@example.com", ESC.sub("", t))
 
 
@@ -57,7 +57,8 @@ def after(t, target, new_lines):
 
 def shoot(png, t):
     t = re.sub(r"\n{3,}", "\n\n", t).strip("\n") + "\n"
-    if subprocess.run([sys.executable, str(SHOT), str(IMG / png)], input=t.encode("utf-8")).returncode:
+    # check=False: the return code is tested right here and turned into a plain message.
+    if subprocess.run([sys.executable, str(SHOT), str(IMG / png)], input=t.encode("utf-8"), check=False).returncode:
         sys.exit(f"term_shot failed for {png}")
 
 

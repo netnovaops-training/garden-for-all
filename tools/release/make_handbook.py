@@ -707,7 +707,6 @@ def build():
         if gs:
             blocks.append(f'<div class="stepblock" style="--a:{a}"><h3><i></i>{html.escape(num)}. {html.escape(label)}</h3>{gs}</div>')
     map_html = "".join(blocks)
-    full = "handbook/23-full-setup.html" if "23-full-setup" in STEP_NAMES else "00-HOW-IT-WORKS.html"
     steps_li = "".join(f'<li><span>{html.escape(what)}</span><small>{html.escape(STEP_TIME.get(fn, ""))}</small></li>' for fn, what in INSTALL)
     cards_l = []
     for key, name, word, risk, gets, btn, link in LEVELS:

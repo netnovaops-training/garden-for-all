@@ -66,7 +66,7 @@ def ensure(cur):
     for sql in SCHEMA:
         try:
             cur.execute(sql)
-        except Exception:
+        except Exception:  # noqa: BLE001, S110  see below
             # Already there. Same tolerance the other modules here use --
             # a migration that cannot be run twice is a migration that gets
             # run by hand once and then forgotten.
@@ -105,7 +105,7 @@ def save(data_url: str, plant_id=None, side: str = "front") -> tuple:
         # and something downstream always ignores it -- then the tag is
         # sideways and unreadable in the very album meant to verify it.
         im = ImageOps.exif_transpose(im).convert("RGB")
-    except Exception:
+    except Exception:  # noqa: BLE001  Pillow raises many kinds for a bad upload; all become one plain ValueError
         raise ValueError("could not read that as a photograph")
 
     im.thumbnail((LONG_EDGE, LONG_EDGE), Image.LANCZOS)

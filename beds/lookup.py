@@ -116,7 +116,7 @@ def _ddg_text(query: str, max_results: int = 4):
             if len(out) < max_results:
                 out += list(ddgs.text(f"{query} plant care",
                                       max_results=max_results - len(out)))
-    except Exception:
+    except Exception:  # noqa: BLE001  ddgs raises its own and its HTTP library's errors; any of them = no results
         # A search that fails is a lookup with nothing in it, not an error
         # the person needs to see. The tag they photographed is still there.
         return out
@@ -136,7 +136,7 @@ def _perenual(name: str):
             data = json.loads(r.read().decode("utf-8"))
         hits = data.get("data") or []
         return hits[0] if hits else None
-    except Exception:
+    except Exception:  # noqa: BLE001  optional lookup: network, JSON or shape error all mean "no answer"
         return None
 
 

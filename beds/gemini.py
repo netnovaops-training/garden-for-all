@@ -138,9 +138,8 @@ def _post(body: bytes, model: str | None = None) -> dict:
             if e.code not in RETRY_ON:
                 raise GeminiUnavailable(
                     f"Gemini said {e.code}: {last}")
-            code = e.code
         except Exception as e:  # noqa: BLE001
-            last, code = str(e)[:200], 0
+            last = str(e)[:200]   # (`code` was set here and above but never read: removed, ruff F841)
         if attempt < RETRIES - 1:
             time.sleep(wait)
             wait *= 2

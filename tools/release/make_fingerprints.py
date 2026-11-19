@@ -39,7 +39,7 @@ def normalized(rel, data):
 
 
 def git(*args, capture=True):
-    r = subprocess.run(["git", "-c", "core.quotepath=off", *args], capture_output=capture)
+    r = subprocess.run(["git", "-c", "core.quotepath=off", *args], capture_output=capture, check=False)  # return code read below
     if r.returncode != 0:
         sys.exit("git " + " ".join(args) + " failed: " + (r.stderr or b"").decode("utf-8", "replace").strip())
     return r.stdout

@@ -134,7 +134,8 @@ def faint_image_uri(path, opacity=0.16):
     import base64
     import mimetypes
     mime = mimetypes.guess_type(path)[0] or "image/png"
-    data = base64.b64encode(open(path, "rb").read()).decode()
+    with open(path, "rb") as fh:
+        data = base64.b64encode(fh.read()).decode()
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100">'
            f'<image width="100" height="100" preserveAspectRatio="xMaxYMax meet" opacity="{opacity}" '
            f'xlink:href="data:{mime};base64,{data}"/></svg>')
