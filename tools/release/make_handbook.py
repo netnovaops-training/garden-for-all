@@ -16,9 +16,17 @@ buttons open "PDF guides/English/...", an optional download the installer fetche
 (tools/get-pdfs.py; not in git), so a button works once the PDFs have arrived. The logo is the author's emblem: it is passed in at release time
 (GARDEN_LOGO=path) and is not kept in git.
 """
-import html, json, os, pathlib, re, shutil, sys, urllib.parse
-import markdown
+import html
+import json
+import os
+import pathlib
+import re
+import shutil
+import sys
+import urllib.parse
+
 import make_pdfs as m
+import markdown
 
 PKG = m.PKG
 ROOT = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else PKG
@@ -413,8 +421,8 @@ def search_entries(n, title, body, lang, first="full", head=None, url=None):
     `url` (a file in the package) is for the guides that are not handbook pages."""
     out, anchor = [], first
     head = head or title
-    for part in re.split(r'(<h[23] id="[^"]+">.*?</h[23]>)', body, flags=re.S):
-        mo = re.match(r'<h[23] id="([^"]+)">(.*?)</h[23]>', part, re.S)
+    for part in re.split(r'(<h[23] id="[^"]+">.*?</h[23]>)', body, flags=re.DOTALL):
+        mo = re.match(r'<h[23] id="([^"]+)">(.*?)</h[23]>', part, re.DOTALL)
         if mo:
             anchor, head = mo.group(1), html.unescape(re.sub("<[^>]+>", "", mo.group(2))).strip()
             continue
@@ -616,7 +624,7 @@ def build():
         text = (SRC / f"{n}.md").read_text(encoding="utf-8")
         md_text = text.split("\n", 1)[1] if text.startswith("# ") else text
         # In brief: the guide's Quick version. Full: the rest of the guide.
-        qm = re.search(r"^## (Quick version)\n(.*?)(?=^---\s*$|^## )", md_text, re.S | re.M)
+        qm = re.search(r"^## (Quick version)\n(.*?)(?=^---\s*$|^## )", md_text, re.DOTALL | re.MULTILINE)
         brief_md = qm.group(2) if qm else ""
         full_md = (md_text[:qm.start()] + md_text[qm.end():]).lstrip().lstrip("-").lstrip() if qm else md_text
         conv = lambda t, slug=None: markdown.Markdown(extensions=["tables", "fenced_code", "sane_lists", "toc"],
@@ -699,7 +707,6 @@ def build():
         if gs:
             blocks.append(f'<div class="stepblock" style="--a:{a}"><h3><i></i>{html.escape(num)}. {html.escape(label)}</h3>{gs}</div>')
     map_html = "".join(blocks)
-    full = "handbook/23-full-setup.html" if "23-full-setup" in STEP_NAMES else "00-HOW-IT-WORKS.html"
     steps_li = "".join(f'<li><span>{html.escape(what)}</span><small>{html.escape(STEP_TIME.get(fn, ""))}</small></li>' for fn, what in INSTALL)
     cards_l = []
     for key, name, word, risk, gets, btn, link in LEVELS:

@@ -10,12 +10,23 @@ Needs: a Python that can make symbolic links (Linux, or Windows with Developer M
 symbolic-link cases are skipped, and said so, when it cannot. To use the Python of the service:
     docker run --rm -v "<repo>:/r:ro" python:3.12-slim python /r/tools/release/tests/test_tag_photo_path.py
 """
-import importlib.abc, importlib.machinery, io, os, shutil, sys, tempfile
+import importlib.abc
+import importlib.machinery
+import io
+import os
+import sys
+import tempfile
 from unittest import mock
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 BEDS = os.path.join(ROOT, "beds")
 passed = failed = skipped = 0
+
+
+def write_file(data, path, mode):
+    """Open, write, close at once (a bare open(...).write() left closing to the garbage collector: ruff SIM115)."""
+    with open(path, mode) as fh:
+        fh.write(data)
 
 
 def ok(name, cond, extra=""):
@@ -36,7 +47,7 @@ def skip(name, why):
 
 # ---- stand-ins for what service.py imports (not under test) --------------------------
 class _Stub(importlib.abc.MetaPathFinder, importlib.abc.Loader):
-    NAMES = {"pymysql", "dedupe", "freeai", "gemini", "tagqueue", "garden_ingest"}
+    NAMES = frozenset({"pymysql", "dedupe", "freeai", "gemini", "tagqueue", "garden_ingest"})   # read-only (ruff RUF012)
 
     def find_spec(self, name, path=None, target=None):
         if name.split(".")[0] in self.NAMES:
@@ -60,17 +71,17 @@ os.makedirs(outside)
 JPEG = b"\xff\xd8\xff\xe0FAKE-TAG-PHOTO"
 OUTSIDE_PIC = b"\xff\xd8\xff\xe0OUTSIDE-PICTURE"
 for rel in ("1/abc.jpg", "unassigned/good.JPG", "1/pic.png"):
-    open(os.path.join(tags, *rel.split("/")), "wb").write(JPEG)
-open(os.path.join(tags, "1", "notes.txt"), "wb").write(b"not a picture")
-open(os.path.join(tags, "1", "noext"), "wb").write(b"not a picture")
-open(os.path.join(outside, "elsewhere.jpg"), "wb").write(OUTSIDE_PIC)
-open(os.path.join(outside, "listing"), "wb").write(b"OUTSIDE-LISTING-TEXT")
+    write_file(JPEG, os.path.join(tags, *rel.split("/")), "wb")
+write_file(b"not a picture", os.path.join(tags, "1", "notes.txt"), "wb")
+write_file(b"not a picture", os.path.join(tags, "1", "noext"), "wb")
+write_file(OUTSIDE_PIC, os.path.join(outside, "elsewhere.jpg"), "wb")
+write_file(b"OUTSIDE-LISTING-TEXT", os.path.join(outside, "listing"), "wb")
 
 os.environ["GARDEN_PHOTO_DIR"] = photos
 os.environ["BEDS_ALLOWED_EMAILS"] = "tester@example.com"
 sys.meta_path.insert(0, _Stub())
 sys.path.insert(0, BEDS)
-import service  # noqa: E402  (the real file)
+import service  # the real file
 
 
 class Req(service.Handler):

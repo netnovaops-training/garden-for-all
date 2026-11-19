@@ -30,12 +30,13 @@ ENV PYTHONPATH=/app \
     PYTHONDONTWRITEBYTECODE=1 \
     PORT=8025
 
-USER garden
+# The garden user made above, by number (uid/gid 1000) so the host can resolve it (hadolint DL3066).
+USER 1000:1000
 EXPOSE 8025
 
 # Docker asks /healthz every 30 seconds; "unhealthy" means the database
 # cannot be reached (or the service stopped answering).
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8025/healthz', timeout=8).status == 200 else 1)"
+    CMD ["python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8025/healthz', timeout=8).status == 200 else 1)"]
 
 CMD ["python", "-u", "/app/garden_ingest/service.py"]

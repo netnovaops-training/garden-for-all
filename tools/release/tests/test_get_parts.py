@@ -7,7 +7,18 @@ key outside every repo. Nothing real is touched, nothing goes on the internet.
 
     python tools/release/tests/test_get_parts.py
 """
-import hashlib, http.server, json, os, shutil, socket, subprocess, sys, tempfile, threading, time, zipfile
+import hashlib
+import http.server
+import json
+import os
+import shutil
+import socket
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 PY = sys.executable
@@ -17,6 +28,28 @@ MAKE = os.path.join(ROOT, "tools", "release", "make_photo_parts.py")
 ENV = {**os.environ, "PYTHONIOENCODING": "utf-8", "GARDEN_GET_RETRY_WAIT": "0.05", "GARDEN_GET_TIMEOUT": "5",
        "GARDEN_PINNED_PATIENCE": "2"}
 passed = failed = 0
+
+
+# Small file helpers: each opens, reads or writes, and closes at once (bare open(...).read() and
+# open(...).write() left the closing to the garbage collector: ruff SIM115).
+def read_bytes(path, n=-1):
+    with open(path, "rb") as fh:
+        return fh.read(n)
+
+
+def read_text(path, **kw):
+    with open(path, **kw) as fh:
+        return fh.read()
+
+
+def load_json(path):
+    with open(path) as fh:
+        return json.load(fh)
+
+
+def write_file(data, path, mode, **kw):
+    with open(path, mode, **kw) as fh:
+        fh.write(data)
 
 
 def ok(name, cond, extra=""):
@@ -73,7 +106,7 @@ class Host:
                 if not f:
                     self.send_error(404)
                     return
-                data = open(f, "rb").read()
+                data = read_bytes(f)
                 if path in host.corrupt:
                     data = bytes([data[0] ^ 255]) + data[1:]
                 start = int(rng.split("=")[1].rstrip("-")) if rng else 0
@@ -123,7 +156,7 @@ def closed_port():
 
 
 def run(args, env=None, **kw):
-    r = subprocess.run([PY, "-I", "-X", "utf8"] + args, capture_output=True, text=True, encoding="utf-8", env={**ENV, **(env or {})}, **kw)
+    r = subprocess.run([PY, "-I", "-X", "utf8"] + args, capture_output=True, text=True, encoding="utf-8", env={**ENV, **(env or {})}, check=False, **kw)
     return r.returncode, r.stdout + r.stderr
 
 
@@ -142,22 +175,22 @@ def body(T):
     zpath = os.path.join(zdir, "junsgarden-photos-addon.zip")
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_STORED) as z:
         z.writestr("images.tar", os.urandom(30 * (1 << 20)))
-    zsha = hashlib.sha256(open(zpath, "rb").read()).hexdigest()
+    zsha = hashlib.sha256(read_bytes(zpath)).hexdigest()
     rc, out = run([MAKE, zpath, outdir, "--key-dir", keydir, "--part-mb", "1", "--tag", "photos-test",
                    "--author-every", "10", "--private-part", "1", "--private-repo", "testowner/testrepo@main"])
     ok("make_photo_parts: builds the parts and the list", rc == 0 and os.path.isfile(os.path.join(outdir, "PHOTO-PARTS.json")), out)
-    key = open(os.path.join(keydir, "photos.key")).read()
+    key = read_text(os.path.join(keydir, "photos.key"))
     ok("make_photo_parts: never prints the key", key.splitlines()[0] not in out)
     rc, out2 = run([MAKE, zpath, os.path.join(T, "x"), "--key-dir", ROOT])
     ok("make_photo_parts: refuses a key folder inside a git repo", rc != 0 and "STOP" in out2)
-    man = json.load(open(os.path.join(outdir, "PHOTO-PARTS.json")))
+    man = load_json(os.path.join(outdir, "PHOTO-PARTS.json"))
     parts = man["parts"]
     names = [p["name"] for p in parts]
     ok("the list: about 30 parts, each with its own sha, hosts and the whole-file sha",
        28 <= len(parts) <= 33 and all(len(p["sha256"]) == 64 for p in parts) and man["sha256"] == zsha
        and man["encryption"]["key_id"] == key.splitlines()[1][3:])
     ok("the list: encrypted bytes differ from the zip (the parts are not the plain zip)",
-       open(os.path.join(outdir, names[1]), "rb").read(64) != open(zpath, "rb").read(64))
+       read_bytes(os.path.join(outdir, names[1]), 64) != read_bytes(zpath, 64))
     first = parts[0]
     privdir = os.path.join(T, "private-repo", "parts")
     ok("the list: part 1 lists drive and the private repository only (not github), prefers drive, priority 1",
@@ -168,17 +201,18 @@ def body(T):
     # Give every Drive entry a file id the way the release does.
     ids = {n: f"ID{i:03d}" for i, n in enumerate(names)}
     idsfile = os.path.join(T, "ids.txt")
-    open(idsfile, "w").write("".join(f"{n} {i}\n" for n, i in ids.items()))
+    write_file("".join(f"{n} {i}\n" for n, i in ids.items()), idsfile, "w")
     manp = os.path.join(T, "PHOTO-PARTS.json")
     shutil.copy(os.path.join(outdir, "PHOTO-PARTS.json"), manp)
     run([MAKE, "--set-ids", manp, idsfile, "--host", "drive"])
-    man = json.load(open(manp))
+    man = load_json(manp)
     manp_pin = os.path.join(T, "PHOTO-PARTS-pinned.json")      # the same parts, part 1 held by Drive only (the generic "pinned" feature)
-    mp = json.load(open(manp))
+    mp = load_json(manp)
     mp["parts"][0]["hosts"] = [h for h in mp["parts"][0]["hosts"] if h.startswith("drive")]
     mp["parts"][0]["pinned"] = "drive"
     del mp["parts"][0]["prefer"]
-    json.dump(mp, open(manp_pin, "w"))
+    with open(manp_pin, "w") as fh:
+        json.dump(mp, fh)
     author_parts = {p["name"] for p in man["parts"] if "author" in p["hosts"]}
     ok("set-ids: every Drive entry names its file id", all(any(h.startswith("drive:ID") for h in p["hosts"]) for p in man["parts"]))
     files = {n: os.path.join(outdir if i else privdir, n) for i, n in enumerate(names)}
@@ -192,11 +226,11 @@ def body(T):
         os.makedirs(d, exist_ok=True)
         path = os.path.join(d, "photos-access.token")
         if text is not False:
-            open(path, "w").write((text or TOKEN) + "\n")
+            write_file((text or TOKEN) + "\n", path, "w")
         return path
     by_id = {ids[n]: n for n in names}
     nodrive = os.path.join(T, "no-hosts.txt")
-    open(nodrive, "w").write("")
+    write_file("", nodrive, "w")
 
     def go(dest, hosts, key_path=None, extra=(), manifest=None, env=None, token=None):
         a = [GET, "photos", "--dest", dest, "--key", key_path or os.path.join(keydir, "photos.key"),
@@ -212,10 +246,10 @@ def body(T):
 
     def installed(d):
         f = os.path.join(d, "junsgarden-photos-addon.zip")
-        return os.path.isfile(f) and hashlib.sha256(open(f, "rb").read()).hexdigest() == zsha
+        return os.path.isfile(f) and hashlib.sha256(read_bytes(f)).hexdigest() == zsha
 
     def nothing_written(d):
-        return not [f for f in os.listdir(d) if f.endswith(".zip") or f.endswith(".partial")]
+        return not [f for f in os.listdir(d) if f.endswith((".zip", ".partial"))]
 
     def hostset(github, drive, author=None, **kw):
         h = {"github": github.url("{name}"), "drive": drive.url("uc?export=download&id={id}")}
@@ -289,10 +323,10 @@ def body(T):
        "key file (photos.key) is missing" in out and "열쇠" in out and "junsgarden-for-jun.zip" in out)
     d8 = fresh("d8")
     os.makedirs(os.path.join(T, "k2"))
-    open(os.path.join(T, "k2", "photos.key"), "w").write("0" * 64 + "\nid=deadbeef\n")
+    write_file("0" * 64 + "\nid=deadbeef\n", os.path.join(T, "k2", "photos.key"), "w")
     rc, out = go(d8, {"github": g7.url("{name}")}, key_path=os.path.join(T, "k2", "photos.key"))
     ok("key of another download (id differs): refused before downloading", rc == 4 and not g7.log and nothing_written(d8))
-    open(os.path.join(T, "k2", "photos.key"), "w").write("0" * 64 + "\nid=" + man["encryption"]["key_id"] + "\n")
+    write_file("0" * 64 + "\nid=" + man["encryption"]["key_id"] + "\n", os.path.join(T, "k2", "photos.key"), "w")
     g8 = Host(files, by_id=by_id)
     rc, out = go(d8, {"github": g8.url("{name}"), "drive": g8.url("uc?export=download&id={id}")}, key_path=os.path.join(T, "k2", "photos.key"))
     ok("wrong key (right id): decrypt gives a wrong file, nothing installed, exit 4", rc == 4 and nothing_written(d8) and "Nothing was installed" in out, out)
@@ -355,7 +389,7 @@ def body(T):
     seen = [TOKEN in out]
     for root, _d, fs in os.walk(d13):
         for f in fs:
-            seen.append(TOKEN.encode() in open(os.path.join(root, f), "rb").read())
+            seen.append(TOKEN.encode() in read_bytes(os.path.join(root, f)))
     ok("token: never in the output and never written into the garden folder or its parts", not any(seen))
     ok("token: removed after the success (zeros then deleted)", not os.path.exists(t13))
     dr_back, pv_back = Host(files, by_id=by_id), Host(priv_files, token=TOKEN)
@@ -383,7 +417,7 @@ def body(T):
     rc, out = go(d16, with_priv(gh=Host(files), dr=Host(files, by_id=by_id, down=True), priv=pv_w), token=t16)
     ok("wrong token: the private host answers 401, it is called unavailable in plain words, exit 1, nothing installed, the access file stays",
        rc == 1 and nothing_written(d16) and set(pv_w.auth) == {401} and "did not accept the access" in out and os.path.exists(t16) and "ghp_WRONG_TOKEN" not in out, out[-500:])
-    open(t16, "w").write(TOKEN + "\n")
+    write_file(TOKEN + "\n", t16, "w")
     rc, out = go(d16, with_priv(gh=Host(files), dr=Host(files, by_id=by_id), priv=pv_w), token=t16)
     ok("after the failed run the verified parts were kept: a second run with Drive back and the right token completes, then the access file is gone",
        rc == 0 and installed(d16) and not os.path.exists(t16), out[-300:])
@@ -412,12 +446,12 @@ def body(T):
         with zipfile.ZipFile(os.path.join(serve, zn), "w") as z:
             for m in mem:
                 z.writestr(f"{folder}/{m}", b"%PDF-1.4 test " + m.encode())
-        b = open(os.path.join(serve, zn), "rb").read()
+        b = read_bytes(os.path.join(serve, zn))
         pdfs[code] = f"{hashlib.sha256(b).hexdigest()}  {zn} {len(b)} {code} github,author"
-    open(os.path.join(g, "PDF-GUIDES-SHA256.txt"), "w").write(
-        f"url=http://127.0.0.1:{closed_port()}/x\n" + pdfs["en"] + "\n" + pdfs["ko"] + "\n")
+    write_file(
+        f"url=http://127.0.0.1:{closed_port()}/x\n" + pdfs["en"] + "\n" + pdfs["ko"] + "\n", os.path.join(g, "PDF-GUIDES-SHA256.txt"), "w")
     pdf_host = Host({f: os.path.join(serve, f) for f in os.listdir(serve)})
-    open(os.path.join(g, "DOWNLOAD-HOSTS.txt"), "w").write(f"author  {pdf_host.url('{name}')}\n")
+    write_file(f"author  {pdf_host.url('{name}')}\n", os.path.join(g, "DOWNLOAD-HOSTS.txt"), "w")
     dd = os.path.join(T, "pd")
     os.makedirs(dd)
     rc, out = run([os.path.join(g, "tools", "get-pdfs.py"), "both", "--dest", dd])
@@ -435,7 +469,7 @@ def body(T):
     # ---- 12. the glue in garden.sh: photos_start (background) and photos_wait (one progress line), the real functions
     bash = shutil.which("bash")
     if bash:
-        src = open(os.path.join(ROOT, "garden.sh"), encoding="utf-8").read()
+        src = read_text(os.path.join(ROOT, "garden.sh"), encoding="utf-8")
         glue = src[src.index("PHOTOS_PID=\n"):src.index("# Menu 6, 11 (or: bash garden.sh photos)")]
         gd = os.path.join(T, "gardenfolder")
         os.makedirs(os.path.join(gd, "tools"))
@@ -443,20 +477,20 @@ def body(T):
         shutil.copy(manp, os.path.join(gd, "PHOTO-PARTS.json"))
         shutil.copy(os.path.join(keydir, "photos.key"), os.path.join(gd, "photos.key"))
         gg, gdr = Host(files), Host(files, by_id=by_id)
-        open(os.path.join(gd, "DOWNLOAD-HOSTS.txt"), "w").write(
-            "github " + gg.url("{name}") + "\ndrive " + gdr.url("uc?export=download&id={id}") + "\n")
+        write_file(
+            "github " + gg.url("{name}") + "\ndrive " + gdr.url("uc?export=download&id={id}") + "\n", os.path.join(gd, "DOWNLOAD-HOSTS.txt"), "w")
         drv = os.path.join(T, "glue.sh")
         pyx = PY.replace("\\", "/")
-        open(drv, "w", newline="\n").write(
+        write_file(
             'python3() { "' + pyx + '" "$@"; }\nnote() { echo "NOTE $*"; }\nfind_download() { return 1; }\nhave_photos() { return 1; }\n'
-            'HERE="$PWD"\n' + glue + '\nphotos_start\nphotos_wait\nls\n')
-        r = subprocess.run([bash, drv], cwd=gd, capture_output=True, text=True, encoding="utf-8", env=ENV)
+            'HERE="$PWD"\n' + glue + '\nphotos_start\nphotos_wait\nls\n', drv, "w", newline="\n")
+        r = subprocess.run([bash, drv], cwd=gd, capture_output=True, text=True, encoding="utf-8", env=ENV, check=False)
         ok("garden.sh glue: photos_start/photos_wait fetch the photos in the background, zip lands in the garden folder",
            "junsgarden-photos-addon.zip" in r.stdout and "arriving in the background" in r.stdout and installed(gd), r.stdout[-400:] + r.stderr[-300:])
         shutil.rmtree(os.path.join(gd, ".garden-downloads"), ignore_errors=True)
         os.remove(os.path.join(gd, "junsgarden-photos-addon.zip"))
         os.remove(os.path.join(gd, "photos.key"))
-        r = subprocess.run([bash, drv], cwd=gd, capture_output=True, text=True, encoding="utf-8", env=ENV)
+        r = subprocess.run([bash, drv], cwd=gd, capture_output=True, text=True, encoding="utf-8", env=ENV, check=False)
         ok("garden.sh glue: with no key the script carries on, says so in plain words, writes no zip",
            r.returncode == 0 and "photos.key" in r.stdout and not installed(gd) and not os.path.exists(os.path.join(gd, "junsgarden-photos-addon.zip")), r.stdout[-500:])
 

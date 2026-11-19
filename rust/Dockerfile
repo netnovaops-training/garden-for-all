@@ -31,6 +31,9 @@ FROM rust:${RUST_VERSION}-slim-trixie@sha256:1a939748a7cbab172de91a014e3804a97af
 # pkg-config and libssl-dev aren't used by today's dependency tree (it's rustls
 # all the way down) but nearly every crate you might add next wants them, and
 # their absence produces a linker error that names neither.
+# Distro package versions are not pinned (hadolint DL3008): the base image is pinned by digest and
+# kept current by Dependabot; pinned package versions break the build when the mirror drops them.
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
         pkg-config libssl-dev ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -66,6 +69,9 @@ FROM debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20b
 # tzdata:  without it every date in the app is UTC, silently. The apps read TZ
 #          from the compose file, and that only works if the database is here.
 # wget:    what the healthcheck uses.
+# Distro package versions are not pinned (hadolint DL3008): the base image is pinned by digest and
+# kept current by Dependabot; pinned package versions break the build when the mirror drops them.
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates tzdata wget \
     && rm -rf /var/lib/apt/lists/*
@@ -78,6 +84,9 @@ COPY --from=builder /build/app /usr/local/bin/app
 
 # Apps that keep state write here; the compose file mounts a volume over it.
 RUN mkdir -p /data && chown app:app /data
+# By name (hadolint DL3066): `useradd --system` picks the uid, and fixing one now would change the
+# owner of files already in existing /data volumes.
+# hadolint ignore=DL3066
 USER app
 
 ENV APP_PORT=8010
@@ -85,6 +94,8 @@ EXPOSE 8010
 
 # Docker Desktop shows this as a green/red dot next to the container, which is
 # the fastest way to tell "started" from "actually working".
+# Shell form on purpose (hadolint DL3025): it needs ${APP_PORT} expanded and the `|| exit 1`.
+# hadolint ignore=DL3025
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD wget -qO- "http://127.0.0.1:${APP_PORT}/healthz" >/dev/null 2>&1 || exit 1
 

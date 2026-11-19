@@ -9,7 +9,11 @@ guide expects (MUST_CONTAIN below). Writes the full list to
 link-check-report.txt next to this package folder.
 Nothing here is needed to RUN the garden.
 """
-import concurrent.futures as cf, pathlib, re, subprocess, sys
+import concurrent.futures as cf
+import pathlib
+import re
+import subprocess
+import sys
 
 PKG = pathlib.Path(__file__).resolve().parents[2]
 REPORT = PKG.parent / "link-check-report.txt"
@@ -40,13 +44,14 @@ def fetch(url):
     the system's certificates, like a browser)."""
     try:
         r = subprocess.run(["curl", "-sL", "--max-time", "25", "-A", UA, "-H", "Accept-Language: en",
-                            "-r", "0-600000", "-w", "\n%{http_code}", url], capture_output=True, timeout=40)
+                            "-r", "0-600000", "-w", "\n%{http_code}", url], capture_output=True, timeout=40,
+                           check=False)   # curl's own exit code is reported below, not raised
         out = r.stdout.decode("utf-8", "replace")
         body, _, code = out.rpartition("\n")
         code = int(code) if code.strip().isdigit() else 0
         # 206 = "partial content": the page answered with the part we asked for.
         return (200 if code == 206 else code) if code else f"error: curl {r.returncode}", body
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError) as e:   # no curl (FileNotFoundError), or it hung (TimeoutExpired)
         return f"error: {type(e).__name__}", ""
 
 
@@ -75,8 +80,8 @@ def main():
             missing = [w for w in MUST_CONTAIN.get(u, []) if w.lower() not in body.lower()]
             if missing:
                 words_missing.append(f"{u}  is missing: {missing}   [{where}]")
-    lines = [f"Checked {len(results)} addresses: {ok} open fine, {len(broken)} broken, "
-             f"{len(by_hand)} to check by hand, {len(words_missing)} with expected words missing.", ""]
+    lines = [(f"Checked {len(results)} addresses: {ok} open fine, {len(broken)} broken, "
+              f"{len(by_hand)} to check by hand, {len(words_missing)} with expected words missing."), ""]
     for title, items in (("BROKEN (fix these)", broken), ("EXPECTED WORDS MISSING", words_missing),
                          ("CHECK BY HAND (the site refuses automatic checks)", by_hand)):
         lines += [f"== {title}"] + (items or ["(none)"]) + [""]

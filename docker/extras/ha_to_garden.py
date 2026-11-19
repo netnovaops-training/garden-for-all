@@ -17,6 +17,7 @@ Only the standard Python library is used, so nothing needs installing.
 """
 
 import json
+import math
 import os
 import subprocess
 import sys
@@ -62,9 +63,12 @@ def ha_state(token, entity):
         headers={"Authorization": f"Bearer {token}"},
     )
     try:
-        with urllib.request.urlopen(request, timeout=10) as reply:
+        with urllib.request.urlopen(request, timeout=10) as reply:  # HA_URL is a fixed http:// address above  # nosec B310
             state = json.load(reply)["state"]
-        return float(state)  # "unavailable" or "unknown" raise ValueError
+        value = float(state)  # "unavailable" or "unknown" raise ValueError
+        if not math.isfinite(value):  # "nan"/"inf" pass float() but are not readings, and not valid SQL numbers
+            raise ValueError(f"not a finite number: {state!r}")
+        return value
     except (ValueError, KeyError, OSError) as error:
         print(f"  could not read {entity}: {error}", file=sys.stderr)
         return None
@@ -87,11 +91,15 @@ def main():
 
     # Column names come from this file (not from outside), and values are
     # numbers already checked above, so building the SQL text like this is safe.
+    # (It goes to the mariadb command line on stdin, which has no %s parameters;
+    # the names are re-checked here so an edit to SENSORS cannot break that.)
+    if not all(c.replace("_", "").isalnum() and c.isascii() for c in readings):
+        sys.exit("A column name in SENSORS may only use letters, digits and _.")
     columns = ", ".join(f"`{c}`" for c in readings)
-    values = ", ".join(repr(v) for v in readings.values())
+    values = ", ".join(repr(float(v)) for v in readings.values())
     now = datetime.now().strftime("%Y-%m-%d %H:%M:00")
-    sql = (
-        f"INSERT INTO juns_garden_db.weather (obs_time, location, source, {columns}) "
+    sql = (  # fixed names and finite floats only, checked above
+        f"INSERT INTO juns_garden_db.weather (obs_time, location, source, {columns}) "  # nosec B608
         f"VALUES ('{now}', '{LOCATION}', '{SOURCE}', {values}) "
         f"ON DUPLICATE KEY UPDATE "
         + ", ".join(f"`{c}`=VALUES(`{c}`)" for c in readings)

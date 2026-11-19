@@ -38,14 +38,23 @@ WHAT IT DELIBERATELY WILL NOT DO:
 """
 from __future__ import annotations
 
-from .vocab import (CONTROLLED, Decision, Vocabulary, build, canon_key,
-                    resolve_all)
-
 import re
 
-__all__ = ["review", "apply_approved", "remember", "ensure", "CONTROLLED",
-           "Decision", "Vocabulary", "canon_key", "build", "resolve_all",
-           "SCHEMA"]
+from .vocab import CONTROLLED, Decision, Vocabulary, build, canon_key, resolve_all
+
+__all__ = [
+    "CONTROLLED",
+    "SCHEMA",
+    "Decision",
+    "Vocabulary",
+    "apply_approved",
+    "build",
+    "canon_key",
+    "ensure",
+    "remember",
+    "resolve_all",
+    "review",
+]
 
 SCHEMA = """
 -- What a person has already decided a loose wording means, here.

@@ -35,7 +35,6 @@ a write, not a re-derivation, and the wiki cannot change under it.
 """
 from __future__ import annotations
 
-
 KINDS = ("new", "addition", "detail", "conflict")
 STATUS = ("pending", "applied", "declined", "failed")
 

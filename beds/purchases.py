@@ -116,9 +116,9 @@ def read_receipt(text, ask):
         return {"store": "", "date": "", "lines": []}
     try:
         raw = ask(READ_RECEIPT.format(text=text[:14000]))
-    except Exception:
+    except Exception:  # noqa: BLE001  ask() is whichever AI backend is set up; its errors mean "nothing read"
         return {"store": "", "date": "", "lines": []}
-    m = re.search(r"\{.*\}", raw, re.S)
+    m = re.search(r"\{.*\}", raw, re.DOTALL)
     if not m:
         return {"store": "", "date": "", "lines": []}
     try:
@@ -177,9 +177,9 @@ def match_line(line_text, catalogue_names, ask):
     listed = chr(10).join("  - " + n for n in catalogue_names[:400])
     try:
         raw = ask(MATCH_LINE.format(names=listed, line=line_text))
-    except Exception:
+    except Exception:  # noqa: BLE001  ask() is whichever AI backend is set up; its errors mean "no match"
         return "", 0.0
-    m = re.search(r"\{.*\}", raw, re.S)
+    m = re.search(r"\{.*\}", raw, re.DOTALL)
     if not m:
         return "", 0.0
     try:

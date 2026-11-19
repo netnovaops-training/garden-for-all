@@ -13,7 +13,11 @@ downloads against; that file IS in the program.
 The zips are reproducible: sorted names, a fixed date, UTF-8 names (the Korean
 folder names), so the same PDFs always give the same fingerprint.
 """
-import argparse, hashlib, pathlib, sys, zipfile
+import argparse
+import hashlib
+import pathlib
+import sys
+import zipfile
 
 REPO = "netnovaops-training/garden-for-all"
 ap = argparse.ArgumentParser()

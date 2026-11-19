@@ -24,7 +24,14 @@
   rewrites the list so each part names its file id on that host (IDS.txt: "<part name> <id>" per
   line). Run it once the parts are uploaded.
 """
-import argparse, hashlib, json, os, secrets, subprocess, sys, threading
+import argparse
+import hashlib
+import json
+import os
+import secrets
+import subprocess
+import sys
+import threading
 
 ITER = 10000
 
@@ -41,13 +48,16 @@ def inside_a_repo(path):
 
 
 def set_ids(manifest, idsfile, host):
-    m = json.load(open(manifest, encoding="utf-8"))
-    ids = dict(l.split(None, 1) for l in open(idsfile, encoding="utf-8").read().splitlines() if l.strip())
+    with open(manifest, encoding="utf-8") as fh:
+        m = json.load(fh)
+    with open(idsfile, encoding="utf-8") as fh:
+        ids = dict(l.split(None, 1) for l in fh.read().splitlines() if l.strip())
     for p in m["parts"]:
         if p["name"] in ids:
             keep = [h for h in p["hosts"] if h.split(":")[0] != host]
             p["hosts"] = keep + [f"{host}:{ids[p['name']].strip()}"]
-    json.dump(m, open(manifest, "w", encoding="utf-8", newline="\n"), indent=1)
+    with open(manifest, "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(m, fh, indent=1)
     print(f"ids set on {sum(1 for p in m['parts'] if any(h.startswith(host + ':') for h in p['hosts']))} parts")
 
 
@@ -71,13 +81,15 @@ def main():
     ap.add_argument("--host", default="drive")
     a = ap.parse_args()
     if a.set_private_repo:
-        m = json.load(open(a.set_private_repo[0], encoding="utf-8"))
+        with open(a.set_private_repo[0], encoding="utf-8") as fh:
+            m = json.load(fh)
         n = 0
         for p in m["parts"]:
             if any(h.startswith("ghprivate") for h in p["hosts"]):
                 p["hosts"] = [h for h in p["hosts"] if not h.startswith("ghprivate")] + ["ghprivate:" + a.set_private_repo[1]]
                 n += 1
-        json.dump(m, open(a.set_private_repo[0], "w", encoding="utf-8", newline=chr(10)), indent=1)
+        with open(a.set_private_repo[0], "w", encoding="utf-8", newline=chr(10)) as fh:
+            json.dump(m, fh, indent=1)
         print(f"private repository set on {n} part(s)")
         return 0
     if a.set_ids:
@@ -99,7 +111,8 @@ def main():
         with os.fdopen(fd, "w", newline="\n") as f:
             f.write(f"{key}\nid={kid}\n")
         print("made a new key (not shown); id", kid)
-    lines = open(keyfile, encoding="utf-8").read().splitlines()
+    with open(keyfile, encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
     kid = lines[1][3:]
 
     name = os.path.basename(a.zip)
@@ -132,9 +145,11 @@ def main():
         if n in a.private_part:        # never in the public folder: it goes to private-repo/parts/ next to it
             pdir = os.path.join(os.path.dirname(os.path.abspath(a.out)), "private-repo", "parts")
             os.makedirs(pdir, exist_ok=True)
-            open(os.path.join(pdir, pname), "wb").write(data)
+            with open(os.path.join(pdir, pname), "wb") as fh:
+                fh.write(data)
         else:
-            open(os.path.join(a.out, pname), "wb").write(data)
+            with open(os.path.join(a.out, pname), "wb") as fh:
+                fh.write(data)
         h = list(hosts[:2]) + ([hosts[2]] if len(hosts) > 2 and n % a.author_every == 0 else [])
         entry = {"name": pname, "size": len(data), "sha256": hashlib.sha256(data).hexdigest(), "hosts": h}
         if n in prefers:             # fetched first from this host; the others only if it does not answer
@@ -163,7 +178,7 @@ def main():
     print(f"{n} parts of about {a.part_mb:g} MB in {a.out}; list: {os.path.join(a.out, a.manifest)}")
     print("Next: copy the list into the program as PHOTO-PARTS.json; upload the parts to each host;")
     print("put the key into the data zip (never anywhere else):")
-    print(f"  GARDEN_PHOTOS_KEY=<key folder>/photos.key python tools/release/make_zip.py OUT/junsgarden-for-jun.zip")
+    print("  GARDEN_PHOTOS_KEY=<key folder>/photos.key python tools/release/make_zip.py OUT/junsgarden-for-jun.zip")
     return 0
 
 

@@ -79,12 +79,12 @@ def search_catalogue(cursor, names: list, table: str = "data_source",
     if not wanted:
         return []
 
-    cols = ", ".join("`{}`".format(c) for c in NAME_COLS)
+    cols = ", ".join(f"`{c}`" for c in NAME_COLS)
     cursor.execute(
         # `picture`, NOT `photo`. The read-only API renames it on the way
         # out, which is why the wrong name looked right.
-        "SELECT id, {}, flower_bed, bloom_color, plant_type, died, picture "
-        "FROM `{}`".format(cols, table))
+        f"SELECT id, {cols}, flower_bed, bloom_color, plant_type, died, picture "
+        f"FROM `{table}`")
     rows = cursor.fetchall()
 
     scored = {}
@@ -101,18 +101,18 @@ def search_catalogue(cursor, names: list, table: str = "data_source",
                 if not hk:
                     continue
                 if hk == wk:
-                    s, why = 1.0, "{} is exactly {!r}".format(col, have)
+                    s, why = 1.0, f"{col} is exactly {have!r}"
                 elif wk in hk or hk in wk:
                     # A CONTAINMENT MATCH IS STRONG HERE and weak elsewhere.
                     # "redbud" inside "The Rising Sun Redbud" is the normal
                     # way a person refers to a plant they own.
                     s = 0.88
-                    why = "{} contains it: {!r}".format(col, have)
+                    why = f"{col} contains it: {have!r}"
                 else:
                     s = difflib.SequenceMatcher(None, wk, hk).ratio()
                     if s < 0.82:
                         continue
-                    why = "{} is close: {!r}".format(col, have)
+                    why = f"{col} is close: {have!r}"
                 # Earlier names from the model are likelier, so a match on
                 # the second guess is worth slightly less than on the first.
                 s *= 1.0 - 0.06 * wanted.index(want)

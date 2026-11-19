@@ -2,25 +2,26 @@
 Picture 1: a VM = a whole second computer inside your computer (heavy).
 Picture 2: Docker = small boxes, one program each, sharing one computer (light)."""
 import os
+
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "START-HERE", "images")
 
 T = {
- "en": dict(
-   vm_title="A virtual machine (VM): a whole extra computer inside your computer",
-   your_pc="Your computer", vm="Pretend computer", os="Its own Windows or Ubuntu",
-   prog="One program", mem="usually needs 2 to 4 GB of memory", slow="starts in minutes",
-   dk_title="Docker: small boxes, each with one program, sharing your computer",
-   ubuntu="Ubuntu (one, shared by all the boxes)", engine="Docker",
-   box1="Website", box2="Database", box3="Garden tools", box4="Sign-in page",
-   small="each box: only what its program needs", fast="starts in seconds"),
- "ko": dict(
-   vm_title="가상 머신(VM): 내 컴퓨터 안의 또 다른 컴퓨터 한 대 전체",
-   your_pc="내 컴퓨터", vm="흉내 내는 컴퓨터", os="자기만의 Windows나 Ubuntu",
-   prog="프로그램 하나", mem="보통 메모리 2~4 GB 필요", slow="켜지는 데 몇 분",
-   dk_title="Docker: 프로그램 하나씩 든 작은 상자들이 내 컴퓨터를 함께 써요",
-   ubuntu="Ubuntu(하나, 모든 상자가 함께 써요)", engine="Docker",
-   box1="웹사이트", box2="데이터베이스", box3="정원 도구", box4="로그인 페이지",
-   small="상자마다: 그 프로그램에 필요한 것만", fast="켜지는 데 몇 초"),
+ "en": {
+   "vm_title": "A virtual machine (VM): a whole extra computer inside your computer",
+   "your_pc": "Your computer", "vm": "Pretend computer", "os": "Its own Windows or Ubuntu",
+   "prog": "One program", "mem": "usually needs 2 to 4 GB of memory", "slow": "starts in minutes",
+   "dk_title": "Docker: small boxes, each with one program, sharing your computer",
+   "ubuntu": "Ubuntu (one, shared by all the boxes)", "engine": "Docker",
+   "box1": "Website", "box2": "Database", "box3": "Garden tools", "box4": "Sign-in page",
+   "small": "each box: only what its program needs", "fast": "starts in seconds"},
+ "ko": {
+   "vm_title": "가상 머신(VM): 내 컴퓨터 안의 또 다른 컴퓨터 한 대 전체",
+   "your_pc": "내 컴퓨터", "vm": "흉내 내는 컴퓨터", "os": "자기만의 Windows나 Ubuntu",
+   "prog": "프로그램 하나", "mem": "보통 메모리 2~4 GB 필요", "slow": "켜지는 데 몇 분",
+   "dk_title": "Docker: 프로그램 하나씩 든 작은 상자들이 내 컴퓨터를 함께 써요",
+   "ubuntu": "Ubuntu(하나, 모든 상자가 함께 써요)", "engine": "Docker",
+   "box1": "웹사이트", "box2": "데이터베이스", "box3": "정원 도구", "box4": "로그인 페이지",
+   "small": "상자마다: 그 프로그램에 필요한 것만", "fast": "켜지는 데 몇 초"},
 }
 FONT = "font-family='Segoe UI, Malgun Gothic, Noto Sans KR, Arial, sans-serif'"
 
@@ -68,6 +69,8 @@ def docker_svg(t):
 
 
 for lang, t in T.items():
-    open(os.path.join(OUT, f"docker-1-vm-{lang}.svg"), "w", encoding="utf-8").write(vm_svg(t))
-    open(os.path.join(OUT, f"docker-2-boxes-{lang}.svg"), "w", encoding="utf-8").write(docker_svg(t))
+    with open(os.path.join(OUT, f"docker-1-vm-{lang}.svg"), "w", encoding="utf-8") as fh:
+        fh.write(vm_svg(t))
+    with open(os.path.join(OUT, f"docker-2-boxes-{lang}.svg"), "w", encoding="utf-8") as fh:
+        fh.write(docker_svg(t))
 print("ok")

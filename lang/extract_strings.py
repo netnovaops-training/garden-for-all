@@ -259,12 +259,12 @@ def collect():
     # Indirect: the API key labels go through  Lt "$label"  and  say "$label",
     # and the key state through  Lt "$k"  (k="not set").
     src = GARDEN.read_text(encoding="utf-8")
-    m = re.search(r"^KEYS_LIST=\((.*?)^\)", src, re.S | re.M)
+    m = re.search(r"^KEYS_LIST=\((.*?)^\)", src, re.DOTALL | re.MULTILINE)
     if m:
         for entry in re.findall(r'"([^"]*)"', m.group(1)):
             add(entry.split("|")[1], False, "KEYS_LIST")
     # The install step names go through  Lt "$what"  (what = the part after |).
-    m = re.search(r"^INSTALL_STEPS=\((.*?)^\)", src, re.S | re.M)
+    m = re.search(r"^INSTALL_STEPS=\((.*?)^\)", src, re.DOTALL | re.MULTILINE)
     if m:
         for entry in re.findall(r'"([^"]*)"', m.group(1)):
             add(entry.split("|", 1)[1], False, "INSTALL_STEPS")
