@@ -1,7 +1,7 @@
 [versions]
 zxing = "3.5.4"
 coil = "2.7.0"
-agp = "9.4.1"
+agp = "9.5.1"
 coreKtx = "1.19.1"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -18,8 +18,8 @@ securityCrypto = "1.1.0"
 # Reads the rotation flag a phone writes into a photo. Without it the model
 # is handed a sideways picture and describes it confidently and wrongly.
 exifinterface = "1.4.2"
-datastore = "1.1.1"
-kotlinxSerializationJson = "1.11.0"
+datastore = "1.3.0"
+kotlinxSerializationJson = "1.13.0"
 # Ed25519 for the garden's signed address (GardenAddress.kt): Android's own crypto refuses
 # Ed25519 keys (found on an Android 16 emulator), Tink checks them on every phone. Already
 # inside the app through security-crypto; named here so it is the newest Tink.
