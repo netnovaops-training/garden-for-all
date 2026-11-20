@@ -1,0 +1,8 @@
+# OSV-Scanner exceptions for rust/Cargo.lock. Each one says why it is accepted and when it is looked at again.
+# Added 2026-11-20 with the author's approval (the advisory has no fixed release yet).
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0543"
+ignoreUntil = 2027-02-20
+reason = """chrono 0.4.45 is the newest release and the advisory lists no fixed version. Re-check with the monthly
+Dependabot run and take the fix as soon as it is published; the ignore expires on its own on 2027-02-20."""
