@@ -5,9 +5,6 @@ package org.jasonagibson.junsgarden.garden
 
 import org.jasonagibson.junsgarden.R
 import org.jasonagibson.junsgarden.ui.AppText
-import java.time.Month
-import java.time.format.TextStyle
-import java.util.Locale
 
 /**
  * The same grouping catalog.php uses, so the app and the website agree.
@@ -35,7 +32,7 @@ import java.util.Locale
  *
  * NOTHING HERE WRITES. This reads the record and decides what to show. In
  * particular `grow_months` and `bloom_months` are only ever DECODED -- see
- * monthRange below.
+ * monthRange in PlantMonths.kt.
  */
 
 /** A labelled group of rows, rendered as one card. */
@@ -44,42 +41,6 @@ data class PlantSection(
     val icon: String,
     val rows: List<Pair<String, String>>,
 )
-
-/** Month `i` (0 = January) in the app's language: "May" or "5월"; short: "May" or "5월". */
-private fun monthName(i: Int, short: Boolean = false): String =
-    Month.of(i + 1).getDisplayName(if (short) TextStyle.SHORT else TextStyle.FULL, Locale.getDefault())
-
-/**
- * "....MJJAS..." -> "May–September".
- *
- * THE ENCODING IS TWELVE CHARACTERS, ONE PER MONTH, a dot for off. It is
- * also the column with a history of being corrupted by app-layer bugs --
- * there are one-off repair scripts in the old project because of it. So this
- * only ever READS it. Nothing in the app writes a month bitmap, and if this
- * cannot make sense of a value it returns the raw string rather than
- * guessing, because a wrong month range looks exactly as confident as a
- * right one.
- */
-fun monthRange(raw: String?): String {
-    val s = raw?.trim().orEmpty()
-    if (s.isEmpty()) return ""
-    if (s.length != 12) return s          // not the bitmap; show it as-is
-
-    val on = s.indices.filter { s[it] != '.' && !s[it].isWhitespace() }
-    if (on.isEmpty()) return ""
-    if (on.size == 12) return AppText.s(R.string.all_year)
-
-    // Contiguous is the ordinary case and reads best as a range.
-    val contiguous = on.zipWithNext().all { (a, b) -> b == a + 1 }
-    if (contiguous) {
-        val first = monthName(on.first())
-        val last = monthName(on.last())
-        return if (first == last) first else "$first–$last"
-    }
-    // Split seasons do exist -- something that blooms in spring and again in
-    // autumn -- and collapsing those to "March–October" would be a lie.
-    return on.joinToString(", ") { monthName(it, short = true) }
-}
 
 private fun Map<String, String>.take(key: String): String =
     this[key]?.trim().orEmpty()
