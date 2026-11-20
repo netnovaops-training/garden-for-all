@@ -79,12 +79,18 @@ def search_catalogue(cursor, names: list, table: str = "data_source",
     if not wanted:
         return []
 
+    # 2026-11-20 (Bandit B608): a table name cannot be sent as a SQL parameter,
+    # so it is put into the text. Outcome: only plain names (letters, digits,
+    # underscore) are accepted, so nothing a caller passes can add SQL. Every
+    # real caller passes "data_source" or another table of this database.
+    if not re.fullmatch(r"[A-Za-z0-9_]{1,64}", table or ""):
+        raise ValueError(f"bad table name: {table!r}")
     cols = ", ".join(f"`{c}`" for c in NAME_COLS)
-    cursor.execute(
-        # `picture`, NOT `photo`. The read-only API renames it on the way
-        # out, which is why the wrong name looked right.
-        f"SELECT id, {cols}, flower_bed, bloom_color, plant_type, died, picture "
-        f"FROM `{table}`")
+    # `picture`, NOT `photo`. The read-only API renames it on the way
+    # out, which is why the wrong name looked right.
+    sql = (f"SELECT id, {cols}, flower_bed, bloom_color, plant_type, died, picture "  # nosec B608
+           f"FROM `{table}`")
+    cursor.execute(sql)
     rows = cursor.fetchall()
 
     scored = {}
