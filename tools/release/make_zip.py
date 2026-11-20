@@ -37,7 +37,12 @@ it from there, in one of two ways (written into CODE-SOURCE.txt):
 Test-only: SMALL_DIR swaps in a small backup and a small wiki seed, so a full
 install test is quick. The program files are exactly the same.
 """
-import hashlib, io, os, shutil, sys, tarfile, zipfile
+import hashlib
+import io
+import os
+import sys
+import tarfile
+import zipfile
 
 # Run from anywhere:  python tools/release/make_zip.py [OUTPUT.zip]
 # The three zips are written next to OUTPUT (default: next to this package folder).
@@ -92,8 +97,19 @@ def in_main_zip(rel):
     return rel in NOT_ON_GITHUB or rel in STARTERS or rel.startswith("handbook/")
 
 
+def read_bytes(path):
+    """The whole file, closed again at once (bare open(...).read() left closing to the garbage collector)."""
+    with open(path, "rb") as fh:
+        return fh.read()
+
+
+def write_bytes(path, data):
+    with open(path, "wb") as fh:
+        fh.write(data)
+
+
 def content(full, name):
-    data = open(full, "rb").read()
+    data = read_bytes(full)
     ext = os.path.splitext(name)[1].lower()
     is_text = ext in TEXT_EXT or name in ("Dockerfile", ".gitignore", ".dockerignore", ".gitattributes") or name.startswith("Dockerfile")
     if ext in CRLF_EXT:
@@ -115,7 +131,8 @@ backup_tars = sorted(f for f in os.listdir(BACKUP_DIR) if f.startswith("junsgard
 assert len(backup_tars) == 1, f"expected one starter backup in {BACKUP_DIR}, found {backup_tars}"
 backup_name = backup_tars[0]
 stem = backup_name[:-4]
-src_tar = tarfile.open(os.path.join(BACKUP_DIR, backup_name))
+# Used by step 1 and by the photos add-on below, so not a `with` block: closed explicitly after the photos.
+src_tar = tarfile.open(os.path.join(BACKUP_DIR, backup_name))  # noqa: SIM115
 # The starter backup in the download says where it came from without naming anyone.
 out_stem = stem.replace("_from-jasons-server", "_from-the-author")
 out_name = out_stem + ".tar"
@@ -146,7 +163,8 @@ with zipfile.ZipFile(PHOTOS, "w", zipfile.ZIP_STORED, allowZip64=True) as z:
         "이 파일은 압축을 풀지 마세요. Home 폴더(Ubuntu)나 바탕 화면(Windows)에 두세요.\n"
         "설치가 알아서 찾아요. 나중에, 또는 사진을 다시 넣으려면: 메뉴 6, 그다음 11\n"
         "(또는: bash garden.sh photos). 이미 있는 사진은 그대로 둬요.\n"
-        "메뉴가 쓰기 전에 지문(fingerprint)을 확인해요.\n").encode("utf-8"))
+        "메뉴가 쓰기 전에 지문(fingerprint)을 확인해요.\n").encode())
+src_tar.close()
 photos_sha = h.hexdigest()
 
 # The starter backup without photos: same pieces, new MANIFEST and SHA256SUMS.
@@ -168,7 +186,7 @@ with tarfile.open(fileobj=slim, mode="w") as out:
 slim_bytes = slim.getvalue()
 
 # ---- 2. The wiki add-on ------------------------------------------------------
-seed_bytes = open(SEED_SRC, "rb").read()
+seed_bytes = read_bytes(SEED_SRC)
 seed_sha = hashlib.sha256(seed_bytes).hexdigest()
 if os.path.exists(WIKI):
     os.remove(WIKI)
@@ -184,7 +202,7 @@ with zipfile.ZipFile(WIKI, "w", zipfile.ZIP_STORED) as z:
         "위키를 켤 때만 필요해요. 이 파일은 압축을 풀지 말고 Home 폴더(Ubuntu)나\n"
         "바탕 화면(Windows)에 두세요. 그다음 메뉴에서: 9(Parts)로 위키를 켜거나,\n"
         "이미 켜져 있으면:  bash garden.sh wiki\n"
-        "메뉴가 쓰기 전에 지문(fingerprint)을 확인해요.\n").encode("utf-8"))
+        "메뉴가 쓰기 전에 지문(fingerprint)을 확인해요.\n").encode())
 
 # ---- 3. The main zip ---------------------------------------------------------
 if CODE_REF:
@@ -214,7 +232,7 @@ entries = []
 for root, dirs, files in os.walk(SRC):
     dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS)
     for name in sorted(files):
-        if name in SKIP_FILES or name.endswith(".env") or name.endswith(".pyc"):
+        if name in SKIP_FILES or name.endswith((".env", ".pyc")):
             continue
         full = os.path.join(root, name)
         rel = os.path.relpath(full, SRC).replace(os.sep, "/")
@@ -242,16 +260,16 @@ with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
             lines.append(f"{hashlib.sha256(data).hexdigest()}  ./{rel}\n")
         z.writestr(info_for(TOP + rel), data)
     if PHOTOS_KEY:
-        z.writestr(info_for(TOP + "photos.key", mode=0o600), open(PHOTOS_KEY, "rb").read())
+        z.writestr(info_for(TOP + "photos.key", mode=0o600), read_bytes(PHOTOS_KEY))
     if PHOTOS_TOKEN:
-        z.writestr(info_for(TOP + "photos-access.token", mode=0o600), open(PHOTOS_TOKEN, "rb").read())
+        z.writestr(info_for(TOP + "photos-access.token", mode=0o600), read_bytes(PHOTOS_TOKEN))
     listing = "".join(sorted(lines, key=lambda l: l.split("  ", 1)[1])).encode()
     z.writestr(info_for(TOP + "FILES-FROM-AUTHOR.txt"), listing)
 
 if not SMALL:
     # Keep the fingerprints next to the source too (git tracks them).
-    open(os.path.join(SRC, "FILES-FROM-AUTHOR.txt"), "wb").write(listing)
-    open(os.path.join(SRC, PHOTOS_SHA_REL.replace("/", os.sep)), "wb").write(generated[PHOTOS_SHA_REL])
-    open(os.path.join(SRC, SEED_SHA_REL.replace("/", os.sep)), "wb").write(generated[SEED_SHA_REL])
+    write_bytes(os.path.join(SRC, "FILES-FROM-AUTHOR.txt"), listing)
+    write_bytes(os.path.join(SRC, PHOTOS_SHA_REL.replace("/", os.sep)), generated[PHOTOS_SHA_REL])
+    write_bytes(os.path.join(SRC, SEED_SHA_REL.replace("/", os.sep)), generated[SEED_SHA_REL])
 for f in (OUT, PHOTOS, WIKI):
     print(f"{os.path.basename(f):40s} {os.path.getsize(f) / 1e6:8.1f} MB")

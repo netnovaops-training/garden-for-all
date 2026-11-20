@@ -70,6 +70,12 @@
                         <small style="color: #555; display:block; margin-top: 8px;">✨ <strong>AI Managed:</strong> Detailed plant specifications are now strictly managed autonomously by the Ollama integration.</small>
                     </div>
 
+                    <!-- The grower's product page; the server accepts only a full https:// address (weblink.rs). -->
+                    <div>
+                        <label for="p_product_url" style="font-weight: bold; color: #2e7d32; display:block; margin-bottom: 5px;">Source</label>
+                        <input type="url" name="product_url" id="p_product_url" placeholder="https://..." maxlength="500" pattern="https://.+" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                    </div>
+
                     <div style="display:none;">
                         <input id="p_family"><input id="p_genus"><input id="p_company"><input id="p_local_store"><input id="p_sun"><input id="p_qty"><input id="p_year"><input id="p_zones"><input id="p_water"><input id="p_size_new"><input id="p_size"><input id="p_deer"><input id="p_space"><input id="p_maint"><input id="p_attracts"><input id="p_care"><input id="p_cleanup"><input id="p_cuttings"><input id="p_admin_todo"><input id="p_split"><input id="p_botanical"><input id="p_soil_ph"><input id="p_soil_type"><input id="p_bloom_color"><input id="p_foliage_color"><input id="p_stem_color"><input id="p_toxicity"><input id="p_prop"><input id="p_disease"><input id="p_grow_months"><input id="p_bloom_months"><select id="p_grow_start"></select><select id="p_grow_end"></select><select id="p_bloom_start"></select><select id="p_bloom_end"></select><input id="p_est_cost">
                     </div>

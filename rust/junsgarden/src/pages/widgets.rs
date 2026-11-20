@@ -77,7 +77,11 @@ fn r(v: Option<f64>, places: i32) -> f64 {
 fn date_mjy(s: &str) -> String {
     let d = chrono::NaiveDate::parse_from_str(s.get(0..10).unwrap_or(""), "%Y-%m-%d")
         .ok()
-        .or_else(|| chrono::DateTime::parse_from_rfc3339(s).ok().map(|d| d.date_naive()));
+        .or_else(|| {
+            chrono::DateTime::parse_from_rfc3339(s)
+                .ok()
+                .map(|d| d.date_naive())
+        });
     match d {
         Some(d) => d.format("%b %-d, %Y").to_string(),
         None => s.to_string(),
@@ -130,7 +134,9 @@ fn weather_forecast(state: &AppState) -> String {
     // file unreadable, or good data. In the good case the JSON looks like
     // `{"predictions": {"tmax_f": .., "tmin_f": .., "prcp_in": ..}, ...}`.
     match read_forecast(state) {
-        Err("Forecast file not found") => t.err = "Forecast file not found. Run the pipeline to generate predictions.".into(),
+        Err("Forecast file not found") => {
+            t.err = "Forecast file not found. Run the pipeline to generate predictions.".into()
+        }
         Err(_) => t.err = "Could not parse forecast file.".into(),
         Ok(data) => {
             t.has_err = false;
@@ -140,10 +146,17 @@ fn weather_forecast(state: &AppState) -> String {
             let tmin = p["tmin_f"].as_f64().unwrap_or(0.0);
             let prcp = p["prcp_in"].as_f64().unwrap_or(0.0);
             // Date the prediction is for, and when it was generated (shown in local time).
-            t.title_suffix = format!(" — {}", date_mjy(data["prediction_for"].as_str().unwrap_or("—")));
+            t.title_suffix = format!(
+                " — {}",
+                date_mjy(data["prediction_for"].as_str().unwrap_or("—"))
+            );
             if let Some(g) = data["generated_at"].as_str() {
                 t.gen_at = chrono::DateTime::parse_from_rfc3339(g)
-                    .map(|d| d.with_timezone(&chrono::Local).format("%b %-d, %Y %-I:%M %p").to_string())
+                    .map(|d| {
+                        d.with_timezone(&chrono::Local)
+                            .format("%b %-d, %Y %-I:%M %p")
+                            .to_string()
+                    })
                     .unwrap_or_else(|_| "—".into());
             }
             t.win_end = date_mjy(data["window_end"].as_str().unwrap_or("—"));
@@ -204,7 +217,13 @@ fn latest_reading(state: &AppState) -> Option<Map<String, Value>> {
     std::fs::read(&state.weather_latest)
         .ok()
         .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
-        .and_then(|v| if let Value::Object(m) = v { Some(m) } else { None })
+        .and_then(|v| {
+            if let Value::Object(m) = v {
+                Some(m)
+            } else {
+                None
+            }
+        })
 }
 
 /// Made-up reading used when the real file is missing, so the cards still show
@@ -216,17 +235,44 @@ fn mock_reading(with_temperature: bool) -> Map<String, Value> {
     // the map as JSON.
     if with_temperature {
         for (k, v) in [
-            ("temperature", 72.0), ("feels_like", 70.0), ("humidity", 55.0), ("dew_point", 52.0), ("precipitation", 0.0), ("rain", 0.0),
-            ("snowfall", 0.0), ("wind_speed", 8.0), ("wind_gusts", 14.0), ("wind_direction", 220.0), ("cloud_cover", 30.0), ("pressure", 1015.2),
-            ("uv_index", 5.0), ("visibility", 10.0), ("soil_temp_6in", 65.0), ("soil_moisture_6in", 0.32), ("grass_pollen", 12.0),
-            ("tree_pollen", 8.0), ("weed_pollen", 3.0), ("aqi", 35.0),
+            ("temperature", 72.0),
+            ("feels_like", 70.0),
+            ("humidity", 55.0),
+            ("dew_point", 52.0),
+            ("precipitation", 0.0),
+            ("rain", 0.0),
+            ("snowfall", 0.0),
+            ("wind_speed", 8.0),
+            ("wind_gusts", 14.0),
+            ("wind_direction", 220.0),
+            ("cloud_cover", 30.0),
+            ("pressure", 1015.2),
+            ("uv_index", 5.0),
+            ("visibility", 10.0),
+            ("soil_temp_6in", 65.0),
+            ("soil_moisture_6in", 0.32),
+            ("grass_pollen", 12.0),
+            ("tree_pollen", 8.0),
+            ("weed_pollen", 3.0),
+            ("aqi", 35.0),
         ] {
             m.insert(k.into(), json!(v));
         }
         // A timestamp for "now" (local time).
-        m.insert("timestamp".into(), json!(chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string()));
+        m.insert(
+            "timestamp".into(),
+            json!(chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string()),
+        );
     } else {
-        for (k, v) in [("humidity", 55.0), ("dew_point", 52.0), ("precipitation", 0.0), ("rain", 0.0), ("snowfall", 0.0), ("soil_moisture_6in", 0.32), ("pressure", 1015.2)] {
+        for (k, v) in [
+            ("humidity", 55.0),
+            ("dew_point", 52.0),
+            ("precipitation", 0.0),
+            ("rain", 0.0),
+            ("snowfall", 0.0),
+            ("soil_moisture_6in", 0.32),
+            ("pressure", 1015.2),
+        ] {
             m.insert(k.into(), json!(v));
         }
     }
@@ -255,7 +301,13 @@ struct Group {
 /// Build one `Metric` from borrowed text and owned text. `.into()` converts the
 /// `&str` arguments into owned `String` values.
 fn metric(icon: &str, label: &str, value: String, sub: String, color: &str) -> Metric {
-    Metric { icon: icon.into(), label: label.into(), value, sub, color: color.into() }
+    Metric {
+        icon: icon.into(),
+        label: label.into(),
+        value,
+        sub,
+        color: color.into(),
+    }
 }
 
 // The next struct is the card 2 template and holds the values it prints.
@@ -282,7 +334,9 @@ struct IotCurrent {
 /// one has no temperature. Takes the app state. Gives back the card's HTML.
 fn iot_current(state: &AppState) -> String {
     // 1. Pick the reading. `filter` keeps it only if it has a temperature.
-    let c = latest_reading(state).filter(|c| c.contains_key("temperature")).unwrap_or_else(|| mock_reading(true));
+    let c = latest_reading(state)
+        .filter(|c| c.contains_key("temperature"))
+        .unwrap_or_else(|| mock_reading(true));
     // 2. `g("name")` reads one number, 0 if absent. Then round the main values.
     let g = |k: &str| num(&c, k).unwrap_or(0.0);
     let temp = r(Some(g("temperature")), 0);
@@ -308,13 +362,24 @@ fn iot_current(state: &AppState) -> String {
     };
     // 4. UV label: up to 2 low, up to 5 moderate, up to 7 high, above that very high.
     let uv = r(Some(g("uv_index")), 0);
-    let uv_label = if uv <= 2.0 { "Low" } else if uv <= 5.0 { "Moderate" } else if uv <= 7.0 { "High" } else { "Very High" };
+    let uv_label = if uv <= 2.0 {
+        "Low"
+    } else if uv <= 5.0 {
+        "Moderate"
+    } else if uv <= 7.0 {
+        "High"
+    } else {
+        "Very High"
+    };
     let wind = r(Some(g("wind_speed")), 0);
     let gusts = r(Some(g("wind_gusts")), 0);
     let wind_dir = r(Some(g("wind_direction")), 0);
     // 5. Wind direction. A compass has 16 points of 22.5 degrees each, so divide by
     // 22.5, round, and wrap around with `rem_euclid(16)` so 360 degrees gives "N".
-    let dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+    let dirs = [
+        "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW",
+        "NW", "NNW",
+    ];
     let compass = dirs[(php_round(wind_dir / 22.5, 0) as i64).rem_euclid(16) as usize];
     let cloud = r(Some(g("cloud_cover")), 0);
     let pressure = r(Some(g("pressure")), 1);
@@ -327,9 +392,21 @@ fn iot_current(state: &AppState) -> String {
     // 6. Pollen is the sum of grass, tree and weed. Over 50 is high, over 20 moderate.
     // Air quality: up to 50 good, up to 100 moderate, above that unhealthy.
     let total_pollen = grass + tree + weed;
-    let pollen_level = if total_pollen > 50.0 { "High" } else if total_pollen > 20.0 { "Moderate" } else { "Low" };
+    let pollen_level = if total_pollen > 50.0 {
+        "High"
+    } else if total_pollen > 20.0 {
+        "Moderate"
+    } else {
+        "Low"
+    };
     let aqi = r(Some(g("aqi")), 0);
-    let aqi_label = if aqi <= 50.0 { "Good" } else if aqi <= 100.0 { "Moderate" } else { "Unhealthy" };
+    let aqi_label = if aqi <= 50.0 {
+        "Good"
+    } else if aqi <= 100.0 {
+        "Moderate"
+    } else {
+        "Unhealthy"
+    };
 
     // 7. Build three groups of tiles: Air, Wind & Atmosphere, Ground & Soil.
     // Colours are hex codes picked to match the old PHP card.
@@ -339,11 +416,50 @@ fn iot_current(state: &AppState) -> String {
             label: "🌡️ Air".into(),
             default_on: true,
             metrics: vec![
-                metric("🌡️", "Temperature", format!("{}°F", php_num(temp)), format!("Feels {}°F", php_num(feels)), "#FFF3E0"),
-                metric("💧", "Humidity", format!("{}%", php_num(hum)), format!("Dew {}°F", php_num(dew)), "#E3F2FD"),
-                metric("☀️", "UV Index", php_num(uv), uv_label.into(), if uv > 5.0 { "#FFF3E0" } else { "#F1F8E9" }),
-                metric("🌾", "Pollen", pollen_level.into(), format!("G:{} T:{} W:{}", php_num(grass), php_num(tree), php_num(weed)), if total_pollen > 50.0 { "#FFEBEE" } else { "#F3E5F5" }),
-                metric("🫁", "Air Quality", php_num(aqi), aqi_label.into(), "#E0F7FA"),
+                metric(
+                    "🌡️",
+                    "Temperature",
+                    format!("{}°F", php_num(temp)),
+                    format!("Feels {}°F", php_num(feels)),
+                    "#FFF3E0",
+                ),
+                metric(
+                    "💧",
+                    "Humidity",
+                    format!("{}%", php_num(hum)),
+                    format!("Dew {}°F", php_num(dew)),
+                    "#E3F2FD",
+                ),
+                metric(
+                    "☀️",
+                    "UV Index",
+                    php_num(uv),
+                    uv_label.into(),
+                    if uv > 5.0 { "#FFF3E0" } else { "#F1F8E9" },
+                ),
+                metric(
+                    "🌾",
+                    "Pollen",
+                    pollen_level.into(),
+                    format!(
+                        "G:{} T:{} W:{}",
+                        php_num(grass),
+                        php_num(tree),
+                        php_num(weed)
+                    ),
+                    if total_pollen > 50.0 {
+                        "#FFEBEE"
+                    } else {
+                        "#F3E5F5"
+                    },
+                ),
+                metric(
+                    "🫁",
+                    "Air Quality",
+                    php_num(aqi),
+                    aqi_label.into(),
+                    "#E0F7FA",
+                ),
             ],
         },
         Group {
@@ -351,10 +467,44 @@ fn iot_current(state: &AppState) -> String {
             label: "💨 Wind & Atmosphere".into(),
             default_on: false,
             metrics: vec![
-                metric("💨", "Wind", format!("{} mph", php_num(wind)), format!("{compass} gusts {}", php_num(gusts)), "#E8F5E9"),
-                metric("🔻", "Pressure", format!("{} hPa", php_num(pressure)), if pressure > 1020.0 { "High (stable)" } else { "Normal" }.into(), "#FCE4EC"),
-                metric("☁️", "Cloud Cover", format!("{}%", php_num(cloud)), if cloud < 20.0 { "Clear sky" } else { "Overcast" }.into(), "#F5F5F5"),
-                metric("👁️", "Visibility", format!("{} mi", php_num(vis)), if vis > 5.0 { "Clear" } else { "Low visibility" }.into(), "#ECEFF1"),
+                metric(
+                    "💨",
+                    "Wind",
+                    format!("{} mph", php_num(wind)),
+                    format!("{compass} gusts {}", php_num(gusts)),
+                    "#E8F5E9",
+                ),
+                metric(
+                    "🔻",
+                    "Pressure",
+                    format!("{} hPa", php_num(pressure)),
+                    if pressure > 1020.0 {
+                        "High (stable)"
+                    } else {
+                        "Normal"
+                    }
+                    .into(),
+                    "#FCE4EC",
+                ),
+                metric(
+                    "☁️",
+                    "Cloud Cover",
+                    format!("{}%", php_num(cloud)),
+                    if cloud < 20.0 {
+                        "Clear sky"
+                    } else {
+                        "Overcast"
+                    }
+                    .into(),
+                    "#F5F5F5",
+                ),
+                metric(
+                    "👁️",
+                    "Visibility",
+                    format!("{} mi", php_num(vis)),
+                    if vis > 5.0 { "Clear" } else { "Low visibility" }.into(),
+                    "#ECEFF1",
+                ),
             ],
         },
         Group {
@@ -365,7 +515,14 @@ fn iot_current(state: &AppState) -> String {
                 "🌱",
                 "Soil Temp",
                 format!("{}°F", php_num(soil_t)),
-                if soil_t < 45.0 { "Too cold" } else if soil_t < 60.0 { "Cool crops OK" } else { "Warm crops OK" }.into(),
+                if soil_t < 45.0 {
+                    "Too cold"
+                } else if soil_t < 60.0 {
+                    "Cool crops OK"
+                } else {
+                    "Warm crops OK"
+                }
+                .into(),
                 "#EFEBE9",
             )],
         },
@@ -374,14 +531,28 @@ fn iot_current(state: &AppState) -> String {
     IotCurrent {
         uid: uid("wgt_air_"),
         has_timestamp: c.contains_key("timestamp"),
-        timestamp: he(&c.get("timestamp").map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())).unwrap_or_default()),
+        timestamp: he(&c
+            .get("timestamp")
+            .map(|v| {
+                v.as_str()
+                    .map(str::to_string)
+                    .unwrap_or_else(|| v.to_string())
+            })
+            .unwrap_or_default()),
         temp: php_num(temp),
         feels: php_num(feels),
         soil_t: php_num(soil_t),
         zone_status: zone_status.into(),
         zone_icon: zone_icon.into(),
         zone_color: zone_color.into(),
-        soil_note: if soil_t >= 60.0 { "✅ Warm enough for all crops" } else if soil_t >= 45.0 { "🌿 Cool-season crops OK" } else { "❄️ Too cold to plant" }.into(),
+        soil_note: if soil_t >= 60.0 {
+            "✅ Warm enough for all crops"
+        } else if soil_t >= 45.0 {
+            "🌿 Cool-season crops OK"
+        } else {
+            "❄️ Too cold to plant"
+        }
+        .into(),
         groups,
     }
     .render()
@@ -408,7 +579,9 @@ struct IotMoisture {
 /// Build card 3. Takes the app state. Gives back the card's HTML.
 async fn iot_moisture(state: &AppState) -> String {
     // 1. Pick the reading (real or made up) and round the values.
-    let c = latest_reading(state).filter(|c| c.contains_key("humidity")).unwrap_or_else(|| mock_reading(false));
+    let c = latest_reading(state)
+        .filter(|c| c.contains_key("humidity"))
+        .unwrap_or_else(|| mock_reading(false));
     let g = |k: &str| num(&c, k).unwrap_or(0.0);
     let hum = r(Some(g("humidity")), 0);
     let dew = r(Some(g("dew_point")), 0);
@@ -423,9 +596,27 @@ async fn iot_moisture(state: &AppState) -> String {
             label: "🌧️ Precipitation".into(),
             default_on: true,
             metrics: vec![
-                metric("🌧️", "Rain", format!("{}\"", php_num(rain)), if rain > 0.5 { "Heavy" } else { "Light" }.into(), "#E3F2FD"),
-                metric("❄️", "Snowfall", format!("{}\"", php_num(snow)), if snow > 0.0 { "Active" } else { "None" }.into(), if snow > 0.0 { "#E8EAF6" } else { "#FAFAFA" }),
-                metric("💧", "Total Precip", format!("{}\"", php_num(precip)), "Combined".into(), "#E1F5FE"),
+                metric(
+                    "🌧️",
+                    "Rain",
+                    format!("{}\"", php_num(rain)),
+                    if rain > 0.5 { "Heavy" } else { "Light" }.into(),
+                    "#E3F2FD",
+                ),
+                metric(
+                    "❄️",
+                    "Snowfall",
+                    format!("{}\"", php_num(snow)),
+                    if snow > 0.0 { "Active" } else { "None" }.into(),
+                    if snow > 0.0 { "#E8EAF6" } else { "#FAFAFA" },
+                ),
+                metric(
+                    "💧",
+                    "Total Precip",
+                    format!("{}\"", php_num(precip)),
+                    "Combined".into(),
+                    "#E1F5FE",
+                ),
             ],
         },
         Group {
@@ -433,9 +624,48 @@ async fn iot_moisture(state: &AppState) -> String {
             label: "💦 Moisture & Humidity".into(),
             default_on: true,
             metrics: vec![
-                metric("💧", "Humidity", format!("{}%", php_num(hum)), if hum > 80.0 { "Very humid" } else if hum > 60.0 { "Comfortable" } else { "Dry" }.into(), "#E3F2FD"),
-                metric("💦", "Soil Moisture", format!("{}%", php_num(soil_m)), if soil_m < 30.0 { "Needs water" } else if soil_m > 70.0 { "Saturated" } else { "Good" }.into(), if soil_m < 30.0 { "#FFF3E0" } else { "#E0F7FA" }),
-                metric("💨", "Dew Point", format!("{}°F", php_num(dew)), if dew > 65.0 { "Muggy" } else if dew > 55.0 { "Comfortable" } else { "Dry air" }.into(), "#ECEFF1"),
+                metric(
+                    "💧",
+                    "Humidity",
+                    format!("{}%", php_num(hum)),
+                    if hum > 80.0 {
+                        "Very humid"
+                    } else if hum > 60.0 {
+                        "Comfortable"
+                    } else {
+                        "Dry"
+                    }
+                    .into(),
+                    "#E3F2FD",
+                ),
+                metric(
+                    "💦",
+                    "Soil Moisture",
+                    format!("{}%", php_num(soil_m)),
+                    if soil_m < 30.0 {
+                        "Needs water"
+                    } else if soil_m > 70.0 {
+                        "Saturated"
+                    } else {
+                        "Good"
+                    }
+                    .into(),
+                    if soil_m < 30.0 { "#FFF3E0" } else { "#E0F7FA" },
+                ),
+                metric(
+                    "💨",
+                    "Dew Point",
+                    format!("{}°F", php_num(dew)),
+                    if dew > 65.0 {
+                        "Muggy"
+                    } else if dew > 55.0 {
+                        "Comfortable"
+                    } else {
+                        "Dry air"
+                    }
+                    .into(),
+                    "#ECEFF1",
+                ),
             ],
         },
     ];
@@ -457,7 +687,9 @@ async fn iot_moisture(state: &AppState) -> String {
         .await;
         for row in &rows {
             let day = row.get("day").and_then(Value::as_str).unwrap_or("");
-            let label = chrono::NaiveDate::parse_from_str(day, "%Y-%m-%d").map(|d| d.format("%a").to_string()).unwrap_or_else(|_| chrono::Local::now().format("%a").to_string());
+            let label = chrono::NaiveDate::parse_from_str(day, "%Y-%m-%d")
+                .map(|d| d.format("%a").to_string())
+                .unwrap_or_else(|_| chrono::Local::now().format("%a").to_string());
             labels.push(json!(label));
             rain_v.push(json!(r(num(row, "total_precip"), 2)));
             snow_v.push(json!(r(num(row, "total_snow"), 1)));
@@ -466,16 +698,32 @@ async fn iot_moisture(state: &AppState) -> String {
     }
     // 4. If there is no real data, show a sample week so the chart is not empty.
     if labels.is_empty() {
-        labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].iter().map(|d| json!(d)).collect();
-        rain_v = [0.1, 0.0, 0.3, 0.8, 0.0, 0.0, 0.2].iter().map(|v| json!(v)).collect();
+        labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            .iter()
+            .map(|d| json!(d))
+            .collect();
+        rain_v = [0.1, 0.0, 0.3, 0.8, 0.0, 0.0, 0.2]
+            .iter()
+            .map(|v| json!(v))
+            .collect();
         snow_v = vec![json!(0); 7];
-        hum_v = [62, 58, 70, 82, 55, 48, 60].iter().map(|v| json!(v)).collect();
+        hum_v = [62, 58, 70, 82, 55, 48, 60]
+            .iter()
+            .map(|v| json!(v))
+            .collect();
     }
     // 5. Fill the template. `json_encode` writes lists as JSON text, as PHP did.
     IotMoisture {
         uid: uid("wgt_water_"),
         has_timestamp: c.contains_key("timestamp"),
-        timestamp: he(&c.get("timestamp").map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())).unwrap_or_default()),
+        timestamp: he(&c
+            .get("timestamp")
+            .map(|v| {
+                v.as_str()
+                    .map(str::to_string)
+                    .unwrap_or_else(|| v.to_string())
+            })
+            .unwrap_or_default()),
         groups,
         trend_labels: json_encode(&Value::Array(labels)),
         trend_rain: json_encode(&Value::Array(rain_v)),
@@ -502,12 +750,31 @@ struct IotSoil {
 /// Build card 4. Takes nothing. Gives back the card's HTML. Each bar is blue at
 /// 70 or more, green at 50 or more, orange below that.
 fn iot_soil() -> String {
-    let labels = ["Zen Garden", "River Garden", "Ko-Ja Garden", "Kona's Garden", "Korea Garden", "The Royal Run", "Jason's Terrace", "The 4 Season Garden", "Boo Boo's Garden", "Front Garden"];
+    let labels = [
+        "Zen Garden",
+        "River Garden",
+        "Ko-Ja Garden",
+        "Kona's Garden",
+        "Korea Garden",
+        "The Royal Run",
+        "Jason's Terrace",
+        "The 4 Season Garden",
+        "Boo Boo's Garden",
+        "Front Garden",
+    ];
     let current = [72, 58, 65, 80, 44, 38, 71, 55, 62, 48];
     let optimal = [70, 65, 65, 70, 60, 55, 65, 60, 65, 60];
     let colors: Vec<Value> = current
         .iter()
-        .map(|v| json!(if *v >= 70 { "rgba(33,150,243,0.7)" } else if *v >= 50 { "rgba(76,175,80,0.7)" } else { "rgba(255,152,0,0.7)" }))
+        .map(|v| {
+            json!(if *v >= 70 {
+                "rgba(33,150,243,0.7)"
+            } else if *v >= 50 {
+                "rgba(76,175,80,0.7)"
+            } else {
+                "rgba(255,152,0,0.7)"
+            })
+        })
         .collect();
     IotSoil {
         labels_json: json_encode(&json!(labels)),
@@ -539,11 +806,32 @@ struct IotWeather {
 /// Starts with a sample year, and replaces it if the database has rows.
 async fn iot_weather(state: &AppState) -> String {
     let mut live = false;
-    let mut months: Vec<Value> = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].iter().map(|m| json!(m)).collect();
-    let mut temps: Vec<f64> = vec![24.0, 27.0, 36.0, 49.0, 60.0, 70.0, 75.0, 73.0, 65.0, 53.0, 41.0, 29.0];
+    let mut months: Vec<Value> = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ]
+    .iter()
+    .map(|m| json!(m))
+    .collect();
+    let mut temps: Vec<f64> = vec![
+        24.0, 27.0, 36.0, 49.0, 60.0, 70.0, 75.0, 73.0, 65.0, 53.0, 41.0, 29.0,
+    ];
     let mut temps_json: Vec<Value> = temps.iter().map(|t| json!(*t as i64)).collect();
-    let mut rain: Vec<Value> = [2.4, 2.1, 3.2, 3.5, 3.8, 3.9, 4.1, 3.7, 3.5, 3.3, 3.0, 2.6].iter().map(|v| json!(v)).collect();
-    let mut snow: Vec<Value> = [12.5f64, 10.2, 8.0, 1.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 3.0, 9.8].iter().map(|v| if v.fract() == 0.0 { json!(*v as i64) } else { json!(v) }).collect();
+    let mut rain: Vec<Value> = [2.4, 2.1, 3.2, 3.5, 3.8, 3.9, 4.1, 3.7, 3.5, 3.3, 3.0, 2.6]
+        .iter()
+        .map(|v| json!(v))
+        .collect();
+    let mut snow: Vec<Value> = [
+        12.5f64, 10.2, 8.0, 1.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 3.0, 9.8,
+    ]
+    .iter()
+    .map(|v| {
+        if v.fract() == 0.0 {
+            json!(*v as i64)
+        } else {
+            json!(v)
+        }
+    })
+    .collect();
     // Monthly averages for the last 365 days. `DATE_FORMAT(obs_time, '%Y-%m-01')`
     // turns every timestamp into the first day of its month, so `GROUP BY month`
     // makes one row per month.
@@ -563,7 +851,9 @@ async fn iot_weather(state: &AppState) -> String {
             snow.clear();
             for row in &rows {
                 let m = row.get("month").and_then(Value::as_str).unwrap_or("");
-                months.push(json!(chrono::NaiveDate::parse_from_str(m, "%Y-%m-%d").map(|d| d.format("%b %Y").to_string()).unwrap_or_default()));
+                months.push(json!(chrono::NaiveDate::parse_from_str(m, "%Y-%m-%d")
+                    .map(|d| d.format("%b %Y").to_string())
+                    .unwrap_or_default()));
                 let t = r(num(row, "avg_temp"), 1);
                 temps.push(t);
                 temps_json.push(json!(t));
@@ -573,7 +863,10 @@ async fn iot_weather(state: &AppState) -> String {
         }
     }
     // Point colour: purple below 35 degrees, red otherwise.
-    let colors: Vec<Value> = temps.iter().map(|t| json!(if *t < 35.0 { "#9C27B0" } else { "#F44336" })).collect();
+    let colors: Vec<Value> = temps
+        .iter()
+        .map(|t| json!(if *t < 35.0 { "#9C27B0" } else { "#F44336" }))
+        .collect();
     IotWeather {
         live,
         months_json: json_encode(&Value::Array(months)),
@@ -608,14 +901,33 @@ struct IotWaterUse {
 /// the sum of the beds; the monthly estimate is that times 4 and the yearly
 /// estimate is that times 26, both copied from the PHP.
 fn iot_water_use() -> String {
-    let beds = ["Zen Garden", "River Garden", "Ko-Ja Garden", "The Royal Run", "Korea Garden", "Kona's Garden", "The 4 Season Garden", "Jason's Terrace"];
+    let beds = [
+        "Zen Garden",
+        "River Garden",
+        "Ko-Ja Garden",
+        "The Royal Run",
+        "Korea Garden",
+        "Kona's Garden",
+        "The 4 Season Garden",
+        "Jason's Terrace",
+    ];
     let actual = [45, 32, 38, 28, 52, 41, 35, 22];
     let target = [40, 35, 35, 30, 40, 38, 30, 25];
     let total_weekly: i64 = actual.iter().sum();
     let total_target: i64 = target.iter().sum();
     let over = total_weekly - total_target;
     // A bar is red when a bed used more than its target, blue otherwise.
-    let colors: Vec<Value> = actual.iter().zip(target.iter()).map(|(a, t)| json!(if a > t { "rgba(244,67,54,0.6)" } else { "rgba(33,150,243,0.6)" })).collect();
+    let colors: Vec<Value> = actual
+        .iter()
+        .zip(target.iter())
+        .map(|(a, t)| {
+            json!(if a > t {
+                "rgba(244,67,54,0.6)"
+            } else {
+                "rgba(33,150,243,0.6)"
+            })
+        })
+        .collect();
     let annual = total_weekly * 26;
     IotWaterUse {
         beds_json: json_encode(&json!(beds)),
@@ -624,7 +936,11 @@ fn iot_water_use() -> String {
         colors_json: json_encode(&Value::Array(colors)),
         total_weekly,
         total_target,
-        over_under_text: if over > 0 { format!("⚠️ +{over}") } else { format!("✅ {over}") },
+        over_under_text: if over > 0 {
+            format!("⚠️ +{over}")
+        } else {
+            format!("✅ {over}")
+        },
         monthly_est: total_weekly * 4,
         annual_est: number_format(annual),
     }
@@ -640,12 +956,16 @@ fn number_format(n: i64) -> String {
     let s = n.abs().to_string();
     let mut out = String::new();
     for (i, c) in s.chars().enumerate() {
-        if i > 0 && (s.len() - i) % 3 == 0 {
+        if i > 0 && (s.len() - i).is_multiple_of(3) {
             out.push(',');
         }
         out.push(c);
     }
-    if n < 0 { format!("-{out}") } else { out }
+    if n < 0 {
+        format!("-{out}")
+    } else {
+        out
+    }
 }
 
 // Card 7: a heat grid of average weather by hour of the day.
@@ -714,7 +1034,12 @@ fn heat_grid(rows: &[Map<String, Value>], outer_key: &str, zero_based: bool) -> 
             outer.push((o, vec![(h, cell)]));
         }
     }
-    php_int_keyed(outer.into_iter().map(|(k, hours)| (k, php_int_keyed(hours))).collect())
+    php_int_keyed(
+        outer
+            .into_iter()
+            .map(|(k, hours)| (k, php_int_keyed(hours)))
+            .collect(),
+    )
 }
 
 /// Build card 7. Takes the app state. Gives back the card's HTML.
@@ -758,7 +1083,8 @@ async fn iot_heatgrid(state: &AppState) -> String {
             let mut hours = Vec::new();
             for h in 0..24 {
                 let hf = h as f64;
-                let base = 55.0 + 15.0 * ((hf - 6.0) * pi / 12.0).sin() + rng.random_range(-3..=3) as f64;
+                let base =
+                    55.0 + 15.0 * ((hf - 6.0) * pi / 12.0).sin() + rng.random_range(-3..=3) as f64;
                 hours.push((h, json!({
                     "temp": php_round(base, 1),
                     "hum": php_round(70.0 - 20.0 * ((hf - 6.0) * pi / 12.0).sin() + rng.random_range(-5..=5) as f64, 0),
@@ -770,7 +1096,9 @@ async fn iot_heatgrid(state: &AppState) -> String {
             d30.push((d, php_int_keyed(hours)));
         }
         // Typical average temperature for each month of the year, January first.
-        let month_temps = [25.0, 28.0, 38.0, 52.0, 63.0, 73.0, 78.0, 75.0, 66.0, 54.0, 42.0, 30.0];
+        let month_temps = [
+            25.0, 28.0, 38.0, 52.0, 63.0, 73.0, 78.0, 75.0, 66.0, 54.0, 42.0, 30.0,
+        ];
         let mut d12 = Vec::new();
         for (m, mt) in month_temps.iter().enumerate() {
             let mut hours = Vec::new();
@@ -789,7 +1117,14 @@ async fn iot_heatgrid(state: &AppState) -> String {
         data30 = php_int_keyed(d30);
         data12 = php_int_keyed(d12);
     }
-    IotHeatgrid { uid: uid("heatgrid_"), live, data30_json: json_encode(&data30), data12_json: json_encode(&data12) }.render().unwrap_or_default()
+    IotHeatgrid {
+        uid: uid("heatgrid_"),
+        live,
+        data30_json: json_encode(&data30),
+        data12_json: json_encode(&data12),
+    }
+    .render()
+    .unwrap_or_default()
 }
 
 // --- 8. plant weather detective ---------------------------------------------------
@@ -928,7 +1263,9 @@ async fn garden_intelligence(state: &AppState, allow_slow: bool) -> String {
         )
         .await;
         for row in &rows {
-            let yr = num(row, "yr").map(|y| (y as i64).to_string()).unwrap_or_default();
+            let yr = num(row, "yr")
+                .map(|y| (y as i64).to_string())
+                .unwrap_or_default();
             let days = num(row, "days_covered").unwrap_or(0.0) as i64;
             if yr.is_empty() {
                 continue;
@@ -1028,7 +1365,12 @@ async fn garden_intelligence(state: &AppState, allow_slow: bool) -> String {
     let mut wins: Vec<String> = Vec::new();
     let mut risks: Vec<String> = Vec::new();
     // Closure: how many plants died among those planted in year `yr`.
-    let deaths_for = |yr: &str| surv.iter().find(|(y, ..)| y == yr).map(|(_, _, d, _, _)| *d).unwrap_or(0);
+    let deaths_for = |yr: &str| {
+        surv.iter()
+            .find(|(y, ..)| y == yr)
+            .map(|(_, _, d, _, _)| *d)
+            .unwrap_or(0)
+    };
 
     // Only compare weather with plants when real weather data exists.
     if live {
@@ -1040,7 +1382,13 @@ async fn garden_intelligence(state: &AppState, allow_slow: bool) -> String {
             let frost_days = w.frost_days.unwrap_or(0.0);
             let min_temp = w.min_temp;
             if deaths > 0 && frost_days > 0.0 {
-                let sev = if deaths > 5 { "high" } else if deaths > 2 { "medium" } else { "low" };
+                let sev = if deaths > 5 {
+                    "high"
+                } else if deaths > 2 {
+                    "medium"
+                } else {
+                    "low"
+                };
                 insights.push(Insight {
                     icon: "❄️".into(),
                     color: sev_color(sev).into(),
@@ -1064,8 +1412,15 @@ async fn garden_intelligence(state: &AppState, allow_slow: bool) -> String {
                 let full_sun_died = dead
                     .iter()
                     .filter(|p| {
-                        p.get("year_planted").and_then(Value::as_str).unwrap_or("").starts_with(yr.as_str())
-                            && p.get("sun_exposure").and_then(Value::as_str).unwrap_or("").to_lowercase().contains("full sun")
+                        p.get("year_planted")
+                            .and_then(Value::as_str)
+                            .unwrap_or("")
+                            .starts_with(yr.as_str())
+                            && p.get("sun_exposure")
+                                .and_then(Value::as_str)
+                                .unwrap_or("")
+                                .to_lowercase()
+                                .contains("full sun")
                     })
                     .count();
                 insights.push(Insight {
@@ -1109,20 +1464,26 @@ async fn garden_intelligence(state: &AppState, allow_slow: bool) -> String {
             if s.3 < 3 {
                 continue;
             }
-            if best.map_or(true, |b| s.4 > b.4) {
+            if best.is_none_or(|b| s.4 > b.4) {
                 best = Some(s);
             }
-            if worst.map_or(true, |w| s.4 < w.4) {
+            if worst.is_none_or(|w| s.4 < w.4) {
                 worst = Some(s);
             }
         }
         if let Some(b) = best {
             if let Some((_, w)) = wx.iter().find(|(y, _)| *y == b.0) {
-                wins.push(format!("🏆 <strong>Best year: {}</strong> ({}% survival) — Avg {}°F, {}\" rain.", b.0, php_num(b.4), php_num(w.avg_temp), php_num(w.total_rain)));
+                wins.push(format!(
+                    "🏆 <strong>Best year: {}</strong> ({}% survival) — Avg {}°F, {}\" rain.",
+                    b.0,
+                    php_num(b.4),
+                    php_num(w.avg_temp),
+                    php_num(w.total_rain)
+                ));
             }
         }
         if let Some(wst) = worst {
-            if best.map_or(true, |b| b.0 != wst.0) {
+            if best.is_none_or(|b| b.0 != wst.0) {
                 if let Some((_, w)) = wx.iter().find(|(y, _)| *y == wst.0) {
                     risks.push(format!("📉 <strong>Toughest year: {}</strong> ({}% survival) — Avg {}°F, {}\" rain.", wst.0, php_num(wst.4), php_num(w.avg_temp), php_num(w.total_rain)));
                 }
@@ -1163,33 +1524,75 @@ async fn garden_intelligence(state: &AppState, allow_slow: bool) -> String {
     if live && brain::available(state).await {
         let mut ctx: Vec<(String, Vec<String>)> = Vec::new();
         if !wins.is_empty() {
-            ctx.push(("What went well".into(), wins.iter().map(|w| strip_tags(w)).collect()));
+            ctx.push((
+                "What went well".into(),
+                wins.iter().map(|w| strip_tags(w)).collect(),
+            ));
         }
         if !risks.is_empty() {
-            ctx.push(("What went badly".into(), risks.iter().map(|w| strip_tags(w)).collect()));
+            ctx.push((
+                "What went badly".into(),
+                risks.iter().map(|w| strip_tags(w)).collect(),
+            ));
         }
         if !insights.is_empty() {
-            ctx.push(("Weather correlations found".into(), insights.iter().map(|i| strip_tags(&i.text)).collect()));
+            ctx.push((
+                "Weather correlations found".into(),
+                insights.iter().map(|i| strip_tags(&i.text)).collect(),
+            ));
         }
         ctx.push((
             "Weather by year".into(),
             wx.iter()
-                .map(|(yr, w)| format!("{yr}: average {} F, low {} F, high {} F, {} in rain, {} in snow", php_num(w.avg_temp), php_num(w.min_temp), php_num(w.max_temp), php_num(w.total_rain), php_num(w.total_snow)))
+                .map(|(yr, w)| {
+                    format!(
+                        "{yr}: average {} F, low {} F, high {} F, {} in rain, {} in snow",
+                        php_num(w.avg_temp),
+                        php_num(w.min_temp),
+                        php_num(w.max_temp),
+                        php_num(w.total_rain),
+                        php_num(w.total_snow)
+                    )
+                })
                 .collect(),
         ));
-        ctx.push(("Survival by year".into(), surv.iter().map(|(yr, _, _, total, rate)| format!("{yr}: {}% of {total} plants survived", php_num(*rate))).collect()));
+        ctx.push((
+            "Survival by year".into(),
+            surv.iter()
+                .map(|(yr, _, _, total, rate)| {
+                    format!("{yr}: {}% of {total} plants survived", php_num(*rate))
+                })
+                .collect(),
+        ));
         if !dropped.is_empty() {
-            ctx.push(("Years excluded as incomplete".into(), dropped.iter().map(|y| format!("{y} of weather recorded - too little of the year to compare fairly")).collect()));
+            ctx.push((
+                "Years excluded as incomplete".into(),
+                dropped
+                    .iter()
+                    .map(|y| {
+                        format!(
+                            "{y} of weather recorded - too little of the year to compare fairly"
+                        )
+                    })
+                    .collect(),
+            ));
         }
         // The reply is JSON with a model name, a headline, findings and advice.
         ai = brain::insights(state, &ctx, allow_slow).await;
     }
 
     // 9. Turn the numbers into JSON text for the card's script, keyed by year.
-    let years_json = json_encode(&Value::Array(wx.iter().map(|(y, _)| json!(y.parse::<i64>().unwrap_or(0))).collect()));
+    let years_json = json_encode(&Value::Array(
+        wx.iter()
+            .map(|(y, _)| json!(y.parse::<i64>().unwrap_or(0)))
+            .collect(),
+    ));
     let mut surv_map = Map::new();
     for (yr, alive, died, total, rate) in &surv {
-        surv_map.insert(yr.clone(), json!({ "alive": alive, "died": died, "total": total, "rate": rate }));
+        surv_map.insert(
+            yr.clone(),
+            json!({ "alive": alive, "died": died, "total": total, "rate": rate }),
+        );
     }
     let mut wx_map = Map::new();
     for (yr, w) in &wx {
@@ -1211,15 +1614,34 @@ async fn garden_intelligence(state: &AppState, allow_slow: bool) -> String {
         wx_map.insert(yr.clone(), Value::Object(m));
     }
     // A closure that turns an optional JSON list into a list of text lines.
-    let str_list = |v: Option<&Value>| v.and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default();
+    let str_list = |v: Option<&Value>| {
+        v.and_then(Value::as_array)
+            .map(|a| {
+                a.iter()
+                    .filter_map(Value::as_str)
+                    .map(str::to_string)
+                    .collect()
+            })
+            .unwrap_or_default()
+    };
     // 10. Fill the card's template and render it.
     GardenIntelligence {
         live,
         years_count: wx.len(),
         plants_total: surv.iter().map(|s| s.3).sum(),
         has_ai: ai.is_some(),
-        ai_model: ai.as_ref().and_then(|a| a.get("model")).and_then(Value::as_str).unwrap_or("local AI").to_string(),
-        ai_headline: ai.as_ref().and_then(|a| a.get("headline")).and_then(Value::as_str).unwrap_or("").to_string(),
+        ai_model: ai
+            .as_ref()
+            .and_then(|a| a.get("model"))
+            .and_then(Value::as_str)
+            .unwrap_or("local AI")
+            .to_string(),
+        ai_headline: ai
+            .as_ref()
+            .and_then(|a| a.get("headline"))
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string(),
         ai_findings: str_list(ai.as_ref().and_then(|a| a.get("findings"))),
         ai_advice: str_list(ai.as_ref().and_then(|a| a.get("advice"))),
         wins,
@@ -1308,6 +1730,45 @@ pub async fn render_all(state: &AppState, allow_slow: bool) -> Rendered {
     }
 }
 
+/// Death counts grouped by one column (sun exposure or water needs).
+/// Takes the column to group by (a fixed name, never from a visitor, because it
+/// picks the SQL text) and the app state. Gives back (value, count, died) tuples,
+/// most common first. Used by card 9.
+async fn by_col(col: &'static str, state: &AppState) -> Vec<(String, i64, i64)> {
+    let sql = if col == "sun_exposure" {
+        "SELECT sun_exposure AS k, COUNT(*) AS cnt, SUM(CASE WHEN died=1 THEN 1 ELSE 0 END) AS died FROM data_source WHERE sun_exposure != '' GROUP BY sun_exposure ORDER BY cnt DESC"
+    } else {
+        "SELECT water_needs AS k, COUNT(*) AS cnt, SUM(CASE WHEN died=1 THEN 1 ELSE 0 END) AS died FROM data_source WHERE water_needs IS NOT NULL AND TRIM(water_needs) != '' GROUP BY water_needs ORDER BY cnt DESC"
+    };
+    // Run the query, turn each row into JSON, then read the three numbers from it.
+    sqlx::query(sql)
+        .fetch_all(&state.db)
+        .await
+        .unwrap_or_default()
+        .iter()
+        .filter_map(|r| {
+            if let Value::Object(m) = row_to_json(r) {
+                Some(m)
+            } else {
+                None
+            }
+        })
+        .map(|m| {
+            (
+                m.get("k")
+                    .map(|v| {
+                        v.as_str()
+                            .map(str::to_string)
+                            .unwrap_or_else(|| v.to_string())
+                    })
+                    .unwrap_or_default(),
+                num(&m, "cnt").unwrap_or(0.0) as i64,
+                num(&m, "died").unwrap_or(0.0) as i64,
+            )
+        })
+        .collect()
+}
+
 // Tests run only with `cargo test`.
 #[cfg(test)]
 mod tests {
@@ -1316,8 +1777,14 @@ mod tests {
     // Checks the list-versus-object choice, as PHP's `json_encode` makes it.
     #[test]
     fn int_keyed_arrays_become_lists_only_when_sequential() {
-        assert_eq!(php_int_keyed(vec![(0, json!(1)), (1, json!(2))]), json!([1, 2]));
-        assert_eq!(php_int_keyed(vec![(0, json!(1)), (2, json!(2))]), json!({ "0": 1, "2": 2 }));
+        assert_eq!(
+            php_int_keyed(vec![(0, json!(1)), (1, json!(2))]),
+            json!([1, 2])
+        );
+        assert_eq!(
+            php_int_keyed(vec![(0, json!(1)), (2, json!(2))]),
+            json!({ "0": 1, "2": 2 })
+        );
     }
 
     // Checks comma grouping of numbers.
@@ -1336,31 +1803,4 @@ mod tests {
         assert!(html.contains("⚠️ +20 gal"));
         assert!(html.contains("~7,618 gal"));
     }
-}
-
-/// Death counts grouped by one column (sun exposure or water needs).
-/// Takes the column to group by (a fixed name, never from a visitor, because it
-/// picks the SQL text) and the app state. Gives back (value, count, died) tuples,
-/// most common first. Used by card 9.
-async fn by_col(col: &'static str, state: &AppState) -> Vec<(String, i64, i64)> {
-    let sql = if col == "sun_exposure" {
-        "SELECT sun_exposure AS k, COUNT(*) AS cnt, SUM(CASE WHEN died=1 THEN 1 ELSE 0 END) AS died FROM data_source WHERE sun_exposure != '' GROUP BY sun_exposure ORDER BY cnt DESC"
-    } else {
-        "SELECT water_needs AS k, COUNT(*) AS cnt, SUM(CASE WHEN died=1 THEN 1 ELSE 0 END) AS died FROM data_source WHERE water_needs IS NOT NULL AND TRIM(water_needs) != '' GROUP BY water_needs ORDER BY cnt DESC"
-    };
-    // Run the query, turn each row into JSON, then read the three numbers from it.
-    sqlx::query(sql)
-        .fetch_all(&state.db)
-        .await
-        .unwrap_or_default()
-        .iter()
-        .filter_map(|r| if let Value::Object(m) = row_to_json(r) { Some(m) } else { None })
-        .map(|m| {
-            (
-                m.get("k").map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())).unwrap_or_default(),
-                num(&m, "cnt").unwrap_or(0.0) as i64,
-                num(&m, "died").unwrap_or(0.0) as i64,
-            )
-        })
-        .collect()
 }

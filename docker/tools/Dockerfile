@@ -17,6 +17,9 @@ FROM alpine:3.24@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5
 # argon2         : makes password hashes for set-password
 # tar, gzip, coreutils : packing files and checking them (sha256sum)
 # curl           : sends the test email (garden.sh email)
+# Distro package versions are not pinned (hadolint DL3018): the base image is pinned by digest and
+# kept current by Dependabot; pinned package versions break the build when the mirror drops them.
+# hadolint ignore=DL3018
 RUN apk add --no-cache bash mariadb-client argon2 tar gzip coreutils findutils curl
 
 COPY garden-tools.sh /usr/local/bin/garden-tools

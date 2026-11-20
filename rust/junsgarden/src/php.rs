@@ -158,11 +158,17 @@ pub fn json_encode(v: &serde_json::Value) -> String {
         }
         Value::String(s) => json_string(s),
         // Arrays: encode each item, join with commas, wrap in square brackets.
-        Value::Array(a) => format!("[{}]", a.iter().map(json_encode).collect::<Vec<_>>().join(",")),
+        Value::Array(a) => format!(
+            "[{}]",
+            a.iter().map(json_encode).collect::<Vec<_>>().join(",")
+        ),
         // Objects: key and value pairs, in the order they were stored, wrapped in braces.
         Value::Object(m) => format!(
             "{{{}}}",
-            m.iter().map(|(k, v)| format!("{}:{}", json_string(k), json_encode(v))).collect::<Vec<_>>().join(",")
+            m.iter()
+                .map(|(k, v)| format!("{}:{}", json_string(k), json_encode(v)))
+                .collect::<Vec<_>>()
+                .join(",")
         ),
     }
 }
@@ -239,7 +245,12 @@ pub fn php_float(s: &str) -> f64 {
     let t = s.trim();
     let mut end = 0;
     for (i, c) in t.char_indices() {
-        if c.is_ascii_digit() || c == '.' || (i == 0 && (c == '-' || c == '+')) || c == 'e' || c == 'E' {
+        if c.is_ascii_digit()
+            || c == '.'
+            || (i == 0 && (c == '-' || c == '+'))
+            || c == 'e'
+            || c == 'E'
+        {
             end = i + c.len_utf8();
         } else {
             break;
@@ -254,11 +265,19 @@ pub fn php_round(v: f64, places: i32) -> f64 {
     // Shift the decimal point by `places`, round, then shift back.
     let m = 10f64.powi(places);
     let x = v * m;
-    let r = if x >= 0.0 { (x + 0.5).floor() } else { (x - 0.5).ceil() };
+    let r = if x >= 0.0 {
+        (x + 0.5).floor()
+    } else {
+        (x - 0.5).ceil()
+    };
     // Values like 2.675 * 100 = 267.49999 in binary; PHP pre-rounds to the
     // nearest representable value first, which this approximates.
     let r2 = (x * 1e9).round() / 1e9;
-    let r2 = if r2 >= 0.0 { (r2 + 0.5).floor() } else { (r2 - 0.5).ceil() };
+    let r2 = if r2 >= 0.0 {
+        (r2 + 0.5).floor()
+    } else {
+        (r2 - 0.5).ceil()
+    };
     (if (r - r2).abs() > 0.0 { r2 } else { r }) / m
 }
 
@@ -287,10 +306,19 @@ pub fn search_norm(raw: &str) -> String {
     // Replace every character that is not a letter, digit or space with a space.
     let spaced: String = raw
         .chars()
-        .map(|c| if c.is_ascii_alphanumeric() || c.is_ascii_whitespace() { c } else { ' ' })
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c.is_ascii_whitespace() {
+                c
+            } else {
+                ' '
+            }
+        })
         .collect();
     // Split on whitespace and rejoin with single spaces; this collapses runs and trims.
-    let collapsed = spaced.split_ascii_whitespace().collect::<Vec<_>>().join(" ");
+    let collapsed = spaced
+        .split_ascii_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
     // If nothing useful is left, use the original term (PHP's `?:` treats "0" as empty).
     if collapsed.is_empty() || collapsed == "0" {
         raw.to_string()
@@ -320,7 +348,10 @@ mod tests {
 
     #[test]
     fn he_matches_php_quote_style() {
-        assert_eq!(he("Jun's \"garden\" <b>&"), "Jun&#039;s &quot;garden&quot; &lt;b&gt;&amp;");
+        assert_eq!(
+            he("Jun's \"garden\" <b>&"),
+            "Jun&#039;s &quot;garden&quot; &lt;b&gt;&amp;"
+        );
     }
 
     #[test]
@@ -336,13 +367,22 @@ mod tests {
 
     #[test]
     fn urlencode_matches_php() {
-        assert_eq!(urlencode("Check out Jun's Garden: x/y"), "Check+out+Jun%27s+Garden%3A+x%2Fy");
-        assert_eq!(urlencode("https://junsgarden.zapto.org/"), "https%3A%2F%2Fjunsgarden.zapto.org%2F");
+        assert_eq!(
+            urlencode("Check out Jun's Garden: x/y"),
+            "Check+out+Jun%27s+Garden%3A+x%2Fy"
+        );
+        assert_eq!(
+            urlencode("https://junsgarden.zapto.org/"),
+            "https%3A%2F%2Fjunsgarden.zapto.org%2F"
+        );
     }
 
     #[test]
     fn json_matches_php_default_flags() {
         assert_eq!(json_string("images/a.webp"), "\"images\\/a.webp\"");
-        assert_eq!(json_string("café — 🌿"), "\"caf\\u00e9 \\u2014 \\ud83c\\udf3f\"");
+        assert_eq!(
+            json_string("café — 🌿"),
+            "\"caf\\u00e9 \\u2014 \\ud83c\\udf3f\""
+        );
     }
 }

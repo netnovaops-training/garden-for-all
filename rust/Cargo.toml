@@ -33,7 +33,7 @@ serde_json = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 anyhow = "1"
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream", "multipart"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "stream", "multipart", "query", "form"] }
 time = { version = "0.3", features = ["formatting", "macros", "local-offset"] }
 
 # Password hashing for the two logins (accounts.rs). Argon2 is deliberately
@@ -65,7 +65,7 @@ futures-util = "0.3"
 # checking at all -- sqlx keeps "raw SQL, no ORM" (matches the existing
 # schema/queries we're porting) but checks query shape against the schema
 # at compile time instead of first-request-in-production.
-sqlx = { version = "0.8", default-features = false, features = ["mysql", "runtime-tokio-rustls", "macros", "chrono"] }
+sqlx = { version = "0.9", default-features = false, features = ["mysql", "runtime-tokio", "tls-rustls-ring-webpki", "macros", "chrono"] }
 # Dates out of MariaDB DATETIME columns. `default-features = false` drops
 # the (unused here) oldtime/js interop weight; "clock" is not needed
 # either -- nothing in this stack asks chrono for "now", only for

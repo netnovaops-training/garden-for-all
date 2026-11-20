@@ -29,7 +29,17 @@ pub fn garden_clean(v: &str) -> String {
         .replace(['\u{201C}', '\u{201D}'], "\"");
     // Step 3: trim these characters from both ends: space, tab, newline, carriage return,
     // null, vertical tab, and the full stop. Same set the PHP `trim` call used.
-    straight.trim_matches(|c: char| c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\0' || c == '\u{0B}' || c == '.').to_string()
+    straight
+        .trim_matches(|c: char| {
+            c == ' '
+                || c == '\t'
+                || c == '\n'
+                || c == '\r'
+                || c == '\0'
+                || c == '\u{0B}'
+                || c == '.'
+        })
+        .to_string()
 }
 
 /// Sun words people write, as (what they wrote in lower case, standard name, rank).
@@ -51,7 +61,7 @@ const SUN_TERMS: [(&str, &str, u8); 9] = [
 fn normalise_sun(v: &str) -> String {
     // Any kind of dash, with optional spaces around it.
     let parts: Vec<&str> = v
-        .split(|c| c == '-' || c == '\u{2013}' || c == '\u{2014}')
+        .split(['-', '\u{2013}', '\u{2014}'])
         .map(str::trim)
         .collect();
     // Terms found so far, as (standard name, rank), without repeats.
@@ -77,7 +87,7 @@ fn normalise_sun(v: &str) -> String {
         return v.to_string();
     }
     // Sort by rank, highest first, so the brightest term comes first.
-    seen.sort_by(|a, b| b.1.cmp(&a.1));
+    seen.sort_by_key(|e| std::cmp::Reverse(e.1));
     // Join the standard names with " - ".
     seen.iter().map(|(n, _)| *n).collect::<Vec<_>>().join(" - ")
 }
@@ -133,7 +143,10 @@ fn water_ranks(s: &str) -> Vec<u8> {
         r.push(1);
     }
     // Any of these words (or words starting with them) mean Average.
-    if ["average", "medium", "moderate", "regular", "consistent"].iter().any(|w| starts_word(s, w)) {
+    if ["average", "medium", "moderate", "regular", "consistent"]
+        .iter()
+        .any(|w| starts_word(s, w))
+    {
         r.push(2);
     }
     // These mean High.
@@ -167,7 +180,7 @@ fn normalise_water(v: &str) -> String {
             // The character before and the character after the dash, if any.
             let before = s[..i].chars().last();
             let after = s[i + c.len_utf8()..].chars().next();
-            if before.map_or(false, char::is_whitespace) && after.map_or(false, char::is_whitespace) {
+            if before.is_some_and(char::is_whitespace) && after.is_some_and(char::is_whitespace) {
                 // The clause ends just before the space that comes before the dash.
                 head_end = i - 1;
                 break;
@@ -202,7 +215,11 @@ fn normalise_water(v: &str) -> String {
     let lo = *ranks.iter().min().unwrap();
     let hi = *ranks.iter().max().unwrap();
     // One level gives its name; two levels give "Low to High" style text.
-    if lo == hi { name(lo).to_string() } else { format!("{} to {}", name(lo), name(hi)) }
+    if lo == hi {
+        name(lo).to_string()
+    } else {
+        format!("{} to {}", name(lo), name(hi))
+    }
 }
 
 /// Maps toxicity wording to one of: Non-toxic, Toxic to Humans & Pets, Toxic to Humans,
@@ -228,7 +245,9 @@ fn normalise_toxicity(v: &str) -> String {
 /// Groups root-system wording into three standard groups. Unknown wording is unchanged.
 fn normalise_roots(v: &str) -> String {
     match v.to_lowercase().as_str() {
-        "fibrous" | "adventitious" | "fibrous/adventitious" => "Fibrous/Adventitious Systems".to_string(),
+        "fibrous" | "adventitious" | "fibrous/adventitious" => {
+            "Fibrous/Adventitious Systems".to_string()
+        }
         "taproot" => "Taproot Systems".to_string(),
         "tuberous" | "bulbous" | "rhizomatous" => "Specialized Systems".to_string(),
         _ => v.to_string(),
@@ -334,24 +353,48 @@ mod tests {
     #[test]
     fn sun_ranges_collapse_brightest_first() {
         assert_eq!(garden_normalise("sun_exposure", "Partial"), "Partial Shade");
-        assert_eq!(garden_normalise("sun_exposure", "Full Sun - Partial"), "Full Sun - Partial Shade");
-        assert_eq!(garden_normalise("sun_exposure", "Partial Shade - Full Sun"), "Full Sun - Partial Shade");
+        assert_eq!(
+            garden_normalise("sun_exposure", "Full Sun - Partial"),
+            "Full Sun - Partial Shade"
+        );
+        assert_eq!(
+            garden_normalise("sun_exposure", "Partial Shade - Full Sun"),
+            "Full Sun - Partial Shade"
+        );
         assert_eq!(garden_normalise("sun_exposure", "Dappled"), "Dappled");
     }
 
     #[test]
     fn water_reads_the_first_clause() {
-        assert_eq!(garden_normalise("water_needs", "Average, drought tolerant once established"), "Average");
-        assert_eq!(garden_normalise("water_needs", "Low to Average"), "Low to Average");
-        assert_eq!(garden_normalise("water_needs", "1-2 inches per week"), "Average");
+        assert_eq!(
+            garden_normalise("water_needs", "Average, drought tolerant once established"),
+            "Average"
+        );
+        assert_eq!(
+            garden_normalise("water_needs", "Low to Average"),
+            "Low to Average"
+        );
+        assert_eq!(
+            garden_normalise("water_needs", "1-2 inches per week"),
+            "Average"
+        );
         assert_eq!(garden_normalise("water_needs", "Keep soil moist"), "High");
-        assert_eq!(garden_normalise("water_needs", "Medium; keep soil evenly moist"), "Average");
+        assert_eq!(
+            garden_normalise("water_needs", "Medium; keep soil evenly moist"),
+            "Average"
+        );
     }
 
     #[test]
     fn toxicity_by_who_is_at_risk() {
-        assert_eq!(garden_normalise("toxicity", "Non-toxic, pet and wildlife safe"), "Non-toxic");
-        assert_eq!(garden_normalise("toxicity", "Toxic to pets and humans if ingested"), "Toxic to Humans & Pets");
+        assert_eq!(
+            garden_normalise("toxicity", "Non-toxic, pet and wildlife safe"),
+            "Non-toxic"
+        );
+        assert_eq!(
+            garden_normalise("toxicity", "Toxic to pets and humans if ingested"),
+            "Toxic to Humans & Pets"
+        );
         assert_eq!(garden_normalise("toxicity", "Toxic"), "Toxic");
     }
 

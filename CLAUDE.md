@@ -11,5 +11,5 @@ Read `AGENTS.md` first; everything about this project is there. In short:
   way in.
 - No secrets in the repo. Run `sh tools/check-secrets.sh` before committing.
 - Build and test in Docker on Linux:
-  `cd rust && docker run --rm -v "$PWD":/build -w /build rust:1.95-bookworm cargo test --locked -p junsgarden`
+  `cd rust && docker run --rm -v "$PWD":/build -w /build rust:1.99-trixie cargo test --locked -p junsgarden`
 - Jun is learning: explain in plain words and keep changes small.

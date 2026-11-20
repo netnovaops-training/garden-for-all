@@ -15,7 +15,13 @@ The fingerprint is of the file exactly as get-code.* will write it: the same byt
 archive (GitHub's download) gives, with Windows line endings on .cmd, .ps1 and .bat files.
 The list is read from `git archive` itself, so it matches what GitHub serves.
 """
-import argparse, hashlib, io, os, subprocess, sys, tarfile
+import argparse
+import hashlib
+import io
+import os
+import subprocess
+import sys
+import tarfile
 
 LIST_NAME = "CODE-FINGERPRINTS.txt"
 CRLF_EXT = (".cmd", ".ps1", ".bat")
@@ -33,7 +39,7 @@ def normalized(rel, data):
 
 
 def git(*args, capture=True):
-    r = subprocess.run(["git", "-c", "core.quotepath=off", *args], capture_output=capture)
+    r = subprocess.run(["git", "-c", "core.quotepath=off", *args], capture_output=capture, check=False)  # return code read below
     if r.returncode != 0:
         sys.exit("git " + " ".join(args) + " failed: " + (r.stderr or b"").decode("utf-8", "replace").strip())
     return r.stdout

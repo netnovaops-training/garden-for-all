@@ -42,7 +42,6 @@ more than any single reading.
 from __future__ import annotations
 
 import base64
-import json
 import os
 
 # How long to wait for the free AI to look at a photograph (seconds).

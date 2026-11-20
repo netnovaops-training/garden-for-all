@@ -1,3 +1,198 @@
 <resources>
+    <!-- Every line a person sees, in English. The Korean is in values-ko/strings.xml (same names);
+         Android picks it when the phone, or this app in Settings > Apps > Jun's Garden > Language,
+         is set to Korean. Android lint fails the build if a Korean line is missing. -->
     <string name="app_name">Jun\'s Garden</string>
+
+    <!-- The main screen: the camera buttons and what they say while working -->
+    <string name="action_identify">Identify</string>
+    <string name="action_tag">Tag</string>
+    <string name="action_barcode">Barcode</string>
+    <string name="action_receipt">Receipt</string>
+    <string name="action_ask">Ask</string>
+    <string name="tag_choice_title">Read a tag</string>
+    <string name="tag_choice_body">One at a time reads it straight away. Many at once queues them and reads them afterwards, so you can photograph a whole tray first.</string>
+    <string name="tag_many">Many at once</string>
+    <string name="tag_one">One now</string>
+    <string name="did_not_work">That did not work.</string>
+    <string name="did_not_work_title">That did not work</string>
+    <string name="wait_examine">Looking at the plant…</string>
+    <string name="wait_tag">Reading the tag…</string>
+    <string name="wait_barcode">Reading the barcode…</string>
+    <string name="wait_receipt">Reading the receipt…</string>
+    <string name="working">Working…</string>
+    <string name="takes_a_minute">This can take a minute.</string>
+    <string name="close">Close</string>
+    <string name="no_barcode_title">No barcode in that photo</string>
+    <string name="no_barcode_body">Hold the phone closer so the stripes fill the frame, and keep it square on.</string>
+    <string name="barcode_unknown">Nothing in the garden has this barcode yet.</string>
+    <string name="barcode_n">Barcode %1$s</string>
+    <string name="back_title">Now the back</string>
+    <string name="back_body">The back of the tag usually has the spacing, zones, sun and water. Turn it over and take one more.</string>
+    <string name="back_skip">Just the front</string>
+    <string name="back_take">Take the back</string>
+
+    <!-- The catalogue -->
+    <string name="unreachable">Could not reach the garden.</string>
+    <string name="search_plants">Search plants</string>
+    <string name="theme">Theme</string>
+    <string name="all">All</string>
+    <string name="try_again">Try again</string>
+    <string name="no_plants">No plants here yet.</string>
+    <string name="no_match">Nothing matches that.</string>
+    <string name="unnamed">(unnamed)</string>
+
+    <!-- One plant -->
+    <string name="could_not_load_plant">Could not load that plant.</string>
+    <string name="back_catalog">‹  Catalog</string>
+    <string name="by_company">By %1$s</string>
+    <string name="plant_grow">Plant / Grow</string>
+    <string name="notes">Notes</string>
+    <string name="more_details">More details</string>
+    <string name="all_year">All year</string>
+    <string name="qty_n">Qty %1$s</string>
+    <string name="planted_n">Planted %1$s</string>
+    <string name="sec_planting">Planting Guide</string>
+    <string name="grow_season">Grow season</string>
+    <string name="bloom_season">Bloom season</string>
+    <string name="spacing">Spacing</string>
+    <string name="planting_depth">Planting depth</string>
+    <string name="mature_size">Mature size</string>
+    <string name="chilling_hours">Chilling hours</string>
+    <string name="life_expectancy">Life expectancy</string>
+    <string name="avg_cost">Avg. cost</string>
+    <string name="store">Store</string>
+    <string name="sec_root">Root System</string>
+    <string name="root_system">System</string>
+    <string name="root_morphology">Morphology</string>
+    <string name="root_function">Function</string>
+    <string name="sec_growing">Growing Conditions</string>
+    <string name="sun">Sun</string>
+    <string name="water">Water</string>
+    <string name="soil_type">Soil type</string>
+    <string name="soil_ph">Soil pH</string>
+    <string name="zones">Zones</string>
+    <string name="native_status">Native status</string>
+    <string name="fertilizer">Fertilizer</string>
+    <string name="sec_appearance">Appearance</string>
+    <string name="plant_type">Type</string>
+    <string name="leaf">Leaf</string>
+    <string name="foliage_color">Foliage color</string>
+    <string name="stem_color">Stem color</string>
+    <string name="bloom">Bloom</string>
+    <string name="fruit">Fruit</string>
+    <string name="evergreen">Evergreen</string>
+    <string name="growth_rate">Growth rate</string>
+    <string name="sec_wildlife">Wildlife &amp; Safety</string>
+    <string name="attracts">Attracts</string>
+    <string name="deer">Deer</string>
+    <string name="toxicity">Toxicity</string>
+    <string name="edibility">Edibility</string>
+    <string name="invasive">Invasive here</string>
+    <string name="note_care">Care</string>
+    <string name="note_maintenance">Maintenance</string>
+    <string name="note_cleanup">Cleanup</string>
+    <string name="note_propagation">Propagation</string>
+    <string name="note_companions">Companion plants</string>
+    <string name="note_pests">Pests &amp; disease</string>
+    <string name="note_aromatics">Aromatics</string>
+    <string name="note_more">More</string>
+
+    <!-- Signing in -->
+    <string name="login_failed">Login failed.</string>
+    <string name="garden_title">Jun &amp; Kona\'s Garden</string>
+    <string name="sign_in_to_continue">Sign in to continue</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="hide">Hide</string>
+    <string name="show">Show</string>
+    <string name="signing_in">Signing in…</string>
+    <string name="sign_in_button">Sign In</string>
+    <string name="continue_guest">Continue as guest</string>
+    <string name="guests_browse">Guests can browse the whole catalog.</string>
+    <string name="forgot_password">Forgot password? / First time?</string>
+    <string name="unreachable_now">The garden is not reachable right now.</string>
+    <string name="unexpected_answer">The garden sent back something unexpected.</string>
+    <string name="garden_answered">The garden answered %1$d.</string>
+
+    <!-- Many tags at once -->
+    <string name="back_garden">‹  Garden</string>
+    <string name="clear">Clear</string>
+    <string name="bulk_title">Many tags at once</string>
+    <string name="bulk_body">Photograph every tag first, then pick them all here. They are queued and read afterwards, so you can put the phone down.</string>
+    <string name="front_then_back">Front then back</string>
+    <string name="fronts_only">Fronts only</string>
+    <string name="pick_photos">Pick photos</string>
+    <string name="add_more_photos">Add more photos</string>
+    <string name="photos_tags">%1$d photos · %2$d tags</string>
+    <string name="odd_photo">There is an odd photo at the end — it will be sent as a front with no back.</string>
+    <string name="tags_queued">%1$d tags queued</string>
+    <string name="tags_duplicates">%1$d were already sent before</string>
+    <string name="tags_unreadable">%1$d could not be read as photographs</string>
+    <string name="tags_waiting_read">%1$d waiting to be read. They appear in the catalogue for approval as each one finishes.</string>
+    <string name="sending_n">Sending %1$d of %2$d…</string>
+    <string name="send_failed">Could not send those tags.</string>
+    <string name="nothing_to_send">Nothing to send</string>
+    <string name="queue_n">Queue %1$d tags</string>
+    <string name="tag_n">Tag %1$d</string>
+    <string name="tag_n_front">Tag %1$d front</string>
+    <string name="tag_n_back">Tag %1$d back</string>
+
+    <!-- What the camera found -->
+    <string name="photo_not_read_by_garden">The garden could not read that photograph.</string>
+    <string name="couldnt_name">Couldn\'t name it</string>
+    <string name="no_health">No health reading came back for this one.</string>
+    <string name="saved_for_later">Saved for later</string>
+    <string name="ai_busy">The free AI readers are busy.</string>
+    <string name="tags_in_line">%1$d tags are waiting in line.</string>
+    <string name="couldnt_read_tag">Couldn\'t read that tag</string>
+    <string name="tag_retry">Try again with the printed side filling the frame, in even light.</string>
+    <string name="read_both_sides">Read both sides of the tag.</string>
+    <string name="photo_saved_one">The photo is saved with the plant.</string>
+    <string name="photo_saved_both">Both photos are saved with the plant.</string>
+    <string name="sides_disagree">The two sides disagree on: %1$s. Worth checking before approving.</string>
+    <string name="fields_waiting">%1$d field(s) waiting for approval.</string>
+    <string name="nothing_recorded">Nothing recorded</string>
+    <string name="receipt_retry">Try again with the whole slip flat in the frame.</string>
+    <string name="spent">Spent: $%1$s</string>
+    <string name="receipt_recorded">Receipt recorded</string>
+    <string name="sign_in_again_camera">Sign in again to use the camera.</string>
+    <string name="in_your_garden">"  ·  in your garden"</string>
+    <string name="seen_visible">What\'s visible</string>
+    <string name="seen_consistent">Consistent with</string>
+    <string name="seen_confirm">Would confirm it</string>
+    <string name="photo_unreadable">Could not read that photograph.</string>
+
+    <!-- Updates, the setup link and the account button -->
+    <string name="download_failed">The download failed (%1$d).</string>
+    <string name="download_not_intact">The download did not arrive intact, so it was not installed. Try again.</string>
+    <string name="your_garden">Your garden: %1$s</string>
+    <string name="login_for_camera">Log in to use the camera tools.</string>
+    <string name="login_again_camera">Log in again to use the camera.</string>
+    <string name="guest">Guest</string>
+    <string name="sign_in">Sign in</string>
+    <string name="log_out_name">Log out %1$s</string>
+    <string name="update_available">Update available: %1$s</string>
+    <string name="downloading">Downloading %1$d%%</string>
+    <string name="newer_ready">A newer version of the garden app is ready.</string>
+    <string name="update_failed">The update could not be installed.</string>
+    <string name="update">Update</string>
+    <string name="later">Later</string>
+
+    <!-- Splash and appearance -->
+    <string name="splash_description">Jun in his garden, holding a sign that reads Jun\'s Garden</string>
+    <string name="skip">Skip</string>
+    <string name="appearance">Appearance</string>
+    <string name="light_or_dark">Light or dark</string>
+    <string name="done">Done</string>
+    <string name="theme_evergreen">Evergreen</string>
+    <string name="theme_forest">Forest</string>
+    <string name="theme_ivy">Ivy</string>
+    <string name="theme_lavender">Lavender</string>
+    <string name="theme_sunflower">Sunflower</string>
+    <string name="theme_sunrise">Sunrise</string>
+    <string name="theme_sunset">Sunset</string>
+    <string name="mode_system">Match phone</string>
+    <string name="mode_light">Light</string>
+    <string name="mode_dark">Dark</string>
 </resources>

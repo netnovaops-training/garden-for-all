@@ -1008,3 +1008,40 @@ PDF guides	PDF 안내서
 Nothing to fetch.	가져올 것이 없어요.
 Nothing was written for the set that failed. Try again later.	실패한 묶음은 아무것도 쓰지 않았어요. 나중에 다시 해 보세요.
 P) PDF guides: get or refresh them (English / Korean)	P) PDF 안내서: 받기 또는 새로 고치기 (영어 / 한국어)
+P) PDF guides: get or refresh them (English / Korean), and the picture walkthrough	P) PDF 안내서: 받기 또는 새로 고치기 (영어 / 한국어), 그리고 사진으로 보는 사용법
+How to use the garden, a picture for every step:	정원 사용법, 단계마다 사진 한 장:
+Picture walkthrough: how to use the garden (English PDF)	사진으로 보는 사용법 (영어 PDF)
+Picture walkthrough: how to use the garden (Korean PDF)	사진으로 보는 사용법 (한국어 PDF)
+19) Print labels: beds and plants, with QR codes	19) 이름표 인쇄: 화단과 식물, QR 코드와 함께
+20) Set up the phone app (QR codes)	20) 휴대폰 앱 설정 (QR 코드)
+21) Put the garden in a folder of its web name (like name.zapto.org/garden)	21) 정원을 웹 이름의 폴더에 두기 (예: name.zapto.org/garden)
+Labels: beds and plants	이름표: 화단과 식물
+Log in on the garden, then print this page. The codes keep working after a	정원에 로그인한 다음 이 페이지를 인쇄하세요. 코드는 웹 이름을 바꾸거나
+change of web name and after a bed is renamed.	화단 이름을 바꿔도 계속 작동해요.
+The phone app	휴대폰 앱
+1. On the phone, open this page (or scan its codes from this screen):	1. 휴대폰에서 이 페이지를 여세요 (또는 이 화면에서 코드를 찍으세요):
+2. Scan the first code to download the app, and install it.	2. 첫 번째 코드를 찍어서 앱을 내려받고 설치하세요.
+3. Scan the second code: the app learns your garden's address.	3. 두 번째 코드를 찍으세요. 앱이 내 정원의 주소를 알게 돼요.
+4. In the app, log in with your garden name and password.	4. 앱에서 정원 이름과 비밀번호로 로그인하세요.
+The page itself, as a code:	페이지 자체를 코드로:
+The garden in a folder	폴더 안의 정원
+The garden can live at the top of its web name, or in a folder of it.	정원은 웹 이름의 맨 위에 있을 수도 있고, 그 안의 폴더에 있을 수도 있어요.
+Labels and phones keep working either way: the codes follow the address.	어느 쪽이든 이름표와 휴대폰은 계속 작동해요. 코드가 주소를 따라가요.
+Folder (like /garden; empty = the top of the web name)	폴더 (예: /garden, 비워 두면 웹 이름의 맨 위)
+a folder is / and then letters, numbers, - or _ (like /garden)	폴더는 / 다음에 글자, 숫자, - 또는 _ 로 써요 (예: /garden)
+Settings (.env): the garden's address is now:	설정(.env): 정원의 주소는 이제 이거예요:
+The old name forwards to the new one, so labels you printed keep working.	예전 이름은 새 이름으로 넘겨주니까, 인쇄한 이름표는 계속 작동해요.
+Phones set up with the app's QR code follow the new name by themselves.	앱 QR 코드로 설정한 휴대폰은 새 이름을 스스로 따라가요.
+Older phones (never set up with the QR code): open the app setup page and scan it once:	예전 휴대폰(QR 코드로 설정한 적 없는 것): 앱 설정 페이지를 열고 한 번 찍으세요:
+New labels (optional, the old ones still work): print the labels page:	새 이름표(선택, 예전 것도 계속 작동해요): 이름표 페이지를 인쇄하세요:
+New web name (like name.zapto.org)	새 웹 이름(예: name.zapto.org)
+Change the web address	웹 주소 바꾸기
+That does not look like a web name (like name.zapto.org) and an optional folder (like /garden).	웹 이름(예: name.zapto.org)과 폴더(선택, 예: /garden)가 맞지 않아요.
+the website did not start again with the new name. Menu M, then 7 (rebuild).	웹사이트가 새 이름으로 다시 시작하지 않았어요. 메뉴 M, 그다음 7(다시 빌드).
+the address asked for on the website is not a web name and folder	웹사이트에서 요청한 주소가 웹 이름과 폴더가 아니에요
+On: the website's address form now changes the address on this computer.	켜짐: 이제 웹사이트의 주소 양식이 이 컴퓨터의 주소를 바꿔요.
+The address watcher	주소 지킴이
+When you change the web address on the website (labels page), the website only leaves a note in its data folder. This small systemd rule sees the note and runs the change on this computer.	웹사이트(이름표 페이지)에서 웹 주소를 바꾸면, 웹사이트는 데이터 폴더에 쪽지만 남겨요. 이 작은 systemd 규칙이 쪽지를 보고 이 컴퓨터에서 변경을 실행해요.
+So the website itself can never change this computer: it can only ask, and garden.sh checks the name before doing anything.	그래서 웹사이트 자신은 이 컴퓨터를 절대 바꿀 수 없어요. 요청만 할 수 있고, garden.sh가 무엇이든 하기 전에 이름을 확인해요.
+no systemd here: the website's address form needs it (garden.sh webname works anyway)	여기에는 systemd가 없어요: 웹사이트의 주소 양식에 필요해요(garden.sh webname은 그래도 작동해요)
+no data folder yet	아직 데이터 폴더가 없어요

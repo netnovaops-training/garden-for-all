@@ -1,7 +1,13 @@
 """Test-only: a small copy of the garden data, so a full install test is quick.
 Same database (all plants), ~40 photos per folder, 40 wiki pages.
 Writes into the scratchpad; the real package is untouched."""
-import gzip, hashlib, io, json, os, sys, tarfile
+import gzip
+import hashlib
+import io
+import json
+import os
+import sys
+import tarfile
 
 # Run from anywhere:  python tools/release/make_small_test.py [OUTPUT-FOLDER]
 PKG = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -11,24 +17,24 @@ OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(PKG), "
 PER_FOLDER, PAGES = 40, 40
 os.makedirs(OUT, exist_ok=True)
 
-src = tarfile.open(os.path.join(PKG, "backups", FULL + ".tar"))
 pieces = {}
-for m in src.getmembers():
-    if m.isfile():
-        pieces[os.path.basename(m.name)] = src.extractfile(m).read() if m.name.endswith("images.tar") is False else None
-
-# images.tar: keep the first PER_FOLDER photos of every folder.
-img_in = tarfile.open(fileobj=src.extractfile(f"{FULL}/images.tar"), mode="r|")
 buf = io.BytesIO(); kept = {}; count = 0
-with tarfile.open(fileobj=buf, mode="w") as img_out:
-    for m in img_in:
-        folder = m.name.lstrip("./").split("/")[0]
-        if m.isdir():
-            img_out.addfile(m); continue
-        if kept.get(folder, 0) >= PER_FOLDER:
-            continue
-        kept[folder] = kept.get(folder, 0) + 1; count += 1
-        img_out.addfile(m, img_in.extractfile(m))
+with tarfile.open(os.path.join(PKG, "backups", FULL + ".tar")) as src:
+    for m in src.getmembers():
+        if m.isfile():
+            pieces[os.path.basename(m.name)] = src.extractfile(m).read() if m.name.endswith("images.tar") is False else None
+
+    # images.tar: keep the first PER_FOLDER photos of every folder.
+    with tarfile.open(fileobj=src.extractfile(f"{FULL}/images.tar"), mode="r|") as img_in, \
+            tarfile.open(fileobj=buf, mode="w") as img_out:
+        for m in img_in:
+            folder = m.name.lstrip("./").split("/")[0]
+            if m.isdir():
+                img_out.addfile(m); continue
+            if kept.get(folder, 0) >= PER_FOLDER:
+                continue
+            kept[folder] = kept.get(folder, 0) + 1; count += 1
+            img_out.addfile(m, img_in.extractfile(m))
 pieces["images.tar"] = buf.getvalue()
 
 manifest = pieces["MANIFEST.txt"].decode().replace(FULL, SMALL)
@@ -52,7 +58,8 @@ with tarfile.open(tar_path, "w") as out:
 
 # Wiki seed: the first PAGES pages, everything else the same.
 seed_path = os.path.join(PKG, "docker", "wiki", "seed", "wiki-pages.json.gz")
-seed = json.load(gzip.open(seed_path, "rt", encoding="utf-8"))
+with gzip.open(seed_path, "rt", encoding="utf-8") as fh:
+    seed = json.load(fh)
 seed["pages"] = seed["pages"][:PAGES]
 with gzip.open(os.path.join(OUT, "wiki-pages.json.gz"), "wt", encoding="utf-8") as fh:
     json.dump(seed, fh)

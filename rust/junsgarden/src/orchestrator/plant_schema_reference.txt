@@ -95,6 +95,8 @@ garden_beds         Which bed(s) the plant lives in
 year_added / year_planted   Year(s) added  e.g. "2024" or "2023 / 2024"
 qty                 Current quantity on hand
 company             Brand/nursery  e.g. "Proven Winners", "Monrovia"
+product_url         The "Source" link: the vendor's product page, a full https:// address
+                    (also accepted in JSON).  NOT source_url (that is the image folder).
 local_store         Where purchased  e.g. "Hewitt's"
 average_cost        Estimated retail cost per gallon  e.g. "8.99"
 picture             Image filename — set via Image Manager tab

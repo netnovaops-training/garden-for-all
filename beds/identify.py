@@ -79,12 +79,18 @@ def search_catalogue(cursor, names: list, table: str = "data_source",
     if not wanted:
         return []
 
-    cols = ", ".join("`{}`".format(c) for c in NAME_COLS)
-    cursor.execute(
-        # `picture`, NOT `photo`. The read-only API renames it on the way
-        # out, which is why the wrong name looked right.
-        "SELECT id, {}, flower_bed, bloom_color, plant_type, died, picture "
-        "FROM `{}`".format(cols, table))
+    # 2026-11-20 (Bandit B608): a table name cannot be sent as a SQL parameter,
+    # so it is put into the text. Outcome: only plain names (letters, digits,
+    # underscore) are accepted, so nothing a caller passes can add SQL. Every
+    # real caller passes "data_source" or another table of this database.
+    if not re.fullmatch(r"[A-Za-z0-9_]{1,64}", table or ""):
+        raise ValueError(f"bad table name: {table!r}")
+    cols = ", ".join(f"`{c}`" for c in NAME_COLS)
+    # `picture`, NOT `photo`. The read-only API renames it on the way
+    # out, which is why the wrong name looked right.
+    sql = (f"SELECT id, {cols}, flower_bed, bloom_color, plant_type, died, picture "  # nosec B608
+           f"FROM `{table}`")
+    cursor.execute(sql)
     rows = cursor.fetchall()
 
     scored = {}
@@ -101,18 +107,18 @@ def search_catalogue(cursor, names: list, table: str = "data_source",
                 if not hk:
                     continue
                 if hk == wk:
-                    s, why = 1.0, "{} is exactly {!r}".format(col, have)
+                    s, why = 1.0, f"{col} is exactly {have!r}"
                 elif wk in hk or hk in wk:
                     # A CONTAINMENT MATCH IS STRONG HERE and weak elsewhere.
                     # "redbud" inside "The Rising Sun Redbud" is the normal
                     # way a person refers to a plant they own.
                     s = 0.88
-                    why = "{} contains it: {!r}".format(col, have)
+                    why = f"{col} contains it: {have!r}"
                 else:
                     s = difflib.SequenceMatcher(None, wk, hk).ratio()
                     if s < 0.82:
                         continue
-                    why = "{} is close: {!r}".format(col, have)
+                    why = f"{col} is close: {have!r}"
                 # Earlier names from the model are likelier, so a match on
                 # the second guess is worth slightly less than on the first.
                 s *= 1.0 - 0.06 * wanted.index(want)

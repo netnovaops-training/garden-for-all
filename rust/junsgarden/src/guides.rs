@@ -31,7 +31,11 @@ pub enum Lang {
 impl Lang {
     /// `?lang=ko` means Korean; anything else (or nothing) means English.
     pub fn from_param(v: Option<&str>) -> Lang {
-        if v == Some("ko") { Lang::Ko } else { Lang::En }
+        if v == Some("ko") {
+            Lang::Ko
+        } else {
+            Lang::En
+        }
     }
 
     /// The `lang` attribute and the value of `?lang=`.
@@ -71,29 +75,73 @@ pub struct Step {
 /// The reading order. The same as STEPS in tools/release/make_pdfs.py (the
 /// test `steps_match_make_pdfs` fails if the two drift apart).
 pub const STEPS: &[Step] = &[
-    Step { num: "0", en: "Start here", ko: "여기서 시작", guides: &["00-OVERVIEW", "00-READ-ME-FIRST", "00b-before-you-start", "23-full-setup", "02a-what-is-docker"] },
-    Step { num: "1", en: "Ubuntu on the computer", ko: "컴퓨터에 Ubuntu 설치", guides: &["01-ubuntu-laptop"] },
-    Step { num: "2", en: "Docker and the install", ko: "Docker와 설치", guides: &["02-docker", "03-run-your-garden"] },
+    Step {
+        num: "0",
+        en: "Start here",
+        ko: "여기서 시작",
+        guides: &[
+            "00-OVERVIEW",
+            "00-READ-ME-FIRST",
+            "00b-before-you-start",
+            "23-full-setup",
+            "02a-what-is-docker",
+        ],
+    },
+    Step {
+        num: "1",
+        en: "Ubuntu on the computer",
+        ko: "컴퓨터에 Ubuntu 설치",
+        guides: &["01-ubuntu-laptop"],
+    },
+    Step {
+        num: "2",
+        en: "Docker and the install",
+        ko: "Docker와 설치",
+        guides: &["02-docker", "03-run-your-garden"],
+    },
     Step {
         num: "3",
         en: "Going online",
         ko: "인터넷에 올리기",
-        guides: &["04-go-public-no-ip-caddy", "04b-take-over-junsgarden-zapto", "07-sso-gate", "14-reserve-your-ip", "20-ssh-and-remote-desktop"],
+        guides: &[
+            "04-go-public-no-ip-caddy",
+            "04b-take-over-junsgarden-zapto",
+            "07-sso-gate",
+            "14-reserve-your-ip",
+            "20-ssh-and-remote-desktop",
+        ],
     },
     Step {
         num: "4",
         en: "Email, keys and AI",
         ko: "이메일, 키, AI",
-        guides: &["16-ai-studio", "05-gemini-prompts", "08-gemini-setup", "15-local-ai", "17-android-app-and-ai-coding"],
+        guides: &[
+            "16-ai-studio",
+            "05-gemini-prompts",
+            "08-gemini-setup",
+            "15-local-ai",
+            "17-android-app-and-ai-coding",
+        ],
     },
-    Step { num: "5", en: "Backups and your data", ko: "백업과 내 데이터", guides: &["13-backups-and-folders", "12-your-database"] },
+    Step {
+        num: "5",
+        en: "Backups and your data",
+        ko: "백업과 내 데이터",
+        guides: &["13-backups-and-folders", "12-your-database"],
+    },
     Step {
         num: "6",
         en: "Everyday use and help",
         ko: "평소에 쓰기와 도움",
         guides: &[
-            "19-every-menu-option", "25-common-questions", "26-rename-move-and-switch", "09-troubleshooting",
-            "11-maintain-your-site", "10-the-plan", "18-review-the-code", "06-shopping-list",
+            "19-every-menu-option",
+            "25-common-questions",
+            "26-rename-move-and-switch",
+            "09-troubleshooting",
+            "11-maintain-your-site",
+            "10-the-plan",
+            "18-review-the-code",
+            "06-shopping-list",
         ],
     },
     Step {
@@ -157,7 +205,9 @@ fn image_name_ok(name: &str) -> bool {
         && name.len() <= 120
         && !name.starts_with('.')
         && !name.contains("..")
-        && name.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_'))
+        && name
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_'))
 }
 
 /// A help id is small letters, numbers and `-` (the rule check_help_ids.py checks).
@@ -167,7 +217,9 @@ pub fn id_ok(id: &str) -> bool {
         && !id.starts_with('-')
         && !id.ends_with('-')
         && !id.contains("--")
-        && id.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+        && id
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
 }
 
 // ---------------------------------------------------------------- help-ids.tsv
@@ -191,10 +243,18 @@ pub struct HelpEntry {
 
 impl HelpEntry {
     pub fn tags(&self, lang: Lang) -> &str {
-        if lang == Lang::Ko { &self.tags_ko } else { &self.tags_en }
+        if lang == Lang::Ko {
+            &self.tags_ko
+        } else {
+            &self.tags_en
+        }
     }
     pub fn brief(&self, lang: Lang) -> &str {
-        if lang == Lang::Ko { &self.brief_ko } else { &self.brief_en }
+        if lang == Lang::Ko {
+            &self.brief_ko
+        } else {
+            &self.brief_en
+        }
     }
     /// The anchor on the guide's page: `help-ID` in English, `help-ID-ko` in
     /// Korean, as in the handbook.
@@ -210,12 +270,23 @@ impl HelpEntry {
 /// other line names the columns. A row with a bad id, an unknown guide or the
 /// wrong number of columns is left out (check_help_ids.py reports those).
 pub fn parse_registry(text: &str) -> Vec<HelpEntry> {
-    let mut lines = text.lines().filter(|l| !l.trim().is_empty() && !l.starts_with('#'));
-    let Some(head) = lines.next() else { return Vec::new() };
+    let mut lines = text
+        .lines()
+        .filter(|l| !l.trim().is_empty() && !l.starts_with('#'));
+    let Some(head) = lines.next() else {
+        return Vec::new();
+    };
     let cols: Vec<&str> = head.split('\t').collect();
     let col = |name: &str| cols.iter().position(|c| *c == name);
-    let (Some(id), Some(guide)) = (col("id"), col("guide")) else { return Vec::new() };
-    let get = |f: &[&str], name: &str| col(name).and_then(|i| f.get(i)).map(|s| s.trim().to_string()).unwrap_or_default();
+    let (Some(id), Some(guide)) = (col("id"), col("guide")) else {
+        return Vec::new();
+    };
+    let get = |f: &[&str], name: &str| {
+        col(name)
+            .and_then(|i| f.get(i))
+            .map(|s| s.trim().to_string())
+            .unwrap_or_default()
+    };
     let mut out = Vec::new();
     for l in lines {
         let f: Vec<&str> = l.split('\t').collect();
@@ -238,7 +309,9 @@ pub fn parse_registry(text: &str) -> Vec<HelpEntry> {
 
 /// help-ids.tsv from the guides folder; empty when it is missing.
 pub fn load_registry(dir: &Path) -> Vec<HelpEntry> {
-    std::fs::read_to_string(dir.join("help-ids.tsv")).map(|t| parse_registry(&t)).unwrap_or_default()
+    std::fs::read_to_string(dir.join("help-ids.tsv"))
+        .map(|t| parse_registry(&t))
+        .unwrap_or_default()
 }
 
 // ---------------------------------------------------------------- titles and summaries
@@ -246,12 +319,19 @@ pub fn load_registry(dir: &Path) -> Vec<HelpEntry> {
 /// The guide's title: its first line without `# ` and without the number
 /// (`# 03. Run your garden` -> `Run your garden`), like make_handbook.py.
 pub fn title_of(md: &str) -> String {
-    let first = md.lines().next().unwrap_or("").trim_start_matches('#').trim();
+    let first = md
+        .lines()
+        .next()
+        .unwrap_or("")
+        .trim_start_matches('#')
+        .trim();
     // Drop "03. " / "04b. ": digits, maybe one small letter, a dot, a space.
     let digits = first.chars().take_while(|c| c.is_ascii_digit()).count();
     if digits > 0 {
         let rest = &first[digits..];
-        let rest = rest.strip_prefix(|c: char| c.is_ascii_lowercase()).unwrap_or(rest);
+        let rest = rest
+            .strip_prefix(|c: char| c.is_ascii_lowercase())
+            .unwrap_or(rest);
         if let Some(r) = rest.strip_prefix('.') {
             if r.starts_with(char::is_whitespace) {
                 return r.trim().to_string();
@@ -279,11 +359,16 @@ pub fn summary_of(md: &str) -> String {
             if let Some(b) = t.strip_prefix("- ") {
                 return clip(&plain_text(b), 180);
             }
-        } else if first_para.is_none() && !t.is_empty() && !t.starts_with(['#', '>', '-', '*', '|', '<', '`']) {
+        } else if first_para.is_none()
+            && !t.is_empty()
+            && !t.starts_with(['#', '>', '-', '*', '|', '<', '`'])
+        {
             first_para = Some(t.to_string());
         }
     }
-    first_para.map(|p| clip(&plain_text(&p), 180)).unwrap_or_default()
+    first_para
+        .map(|p| clip(&plain_text(&p), 180))
+        .unwrap_or_default()
 }
 
 /// Markdown text without its marks (`**`, backticks, link targets).
@@ -318,8 +403,15 @@ fn clip(s: &str, max: usize) -> String {
 /// but letters, digits, `_`, spaces and `-` is removed, the ends trimmed,
 /// everything lower-cased, and each run of spaces and `-` becomes one `-`.
 pub fn slugify(text: &str, unicode: bool) -> String {
-    let folded: String = if unicode { text.to_string() } else { text.nfkd().filter(char::is_ascii).collect() };
-    let kept: String = folded.chars().filter(|c| c.is_alphanumeric() || *c == '_' || *c == '-' || c.is_whitespace()).collect();
+    let folded: String = if unicode {
+        text.to_string()
+    } else {
+        text.nfkd().filter(char::is_ascii).collect()
+    };
+    let kept: String = folded
+        .chars()
+        .filter(|c| c.is_alphanumeric() || *c == '_' || *c == '-' || c.is_whitespace())
+        .collect();
     let lower = kept.trim().to_lowercase();
     let mut out = String::with_capacity(lower.len());
     let mut in_run = false;
@@ -354,7 +446,10 @@ fn unique(id: String, used: &mut HashSet<String>) -> String {
 
 /// `<a id="help-ID"></a>` on its own: the only HTML a guide may contain.
 fn help_anchor(html: &str) -> Option<&str> {
-    let id = html.trim().strip_prefix("<a id=\"help-")?.strip_suffix("\"></a>")?;
+    let id = html
+        .trim()
+        .strip_prefix("<a id=\"help-")?
+        .strip_suffix("\"></a>")?;
     id_ok(id).then_some(id)
 }
 
@@ -374,7 +469,9 @@ fn joined<'a>(h: CowStr<'a>, rest: &mut std::iter::Peekable<Parser<'a>>) -> CowS
 /// anchor is not in the page.
 pub fn section_html(html: &str, anchor: &str) -> String {
     let marker = format!("<a id=\"{anchor}\"></a>");
-    let Some(at) = html.find(&marker) else { return String::new() };
+    let Some(at) = html.find(&marker) else {
+        return String::new();
+    };
     let rest = &html[at + marker.len()..];
     let level_at = |s: &str| -> Option<(usize, u32)> {
         let mut from = 0;
@@ -387,7 +484,9 @@ pub fn section_html(html: &str, anchor: &str) -> String {
         }
         None
     };
-    let Some((start, level)) = level_at(rest) else { return String::new() };
+    let Some((start, level)) = level_at(rest) else {
+        return String::new();
+    };
     let mut end = rest.len();
     let mut from = start + 3;
     while let Some((p, l)) = level_at(&rest[from..]).map(|(p, l)| (from + p, l)) {
@@ -405,7 +504,11 @@ pub fn section_html(html: &str, anchor: &str) -> String {
 /// Join a relative link to the folder the guide is in (`""` or `"ko"`).
 /// `None` when it climbs out of START-HERE.
 fn resolve(base: &str, rel: &str) -> Option<String> {
-    let mut parts: Vec<&str> = if base.is_empty() { Vec::new() } else { vec![base] };
+    let mut parts: Vec<&str> = if base.is_empty() {
+        Vec::new()
+    } else {
+        vec![base]
+    };
     for seg in rel.split('/') {
         match seg {
             "" | "." => {}
@@ -428,7 +531,9 @@ fn rewrite_href(url: &str, lang: Lang) -> Option<String> {
     if let Some(frag) = url.strip_prefix('#') {
         return Some(format!("#{}", fix_frag(frag, lang)));
     }
-    let (path, frag) = url.split_once('#').map_or((url, None), |(p, f)| (p, Some(f)));
+    let (path, frag) = url
+        .split_once('#')
+        .map_or((url, None), |(p, f)| (p, Some(f)));
     let base = if lang == Lang::Ko { "ko" } else { "" };
     let target = resolve(base, path)?;
     let (to_lang, stem) = match target.strip_prefix("ko/") {
@@ -439,14 +544,18 @@ fn rewrite_href(url: &str, lang: Lang) -> Option<String> {
     if !is_guide(stem) {
         return None;
     }
-    let frag = frag.map(|f| format!("#{}", fix_frag(f, to_lang))).unwrap_or_default();
+    let frag = frag
+        .map(|f| format!("#{}", fix_frag(f, to_lang)))
+        .unwrap_or_default();
     Some(format!("/help?guide={stem}{}{frag}", to_lang.amp()))
 }
 
 /// In a Korean page the help anchors are `help-ID-ko` (as in the handbook).
 fn fix_frag(frag: &str, lang: Lang) -> String {
     match frag.strip_prefix("help-") {
-        Some(id) if lang == Lang::Ko && id_ok(id) && !id.ends_with("-ko") => format!("help-{id}-ko"),
+        Some(id) if lang == Lang::Ko && id_ok(id) && !id.ends_with("-ko") => {
+            format!("help-{id}-ko")
+        }
         _ => frag.to_string(),
     }
 }
@@ -471,7 +580,11 @@ pub struct Rendered {
 /// shows the title itself, and the handbook leaves it out too, so the
 /// anchors match.
 pub fn render(md: &str, lang: Lang) -> Rendered {
-    let body = if md.starts_with("# ") { md.split_once('\n').map_or("", |(_, b)| b) } else { md };
+    let body = if md.starts_with("# ") {
+        md.split_once('\n').map_or("", |(_, b)| b)
+    } else {
+        md
+    };
     let mut used = HashSet::new();
     let mut sections = Vec::new();
     let mut out: Vec<Event> = Vec::new();
@@ -494,33 +607,70 @@ pub fn render(md: &str, lang: Lang) -> Rendered {
                     if level == HeadingLevel::H2 {
                         sections.push((id.clone(), words.trim().to_string()));
                     }
-                    out.push(Event::Start(Tag::Heading { level, id: Some(id.into()), classes: Vec::new(), attrs: Vec::new() }));
+                    out.push(Event::Start(Tag::Heading {
+                        level,
+                        id: Some(id.into()),
+                        classes: Vec::new(),
+                        attrs: Vec::new(),
+                    }));
                     out.extend(inner);
                     out.push(Event::End(TagEnd::Heading(level)));
                 }
                 continue;
             }
-            Event::Start(Tag::Link { link_type, dest_url, title, id }) => {
-                let new = if link_type == LinkType::Email { Some(dest_url.to_string()) } else { rewrite_href(&dest_url, lang) };
+            Event::Start(Tag::Link {
+                link_type,
+                dest_url,
+                title,
+                id,
+            }) => {
+                let new = if link_type == LinkType::Email {
+                    Some(dest_url.to_string())
+                } else {
+                    rewrite_href(&dest_url, lang)
+                };
                 link_kept.push(new.is_some());
                 match new {
-                    Some(u) => Event::Start(Tag::Link { link_type, dest_url: u.into(), title, id }),
+                    Some(u) => Event::Start(Tag::Link {
+                        link_type,
+                        dest_url: u.into(),
+                        title,
+                        id,
+                    }),
                     None => Event::InlineHtml(CowStr::Borrowed("<span class=\"help-offsite\">")),
                 }
             }
             Event::End(TagEnd::Link) => {
-                if link_kept.pop().unwrap_or(true) { Event::End(TagEnd::Link) } else { Event::InlineHtml(CowStr::Borrowed("</span>")) }
+                if link_kept.pop().unwrap_or(true) {
+                    Event::End(TagEnd::Link)
+                } else {
+                    Event::InlineHtml(CowStr::Borrowed("</span>"))
+                }
             }
-            Event::Start(Tag::Image { link_type, dest_url, title, id }) => {
+            Event::Start(Tag::Image {
+                link_type,
+                dest_url,
+                title,
+                id,
+            }) => {
                 let new = rewrite_src(&dest_url, lang);
                 image_kept.push(new.is_some());
                 match new {
-                    Some(u) => Event::Start(Tag::Image { link_type, dest_url: u.into(), title, id }),
+                    Some(u) => Event::Start(Tag::Image {
+                        link_type,
+                        dest_url: u.into(),
+                        title,
+                        id,
+                    }),
                     None => Event::InlineHtml(CowStr::Borrowed("<span class=\"help-noimg\">")),
                 }
             }
             Event::End(TagEnd::Image) => {
-                if image_kept.pop().unwrap_or(true) { Event::End(TagEnd::Image) } else { Event::InlineHtml(CowStr::Borrowed("</span>")) }
+                if image_kept.pop().unwrap_or(true) {
+                    Event::End(TagEnd::Image)
+                } else {
+                    Event::InlineHtml(CowStr::Borrowed("</span>"))
+                }
             }
             // HTML written in a guide: only the help anchors pass; anything else
             // is shown as the text it is, never run by the browser.
@@ -550,7 +700,10 @@ pub fn render(md: &str, lang: Lang) -> Rendered {
     }
     let mut html_out = String::with_capacity(body.len() * 3 / 2);
     html::push_html(&mut html_out, out.into_iter());
-    Rendered { html: html_out, sections }
+    Rendered {
+        html: html_out,
+        sections,
+    }
 }
 
 #[cfg(test)]
@@ -559,10 +712,25 @@ mod tests {
 
     #[test]
     fn slugs_follow_python_markdown() {
-        assert_eq!(slugify("Part 9: Your web name at No-IP, and two checks (champagne)", false), "part-9-your-web-name-at-no-ip-and-two-checks-champagne");
-        assert_eq!(slugify("L) Language: English / 한국어 / both", false), "l-language-english-both");
+        assert_eq!(
+            slugify(
+                "Part 9: Your web name at No-IP, and two checks (champagne)",
+                false
+            ),
+            "part-9-your-web-name-at-no-ip-and-two-checks-champagne"
+        );
+        assert_eq!(
+            slugify("L) Language: English / 한국어 / both", false),
+            "l-language-english-both"
+        );
         assert_eq!(slugify("Café — résumé", false), "cafe-resume");
-        assert_eq!(slugify("9 부분: No-IP의 내 웹 이름, 그리고 확인 두 가지(샴페인)", true), "9-부분-no-ip의-내-웹-이름-그리고-확인-두-가지샴페인");
+        assert_eq!(
+            slugify(
+                "9 부분: No-IP의 내 웹 이름, 그리고 확인 두 가지(샴페인)",
+                true
+            ),
+            "9-부분-no-ip의-내-웹-이름-그리고-확인-두-가지샴페인"
+        );
         let mut used = HashSet::new();
         assert_eq!(unique("a".into(), &mut used), "a");
         assert_eq!(unique("a".into(), &mut used), "a_1");
@@ -578,12 +746,36 @@ mod tests {
         std::fs::write(dir.join("MY-WINS.md"), "# private\n").unwrap();
         std::fs::write(dir.join("images/a.png"), b"x").unwrap();
         assert!(guide_file(&dir, "02-docker", Lang::En).is_some());
-        assert!(guide_file(&dir, "02-docker", Lang::Ko).is_none(), "no Korean file");
-        for bad in ["MY-WINS", "../02-docker", "02-docker.md", "ko/02-docker", "..%2F02-docker", "/etc/passwd", "", "help-ids.tsv"] {
-            assert!(guide_file(&dir, bad, Lang::En).is_none(), "{bad} must not open");
+        assert!(
+            guide_file(&dir, "02-docker", Lang::Ko).is_none(),
+            "no Korean file"
+        );
+        for bad in [
+            "MY-WINS",
+            "../02-docker",
+            "02-docker.md",
+            "ko/02-docker",
+            "..%2F02-docker",
+            "/etc/passwd",
+            "",
+            "help-ids.tsv",
+        ] {
+            assert!(
+                guide_file(&dir, bad, Lang::En).is_none(),
+                "{bad} must not open"
+            );
         }
         assert!(image_file(&dir, "a.png").is_some());
-        for bad in ["../02-docker.md", "..", ".hidden.png", "a.png/..", "sub/a.png", "a.md", "a.PNG.txt", "%2e%2e"] {
+        for bad in [
+            "../02-docker.md",
+            "..",
+            ".hidden.png",
+            "a.png/..",
+            "sub/a.png",
+            "a.md",
+            "a.PNG.txt",
+            "%2e%2e",
+        ] {
             assert!(image_file(&dir, bad).is_none(), "{bad} must not open");
         }
         std::fs::remove_dir_all(&dir).ok();
@@ -609,14 +801,38 @@ mod tests {
                   [위](#help-summary). ![마법사](../images/wizard-1-welcome.png) <script>alert(1)</script> [p](../projects/P01.md)\n";
         assert_eq!(title_of(md), "정원 실행하기");
         let r = render(md, Lang::Ko);
-        assert!(r.html.contains("<a id=\"help-summary-ko\"></a>"), "{}", r.html);
-        assert!(r.html.contains("<h2 id=\"요약-설치-끝\">요약, 설치, 끝</h2>"), "{}", r.html);
-        assert_eq!(r.sections, vec![("요약-설치-끝".to_string(), "요약, 설치, 끝".to_string())]);
-        assert!(r.html.contains("href=\"/help?guide=03-run-your-garden\""), "the English original");
-        assert!(r.html.contains("href=\"/help?guide=13-backups-and-folders&amp;lang=ko#help-backup-schedule-ko\""), "{}", r.html);
+        assert!(
+            r.html.contains("<a id=\"help-summary-ko\"></a>"),
+            "{}",
+            r.html
+        );
+        assert!(
+            r.html
+                .contains("<h2 id=\"요약-설치-끝\">요약, 설치, 끝</h2>"),
+            "{}",
+            r.html
+        );
+        assert_eq!(
+            r.sections,
+            vec![("요약-설치-끝".to_string(), "요약, 설치, 끝".to_string())]
+        );
+        assert!(
+            r.html.contains("href=\"/help?guide=03-run-your-garden\""),
+            "the English original"
+        );
+        assert!(
+            r.html.contains(
+                "href=\"/help?guide=13-backups-and-folders&amp;lang=ko#help-backup-schedule-ko\""
+            ),
+            "{}",
+            r.html
+        );
         assert!(r.html.contains("href=\"#help-summary-ko\""));
         assert!(r.html.contains("src=\"/help/images/wizard-1-welcome.png\""));
-        assert!(r.html.contains("&lt;script&gt;"), "HTML in a guide is shown, not run");
+        assert!(
+            r.html.contains("&lt;script&gt;"),
+            "HTML in a guide is shown, not run"
+        );
         assert!(!r.html.contains("<script>"));
         assert!(r.html.contains("<span class=\"help-offsite\">p</span>"));
     }
@@ -635,6 +851,9 @@ mod tests {
     fn summary_is_the_first_quick_point() {
         let md = "# 01. X\n\n## Quick version\n*No time?*\n\n- Install **Ubuntu** with `Rufus`, see [B](#b).\n- Two\n";
         assert_eq!(summary_of(md), "Install Ubuntu with Rufus, see B.");
-        assert_eq!(summary_of("# T\n\n> note\n\nFirst words here.\n"), "First words here.");
+        assert_eq!(
+            summary_of("# T\n\n> note\n\nFirst words here.\n"),
+            "First words here."
+        );
     }
 }

@@ -45,7 +45,10 @@ fn s(m: &Map<String, Value>, k: &str) -> String {
 /// Splits the stored photo list ("a.webp, b.webp") into separate file names. It trims spaces and
 /// drops empty items and the words "none" and "null".
 fn pics_of(raw: &str) -> Vec<String> {
-    raw.split(',').map(|f| f.trim().to_string()).filter(|f| !f.is_empty() && !matches!(f.to_lowercase().as_str(), "none" | "null")).collect()
+    raw.split(',')
+        .map(|f| f.trim().to_string())
+        .filter(|f| !f.is_empty() && !matches!(f.to_lowercase().as_str(), "none" | "null"))
+        .collect()
 }
 
 /// The folder (inside the data folder) where a fetched picture waits for "Confirm & Save".
@@ -68,7 +71,11 @@ fn form_open(act: &str, pid: &str, back: &[(&str, String)], multipart: bool) -> 
     );
     // Add one hidden field per "back" setting, escaped with `he`.
     for (k, v) in back {
-        h.push_str(&format!("<input type=\"hidden\" name=\"{}\" value=\"{}\">", he(k), he(v)));
+        h.push_str(&format!(
+            "<input type=\"hidden\" name=\"{}\" value=\"{}\">",
+            he(k),
+            he(v)
+        ));
     }
     h
 }
@@ -77,7 +84,12 @@ fn form_open(act: &str, pid: &str, back: &[(&str, String)], multipart: bool) -> 
 /// return to after a button, and `wipe_confirm` is true when the "Wipe ALL images" confirmation
 /// should show. Returns HTML in two columns: the left shows the photos and their buttons, the right
 /// has the two ways to add a photo.
-pub fn render(state: &AppState, plant: &Map<String, Value>, back: &[(&str, String)], wipe_confirm: bool) -> String {
+pub fn render(
+    state: &AppState,
+    plant: &Map<String, Value>,
+    back: &[(&str, String)],
+    wipe_confirm: bool,
+) -> String {
     // The plant id, the list of photo names, and the folder where photos live.
     let pid = s(plant, "id");
     let pics = pics_of(&s(plant, "picture"));
@@ -99,7 +111,9 @@ pub fn render(state: &AppState, plant: &Map<String, Value>, back: &[(&str, Strin
                 left.push_str(&ui::caption(&format!("⚠️ File not found: {f}")));
             }
             left.push_str(&form_open("img_remove", &pid, back, false));
-            left.push_str(&format!("<input type=\"hidden\" name=\"idx\" value=\"{i}\">"));
+            left.push_str(&format!(
+                "<input type=\"hidden\" name=\"idx\" value=\"{i}\">"
+            ));
             left.push_str(&ui::button("go", "1", "🗑️ Remove this image", false, true));
             left.push_str("</form>");
         }
@@ -107,67 +121,163 @@ pub fn render(state: &AppState, plant: &Map<String, Value>, back: &[(&str, Strin
         // change.
         let verified = matches!(s(plant, "image_verified").trim(), "1" | "true" | "True");
         // The Verify / Unverify button.
-        left.push_str(&form_open(if verified { "img_unverify" } else { "img_verify" }, &pid, back, false));
-        left.push_str(&ui::button("go", "1", if verified { "❌ Mark as Unverified" } else { "✅ Gallery Looks Good! (Mark as Verified)" }, false, true));
+        left.push_str(&form_open(
+            if verified {
+                "img_unverify"
+            } else {
+                "img_verify"
+            },
+            &pid,
+            back,
+            false,
+        ));
+        left.push_str(&ui::button(
+            "go",
+            "1",
+            if verified {
+                "❌ Mark as Unverified"
+            } else {
+                "✅ Gallery Looks Good! (Mark as Verified)"
+            },
+            false,
+            true,
+        ));
         left.push_str("</form>");
         // First click on "Wipe ALL images" is only a link that reloads the page with `wipe=1`;
         // nothing is deleted yet.
         if !wipe_confirm {
             // Rebuild the address settings as `key=value` pairs, each value percent-encoded.
-            let mut q: Vec<String> = back.iter().map(|(k, v)| format!("{k}={}", crate::php::urlencode(v))).collect();
+            let mut q: Vec<String> = back
+                .iter()
+                .map(|(k, v)| format!("{k}={}", crate::php::urlencode(v)))
+                .collect();
             q.push("wipe=1".into());
-            left.push_str(&format!("<a class=\"st-btn st-full\" href=\"/streamlit/?{}\">🗑️ Wipe ALL images</a>", he(&q.join("&"))));
+            left.push_str(&format!(
+                "<a class=\"st-btn st-full\" href=\"/streamlit/?{}\">🗑️ Wipe ALL images</a>",
+                he(&q.join("&"))
+            ));
         // Second step: ask "Are you sure?" with a Yes button (which posts `img_wipe`) and a Cancel
         // link back to the page without `wipe=1`.
         } else {
-            left.push_str(&ui::warning(&format!("⚠️ Wipe ALL images for **{}**? Cannot be undone.", s(plant, "plant_name"))));
-            let cancel: Vec<String> = back.iter().map(|(k, v)| format!("{k}={}", crate::php::urlencode(v))).collect();
-            left.push_str(&ui::columns(&[1, 1], vec![
-                form_open("img_wipe", &pid, back, false) + &ui::button("go", "1", "✅ Yes, wipe", true, true) + "</form>",
-                format!("<a class=\"st-btn st-full\" href=\"/streamlit/?{}\">❌ Cancel</a>", he(&cancel.join("&"))),
-            ]));
+            left.push_str(&ui::warning(&format!(
+                "⚠️ Wipe ALL images for **{}**? Cannot be undone.",
+                s(plant, "plant_name")
+            )));
+            let cancel: Vec<String> = back
+                .iter()
+                .map(|(k, v)| format!("{k}={}", crate::php::urlencode(v)))
+                .collect();
+            left.push_str(&ui::columns(
+                &[1, 1],
+                vec![
+                    form_open("img_wipe", &pid, back, false)
+                        + &ui::button("go", "1", "✅ Yes, wipe", true, true)
+                        + "</form>",
+                    format!(
+                        "<a class=\"st-btn st-full\" href=\"/streamlit/?{}\">❌ Cancel</a>",
+                        he(&cancel.join("&"))
+                    ),
+                ],
+            ));
         }
     }
 
     // A closure that shows "N/A" for an empty value.
-    let or_na = |v: String| if v.trim().is_empty() { "N/A".to_string() } else { v };
+    let or_na = |v: String| {
+        if v.trim().is_empty() {
+            "N/A".to_string()
+        } else {
+            v
+        }
+    };
     // Build the right column: a summary line for the plant.
-    let mut right = ui::markdown(&format!("**{}**  |  Botanical: {}  |  Family: {}", s(plant, "plant_name"), or_na(s(plant, "botanical_name")), or_na(s(plant, "family"))));
+    let mut right = ui::markdown(&format!(
+        "**{}**  |  Botanical: {}  |  Family: {}",
+        s(plant, "plant_name"),
+        or_na(s(plant, "botanical_name")),
+        or_na(s(plant, "family"))
+    ));
     // Option 1: fetch a picture from the web.
     right.push_str(&ui::subheader("Option 1: Fetch from Web"));
-    right.push_str(&ui::caption("Searches Wikipedia first, then DuckDuckGo — no API key."));
+    right.push_str(&ui::caption(
+        "Searches Wikipedia first, then DuckDuckGo — no API key.",
+    ));
     // The search term starts as the saved `image_search_term`, or the plant name if that is empty.
-    let term = { let t = s(plant, "image_search_term"); if t.trim().is_empty() { s(plant, "plant_name") } else { t } };
+    let term = {
+        let t = s(plant, "image_search_term");
+        if t.trim().is_empty() {
+            s(plant, "plant_name")
+        } else {
+            t
+        }
+    };
     // Search form: a term box and the fetch button.
     right.push_str(&form_open("img_fetch", &pid, back, false));
     right.push_str(&ui::text_input("term", "Search term:", &term, ""));
-    right.push_str(&ui::button("go", "1", "🔍 Fetch Image Preview", false, true));
+    right.push_str(&ui::button(
+        "go",
+        "1",
+        "🔍 Fetch Image Preview",
+        false,
+        true,
+    ));
     right.push_str("</form>");
     // If a fetched picture is waiting, show it with Confirm and Discard buttons. The picture is
     // served by the `?preview=<id>` address in mod.rs.
     if preview_dir(state).join(format!("{pid}.webp")).is_file() {
         right.push_str(&ui::divider());
         right.push_str(&ui::h4("🖼️ Preview — does this look right?"));
-        right.push_str(&format!("<img src=\"/streamlit/?preview={}\" width=\"340\" alt=\"\">", he(&pid)));
-        right.push_str(&ui::columns(&[1, 1], vec![
-            form_open("img_confirm", &pid, back, false) + &ui::button("go", "1", "✅ Confirm & Save", true, true) + "</form>",
-            form_open("img_discard", &pid, back, false) + &ui::button("go", "1", "❌ Discard", false, true) + "</form>",
-        ]));
+        right.push_str(&format!(
+            "<img src=\"/streamlit/?preview={}\" width=\"340\" alt=\"\">",
+            he(&pid)
+        ));
+        right.push_str(&ui::columns(
+            &[1, 1],
+            vec![
+                form_open("img_confirm", &pid, back, false)
+                    + &ui::button("go", "1", "✅ Confirm & Save", true, true)
+                    + "</form>",
+                form_open("img_discard", &pid, back, false)
+                    + &ui::button("go", "1", "❌ Discard", false, true)
+                    + "</form>",
+            ],
+        ));
     }
     // Option 2: upload your own photos. The file box accepts several files.
     right.push_str(&ui::divider());
     right.push_str(&ui::subheader("Option 2: Upload Your Own"));
     right.push_str(&form_open("img_upload", &pid, back, true));
-    right.push_str(&ui::file_uploader("uploads[]", "Upload photos (multiple allowed)", &["jpg", "jpeg", "png", "webp"], true));
+    right.push_str(&ui::file_uploader(
+        "uploads[]",
+        "Upload photos (multiple allowed)",
+        &["jpg", "jpeg", "png", "webp"],
+        true,
+    ));
     // The radio choices, with the more likely one first: a plant with no photos defaults to
     // "replace", one with photos defaults to "append".
-    let choices: [&str; 2] = if pics.is_empty() { ["Wipe gallery and replace", "Append to current gallery"] } else { ["Append to current gallery", "Wipe gallery and replace"] };
-    right.push_str(&ui::radio("up_act", "Upload action:", &choices, choices[0], false, false));
+    let choices: [&str; 2] = if pics.is_empty() {
+        ["Wipe gallery and replace", "Append to current gallery"]
+    } else {
+        ["Append to current gallery", "Wipe gallery and replace"]
+    };
+    right.push_str(&ui::radio(
+        "up_act",
+        "Upload action:",
+        &choices,
+        choices[0],
+        false,
+        false,
+    ));
     // st.js fills this box with a preview of the chosen files and shows the hidden save button only
     // after files are chosen.
     right.push_str("<div data-upload-preview></div>");
     // The save button is hidden at first (`display:none`) by changing its HTML.
-    right.push_str(&ui::button("go", "1", "✅ Process & Save", true, true).replace("class=\"st-btn", "data-upload-save style=\"display:none\" class=\"st-btn"));
+    right.push_str(
+        &ui::button("go", "1", "✅ Process & Save", true, true).replace(
+            "class=\"st-btn",
+            "data-upload-save style=\"display:none\" class=\"st-btn",
+        ),
+    );
     right.push_str("</form>");
 
     // Left column one share wide, right column two shares.
@@ -181,10 +291,15 @@ async fn save_pics(state: &AppState, pid: i64, pics: &[String]) -> Result<(), sq
     // `?` marks in SQL are filled by `.bind(...)` in order, so values never get mixed into the SQL
     // text. This prevents SQL injection.
     sqlx::query("UPDATE data_source SET picture = ?, image_verified = ? WHERE id = ?")
-        .bind(if pics.is_empty() { None } else { Some(pics.join(", ")) })
+        .bind(if pics.is_empty() {
+            None
+        } else {
+            Some(pics.join(", "))
+        })
         .bind(if pics.is_empty() { 0 } else { 1 })
         .bind(pid)
-        .execute(&state.db).await?;
+        .execute(&state.db)
+        .await?;
     // The public pages keep a cache; tell it to rebuild.
     state.invalidate_widget_cache();
     Ok(())
@@ -193,7 +308,10 @@ async fn save_pics(state: &AppState, pid: i64, pics: &[String]) -> Result<(), sq
 /// Seconds since 1970 (the Unix time). Used to make unique file names. If the clock reads before
 /// 1970 it gives 0.
 fn now() -> u64 {
-    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }
 
 /// Runs one image button. `act` is the button's name and `f` the submitted form (including uploaded
@@ -203,10 +321,17 @@ pub async fn action(state: &AppState, act: &str, f: &crate::formdata::FormData) 
     let pid = php_int(f.str("id"));
     // Load the plant's name and photo list. The `.ok().flatten()` steps turn "query failed" and "no
     // row" into the same `None`.
-    let row: Option<(Option<String>, Option<String>)> = sqlx::query_as("SELECT plant_name, picture FROM data_source WHERE id = ?")
-        .bind(pid).fetch_optional(&state.db).await.ok().flatten();
+    let row: Option<(Option<String>, Option<String>)> =
+        sqlx::query_as("SELECT plant_name, picture FROM data_source WHERE id = ?")
+            .bind(pid)
+            .fetch_optional(&state.db)
+            .await
+            .ok()
+            .flatten();
     // If the plant does not exist, report that and stop.
-    let Some((name, picture)) = row else { return vec![Flash::Error(format!("Plant {pid} was not found."))] };
+    let Some((name, picture)) = row else {
+        return vec![Flash::Error(format!("Plant {pid} was not found."))];
+    };
     let name = name.unwrap_or_default();
     let pics = pics_of(&picture.unwrap_or_default());
     // A closure that wraps a database error into a message list, used wherever a query can fail.
@@ -336,12 +461,24 @@ pub fn preview_bytes(state: &AppState, pid: i64) -> Option<Vec<u8>> {
 async fn get_bytes(state: &AppState, url: &str, ua: &str) -> Option<Vec<u8>> {
     // `?` here returns `None` early if the request failed (this function returns an Option, so `?`
     // works on Options and Results alike).
-    let r = state.http.get(url).header("User-Agent", ua).timeout(std::time::Duration::from_secs(10)).send().await.ok()?;
+    let r = state
+        .http
+        .get(url)
+        .header("User-Agent", ua)
+        .timeout(std::time::Duration::from_secs(10))
+        .send()
+        .await
+        .ok()?;
     if !r.status().is_success() {
         return None;
     }
     // The Content-Type header: it must say the answer is an image, not a web page.
-    let ct = r.headers().get("content-type").and_then(|v| v.to_str().ok()).unwrap_or("").to_string();
+    let ct = r
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
+        .to_string();
     if !ct.starts_with("image") {
         return None;
     }
@@ -354,16 +491,49 @@ async fn wikipedia(state: &AppState, term: &str) -> Option<Vec<u8>> {
     // Both questions go to the same API address.
     let api = "https://en.wikipedia.org/w/api.php";
     // First question: search for the best matching page title (`srlimit=1` means one result).
-    let search: Value = state.http.get(api).header("User-Agent", UA).timeout(std::time::Duration::from_secs(8))
-        .query(&[("action", "query"), ("list", "search"), ("srsearch", term), ("format", "json"), ("srlimit", "1")])
-        .send().await.ok()?.json().await.ok()?;
+    let search: Value = state
+        .http
+        .get(api)
+        .header("User-Agent", UA)
+        .timeout(std::time::Duration::from_secs(8))
+        .query(&[
+            ("action", "query"),
+            ("list", "search"),
+            ("srsearch", term),
+            ("format", "json"),
+            ("srlimit", "1"),
+        ])
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
     // Read the title with a JSON pointer: `/query/search/0/title` means query, then search, then
     // first item, then title.
-    let title = search.pointer("/query/search/0/title")?.as_str()?.to_string();
+    let title = search
+        .pointer("/query/search/0/title")?
+        .as_str()?
+        .to_string();
     // Second question: the picture ("pageimages") of that page.
-    let pages: Value = state.http.get(api).header("User-Agent", UA).timeout(std::time::Duration::from_secs(8))
-        .query(&[("action", "query"), ("titles", title.as_str()), ("prop", "pageimages"), ("format", "json"), ("pithumbsize", "640")])
-        .send().await.ok()?.json().await.ok()?;
+    let pages: Value = state
+        .http
+        .get(api)
+        .header("User-Agent", UA)
+        .timeout(std::time::Duration::from_secs(8))
+        .query(&[
+            ("action", "query"),
+            ("titles", title.as_str()),
+            ("prop", "pageimages"),
+            ("format", "json"),
+            ("pithumbsize", "640"),
+        ])
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
     // Try each returned page's thumbnail and use the first one that downloads.
     for page in pages.pointer("/query/pages")?.as_object()?.values() {
         if let Some(src) = page.pointer("/thumbnail/source").and_then(Value::as_str) {
@@ -382,22 +552,57 @@ async fn duckduckgo(state: &AppState, term: &str) -> Option<Vec<u8>> {
     // The search text is the term plus the word "plant", so results show plants.
     let q = format!("{term} plant");
     // Step 1: load DuckDuckGo's image search page.
-    let page = state.http.get("https://duckduckgo.com/").header("User-Agent", "Mozilla/5.0")
+    let page = state
+        .http
+        .get("https://duckduckgo.com/")
+        .header("User-Agent", "Mozilla/5.0")
         .query(&[("q", q.as_str()), ("iax", "images"), ("ia", "images")])
-        .timeout(std::time::Duration::from_secs(10)).send().await.ok()?.text().await.ok()?;
+        .timeout(std::time::Duration::from_secs(10))
+        .send()
+        .await
+        .ok()?
+        .text()
+        .await
+        .ok()?;
     // Step 2: pull the `vqd` token out of the page text: take what follows "vqd=", then keep only
     // letters, digits and "-". The `i.js` request needs this token.
-    let vqd = page.split("vqd=").nth(1).map(|r| r.trim_start_matches(['"', '\'']).chars().take_while(|c| c.is_ascii_alphanumeric() || *c == '-').collect::<String>())?;
+    let vqd = page.split("vqd=").nth(1).map(|r| {
+        r.trim_start_matches(['"', '\''])
+            .chars()
+            .take_while(|c| c.is_ascii_alphanumeric() || *c == '-')
+            .collect::<String>()
+    })?;
     if vqd.is_empty() {
         return None;
     }
     // Step 3: ask `i.js` for the image results in JSON.
-    let res: Value = state.http.get("https://duckduckgo.com/i.js").header("User-Agent", "Mozilla/5.0").header("Referer", "https://duckduckgo.com/")
-        .query(&[("l", "us-en"), ("o", "json"), ("q", q.as_str()), ("vqd", vqd.as_str()), ("f", ",,,,,"), ("p", "1")])
-        .timeout(std::time::Duration::from_secs(10)).send().await.ok()?.json().await.ok()?;
+    let res: Value = state
+        .http
+        .get("https://duckduckgo.com/i.js")
+        .header("User-Agent", "Mozilla/5.0")
+        .header("Referer", "https://duckduckgo.com/")
+        .query(&[
+            ("l", "us-en"),
+            ("o", "json"),
+            ("q", q.as_str()),
+            ("vqd", vqd.as_str()),
+            ("f", ",,,,,"),
+            ("p", "1"),
+        ])
+        .timeout(std::time::Duration::from_secs(10))
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?;
     // Step 4: try the first 8 results; use the first image that downloads.
     for hit in res.get("results")?.as_array()?.iter().take(8) {
-        let url = hit.get("image").or_else(|| hit.get("thumbnail")).and_then(Value::as_str).unwrap_or("");
+        let url = hit
+            .get("image")
+            .or_else(|| hit.get("thumbnail"))
+            .and_then(Value::as_str)
+            .unwrap_or("");
         if !url.is_empty() {
             if let Some(b) = get_bytes(state, url, "Mozilla/5.0").await {
                 return Some(b);
@@ -411,7 +616,12 @@ async fn duckduckgo(state: &AppState, term: &str) -> Option<Vec<u8>> {
 /// then the plant name; then DuckDuckGo. Shrunk to fit 900x900, WebP 87.
 /// Takes the botanical name, plant name and search term. Returns a WebP picture as bytes (or
 /// `None`). No key is needed.
-pub async fn fetch_free_image(state: &AppState, botanical: &str, plant_name: &str, term: &str) -> Option<Vec<u8>> {
+pub async fn fetch_free_image(
+    state: &AppState,
+    botanical: &str,
+    plant_name: &str,
+    term: &str,
+) -> Option<Vec<u8>> {
     // `found` will hold the picture once one is downloaded.
     let mut found = None;
     // Try Wikipedia with each name in turn: botanical name, search term, plant name. Skip empty
@@ -428,7 +638,15 @@ pub async fn fetch_free_image(state: &AppState, botanical: &str, plant_name: &st
     // No Wikipedia picture: try DuckDuckGo with the search term, or the plant name if the term is
     // empty.
     if found.is_none() {
-        found = duckduckgo(state, if term.trim().is_empty() { plant_name } else { term }).await;
+        found = duckduckgo(
+            state,
+            if term.trim().is_empty() {
+                plant_name
+            } else {
+                term
+            },
+        )
+        .await;
     }
     // Decode the downloaded bytes as a picture (`found?` stops with `None` if there is no picture).
     let img = image::load_from_memory(&found?).ok()?;

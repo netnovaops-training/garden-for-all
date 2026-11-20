@@ -17,7 +17,6 @@ use std::net::SocketAddr;
 use anyhow::{Context, Result};
 use axum::Router;
 
-
 /// Read an environment variable, falling back to a default.
 ///
 /// Blank counts as unset. `FOO=` in a `.env` file is how people turn a setting
@@ -36,7 +35,9 @@ pub fn env_or(key: &str, default: &str) -> String {
 pub fn env_required(key: &str) -> Result<String> {
     match std::env::var(key) {
         Ok(v) if !v.trim().is_empty() => Ok(v),
-        _ => anyhow::bail!("{key} is not set -- add it to the .env file the container is started with"),
+        _ => anyhow::bail!(
+            "{key} is not set -- add it to the .env file the container is started with"
+        ),
     }
 }
 

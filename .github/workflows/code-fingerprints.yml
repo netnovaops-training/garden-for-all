@@ -7,14 +7,19 @@
 # pull request, a code-scanning autofix, an edit in the web editor).
 #
 #   push to main or fixes  ->  job `refresh` makes the list again and, only if it
-#                                          changed, commits it as github-actions[bot].
+#                                          changed, opens (or updates) a pull request
+#                                          "Refresh the code fingerprints" from the branch
+#                                          bot/fingerprints-<branch>. It never pushes to
+#                                          main or fixes itself: a person merges it.
 #   pull request into main             ->  job `fingerprints-in-sync` only CHECKS (no write).
 #   workflow_dispatch                  ->  same as a push, for the branch it is run on.
 #
-# The bot's commit changes nothing but CODE-FINGERPRINTS.txt, which is in paths-ignore, and a
-# push made with the built-in GITHUB_TOKEN does not start new workflow runs, so it cannot loop.
-# If branch protection or a ruleset that requires pull requests is ever switched on for main,
-# the bot (GitHub Actions app) must be allowed to bypass it for this job to be able to push.
+# The bot's commit changes nothing but CODE-FINGERPRINTS.txt, which is in paths-ignore, and
+# anything done with the built-in GITHUB_TOKEN does not start new workflow runs, so it cannot
+# loop (it also means the check above does not run on the bot's own pull request; the list
+# is made by the same script, so there is nothing for it to catch).
+# Needs, once, in the repository's Settings > Actions > General: "Allow GitHub Actions to
+# create and approve pull requests".
 name: code-fingerprints
 
 on:
@@ -69,10 +74,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
-      contents: write # pushes the refreshed list; nothing else
+      contents: write # pushes the bot/fingerprints-<branch> branch only
+      pull-requests: write # opens the pull request for it
     concurrency:
       group: fingerprints-${{ github.ref }}
-      cancel-in-progress: false
+      cancel-in-progress: true # only the newest list matters
     env:
       BRANCH: ${{ github.ref_name }}
       PYTHONIOENCODING: utf-8
@@ -81,32 +87,26 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
         # The token stays in the checkout's git config because the next step pushes with it.
 
-      - name: Make the list again, commit it only if it changed
+      - name: Make the list again; if it changed, propose it as a pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -eu
+          case "$BRANCH" in bot/*) echo "A bot branch: nothing to do."; exit 0 ;; esac
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for attempt in 1 2 3; do
-            python3 tools/release/make_fingerprints.py
-            git add CODE-FINGERPRINTS.txt
-            if git diff --cached --quiet; then
-              echo "CODE-FINGERPRINTS.txt is already right on $BRANCH: no commit." | tee -a "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            git commit -q -m "Refresh the code fingerprints"
-            if git push origin "HEAD:refs/heads/$BRANCH"; then
-              echo "Refreshed CODE-FINGERPRINTS.txt on $BRANCH ($(git rev-parse --short HEAD))." | tee -a "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            # Someone pushed in between. The list is derived data, so rather than rebase an
-            # old list (which could conflict, or be wrong for the newer files) take the new
-            # tip of the branch and make the list again from it.
-            echo "Push refused (the branch moved), attempt $attempt of 3: updating and trying again."
-            git pull --rebase --autostash origin "$BRANCH" 2>/dev/null || {
-              git rebase --abort 2>/dev/null || true
-              git fetch -q origin "$BRANCH"
-              git reset -q --hard "origin/$BRANCH"
-            }
-          done
-          echo "Could not push the refreshed list after 3 attempts." | tee -a "$GITHUB_STEP_SUMMARY"
-          exit 1
+          python3 tools/release/make_fingerprints.py
+          git add CODE-FINGERPRINTS.txt
+          if git diff --cached --quiet; then
+            echo "CODE-FINGERPRINTS.txt is already right on $BRANCH: nothing to propose." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          bot="bot/fingerprints-$BRANCH"
+          git commit -q -m "Refresh the code fingerprints"
+          # The bot branch is derived data: always the newest list on top of the newest branch.
+          git push -f origin "HEAD:refs/heads/$bot"
+          if [ -z "$(gh pr list --head "$bot" --base "$BRANCH" --state open --json number --jq '.[].number')" ]; then
+            gh pr create --head "$bot" --base "$BRANCH" --title "Refresh the code fingerprints ($BRANCH)" \
+              --body "Made by the code-fingerprints workflow: CODE-FINGERPRINTS.txt again for the newest $BRANCH. Only that file changes. Installs that follow $BRANCH check every file against this list, so merge it soon."
+          fi
+          echo "Proposed a refreshed CODE-FINGERPRINTS.txt for $BRANCH on $bot." | tee -a "$GITHUB_STEP_SUMMARY"

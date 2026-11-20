@@ -29,7 +29,7 @@ name: junsgarden
 
 services:
   db:
-    image: mariadb:13
+    image: mariadb:13@sha256:0e4bb0f339feba125d1154fbacd36c16ec8518f52e44e1f82ecec7d6771caf39
     container_name: garden-db
     restart: unless-stopped
     environment:
@@ -77,6 +77,9 @@ services:
       # the switch in START-HERE/04b-take-over-junsgarden-zapto.md, then
       # https://junsgarden.zapto.org.
       JUNSGARDEN_PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8030}
+      # Signs the address the phone app reads (/app/config.json), so the app follows a
+      # domain change only from this garden. Made by garden.sh; never share it.
+      JUNSGARDEN_SIGNING_KEY: ${SIGNING_KEY:-}
       # Optional: email for "Forgot password" links (see guide 03, part C).
       JUNSGARDEN_SMTP_HOST: ${SMTP_HOST:-}
       JUNSGARDEN_SMTP_PORT: ${SMTP_PORT:-587}
@@ -145,7 +148,7 @@ services:
   #    second each time the garden starts, then stops ("Exited (0)" is normal).
   wiki-db-init:
     profiles: ["wiki"]
-    image: mariadb:13
+    image: mariadb:13@sha256:0e4bb0f339feba125d1154fbacd36c16ec8518f52e44e1f82ecec7d6771caf39
     depends_on:
       db:
         condition: service_healthy
@@ -162,7 +165,7 @@ services:
   #    to put it online it needs its own web name (front door step).
   wiki:
     profiles: ["wiki"]
-    image: ghcr.io/requarks/wiki:2
+    image: ghcr.io/requarks/wiki:2@sha256:e4708eed80c014449c0c8426c8d466c7a52a62131555bb44372fa48378b448b8
     container_name: garden-wiki
     restart: unless-stopped
     depends_on:
@@ -237,7 +240,7 @@ services:
   # Docs: https://www.authelia.com/integration/proxies/caddy/
   authelia:
     profiles: ["gate"]
-    image: authelia/authelia:4.39
+    image: authelia/authelia:4.39@sha256:bd97cff4fcbf715b5ff1f9ae286afbe6033afce385302520b0368122d43a6f54
     container_name: garden-auth
     restart: unless-stopped
     environment:
@@ -257,7 +260,7 @@ services:
   # Docs: https://docs.n8n.io
   n8n:
     profiles: ["n8n"]
-    image: docker.n8n.io/n8nio/n8n
+    image: docker.n8n.io/n8nio/n8n:latest@sha256:d02752c6ab446ae9db8deec2f9cc887c378f77cdcad31650814df936b7386dfb
     container_name: garden-n8n   # "garden-" so it cannot clash with another n8n on the same Docker
     restart: unless-stopped
     network_mode: host
@@ -274,7 +277,7 @@ services:
   # Docs: https://docs.litellm.ai/docs/simple_proxy
   litellm:
     profiles: ["llm"]
-    image: ghcr.io/berriai/litellm:main-stable
+    image: ghcr.io/berriai/litellm:main-stable@sha256:c169fb3adc514fcf210377c203f3de406d54f10bfdacf13948a4a839db9af7de
     container_name: garden-llm
     restart: unless-stopped
     command: ["--config", "/app/config.yaml", "--port", "4000"]
@@ -292,7 +295,7 @@ services:
   # Server: db   User: dbadmin   Password: DB_PASSWORD from your .env
   adminer:
     profiles: ["dbweb"]
-    image: adminer:latest
+    image: adminer:latest@sha256:251295c1cd51d3889f1c42ffa4864b24eeab51f0caf395cfe5bf4726c5ec9a2a
     container_name: garden-adminer
     environment:
       ADMINER_DEFAULT_SERVER: db

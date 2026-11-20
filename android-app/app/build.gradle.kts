@@ -71,6 +71,8 @@ dependencies {
 
     // Encrypted storage for the garden login key -- see GardenLogin.kt.
     implementation(libs.androidx.security.crypto)
+    // Ed25519 for the garden's signed address -- see GardenAddress.kt.
+    implementation(libs.tink.android)
     // Reads which way up a photo was taken, so it is not sent sideways --
     // see GardenCamera.kt.
     implementation(libs.androidx.exifinterface)

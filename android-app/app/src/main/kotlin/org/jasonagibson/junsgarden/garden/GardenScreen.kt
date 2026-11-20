@@ -51,12 +51,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.isSystemInDarkTheme
+import org.jasonagibson.junsgarden.R
 import org.jasonagibson.junsgarden.Shared
+import org.jasonagibson.junsgarden.ui.AppText
 import org.jasonagibson.junsgarden.ui.AppearanceSheet
 import java.io.File
 
@@ -97,7 +100,7 @@ fun GardenScreen(
     // ("Sign in" for a guest, "Log out" for somebody logged in), which runs
     // `onSignIn`.
     guest: Boolean = false,
-    accountLabel: String = "Sign in",
+    accountLabel: String = AppText.s(R.string.sign_in),
     onSignIn: () -> Unit = {},
     // 3.1: logged-in users get Identify, Tag, Barcode and Receipt (read by
     // free cloud AI through the garden site). "Ask" was the old chat and has
@@ -180,7 +183,7 @@ fun GardenScreen(
                 }
             }
                 .onSuccess { reading = it }
-                .onFailure { failure = it.message ?: "That did not work." }
+                .onFailure { failure = it.message ?: AppText.s(R.string.did_not_work) }
             working = false
         }
     }
@@ -260,12 +263,16 @@ fun GardenScreen(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     if (!guest) {
-                        GardenAction("Identify", Modifier.weight(1f)) { shoot(Job.Examine) }
-                        GardenAction("Tag", Modifier.weight(1f)) { askHowMany = true }
+                        GardenAction(stringResource(R.string.action_identify), Modifier.weight(1f)) {
+                            shoot(Job.Examine)
+                        }
+                        GardenAction(stringResource(R.string.action_tag), Modifier.weight(1f)) { askHowMany = true }
                     }
-                    GardenAction("Barcode", Modifier.weight(1f)) { shoot(Job.Barcode) }
+                    GardenAction(stringResource(R.string.action_barcode), Modifier.weight(1f)) { shoot(Job.Barcode) }
                     if (!guest) {
-                        GardenAction("Receipt", Modifier.weight(1f)) { shoot(Job.Receipt) }
+                        GardenAction(stringResource(R.string.action_receipt), Modifier.weight(1f)) {
+                            shoot(Job.Receipt)
+                        }
                     }
                 }
                 Spacer(Modifier.height(10.dp))
@@ -283,7 +290,7 @@ fun GardenScreen(
                         }
                     } else {
                         FloatingActionButton(onClick = { open = true }) {
-                            Text("Ask", style = MaterialTheme.typography.labelLarge)
+                            Text(stringResource(R.string.action_ask), style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
@@ -294,25 +301,19 @@ fun GardenScreen(
         if (askHowMany) {
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = { askHowMany = false },
-                title = { Text("Read a tag") },
-                text = {
-                    Text(
-                        "One at a time reads it straight away. Many at once " +
-                            "queues them and reads them afterwards, so you " +
-                            "can photograph a whole tray first."
-                    )
-                },
+                title = { Text(stringResource(R.string.tag_choice_title)) },
+                text = { Text(stringResource(R.string.tag_choice_body)) },
                 confirmButton = {
                     androidx.compose.material3.TextButton(onClick = {
                         askHowMany = false
                         showBulk = true
-                    }) { Text("Many at once") }
+                    }) { Text(stringResource(R.string.tag_many)) }
                 },
                 dismissButton = {
                     androidx.compose.material3.TextButton(onClick = {
                         askHowMany = false
                         shoot(Job.Tag)
-                    }) { Text("One now") }
+                    }) { Text(stringResource(R.string.tag_one)) }
                 },
             )
         }
@@ -340,7 +341,7 @@ fun GardenScreen(
                             runCatching { camera.readTag(context, listOf(front)) }
                                 .onSuccess { reading = it }
                                 .onFailure {
-                                    failure = it.message ?: "That did not work."
+                                    failure = it.message ?: AppText.s(R.string.did_not_work)
                                 }
                             working = false
                         }
@@ -427,12 +428,14 @@ fun GardenScreen(
 /** Which question the photograph is being taken to answer. */
 private enum class Job { Examine, Tag, Barcode, Receipt }
 
-private fun Job.waitingWords(): String = when (this) {
-    Job.Examine -> "Looking at the plant…"
-    Job.Tag -> "Reading the tag…"
-    Job.Barcode -> "Reading the barcode…"
-    Job.Receipt -> "Reading the receipt…"
-}
+private fun Job.waitingWords(): String = AppText.s(
+    when (this) {
+        Job.Examine -> R.string.wait_examine
+        Job.Tag -> R.string.wait_tag
+        Job.Barcode -> R.string.wait_barcode
+        Job.Receipt -> R.string.wait_receipt
+    }
+)
 
 /**
  * A barcode, and then what it belongs to.
@@ -448,16 +451,15 @@ private suspend fun barcodeReading(
 ): GardenCamera.Reading {
     val code = camera.readBarcode(context, shot)
         ?: return GardenCamera.Reading(
-            headline = "No barcode in that photo",
-            body = "Hold the phone closer so the stripes fill the frame, and " +
-                "keep it square on.",
+            headline = AppText.s(R.string.no_barcode_title),
+            body = AppText.s(R.string.no_barcode_body),
         )
 
     val found = runCatching { GardenApi.barcode(code) }.getOrNull()
     return if (found == null) {
         GardenCamera.Reading(
             headline = code,
-            body = "Nothing in the garden has this barcode yet.",
+            body = AppText.s(R.string.barcode_unknown),
         )
     } else {
         GardenCamera.Reading(
@@ -466,7 +468,7 @@ private suspend fun barcodeReading(
                 if (found.botanical.isNotBlank()) {
                     append(found.botanical).append('\n')
                 }
-                append("Barcode ").append(code)
+                append(AppText.s(R.string.barcode_n, code))
             },
         )
     }
@@ -509,7 +511,7 @@ private fun ResultSheet(
                             CircularProgressIndicator()
                             Spacer(Modifier.height(14.dp))
                             Text(
-                                job?.waitingWords() ?: "Working…",
+                                job?.waitingWords() ?: stringResource(R.string.working),
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                             Spacer(Modifier.height(6.dp))
@@ -517,7 +519,7 @@ private fun ResultSheet(
                             // honest wait here is tens of seconds and a
                             // silent spinner reads as a hang.
                             Text(
-                                "This can take a minute.",
+                                stringResource(R.string.takes_a_minute),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -526,13 +528,13 @@ private fun ResultSheet(
 
                     failure != null -> {
                         Text(
-                            "That did not work",
+                            stringResource(R.string.did_not_work_title),
                             style = MaterialTheme.typography.titleMedium,
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(failure, style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.weight(1f))
-                        TextButton(onClick = onClose) { Text("Close") }
+                        TextButton(onClick = onClose) { Text(stringResource(R.string.close)) }
                     }
 
                     reading != null -> {
@@ -550,7 +552,7 @@ private fun ResultSheet(
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                         }
-                        TextButton(onClick = onClose) { Text("Close") }
+                        TextButton(onClick = onClose) { Text(stringResource(R.string.close)) }
                     }
                 }
             }
@@ -605,14 +607,13 @@ private fun BackSidePrompt(onTakeBack: () -> Unit, onSkip: () -> Unit) {
         ) {
             Column(Modifier.padding(22.dp)) {
                 Text(
-                    "Now the back",
+                    stringResource(R.string.back_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "The back of the tag usually has the spacing, zones, sun "
-                        + "and water. Turn it over and take one more.",
+                    stringResource(R.string.back_body),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(Modifier.height(18.dp))
@@ -620,9 +621,9 @@ private fun BackSidePrompt(onTakeBack: () -> Unit, onSkip: () -> Unit) {
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
                 ) {
-                    TextButton(onClick = onSkip) { Text("Just the front") }
+                    TextButton(onClick = onSkip) { Text(stringResource(R.string.back_skip)) }
                     Spacer(Modifier.width(8.dp))
-                    FilledTonalButton(onClick = onTakeBack) { Text("Take the back") }
+                    FilledTonalButton(onClick = onTakeBack) { Text(stringResource(R.string.back_take)) }
                 }
             }
         }

@@ -3,6 +3,12 @@
 
 package org.jasonagibson.junsgarden.garden
 
+import org.jasonagibson.junsgarden.R
+import org.jasonagibson.junsgarden.ui.AppText
+import java.time.Month
+import java.time.format.TextStyle
+import java.util.Locale
+
 /**
  * The same grouping catalog.php uses, so the app and the website agree.
  *
@@ -39,10 +45,9 @@ data class PlantSection(
     val rows: List<Pair<String, String>>,
 )
 
-private val MONTH_NAMES = listOf(
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-)
+/** Month `i` (0 = January) in the app's language: "May" or "5월"; short: "May" or "5월". */
+private fun monthName(i: Int, short: Boolean = false): String =
+    Month.of(i + 1).getDisplayName(if (short) TextStyle.SHORT else TextStyle.FULL, Locale.getDefault())
 
 /**
  * "....MJJAS..." -> "May–September".
@@ -62,18 +67,18 @@ fun monthRange(raw: String?): String {
 
     val on = s.indices.filter { s[it] != '.' && !s[it].isWhitespace() }
     if (on.isEmpty()) return ""
-    if (on.size == 12) return "All year"
+    if (on.size == 12) return AppText.s(R.string.all_year)
 
     // Contiguous is the ordinary case and reads best as a range.
     val contiguous = on.zipWithNext().all { (a, b) -> b == a + 1 }
     if (contiguous) {
-        val first = MONTH_NAMES[on.first()]
-        val last = MONTH_NAMES[on.last()]
+        val first = monthName(on.first())
+        val last = monthName(on.last())
         return if (first == last) first else "$first–$last"
     }
     // Split seasons do exist -- something that blooms in spring and again in
     // autumn -- and collapsing those to "March–October" would be a lie.
-    return on.joinToString(", ") { MONTH_NAMES[it].take(3) }
+    return on.joinToString(", ") { monthName(it, short = true) }
 }
 
 private fun Map<String, String>.take(key: String): String =
@@ -111,56 +116,56 @@ private fun Map<String, String>.joined(vararg keys: String): String =
 fun plantSections(f: Map<String, String>): List<PlantSection> {
     val out = ArrayList<PlantSection>(5)
 
-    fun add(title: String, icon: String, rows: List<Pair<String, String>>) {
-        val kept = rows.filter { it.second.isNotBlank() }
-        if (kept.isNotEmpty()) out.add(PlantSection(title, icon, kept))
+    fun add(title: Int, icon: String, rows: List<Pair<Int, String>>) {
+        val kept = rows.filter { it.second.isNotBlank() }.map { (label, v) -> AppText.s(label) to v }
+        if (kept.isNotEmpty()) out.add(PlantSection(AppText.s(title), icon, kept))
     }
 
-    add("Planting Guide", "🌱", listOf(
-        "Grow season" to monthRange(f["grow_months"]).ifEmpty { f.take("grow_season") },
-        "Bloom season" to monthRange(f["bloom_months"]).ifEmpty { f.take("season") },
-        "Spacing" to f.take("spacing"),
-        "Planting depth" to f.take("planting_depth"),
-        "Mature size" to f.size2d(),
-        "Chilling hours" to f.take("chilling_hours").takeIf { it != "0" }.orEmpty(),
-        "Life expectancy" to f.take("life_expectancy"),
-        "Avg. cost" to money(f.take("average_cost")),
-        "Store" to f.take("local_store").ifEmpty { f.take("company") },
+    add(R.string.sec_planting, "🌱", listOf(
+        R.string.grow_season to monthRange(f["grow_months"]).ifEmpty { f.take("grow_season") },
+        R.string.bloom_season to monthRange(f["bloom_months"]).ifEmpty { f.take("season") },
+        R.string.spacing to f.take("spacing"),
+        R.string.planting_depth to f.take("planting_depth"),
+        R.string.mature_size to f.size2d(),
+        R.string.chilling_hours to f.take("chilling_hours").takeIf { it != "0" }.orEmpty(),
+        R.string.life_expectancy to f.take("life_expectancy"),
+        R.string.avg_cost to money(f.take("average_cost")),
+        R.string.store to f.take("local_store").ifEmpty { f.take("company") },
     ))
 
-    add("Root System", "🪵", listOf(
-        "System" to f.take("root_system"),
-        "Morphology" to f.take("root_morphology"),
-        "Function" to f.take("root_function"),
+    add(R.string.sec_root, "🪵", listOf(
+        R.string.root_system to f.take("root_system"),
+        R.string.root_morphology to f.take("root_morphology"),
+        R.string.root_function to f.take("root_function"),
     ))
 
-    add("Growing Conditions", "💧", listOf(
-        "Sun" to f.take("sun_exposure"),
-        "Water" to f.take("water_needs"),
-        "Soil type" to f.take("soil_type"),
-        "Soil pH" to f.take("soil_ph"),
-        "Zones" to f.take("zones"),
-        "Native status" to f.take("native_status"),
-        "Fertilizer" to f.take("fertilizer"),
+    add(R.string.sec_growing, "💧", listOf(
+        R.string.sun to f.take("sun_exposure"),
+        R.string.water to f.take("water_needs"),
+        R.string.soil_type to f.take("soil_type"),
+        R.string.soil_ph to f.take("soil_ph"),
+        R.string.zones to f.take("zones"),
+        R.string.native_status to f.take("native_status"),
+        R.string.fertilizer to f.take("fertilizer"),
     ))
 
-    add("Appearance", "🌸", listOf(
-        "Type" to f.take("plant_type"),
-        "Leaf" to f.joined("leaf_type", "leaf_shape", "leaf_margin"),
-        "Foliage color" to f.take("foliage_color"),
-        "Stem color" to f.take("stem_color"),
-        "Bloom" to f.joined("bloom_color", "flower_shape", "flower_size"),
-        "Fruit" to f.joined("fruit_type", "fruit_color", "fruit_edibility"),
-        "Evergreen" to f.take("is_evergreen"),
-        "Growth rate" to f.take("growth_rate"),
+    add(R.string.sec_appearance, "🌸", listOf(
+        R.string.plant_type to f.take("plant_type"),
+        R.string.leaf to f.joined("leaf_type", "leaf_shape", "leaf_margin"),
+        R.string.foliage_color to f.take("foliage_color"),
+        R.string.stem_color to f.take("stem_color"),
+        R.string.bloom to f.joined("bloom_color", "flower_shape", "flower_size"),
+        R.string.fruit to f.joined("fruit_type", "fruit_color", "fruit_edibility"),
+        R.string.evergreen to f.take("is_evergreen"),
+        R.string.growth_rate to f.take("growth_rate"),
     ))
 
-    add("Wildlife & Safety", "🐝", listOf(
-        "Attracts" to f.take("attracts"),
-        "Deer" to f.take("deer_resistance"),
-        "Toxicity" to f.take("toxicity"),
-        "Edibility" to f.take("fruit_edibility"),
-        "Invasive here" to f.take("invasive_local"),
+    add(R.string.sec_wildlife, "🐝", listOf(
+        R.string.attracts to f.take("attracts"),
+        R.string.deer to f.take("deer_resistance"),
+        R.string.toxicity to f.take("toxicity"),
+        R.string.edibility to f.take("fruit_edibility"),
+        R.string.invasive to f.take("invasive_local"),
     ))
 
     return out
@@ -174,15 +179,15 @@ fun plantSections(f: Map<String, String>): List<PlantSection> {
  * of one-word values and nobody read them.
  */
 fun plantNotes(f: Map<String, String>): List<Pair<String, String>> = listOf(
-    "Care" to f.take("care_notes"),
-    "Maintenance" to f.take("maintenance_notes"),
-    "Cleanup" to f.take("cleanup_notes"),
-    "Propagation" to f.take("propagation_method").ifEmpty { f.take("cuttings") },
-    "Companion plants" to f.take("companion_plants"),
-    "Pests & disease" to f.take("disease_susceptibility"),
-    "Aromatics" to f.take("aromatics"),
-    "More" to f.take("extra_details"),
-).filter { it.second.isNotBlank() }
+    R.string.note_care to f.take("care_notes"),
+    R.string.note_maintenance to f.take("maintenance_notes"),
+    R.string.note_cleanup to f.take("cleanup_notes"),
+    R.string.note_propagation to f.take("propagation_method").ifEmpty { f.take("cuttings") },
+    R.string.note_companions to f.take("companion_plants"),
+    R.string.note_pests to f.take("disease_susceptibility"),
+    R.string.note_aromatics to f.take("aromatics"),
+    R.string.note_more to f.take("extra_details"),
+).filter { it.second.isNotBlank() }.map { (label, v) -> AppText.s(label) to v }
 
 /**
  * The quick chips under the photograph: the handful of facts worth seeing
@@ -194,8 +199,8 @@ fun plantChips(f: Map<String, String>): List<Pair<String, String>> {
         if (v.isNotBlank()) chips.add(icon to v)
     }
     val qty = f.take("qty").ifEmpty { f.take("quantity") }
-    put("🪴", if (qty.isNotBlank() && qty != "0") "Qty $qty" else "")
-    put("📅", f.take("year_planted").let { if (it.isBlank()) "" else "Planted $it" })
+    put("🪴", if (qty.isNotBlank() && qty != "0") AppText.s(R.string.qty_n, qty) else "")
+    put("📅", f.take("year_planted").let { if (it.isBlank()) "" else AppText.s(R.string.planted_n, it) })
     put("🌿", f.take("plant_type"))
     put("📈", f.take("growth_rate"))
     put("🌡️", f.take("zones"))

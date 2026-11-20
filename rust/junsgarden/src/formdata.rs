@@ -54,7 +54,9 @@ impl FormData {
     pub fn files_for(&self, field: &str) -> Vec<&Upload> {
         self.files
             .iter()
-            .filter(|u| u.field == field || u.field.trim_end_matches("[]") == field.trim_end_matches("[]"))
+            .filter(|u| {
+                u.field == field || u.field.trim_end_matches("[]") == field.trim_end_matches("[]")
+            })
             .collect()
     }
 }
@@ -76,9 +78,10 @@ pub async fn parse(headers: &HeaderMap, body: Bytes) -> FormData {
 
     // Multipart: a form that may carry files. The boundary text separates the parts.
     if ct.starts_with("multipart/form-data") {
-        if let Some(boundary) = multer::parse_boundary(&ct).ok() {
+        if let Ok(boundary) = multer::parse_boundary(&ct) {
             // `multer` reads a stream, so the body is wrapped as a stream with one item.
-            let stream = futures_util::stream::once(async move { Ok::<Bytes, std::io::Error>(body) });
+            let stream =
+                futures_util::stream::once(async move { Ok::<Bytes, std::io::Error>(body) });
             let mut mp = multer::Multipart::new(stream, boundary);
             // Take the parts one at a time until there are none left.
             while let Ok(Some(field)) = mp.next_field().await {
@@ -93,7 +96,11 @@ pub async fn parse(headers: &HeaderMap, body: Bytes) -> FormData {
                 // A part with a file name is a file upload; a part without one is plain text.
                 match filename {
                     // An empty file input still sends a part with no name.
-                    Some(f) if !f.is_empty() => out.files.push(Upload { field: name, filename: f, bytes: data.to_vec() }),
+                    Some(f) if !f.is_empty() => out.files.push(Upload {
+                        field: name,
+                        filename: f,
+                        bytes: data.to_vec(),
+                    }),
                     Some(_) => {}
                     None => {
                         let text = String::from_utf8_lossy(&data).to_string();

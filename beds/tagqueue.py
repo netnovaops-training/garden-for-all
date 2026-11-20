@@ -47,7 +47,6 @@ never appears - which is the worst failure available here."
 from __future__ import annotations
 
 import hashlib
-import json
 import uuid
 
 SCHEMA = [
@@ -79,7 +78,7 @@ def ensure(cur):
     for sql in SCHEMA:
         try:
             cur.execute(sql)
-        except Exception:
+        except Exception:  # noqa: BLE001, S110  already there: the schema is re-applied on every start
             pass
 
 
@@ -110,9 +109,9 @@ def add(cur, front_file, back_file, front_hash, who) -> tuple:
             "front_hash, status, plant_id, note, added_by) "
             "VALUES (%s,%s,%s,%s,'duplicate',%s,%s,%s)",
             ("dup", front_file, back_file, front_hash, seen.get("plant_id"),
-             "the same photograph is already queued as #%s" % seen["id"],
+             "the same photograph is already queued as #{}".format(seen["id"]),
              (who or "")[:190]))
-        return cur.lastrowid, "duplicate", "already queued as #%s" % seen["id"]
+        return cur.lastrowid, "duplicate", "already queued as #{}".format(seen["id"])
 
     cur.execute(
         "INSERT INTO tag_queue (batch, front_file, back_file, front_hash, "

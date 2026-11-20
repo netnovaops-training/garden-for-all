@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -111,8 +112,7 @@ fun SplashScreen(onDone: () -> Unit) {
     ) {
         Image(
             painter = painterResource(R.drawable.splash_juns_garden),
-            contentDescription = "Jun in his garden, holding a sign that " +
-                "reads Jun's Garden",
+            contentDescription = stringResource(R.string.splash_description),
             modifier = Modifier.fillMaxWidth(),
             // FIT, NOT CROP. Cropping a 16:9 drawing to a tall screen cuts
             // Jun out of his own splash -- he is dead centre in the frame.
@@ -158,7 +158,7 @@ fun SplashScreen(onDone: () -> Unit) {
                 .padding(8.dp),
         ) {
             Text(
-                "Skip",
+                stringResource(R.string.skip),
                 style = MaterialTheme.typography.labelLarge,
                 // Dark on the light green ground, not the theme's onSurface,
                 // which in dark mode would be near-white on near-white.

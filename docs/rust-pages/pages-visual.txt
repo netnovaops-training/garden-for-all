@@ -1,0 +1,19 @@
+# Pages for the screenshot check (shots.py), each at 390 and 1366 px.
+index.php
+blog.php
+plant_listing.php
+catalog.php
+gallery.php
+data.php
+login.php
+login.php?forgot=1
+help
+@login index.php
+@login catalog.php
+@login data.php
+@login help
+@login help/00-READ-ME-FIRST
+@login streamlit/?tab=1
+@login streamlit/?tab=2&p=276
+@login streamlit/?tab=5
+@login streamlit/?tab=11

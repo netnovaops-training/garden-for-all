@@ -12,12 +12,22 @@ Cases: main mode ALL MATCH; one tampered file; one extra file; one missing file;
 spaces, brackets and Korean; the old fixed-commit mode (a real old commit if this repository has one, and
 a made-up one); a fixed commit that has the list; a damaged CODE-SOURCE.txt; and the same for PowerShell.
 """
-import hashlib, http.server, io, os, shutil, subprocess, sys, tarfile, tempfile, threading, zipfile
+import hashlib
+import http.server
+import io
+import os
+import shutil
+import subprocess
+import sys
+import tarfile
+import tempfile
+import threading
+import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 sys.path.insert(0, os.path.join(ROOT, "tools", "release"))
-import make_fingerprints as mf          # noqa: E402
+import make_fingerprints as mf
 
 REPO = "testowner/testrepo"
 LIST = mf.LIST_NAME
@@ -87,12 +97,22 @@ def sha(b):
     return hashlib.sha256(b).hexdigest()
 
 
+def read_bytes(p):
+    with open(p, "rb") as fh:
+        return fh.read()
+
+
+def write_file(p, data, mode="wb", **kw):
+    with open(p, mode, **kw) as fh:
+        fh.write(data)
+
+
 def snapshot(d):
     snap = {}
     for root, _dirs, names in os.walk(d):
         for n in names:
             p = os.path.join(root, n)
-            snap[os.path.relpath(p, d)] = sha(open(p, "rb").read())
+            snap[os.path.relpath(p, d)] = sha(read_bytes(p))
     return snap
 
 
@@ -105,7 +125,7 @@ def new_garden(tmp, source_lines, zip_list_all=None):
     os.makedirs(d)
     carried = {}
     for rel in STARTERS:
-        carried[rel] = open(os.path.join(ROOT, rel), "rb").read()
+        carried[rel] = read_bytes(os.path.join(ROOT, rel))
     carried["README.md"] = b"the private read-me\n"
     carried["site/Boogie.mp3"] = b"not really music\n"
     carried["00-WELCOME.html"] = b"<html>welcome</html>\n"
@@ -116,27 +136,27 @@ def new_garden(tmp, source_lines, zip_list_all=None):
     for rel, data in carried.items():
         p = os.path.join(d, *rel.split("/"))
         os.makedirs(os.path.dirname(p), exist_ok=True)
-        open(p, "wb").write(mf.normalized(rel, data))
+        write_file(p, mf.normalized(rel, data))
     # the zip's list: only what the zip carries, as it is on disk. (Old zips list everything: zip_list_all.)
     listed = {rel: mf.normalized(rel, data) for rel, data in carried.items() if rel != "CODE-SOURCE.txt"}   # the setting is not fingerprinted
     if zip_list_all:
         listed.update({k: v for k, v in zip_list_all.items() if k not in listed})   # the zip's own copies stay as they are
     lines = "".join(f"{sha(b)}  ./{rel}\n" for rel, b in sorted(listed.items()))
-    open(os.path.join(d, "FILES-FROM-AUTHOR.txt"), "w", encoding="utf-8", newline="\n").write(lines)
-    open(os.path.join(d, "photos.key"), "w").write("not a real key\n")           # in the zip, never listed
+    write_file(os.path.join(d, "FILES-FROM-AUTHOR.txt"), lines, "w", encoding="utf-8", newline="\n")
+    write_file(os.path.join(d, "photos.key"), "not a real key\n", "w")           # in the zip, never listed
     return d
 
 
 def run_py(d, base, *args):
     env = dict(os.environ, GARDEN_CODE_BASE=base, PYTHONIOENCODING="utf-8")
-    r = subprocess.run([sys.executable, "-I", os.path.join(d, "tools", "get-code.py"), *args], capture_output=True, env=env, timeout=300)
+    r = subprocess.run([sys.executable, "-I", os.path.join(d, "tools", "get-code.py"), *args], capture_output=True, env=env, timeout=300, check=False)
     return r.returncode, (r.stdout + r.stderr).decode("utf-8", "replace")
 
 
 def run_ps(d, base):
     env = dict(os.environ, GARDEN_CODE_BASE=base)
     script = os.path.join(d, "tools", "get-code.ps1")
-    r = subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script], capture_output=True, env=env, timeout=600)
+    r = subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script], capture_output=True, env=env, timeout=600, check=False)
     return r.returncode, (r.stdout + r.stderr).decode("utf-8", "replace")
 
 
@@ -169,7 +189,10 @@ def main():
             print(f"--- {label}")
             sub = tempfile.mkdtemp(dir=tmp)
 
-            def attempt(name, files, source="ref=main", ref="main", expect_ok=True, expect_text=None, extra_listed=None):
+            # label/run/sub are bound now (default values), not looked up when called: ruff B023. attempt() is
+            # only called inside this same loop turn, so the result is the same; this keeps it that way.
+            def attempt(name, files, source="ref=main", ref="main", expect_ok=True, expect_text=None, extra_listed=None,
+                        *, label=label, run=run, sub=sub):
                 srv.serve(None, ref, files)
                 d = new_garden(tempfile.mkdtemp(dir=sub), f"repo={REPO}\n{source}\n", extra_listed)
                 before = snapshot(d)
@@ -196,8 +219,8 @@ def main():
             ok(f"{label}: main: CODE-FINGERPRINTS.txt is on disk, the same as the download", after.get(LIST) == sha(good[LIST]))
             sample = "tools/get-pdfs.ps1"
             ok(f"{label}: main: a .ps1 got Windows line endings, a .sh kept its own",
-               open(os.path.join(d, *sample.split("/")), "rb").read() == mf.normalized(sample, good[sample]) and b"\r\n" in open(os.path.join(d, *sample.split("/")), "rb").read()
-               and b"\r" not in open(os.path.join(d, "garden.sh"), "rb").read())
+               read_bytes(os.path.join(d, *sample.split("/"))) == mf.normalized(sample, good[sample]) and b"\r\n" in read_bytes(os.path.join(d, *sample.split("/")))
+               and b"\r" not in read_bytes(os.path.join(d, "garden.sh")))
             # 2. one tampered file
             t = dict(public); t["garden.sh"] = public["garden.sh"] + b"# changed\n"
             attempt("one tampered file", t, expect_ok=False, expect_text="different from the list: garden.sh")
@@ -237,9 +260,9 @@ def main():
             attempt("fixed commit, old way, one extra file", t, source=f"commit={FAKE_COMMIT}", ref=FAKE_COMMIT,
                     expect_ok=False, expect_text="not in the list: extra/x.txt", extra_listed=all_listed)
             # 7b. a REAL old commit of this repository (made before the list existed), checked the old way
-            real = next((c for c in ("77b0b3b", "70c479a", "979929f") if subprocess.run(["git", "cat-file", "-e", c + "^{commit}"], capture_output=True).returncode == 0), None)
+            real = next((c for c in ("77b0b3b", "70c479a", "979929f") if subprocess.run(["git", "cat-file", "-e", c + "^{commit}"], capture_output=True, check=False).returncode == 0), None)
             if real:
-                full = subprocess.run(["git", "rev-parse", real], capture_output=True, text=True).stdout.strip()
+                full = subprocess.run(["git", "rev-parse", real], capture_output=True, text=True, check=True).stdout.strip()
                 oldreal = {k: v for k, v in git_tree_files(full).items() if k != "site/Boogie.mp3"}
                 listed_real = {rel: mf.normalized(rel, data) for rel, data in oldreal.items() if rel not in mf.OFF_GITHUB}
                 d, before, after, out = attempt(f"a real old commit ({real}), the old way", oldreal, source=f"commit={full}", ref=full, extra_listed=listed_real)
@@ -270,11 +293,11 @@ def main():
         # --check (the release build's way) against a downloaded archive
         srv.serve(None, "main", public)
         d = new_garden(tempfile.mkdtemp(dir=tmp), f"repo={REPO}\nref=main\n")
-        arc = os.path.join(tmp, "good.tar.gz"); open(arc, "wb").write(make_tar(public))
+        arc = os.path.join(tmp, "good.tar.gz"); write_file(arc, make_tar(public))
         rc, out = run_py(d, srv.base, "--check", arc)
         ok("python --check: main download: ALL MATCH", rc == 0 and out.strip() == "ALL MATCH", out)
         bad = dict(public); bad["garden.sh"] += b"x"
-        arc2 = os.path.join(tmp, "bad.tar.gz"); open(arc2, "wb").write(make_tar(bad))
+        arc2 = os.path.join(tmp, "bad.tar.gz"); write_file(arc2, make_tar(bad))
         rc, out = run_py(d, srv.base, "--check", arc2)
         ok("python --check: tampered download: refused", rc == 1 and "different from the list: garden.sh" in out, out)
     finally:

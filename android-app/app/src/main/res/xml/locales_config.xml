@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The languages the app speaks. Android lists them under Settings > Apps > Jun's Garden >
+     Language, so the app can be in Korean on an English phone (or the other way round). -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="ko" />
+</locale-config>

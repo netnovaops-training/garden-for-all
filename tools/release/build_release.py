@@ -39,7 +39,17 @@ installer (tools/get-pdfs.py). With --pdf-english / --pdf-korean (the folders th
 were built in) step 5b builds those two zips into OUT_FOLDER/pdf, prints their SHA-256
 and checks they are the ones PDF-GUIDES-SHA256.txt (in the public code) names.
 """
-import argparse, hashlib, io, os, pathlib, shutil, subprocess, sys, tarfile, urllib.request, zipfile
+import argparse
+import hashlib
+import io
+import os
+import pathlib
+import shutil
+import subprocess
+import sys
+import tarfile
+import urllib.request
+import zipfile
 
 HERE = pathlib.Path(__file__).resolve().parent
 PKG = HERE.parents[1]
@@ -62,7 +72,10 @@ OUT = pathlib.Path(A.out).resolve()
 STAGE = OUT / "build" / "junsgarden-for-jun"
 CRLF_EXT = (".cmd", ".ps1", ".bat")
 sys.path.insert(0, str(HERE))
-from make_fingerprints import OFF_GITHUB      # the files kept off GitHub on purpose (never on CODE-FINGERPRINTS.txt)
+from make_fingerprints import (
+    OFF_GITHUB,  # the files kept off GitHub on purpose (never on CODE-FINGERPRINTS.txt)
+)
+
 STARTERS = ["Start-Here-Ubuntu.sh", "Start-Here-Windows.cmd", "Garden-Menu-Windows.cmd",
             "tools/get-code.py", "tools/get-code.ps1"]
 
@@ -81,7 +94,8 @@ def normalized(rel, data):
 if A.ref:
     # Follow-main mode: look up where the branch is now and build from exactly that commit.
     def resolve(ref):
-        r = subprocess.run(["git", "ls-remote", f"https://github.com/{A.repo}.git", f"refs/heads/{ref}"], capture_output=True, text=True, timeout=120)
+        # check=False: the return code is read on the next lines and turned into a plain STOP message.
+        r = subprocess.run(["git", "ls-remote", f"https://github.com/{A.repo}.git", f"refs/heads/{ref}"], capture_output=True, text=True, timeout=120, check=False)
         out = r.stdout.split()
         if r.returncode != 0 or len(out) != 2 or len(out[0]) != 40:
             sys.exit(f"STOP: could not find branch {ref} of {A.repo} on GitHub ({r.stderr.strip()[:200]})")
@@ -93,7 +107,9 @@ assert len(A.commit) == 40 and all(c in "0123456789abcdef" for c in A.commit), "
 if STAGE.exists():
     shutil.rmtree(STAGE)
 url = f"https://codeload.github.com/{A.repo}/tar.gz/{A.commit}"
-archive = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "garden-release"}), timeout=300).read()
+# A fixed https:// address (codeload.github.com); `with` closes the connection (it was left to the garbage collector).
+with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "garden-release"}), timeout=300) as resp:  # fixed https:// address  # nosec B310
+    archive = resp.read()
 (OUT / "build").mkdir(parents=True, exist_ok=True)
 (OUT / "build" / "code.tar.gz").write_bytes(archive)
 code = {}
@@ -182,8 +198,15 @@ check = OUT / "check"
 if check.exists():
     shutil.rmtree(check)
 with zipfile.ZipFile(OUT / "junsgarden-for-jun.zip") as z:
-    z.extractall(check)
-import importlib.util      # the zip's own get-code.py, loaded from the extracted zip (its folder is then the garden folder)
+    # The zip was made by step 5 of this script, but its names are still checked before unpacking:
+    # every name must stay inside `check` (no absolute path, no drive letter, no ".." part).
+    for zname in z.namelist():
+        zparts = zname.replace("\\", "/").split("/")
+        if zname.startswith(("/", "\\")) or ":" in zparts[0] or ".." in zparts:
+            sys.exit(f"STOP: the zip holds a name that would land outside the folder: {zname}")
+    z.extractall(check)  # every name checked just above  # nosec B202
+import importlib.util  # the zip's own get-code.py, loaded from the extracted zip (its folder is then the garden folder)
+
 spec = importlib.util.spec_from_file_location("zip_get_code", check / "junsgarden-for-jun" / "tools" / "get-code.py")
 zip_get_code = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(zip_get_code)

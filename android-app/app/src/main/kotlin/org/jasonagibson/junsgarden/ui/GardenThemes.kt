@@ -4,10 +4,12 @@
 package org.jasonagibson.junsgarden.ui
 
 import android.content.Context
+import androidx.annotation.StringRes
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
+import org.jasonagibson.junsgarden.R
 
 /**
  * The themes the original app had, put back.
@@ -30,14 +32,14 @@ import androidx.compose.ui.graphics.Color
  * one of them turns the light/dark switch into a trap, where picking a
  * favourite colour silently costs somebody a readable screen at night.
  */
-enum class GardenTheme(val label: String) {
-    Evergreen("Evergreen"),
-    Forest("Forest"),
-    Ivy("Ivy"),
-    Lavender("Lavender"),
-    Sunflower("Sunflower"),
-    Sunrise("Sunrise"),
-    Sunset("Sunset"),
+enum class GardenTheme(@StringRes val label: Int) {
+    Evergreen(R.string.theme_evergreen),
+    Forest(R.string.theme_forest),
+    Ivy(R.string.theme_ivy),
+    Lavender(R.string.theme_lavender),
+    Sunflower(R.string.theme_sunflower),
+    Sunrise(R.string.theme_sunrise),
+    Sunset(R.string.theme_sunset),
     ;
 
     companion object {
@@ -50,10 +52,10 @@ enum class GardenTheme(val label: String) {
 }
 
 /** Light or dark, or whatever the phone is set to. */
-enum class ThemeMode(val label: String) {
-    System("Match phone"),
-    Light("Light"),
-    Dark("Dark"),
+enum class ThemeMode(@StringRes val label: Int) {
+    System(R.string.mode_system),
+    Light(R.string.mode_light),
+    Dark(R.string.mode_dark),
     ;
 
     companion object {

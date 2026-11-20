@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TEST BUILDS ONLY (app-matrix/matrix.sh copies this into a throwaway copy of the app):
+     lets a debug build talk plain http to the lab garden at 10.0.2.2 (the emulator's name for
+     the computer it runs on). The real app never contains it. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:networkSecurityConfig="@xml/test_network" />
+</manifest>
