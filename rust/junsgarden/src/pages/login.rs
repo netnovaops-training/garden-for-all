@@ -63,6 +63,9 @@ fn safe_back(s: &str) -> String {
     let ok = s.starts_with('/')
         && !s.starts_with("//")
         && !s.contains('\\')
+        // Browsers delete tabs and line breaks inside an address, so `/<tab>/evil.example`
+        // would become `//evil.example` (another site). Refuse every control character.
+        && !s.chars().any(char::is_control)
         && !s.contains("://")
         && s.len() < 300
         && !s.starts_with("/login.php");
@@ -270,6 +273,9 @@ mod tests {
         assert_eq!(safe_back("//evil.example/x"), "/");
         assert_eq!(safe_back("https://evil.example"), "/");
         assert_eq!(safe_back("/\\evil.example"), "/");
+        // A tab or line break between the slashes must not slip through.
+        assert_eq!(safe_back("/\t/evil.example"), "/");
+        assert_eq!(safe_back("/\n/evil.example"), "/");
         assert_eq!(safe_back(""), "/");
         assert_eq!(safe_back("/login.php?x"), "/");
     }

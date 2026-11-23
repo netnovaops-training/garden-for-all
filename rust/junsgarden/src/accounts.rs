@@ -53,6 +53,9 @@ const RESET_MINUTES: i64 = 30;
 const WINDOW_SECONDS: i64 = 900;
 /// Failed logins allowed from one address inside the window before login is blocked.
 const MAX_FAILS_PER_IP: i64 = 5;
+/// The longest password (in bytes) the login will even try. The longest allowed
+/// password is 128 characters of up to 4 bytes each = 512; this leaves room.
+const MAX_LOGIN_BYTES: usize = 1024;
 /// Failed logins allowed against one account name inside the window.
 const MAX_FAILS_PER_NAME: i64 = 10;
 
@@ -259,6 +262,10 @@ pub async fn check_password(
     password: &str,
     ip: &str,
 ) -> Result<String, LoginError> {
+    // A real password is never this long (new ones stop at 128 characters). Refuse
+    // before any hashing, so a huge request body cannot be used to burn CPU on Argon2.
+    // The failure is recorded like any other wrong password.
+    let too_long = password.len() > MAX_LOGIN_BYTES;
     // `&` borrows the database pool from the state instead of copying it.
     let db = &state.db;
     // Step 1: forget failed attempts older than the lockout window.
@@ -310,6 +317,7 @@ pub async fn check_password(
     // Step 5: check the password. For an unknown name or an account with no password yet, check
     // against a dummy hash anyway so the response takes the same time (a timing defence).
     let ok = match (&account, stored) {
+        _ if too_long => false,
         (Some(_), Some(h)) => verify_password(password.to_string(), h).await,
         _ => {
             let _ = verify_password(password.to_string(), dummy_hash()).await;
@@ -472,14 +480,24 @@ pub async fn finish_reset(
         return Err("Something went wrong saving the password. Try again.");
     };
     // Save the new hash and clear the reset code so the link works only once.
-    sqlx::query(
-        "UPDATE `garden_users` SET pass_hash = ?, reset_hash = NULL, reset_expires = NULL WHERE username = ?",
+    // The UPDATE itself re-checks the code and its expiry, so two requests that
+    // arrive together with the same link cannot both win: the database lets
+    // only one of them change the row (the other changes 0 rows and is told
+    // the link was already used). The earlier check above only gives a
+    // friendlier message; this is the one that enforces "works once".
+    let done = sqlx::query(
+        "UPDATE `garden_users` SET pass_hash = ?, reset_hash = NULL, reset_expires = NULL
+         WHERE username = ? AND reset_hash = ? AND reset_expires > NOW()",
     )
     .bind(&hash)
     .bind(&account.name)
+    .bind(sha256_hex(code))
     .execute(&state.db)
     .await
     .map_err(|_| "Something went wrong saving the password. Try again.")?;
+    if done.rows_affected() == 0 {
+        return Err("That link has expired or was already used. Ask for a new one.");
+    }
     // Sign this person out everywhere by deleting all their session rows.
     let _ = sqlx::query("DELETE FROM `garden_sessions` WHERE username = ?")
         .bind(&account.name)
@@ -607,6 +625,14 @@ mod tests {
         assert!(Argon2::default()
             .verify_password(b"wrong", &parsed)
             .is_err());
+    }
+
+    #[test]
+    fn the_login_length_cap_never_blocks_an_allowed_password() {
+        // 128 four-byte characters is the longest password `password_problem` accepts.
+        let longest = "\u{1F331}".repeat(128);
+        assert!(password_problem("Jun", &longest).is_none());
+        assert!(longest.len() <= MAX_LOGIN_BYTES);
     }
 
     #[test]
