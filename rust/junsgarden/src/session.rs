@@ -169,14 +169,14 @@ fn bearer(req: &Request) -> Option<String> {
     is_app_token(token).then(|| token.to_string())
 }
 
-/// Reads a request header as text, or "" if missing. The `'a` marks that the returned
-/// text is borrowed from the request, so it can only be used while the request exists.
 /// Is this name still on the user list (GARDEN_USERS)? Someone taken off the
 /// list by editing .env by hand loses a login they still had, at once.
 fn still_a_user(state: &AppState, name: &str) -> bool {
     state.users.iter().any(|u| u.name == name)
 }
 
+/// Reads a request header as text, or "" if missing. The `'a` marks that the returned
+/// text is borrowed from the request, so it can only be used while the request exists.
 fn header_str<'a>(req: &'a Request, name: &str) -> &'a str {
     req.headers()
         .get(name)
